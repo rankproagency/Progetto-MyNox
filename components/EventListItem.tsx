@@ -1,0 +1,161 @@
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { Event } from '../types';
+import { Colors } from '../constants/colors';
+import { Font } from '../constants/typography';
+import { useFavorites } from '../contexts/FavoritesContext';
+
+interface Props {
+  event: Event;
+}
+
+export default function EventListItem({ event }: Props) {
+  const router = useRouter();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const minPrice = Math.min(...event.ticketTypes.map((t) => t.price));
+  const isSoldOut = event.ticketTypes.every((t) => t.available === 0);
+
+  return (
+    <TouchableOpacity
+      style={styles.container}
+      activeOpacity={0.8}
+      onPress={() => router.push(`/event/${event.id}`)}
+    >
+      <View style={styles.imageWrapper}>
+        <Image source={{ uri: event.imageUrl }} style={styles.image} resizeMode="cover" />
+        {isSoldOut && (
+          <View style={styles.soldOverlay}>
+            <Text style={styles.soldOverlayText}>SOLD</Text>
+          </View>
+        )}
+      </View>
+      <View style={styles.info}>
+        <Text style={styles.name} numberOfLines={1}>{event.name}</Text>
+        <TouchableOpacity onPress={() => router.push(`/club/${event.clubId}`)}>
+          <Text style={styles.club} numberOfLines={1}>{event.club?.name}</Text>
+        </TouchableOpacity>
+        <View style={styles.metaRow}>
+          <Ionicons name="time-outline" size={11} color={Colors.textMuted} />
+          <Text style={styles.time}> {event.startTime}</Text>
+          {event.genres.slice(0, 1).map((g) => (
+            <View key={g} style={styles.genreTag}>
+              <Text style={styles.genreText}>{g}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+      <View style={styles.right}>
+        {isSoldOut ? (
+          <Text style={styles.soldText}>Esaurito</Text>
+        ) : (
+          <Text style={styles.price}>da €{minPrice}</Text>
+        )}
+        <TouchableOpacity
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            toggleFavorite(event.id);
+          }}
+          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+        >
+          <Ionicons
+            name={isFavorite(event.id) ? 'heart' : 'heart-outline'}
+            size={16}
+            color={isFavorite(event.id) ? Colors.accent : Colors.textMuted}
+          />
+        </TouchableOpacity>
+        <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  imageWrapper: {
+    position: 'relative',
+    width: 64,
+    height: 64,
+  },
+  image: {
+    width: 64,
+    height: 64,
+    borderRadius: 10,
+    backgroundColor: Colors.surfaceElevated,
+  },
+  soldOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  soldOverlayText: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: Colors.error,
+    letterSpacing: 1,
+  },
+  info: {
+    flex: 1,
+    marginLeft: 12,
+    marginRight: 8,
+  },
+  name: {
+    fontSize: 14,
+    fontFamily: Font.bold,
+    color: Colors.textPrimary,
+    marginBottom: 3,
+  },
+  club: {
+    fontSize: 12,
+    color: Colors.accent,
+    marginBottom: 5,
+    fontFamily: Font.medium,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
+  time: {
+    fontSize: 11,
+    color: Colors.textMuted,
+  },
+  genreTag: {
+    backgroundColor: 'rgba(168,85,247,0.14)',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  genreText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.accent,
+  },
+  right: {
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  price: {
+    fontSize: 13,
+    fontFamily: Font.bold,
+    color: Colors.accent,
+  },
+  soldText: {
+    fontSize: 12,
+    fontFamily: Font.bold,
+    color: Colors.error,
+  },
+});
