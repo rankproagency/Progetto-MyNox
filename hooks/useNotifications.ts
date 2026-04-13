@@ -5,6 +5,8 @@ import { Platform } from 'react-native';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
@@ -89,7 +91,7 @@ export async function scheduleEventReminders(
         data: { route: '/(tabs)/tickets' },
         sound: 'default',
       },
-      trigger: { seconds: secsDayBefore },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: secsDayBefore },
     });
   }
 
@@ -106,7 +108,7 @@ export async function scheduleEventReminders(
         data: { route: '/(tabs)/tickets' },
         sound: 'default',
       },
-      trigger: { seconds: secsSameDay },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: secsSameDay },
     });
   }
 
@@ -122,7 +124,7 @@ export async function scheduleEventReminders(
         data: { route: '/(tabs)/tickets' },
         sound: 'default',
       },
-      trigger: { seconds: secsOneHour },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: secsOneHour },
     });
   }
 }
@@ -152,6 +154,6 @@ export async function scheduleEventReminder(
       body: `${eventName} ti aspetta stasera. Mostra il QR all'ingresso.`,
       sound: 'default',
     },
-    trigger: { seconds: secs },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: secs },
   });
 }

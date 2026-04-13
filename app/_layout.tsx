@@ -7,6 +7,7 @@ import { TicketsProvider } from '../contexts/TicketsContext';
 import { ProfileProvider } from '../contexts/ProfileContext';
 import { WaitlistProvider } from '../contexts/WaitlistContext';
 import { RecentlyViewedProvider } from '../contexts/RecentlyViewedContext';
+import { EventsProvider } from '../contexts/EventsContext';
 import * as Notifications from 'expo-notifications';
 import { requestNotificationPermission } from '../hooks/useNotifications';
 import {
@@ -43,22 +44,24 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <ProfileProvider>
-        <TicketsProvider>
-          <WaitlistProvider>
-            <FavoritesProvider>
-              <RecentlyViewedProvider>
-                <RootNavigator />
-              </RecentlyViewedProvider>
-            </FavoritesProvider>
-          </WaitlistProvider>
-        </TicketsProvider>
+        <EventsProvider>
+          <TicketsProvider>
+            <WaitlistProvider>
+              <FavoritesProvider>
+                <RecentlyViewedProvider>
+                  <RootNavigator />
+                </RecentlyViewedProvider>
+              </FavoritesProvider>
+            </WaitlistProvider>
+          </TicketsProvider>
+        </EventsProvider>
       </ProfileProvider>
     </AuthProvider>
   );
 }
 
 function RootNavigator() {
-  const { user, isOnboarded } = useAuth();
+  const { user, isOnboarded, isLoading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
   const [ready, setReady] = useState(false);
@@ -78,7 +81,7 @@ function RootNavigator() {
   }, []);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || isLoading) return;
 
     const authScreens = ['onboarding', 'login', 'register'];
     const inAuthScreen = authScreens.includes(segments[0] as string);
@@ -90,7 +93,7 @@ function RootNavigator() {
     } else if (user && inAuthScreen) {
       router.replace('/(tabs)');
     }
-  }, [ready, user, isOnboarded, segments]);
+  }, [ready, isLoading, user, isOnboarded, segments]);
 
   return (
     <>

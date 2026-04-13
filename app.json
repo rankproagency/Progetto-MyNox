@@ -4,12 +4,12 @@
     "slug": "mynox",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash.png",
-      "resizeMode": "cover",
+      "resizeMode": "contain",
       "backgroundColor": "#07080f"
     },
     "ios": {
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#07080f"
       },
       "edgeToEdgeEnabled": true,
@@ -32,13 +32,14 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/logo.png",
+          "icon": "./assets/icon.png",
           "color": "#a855f7",
           "defaultChannel": "mynox-default",
           "androidMode": "default",
           "androidCollapsedTitle": "MyNox"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ]
   }
 }

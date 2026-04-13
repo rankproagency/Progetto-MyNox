@@ -17,7 +17,8 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'flex-start',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
   logo: {
     width: 90,

@@ -13,21 +13,26 @@ import { useState } from 'react';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
 import EventListItem from '../../components/EventListItem';
-import { MOCK_EVENTS, MOCK_CLUBS } from '../../lib/mockData';
 import { useRecentlyViewed } from '../../contexts/RecentlyViewedContext';
+import { useEvents } from '../../contexts/EventsContext';
 import AppHeader from '../../components/AppHeader';
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
   const { recentIds } = useRecentlyViewed();
+  const { events } = useEvents();
 
   const recentEvents = recentIds
-    .map((id) => MOCK_EVENTS.find((e) => e.id === id))
-    .filter(Boolean) as typeof MOCK_EVENTS;
+    .map((id) => events.find((e) => e.id === id))
+    .filter(Boolean) as typeof events;
+
+  const clubs = events
+    .map((e) => e.club)
+    .filter((c, i, arr) => c && arr.findIndex((x) => x?.id === c.id) === i);
 
   const trimmed = query.trim().toLowerCase();
   const filtered = trimmed
-    ? MOCK_EVENTS.filter(
+    ? events.filter(
         (e) =>
           e.name.toLowerCase().includes(trimmed) ||
           e.club?.name.toLowerCase().includes(trimmed) ||
@@ -36,10 +41,12 @@ export default function SearchScreen() {
     : null;
 
   const filteredClubs = trimmed
-    ? MOCK_CLUBS.filter(
-        (c) =>
-          c.name.toLowerCase().includes(trimmed) ||
-          c.city.toLowerCase().includes(trimmed)
+    ? clubs.filter(
+        (c): c is NonNullable<typeof c> =>
+          !!c && (
+            c.name.toLowerCase().includes(trimmed) ||
+            c.city.toLowerCase().includes(trimmed)
+          )
       )
     : null;
 
@@ -132,7 +139,7 @@ export default function SearchScreen() {
                 <Text style={styles.sectionTitle}>Esplora per genere</Text>
                 <View style={styles.genreGrid}>
                   {(['Techno','House','Deep House','Latin','Hip-Hop','Pop','R&B','Reggaeton','Commercial'] as const).map((genre) => {
-                    const count = MOCK_EVENTS.filter((e) => e.genres.includes(genre)).length;
+                    const count = events.filter((e) => e.genres.includes(genre)).length;
                     return (
                       <TouchableOpacity
                         key={genre}

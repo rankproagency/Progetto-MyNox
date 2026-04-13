@@ -22,7 +22,8 @@ import { Font } from '../../constants/typography';
 import EventCard from '../../components/EventCard';
 import EventListItem from '../../components/EventListItem';
 import TonightHero from '../../components/TonightHero';
-import { MOCK_EVENTS, FEATURED_EVENTS, ALL_GENRES, getEventsByDay } from '../../lib/mockData';
+import { ALL_GENRES } from '../../lib/mockData';
+import { useEvents } from '../../contexts/EventsContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Event, Genre } from '../../types';
 import AppHeader from '../../components/AppHeader';
@@ -73,7 +74,7 @@ function getCalendarGrid(year: number, month: number) {
   return grid;
 }
 
-const eventDateSet = new Set(MOCK_EVENTS.map((e) => e.date));
+// eventDateSet viene calcolato dinamicamente dentro il componente
 
 function applyFilters(
   events: Event[],
@@ -92,10 +93,30 @@ function applyFilters(
   });
 }
 
+function getEventsByDayFromList(events: ReturnType<typeof useEvents>['events']) {
+  const groups: Record<string, typeof events> = {};
+  for (const event of events) {
+    if (!groups[event.date]) groups[event.date] = [];
+    groups[event.date].push(event);
+  }
+  const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+  const MONTH_NAMES = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+  return Object.entries(groups)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, evs]) => {
+      const d = new Date(date);
+      const label = `${DAY_NAMES[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
+      return { day: date, label, events: evs };
+    });
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const { musicGenres } = useAuth();
-  const eventsByDay = getEventsByDay();
+  const { events, isLoading: eventsLoading } = useEvents();
+
+  const eventsByDay = getEventsByDayFromList(events);
+  const eventDateSet = new Set(events.map((e) => e.date));
 
   const [cityModalOpen, setCityModalOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState(CITIES[0]);
@@ -129,7 +150,7 @@ export default function HomeScreen() {
   const hasActiveFilters = maxPrice !== null || onlyAvailable || selectedGenres.length > 0;
 
   const recommended = musicGenres.length > 0
-    ? MOCK_EVENTS.filter((e) =>
+    ? events.filter((e) =>
         e.genres.some((g) => (musicGenres as string[]).includes(g)) &&
         e.ticketTypes.some((t) => t.available > 0)
       )
@@ -137,7 +158,7 @@ export default function HomeScreen() {
 
   const eventsForSelectedDate = selectedDate
     ? applyFilters(
-        MOCK_EVENTS.filter((e) => e.date === selectedDate),
+        events.filter((e) => e.date === selectedDate),
         maxPrice, onlyAvailable, selectedGenres
       )
     : null;
@@ -468,8 +489,12 @@ export default function HomeScreen() {
           ) : (
             <>
               {/* Stasera */}
-              <Text style={styles.sectionTitle}>Stasera</Text>
-              <TonightHero event={MOCK_EVENTS[0]} />
+              {events.length > 0 && (
+                <>
+                  <Text style={styles.sectionTitle}>Stasera</Text>
+                  <TonightHero event={events[0]} />
+                </>
+              )}
 
               {/* Consigliati per te */}
               {recommended.length > 0 && (
@@ -499,7 +524,7 @@ export default function HomeScreen() {
               {/* In evidenza */}
               <Text style={[styles.sectionTitle, recommended.length > 0 && styles.sectionSpacing]}>In evidenza</Text>
               <FlatList
-                data={FEATURED_EVENTS}
+                data={events.slice(0, 3)}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => <EventCard event={item} />}
                 horizontal
@@ -511,13 +536,13 @@ export default function HomeScreen() {
 
               {/* Questa settimana */}
               <Text style={[styles.sectionTitle, styles.sectionSpacing]}>Questa settimana</Text>
-              {eventsByDay.map(({ day, label, events }) => (
+              {eventsByDay.map(({ day, label, events: dayEvents }) => (
                 <View key={day} style={styles.dayGroup}>
                   <View style={styles.dayHeader}>
                     <Text style={styles.dayLabel}>{label}</Text>
                     <View style={styles.dayLine} />
                   </View>
-                  {events.map((event) => (
+                  {dayEvents.map((event) => (
                     <EventListItem key={event.id} event={event} />
                   ))}
                 </View>

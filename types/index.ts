@@ -61,6 +61,10 @@ export interface Table {
   capacity: number;
   deposit: number;
   available: boolean;
+  posX?: number;
+  posY?: number;
+  section?: string;
+  tableNumber?: number;
 }
 
 export interface Ticket {

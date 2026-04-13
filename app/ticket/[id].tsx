@@ -307,11 +307,11 @@ const styles = StyleSheet.create({
   usedBadgeText: { fontSize: 13, color: Colors.error, fontWeight: '600' },
   baristaBtm: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: 12, borderWidth: 1, borderColor: Colors.border,
-    paddingHorizontal: 20, paddingVertical: 12, marginBottom: 10,
+    backgroundColor: Colors.success,
+    borderRadius: 12,
+    paddingHorizontal: 20, paddingVertical: 13, marginBottom: 10,
   },
-  baristaText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
+  baristaText: { fontSize: 14, fontWeight: '700', color: Colors.white },
   bouncerBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: Colors.success,

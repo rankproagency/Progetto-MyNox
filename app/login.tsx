@@ -33,8 +33,12 @@ export default function LoginScreen() {
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await login(email.trim(), password);
-    router.replace('/(tabs)');
+    try {
+      await login(email.trim(), password);
+      router.replace('/(tabs)');
+    } catch (e: any) {
+      Alert.alert('Accesso fallito', e.message ?? 'Credenziali non valide.');
+    }
   }
 
   return (
@@ -161,8 +165,8 @@ const styles = StyleSheet.create({
   bgGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 350 },
   scroll: { paddingHorizontal: 24, paddingBottom: 40 },
 
-  logoSection: { alignItems: 'center', paddingTop: 56, paddingBottom: 44 },
-  logoImage: { width: 300, height: 85, marginBottom: 12 },
+  logoSection: { alignItems: 'center', paddingTop: 100, paddingBottom: 44 },
+  logoImage: { width: 254, height: 72, marginBottom: 12 },
   logoSub: { fontSize: 16, color: Colors.textSecondary, fontWeight: '500' },
 
   form: { gap: 20, marginBottom: 28 },

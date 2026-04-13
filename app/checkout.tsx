@@ -15,9 +15,16 @@ import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
-import { MOCK_EVENTS } from '../lib/mockData';
+import { useEvents } from '../contexts/EventsContext';
 import { notifyTicketConfirmed, scheduleEventReminders } from '../hooks/useNotifications';
 import { useTickets } from '../contexts/TicketsContext';
+
+function generateId(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
 
 const PROMO_CODES: Record<string, { type: 'percent' | 'flat'; value: number; label: string }> = {
   LAUNCH10: { type: 'percent', value: 10, label: '10% di sconto' },
@@ -36,7 +43,8 @@ export default function CheckoutScreen() {
   const router = useRouter();
   const { addTickets } = useTickets();
 
-  const event = MOCK_EVENTS.find((e) => e.id === eventId);
+  const { events } = useEvents();
+  const event = events.find((e) => e.id === eventId);
   const ticket = event?.ticketTypes.find((t) => t.id === ticketId);
   const table = tableId ? event?.tables.find((t) => t.id === tableId) : null;
   const quantity = Math.max(1, parseInt(qty ?? '1', 10));
@@ -45,6 +53,7 @@ export default function CheckoutScreen() {
   const [appliedPromo, setAppliedPromo] = useState<(typeof PROMO_CODES)[string] | null>(null);
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState<'apple' | 'card' | 'google'>('apple');
 
   if (!event || !ticket) return null;
 
@@ -94,8 +103,8 @@ export default function CheckoutScreen() {
               // notification failure must not block ticket creation
             }
             const formatted = formatDate(event!.date);
-            const newTickets = Array.from({ length: quantity }, (_, i) => {
-              const id = `ticket-${Date.now()}-${i}`;
+            const newTickets = Array.from({ length: quantity }, () => {
+              const id = generateId();
               return {
                 id,
                 eventId: event!.id,
@@ -105,13 +114,13 @@ export default function CheckoutScreen() {
                 date: formatted,
                 startTime: event!.startTime,
                 ticketLabel: ticket!.label,
-                qrCode: `MYNOX-TICKET-${id}-2026`,
-                drinkQrCode: `MYNOX-DRINK-${id}-2026`,
+                qrCode: `MYNOX-TICKET-${id}`,
+                drinkQrCode: `MYNOX-DRINK-${id}`,
                 drinkUsed: false,
                 status: 'valid' as const,
               };
             });
-            addTickets(newTickets);
+            await addTickets(newTickets);
             router.replace('/(tabs)/tickets');
           },
         },
@@ -227,17 +236,23 @@ export default function CheckoutScreen() {
         {/* Metodi di pagamento */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Paga con</Text>
-          <PayMethod icon="logo-apple" label="Apple Pay" />
-          <PayMethod icon="card-outline" label="Carta di credito / debito" />
-          <PayMethod icon="phone-portrait-outline" label="Google Pay" />
+          <PayMethod icon="logo-apple" label="Apple Pay" active={selectedMethod === 'apple'} onPress={() => { Haptics.selectionAsync(); setSelectedMethod('apple'); }} />
+          <PayMethod icon="card-outline" label="Carta di credito / debito" active={selectedMethod === 'card'} onPress={() => { Haptics.selectionAsync(); setSelectedMethod('card'); }} />
+          <PayMethod icon="phone-portrait-outline" label="Google Pay" active={selectedMethod === 'google'} onPress={() => { Haptics.selectionAsync(); setSelectedMethod('google'); }} />
         </View>
 
       </ScrollView>
 
       <View style={styles.ctaContainer}>
         <TouchableOpacity style={styles.ctaButton} activeOpacity={0.85} onPress={handlePay}>
-          <Ionicons name="lock-closed" size={16} color={Colors.white} />
-          <Text style={styles.ctaText}>Paga €{total}</Text>
+          <Ionicons
+            name={selectedMethod === 'apple' ? 'logo-apple' : selectedMethod === 'google' ? 'phone-portrait-outline' : 'card-outline'}
+            size={16}
+            color={Colors.white}
+          />
+          <Text style={styles.ctaText}>
+            {selectedMethod === 'apple' ? 'Paga con Apple Pay' : selectedMethod === 'google' ? 'Paga con Google Pay' : `Paga €${total}`}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -260,12 +275,24 @@ function Row({
   );
 }
 
-function PayMethod({ icon, label }: { icon: React.ComponentProps<typeof Ionicons>['name']; label: string }) {
+function PayMethod({ icon, label, active, onPress }: {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  label: string;
+  active?: boolean;
+  onPress?: () => void;
+}) {
   return (
-    <TouchableOpacity style={styles.payMethod} activeOpacity={0.8}>
-      <Ionicons name={icon} size={20} color={Colors.textSecondary} />
-      <Text style={styles.payLabel}>{label}</Text>
-      <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+    <TouchableOpacity
+      style={[styles.payMethod, active && styles.payMethodActive]}
+      activeOpacity={0.8}
+      onPress={onPress}
+    >
+      <Ionicons name={icon} size={20} color={active ? Colors.accent : Colors.textSecondary} />
+      <Text style={[styles.payLabel, active && styles.payLabelActive]}>{label}</Text>
+      {active
+        ? <Ionicons name="checkmark-circle" size={18} color={Colors.accent} />
+        : <Ionicons name="radio-button-off" size={18} color={Colors.border} />
+      }
     </TouchableOpacity>
   );
 }
@@ -354,7 +381,12 @@ const styles = StyleSheet.create({
     borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
     padding: 14, marginBottom: 8,
   },
+  payMethodActive: {
+    borderColor: Colors.accent,
+    backgroundColor: 'rgba(168,85,247,0.07)',
+  },
   payLabel: { flex: 1, fontSize: 14, fontWeight: '500', color: Colors.textPrimary },
+  payLabelActive: { color: Colors.accent, fontWeight: '700' },
   ctaContainer: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     paddingHorizontal: 20, paddingVertical: 16, paddingBottom: 32,

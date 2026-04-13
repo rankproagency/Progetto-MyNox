@@ -6,16 +6,17 @@ import { useRouter } from 'expo-router';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import EventListItem from '../components/EventListItem';
-import { MOCK_EVENTS } from '../lib/mockData';
 import { useFavorites } from '../contexts/FavoritesContext';
+import { useEvents } from '../contexts/EventsContext';
 
 export default function FavoritesScreen() {
   const router = useRouter();
   const { favoriteIds } = useFavorites();
+  const { events } = useEvents();
 
   const favorites = favoriteIds
-    .map((id) => MOCK_EVENTS.find((e) => e.id === id))
-    .filter(Boolean) as typeof MOCK_EVENTS;
+    .map((id) => events.find((e) => e.id === id))
+    .filter(Boolean) as typeof events;
 
   return (
     <View style={styles.container}>

@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { supabase } from '../lib/supabase';
+import type { Session } from '@supabase/supabase-js';
 
 export interface AuthUser {
   id: string;
@@ -22,7 +24,7 @@ interface AuthCtx {
 const AuthContext = createContext<AuthCtx>({
   user: null,
   isOnboarded: false,
-  isLoading: false,
+  isLoading: true,
   login: async () => {},
   register: async () => {},
   logout: () => {},
@@ -32,30 +34,94 @@ const AuthContext = createContext<AuthCtx>({
   setMusicGenres: () => {},
 });
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const KEYS = {
+  onboarded: '@mynox_onboarded',
+  genres: '@mynox_genres',
+};
+
+function sessionToUser(session: Session): AuthUser {
+  return {
+    id: session.user.id,
+    name: session.user.user_metadata?.name ?? session.user.email?.split('@')[0] ?? '',
+    email: session.user.email ?? '',
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isOnboarded, setIsOnboarded] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [musicGenres, setMusicGenres] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [musicGenres, setMusicGenresState] = useState<string[]>([]);
 
-  const login = useCallback(async (email: string, _password: string) => {
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    setUser({ id: 'mock-user-1', name: email.split('@')[0], email });
-    setIsLoading(false);
+  useEffect(() => {
+    async function init() {
+      try {
+        const [{ data: { session } }, rawOnboarded, rawGenres] = await Promise.all([
+          supabase.auth.getSession(),
+          AsyncStorage.getItem(KEYS.onboarded),
+          AsyncStorage.getItem(KEYS.genres),
+        ]);
+        if (session) setUser(sessionToUser(session));
+        if (rawOnboarded === 'true') setIsOnboarded(true);
+        if (rawGenres) setMusicGenresState(JSON.parse(rawGenres));
+      } catch (_) {
+        // start fresh
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    init();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session ? sessionToUser(session) : null);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
-  const register = useCallback(async (name: string, email: string, _password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    setUser({ id: 'mock-user-1', name, email });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     setIsLoading(false);
+    if (error) throw new Error(error.message);
   }, []);
 
-  const logout = useCallback(() => setUser(null), []);
-  const completeOnboarding = useCallback(() => setIsOnboarded(true), []);
-  const updateUser = useCallback((updates: Partial<Pick<AuthUser, 'name' | 'email'>>) => {
+  const register = useCallback(async (name: string, email: string, password: string) => {
+    setIsLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name } },
+    });
+    setIsLoading(false);
+    if (error) throw new Error(error.message);
+  }, []);
+
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  }, []);
+
+  const completeOnboarding = useCallback(async () => {
+    setIsOnboarded(true);
+    await AsyncStorage.setItem(KEYS.onboarded, 'true');
+  }, []);
+
+  const updateUser = useCallback(async (updates: Partial<Pick<AuthUser, 'name' | 'email'>>) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    await supabase.from('profiles').update(updates).eq('id', session.user.id);
     setUser((prev) => prev ? { ...prev, ...updates } : prev);
+  }, []);
+
+  const setMusicGenres = useCallback(async (genres: string[]) => {
+    setMusicGenresState(genres);
+    await AsyncStorage.setItem(KEYS.genres, JSON.stringify(genres));
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await supabase.from('profiles').update({ music_genres: genres }).eq('id', session.user.id);
+    }
   }, []);
 
   return (

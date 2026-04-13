@@ -17,8 +17,9 @@ import { useState, useEffect } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
-import { MOCK_EVENTS } from '../../lib/mockData';
+import { useEvents } from '../../contexts/EventsContext';
 import { TicketType, Table } from '../../types';
+import TableMap from '../../components/TableMap';
 import { useFavorites } from '../../contexts/FavoritesContext';
 import { useWaitlist } from '../../contexts/WaitlistContext';
 import { useRecentlyViewed } from '../../contexts/RecentlyViewedContext';
@@ -31,7 +32,8 @@ export default function EventScreen() {
   const { isFavorite, toggleFavorite } = useFavorites();
   const { isOnWaitlist, addToWaitlist, removeFromWaitlist } = useWaitlist();
   const { addRecentlyViewed } = useRecentlyViewed();
-  const event = MOCK_EVENTS.find((e) => e.id === id);
+  const { events } = useEvents();
+  const event = events.find((e) => e.id === id);
 
   useEffect(() => {
     if (id) addRecentlyViewed(id);
@@ -168,16 +170,24 @@ export default function EventScreen() {
           </View>
         )}
 
-        {/* Contatore acquisti */}
+        {/* Contatore disponibilità */}
         <View style={styles.section}>
           <View style={styles.soldRow}>
             <View style={styles.soldLeft}>
               <Ionicons name="flame" size={16} color={Colors.accent} />
-              <Text style={styles.soldText}>
-                <Text style={styles.soldCount}>{event.ticketsSold}</Text> persone hanno già acquistato
-              </Text>
+              {event.ticketsSold > 0 ? (
+                <Text style={styles.soldText}>
+                  <Text style={styles.soldCount}>{event.ticketsSold}</Text> persone hanno già acquistato
+                </Text>
+              ) : (
+                <Text style={styles.soldText}>
+                  <Text style={styles.soldCount}>{event.capacity}</Text> posti disponibili
+                </Text>
+              )}
             </View>
-            <Text style={styles.soldPercent}>{soldPercent}%</Text>
+            <Text style={styles.soldPercent}>
+              {event.ticketsSold > 0 ? `${soldPercent}%` : 'Biglietti aperti'}
+            </Text>
           </View>
           <View style={styles.progressBar}>
             <View style={[styles.progressFill, { width: `${Math.min(soldPercent, 100)}%` }]} />
@@ -276,7 +286,6 @@ export default function EventScreen() {
                 </View>
                 <View>
                   <Text style={styles.ticketLabel}>{ticket.label}</Text>
-                  <Text style={styles.ticketAvailable}>{ticket.available} disponibili</Text>
                 </View>
               </View>
               <View style={styles.ticketRight}>
@@ -313,49 +322,14 @@ export default function EventScreen() {
         {event.tables.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Prenota un tavolo</Text>
-            <Text style={styles.sectionSubtitle}>Solo caparra — il resto si paga in loco</Text>
-            <TouchableOpacity
-              style={[styles.ticketOption, selectedTable === null && styles.noTableOption]}
-              onPress={() => setSelectedTable(null)}
-              activeOpacity={0.8}
-            >
-              <View style={styles.ticketLeft}>
-                <View style={[styles.radio, selectedTable === null && styles.radioActive]}>
-                  {selectedTable === null && <View style={styles.radioDot} />}
-                </View>
-                <Text style={styles.ticketLabel}>Nessun tavolo</Text>
-              </View>
-            </TouchableOpacity>
-            {event.tables.map((table) => (
-              <TouchableOpacity
-                key={table.id}
-                style={[
-                  styles.ticketOption,
-                  selectedTable?.id === table.id && styles.ticketSelected,
-                  !table.available && styles.ticketDisabled,
-                ]}
-                onPress={() => table.available && setSelectedTable(table)}
-                activeOpacity={table.available ? 0.8 : 1}
-              >
-                <View style={styles.ticketLeft}>
-                  <View style={[styles.radio, selectedTable?.id === table.id && styles.radioActive]}>
-                    {selectedTable?.id === table.id && <View style={styles.radioDot} />}
-                  </View>
-                  <View>
-                    <Text style={[styles.ticketLabel, !table.available && styles.disabledText]}>
-                      {table.label}
-                    </Text>
-                    {!table.available && <Text style={styles.soldOut}>Esaurito</Text>}
-                  </View>
-                </View>
-                <View style={styles.ticketRight}>
-                  <Text style={[styles.ticketPrice, !table.available && styles.disabledText]}>
-                    €{table.deposit}
-                  </Text>
-                  <Text style={styles.ticketDrink}>caparra</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
+            <Text style={styles.sectionSubtitle}>
+              Tocca un tavolo sulla mappa per selezionarlo · Solo caparra, il resto in loco
+            </Text>
+            <TableMap
+              tables={event.tables}
+              selected={selectedTable}
+              onSelect={setSelectedTable}
+            />
           </View>
         )}
 

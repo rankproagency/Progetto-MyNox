@@ -9,15 +9,28 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Image,
+  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/colors';
 import { useAuth } from '../contexts/AuthContext';
+
+const MAX_DATE = new Date();
+MAX_DATE.setFullYear(MAX_DATE.getFullYear() - 18); // non si può selezionare meno di 18 anni fa
+
+function formatDOB(date: Date): string {
+  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const y = date.getFullYear();
+  return `${d}/${m}/${y}`;
+}
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -26,18 +39,12 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [dateOfBirth, setDateOfBirth] = useState('');
-
-  function validateAge(dob: string): boolean {
-    const parts = dob.split('/');
-    if (parts.length !== 3) return false;
-    const birth = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-    const age = (Date.now() - birth.getTime()) / (365.25 * 24 * 3600 * 1000);
-    return age >= 18;
-  }
+  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
+  const [showPicker, setShowPicker] = useState(false);
+  const [tempDate, setTempDate] = useState<Date>(MAX_DATE);
 
   async function handleRegister() {
-    if (!name.trim() || !email.trim() || !password.trim() || !dateOfBirth.trim()) {
+    if (!name.trim() || !email.trim() || !password.trim() || !dateOfBirth) {
       Alert.alert('Errore', 'Compila tutti i campi.');
       return;
     }
@@ -49,13 +56,23 @@ export default function RegisterScreen() {
       Alert.alert('Errore', 'La password deve essere di almeno 6 caratteri.');
       return;
     }
-    if (!validateAge(dateOfBirth)) {
-      Alert.alert('Accesso negato', 'Devi avere almeno 18 anni per usare MyNox.');
-      return;
-    }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await register(name.trim(), email.trim(), password);
-    router.replace('/(tabs)');
+    try {
+      await register(name.trim(), email.trim(), password);
+      router.replace('/(tabs)');
+    } catch (e: any) {
+      Alert.alert('Registrazione fallita', e.message ?? 'Riprova più tardi.');
+    }
+  }
+
+  function handlePickerChange(_: any, selected?: Date) {
+    if (selected) setTempDate(selected);
+  }
+
+  function confirmDate() {
+    setDateOfBirth(tempDate);
+    setShowPicker(false);
+    Haptics.selectionAsync();
   }
 
   return (
@@ -72,13 +89,16 @@ export default function RegisterScreen() {
         >
           <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-            {/* Header */}
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
             </TouchableOpacity>
 
             <View style={styles.logoSection}>
-              <Text style={styles.logo}>MYNOX</Text>
+              <Image
+                source={require('../assets/logo-cropped.png')}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
               <Text style={styles.logoSub}>Crea il tuo account</Text>
             </View>
 
@@ -117,14 +137,22 @@ export default function RegisterScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
-              <InputField
-                label="Data di nascita"
-                icon="calendar-outline"
-                value={dateOfBirth}
-                onChangeText={setDateOfBirth}
-                placeholder="GG/MM/AAAA"
-                keyboardType="numeric"
-              />
+
+              {/* Data di nascita — picker nativo */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Data di nascita</Text>
+                <TouchableOpacity
+                  style={[styles.inputRow, styles.dateRow]}
+                  onPress={() => { Haptics.selectionAsync(); setShowPicker(true); }}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="calendar-outline" size={18} color={Colors.textMuted} style={styles.inputIcon} />
+                  <Text style={[styles.dateText, !dateOfBirth && styles.datePlaceholder]}>
+                    {dateOfBirth ? formatDOB(dateOfBirth) : 'Seleziona la tua data di nascita'}
+                  </Text>
+                  <Ionicons name="chevron-down" size={16} color={Colors.textMuted} />
+                </TouchableOpacity>
+              </View>
             </View>
 
             <View style={styles.ageNote}>
@@ -155,6 +183,36 @@ export default function RegisterScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      {/* Date picker modal */}
+      {showPicker && (
+        <Modal transparent animationType="slide" onRequestClose={() => setShowPicker(false)}>
+          <TouchableOpacity style={styles.pickerOverlay} activeOpacity={1} onPress={() => setShowPicker(false)} />
+          <View style={styles.pickerSheet}>
+            <View style={styles.pickerHandle} />
+            <View style={styles.pickerHeader}>
+              <TouchableOpacity onPress={() => setShowPicker(false)}>
+                <Text style={styles.pickerCancel}>Annulla</Text>
+              </TouchableOpacity>
+              <Text style={styles.pickerTitle}>Data di nascita</Text>
+              <TouchableOpacity onPress={confirmDate}>
+                <Text style={styles.pickerConfirm}>Conferma</Text>
+              </TouchableOpacity>
+            </View>
+            <DateTimePicker
+              value={tempDate}
+              mode="date"
+              display="spinner"
+              maximumDate={MAX_DATE}
+              minimumDate={new Date(1920, 0, 1)}
+              onChange={handlePickerChange}
+              textColor={Colors.textPrimary}
+              locale="it-IT"
+              style={styles.picker}
+            />
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -201,15 +259,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
     marginTop: 12, marginBottom: 24,
   },
-  logoSection: { alignItems: 'center', paddingBottom: 36 },
-  logo: {
-    fontSize: 32, fontWeight: '900', color: Colors.textPrimary,
-    letterSpacing: 6,
-    textShadowColor: Colors.accent,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 14,
-    marginBottom: 8,
-  },
+  logoSection: { alignItems: 'center', paddingTop: 16, paddingBottom: 36 },
+  logoImage: { width: 254, height: 72, marginBottom: 12 },
   logoSub: { fontSize: 16, color: Colors.textSecondary, fontWeight: '500' },
 
   form: { gap: 20, marginBottom: 16 },
@@ -224,6 +275,10 @@ const styles = StyleSheet.create({
   inputIcon: { marginRight: 10 },
   input: { flex: 1, paddingVertical: 14, fontSize: 15, color: Colors.textPrimary },
   eyeBtn: { padding: 4 },
+
+  dateRow: { paddingVertical: 14 },
+  dateText: { flex: 1, fontSize: 15, color: Colors.textPrimary },
+  datePlaceholder: { color: Colors.textMuted },
 
   ageNote: {
     flexDirection: 'row', gap: 8, alignItems: 'flex-start',
@@ -244,4 +299,30 @@ const styles = StyleSheet.create({
   loginRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   loginText: { fontSize: 14, color: Colors.textSecondary },
   loginLink: { fontSize: 14, fontWeight: '700', color: Colors.accent },
+
+  // Picker
+  pickerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  pickerSheet: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    borderWidth: 1, borderBottomWidth: 0, borderColor: Colors.border,
+    paddingBottom: 40,
+  },
+  pickerHandle: {
+    alignSelf: 'center', marginTop: 12, marginBottom: 4,
+    width: 36, height: 4, borderRadius: 2, backgroundColor: Colors.border,
+  },
+  pickerHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: 20, paddingVertical: 14,
+    borderBottomWidth: 1, borderBottomColor: Colors.border,
+  },
+  pickerTitle: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary },
+  pickerCancel: { fontSize: 15, color: Colors.textMuted },
+  pickerConfirm: { fontSize: 15, fontWeight: '700', color: Colors.accent },
+  picker: { width: '100%' },
 });
