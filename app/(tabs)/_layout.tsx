@@ -29,6 +29,7 @@ export default function TabsLayout() {
             intensity={60}
             tint="dark"
             style={StyleSheet.absoluteFill}
+            pointerEvents="none"
           />
         ),
         tabBarActiveTintColor: Colors.accent,

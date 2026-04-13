@@ -82,9 +82,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setIsLoading(false);
-    if (error) throw new Error(error.message);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw new Error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
@@ -99,8 +102,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await supabase.auth.signOut();
-    setUser(null);
+    try {
+      await supabase.auth.signOut();
+    } finally {
+      setUser(null);
+    }
   }, []);
 
   const completeOnboarding = useCallback(async () => {
