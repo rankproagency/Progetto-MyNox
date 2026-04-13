@@ -52,7 +52,7 @@ export default function ProfileScreen() {
   return (
     <View style={styles.outerContainer}>
       <LinearGradient
-        colors={['rgba(168,85,247,0.12)', 'transparent']}
+        colors={['rgba(168,85,247,0.22)', 'transparent']}
         style={styles.bgGradient}
         pointerEvents="none"
       />

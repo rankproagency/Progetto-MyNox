@@ -71,7 +71,7 @@ export default function TicketsScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['rgba(168,85,247,0.12)', 'transparent']} style={styles.bgGradient} pointerEvents="none" />
+      <LinearGradient colors={['rgba(168,85,247,0.22)', 'transparent']} style={styles.bgGradient} pointerEvents="none" />
       <SafeAreaView style={{ flex: 1 }}>
         <AppHeader />
 

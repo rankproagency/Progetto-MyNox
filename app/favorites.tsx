@@ -21,7 +21,7 @@ export default function FavoritesScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['rgba(168,85,247,0.12)', 'transparent']}
+        colors={['rgba(168,85,247,0.22)', 'transparent']}
         style={styles.bgGradient}
         pointerEvents="none"
       />

@@ -149,6 +149,8 @@ export default function HomeScreen() {
 
   const hasActiveFilters = maxPrice !== null || onlyAvailable || selectedGenres.length > 0;
 
+  const tonightEvent = events.find((e) => e.date === today && e.ticketTypes.some((t) => t.available > 0)) ?? null;
+
   const recommended = musicGenres.length > 0
     ? events.filter((e) =>
         e.genres.some((g) => (musicGenres as string[]).includes(g)) &&
@@ -193,7 +195,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['rgba(168,85,247,0.12)', 'transparent']}
+        colors={['rgba(168,85,247,0.22)', 'transparent']}
         style={styles.bgGradient}
         pointerEvents="none"
       />
@@ -489,10 +491,10 @@ export default function HomeScreen() {
           ) : (
             <>
               {/* Stasera */}
-              {events.length > 0 && (
+              {tonightEvent && (
                 <>
                   <Text style={styles.sectionTitle}>Stasera</Text>
-                  <TonightHero event={events[0]} />
+                  <TonightHero event={tonightEvent} />
                 </>
               )}
 

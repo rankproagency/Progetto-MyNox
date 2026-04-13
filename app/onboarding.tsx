@@ -88,7 +88,7 @@ export default function OnboardingScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['rgba(168,85,247,0.08)', 'transparent']}
+        colors={['rgba(168,85,247,0.18)', 'transparent']}
         style={styles.bgGradient}
         pointerEvents="none"
       />

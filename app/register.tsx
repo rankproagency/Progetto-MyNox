@@ -38,13 +38,15 @@ export default function RegisterScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const [showPicker, setShowPicker] = useState(false);
   const [tempDate, setTempDate] = useState<Date>(MAX_DATE);
 
   async function handleRegister() {
-    if (!name.trim() || !email.trim() || !password.trim() || !dateOfBirth) {
+    if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim() || !dateOfBirth) {
       Alert.alert('Errore', 'Compila tutti i campi.');
       return;
     }
@@ -54,6 +56,10 @@ export default function RegisterScreen() {
     }
     if (password.length < 6) {
       Alert.alert('Errore', 'La password deve essere di almeno 6 caratteri.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert('Errore', 'Le password non coincidono.');
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -78,7 +84,7 @@ export default function RegisterScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['rgba(168,85,247,0.1)', 'transparent']}
+        colors={['rgba(168,85,247,0.20)', 'transparent']}
         style={styles.bgGradient}
         pointerEvents="none"
       />
@@ -108,7 +114,7 @@ export default function RegisterScreen() {
                 icon="person-outline"
                 value={name}
                 onChangeText={setName}
-                placeholder="Pietro Tortelotti"
+                placeholder="nome e cognome"
               />
               <InputField
                 label="Email"
@@ -136,6 +142,31 @@ export default function RegisterScreen() {
                     <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={Colors.textMuted} />
                   </TouchableOpacity>
                 </View>
+              </View>
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Conferma password</Text>
+                <View style={[
+                  styles.inputRow,
+                  confirmPassword.length > 0 && password !== confirmPassword && styles.inputRowError,
+                ]}>
+                  <Ionicons name="lock-closed-outline" size={18} color={Colors.textMuted} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    placeholder="Ripeti la password"
+                    placeholderTextColor={Colors.textMuted}
+                    secureTextEntry={!showConfirmPassword}
+                    autoCapitalize="none"
+                  />
+                  <TouchableOpacity onPress={() => setShowConfirmPassword((v) => !v)} style={styles.eyeBtn}>
+                    <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={Colors.textMuted} />
+                  </TouchableOpacity>
+                </View>
+                {confirmPassword.length > 0 && password !== confirmPassword && (
+                  <Text style={styles.fieldError}>Le password non coincidono</Text>
+                )}
               </View>
 
               {/* Data di nascita — picker nativo */}
@@ -275,6 +306,8 @@ const styles = StyleSheet.create({
   inputIcon: { marginRight: 10 },
   input: { flex: 1, paddingVertical: 14, fontSize: 15, color: Colors.textPrimary },
   eyeBtn: { padding: 4 },
+  inputRowError: { borderColor: Colors.error },
+  fieldError: { fontSize: 12, color: Colors.error, marginTop: 2 },
 
   dateRow: { paddingVertical: 14 },
   dateText: { flex: 1, fontSize: 15, color: Colors.textPrimary },

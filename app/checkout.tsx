@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
@@ -130,6 +131,12 @@ export default function CheckoutScreen() {
   }
 
   return (
+    <View style={styles.outerContainer}>
+      <LinearGradient
+        colors={['rgba(168,85,247,0.20)', 'transparent']}
+        style={styles.bgGradient}
+        pointerEvents="none"
+      />
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -256,6 +263,7 @@ export default function CheckoutScreen() {
         </TouchableOpacity>
       </View>
     </SafeAreaView>
+    </View>
   );
 }
 
@@ -315,7 +323,9 @@ const rowStyles = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  outerContainer: { flex: 1, backgroundColor: Colors.background },
+  bgGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 14,
@@ -397,6 +407,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     backgroundColor: Colors.accent,
     borderRadius: 16, paddingVertical: 16,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 10,
   },
   ctaText: { fontSize: 16, fontFamily: Font.extraBold, color: Colors.white },
 });
