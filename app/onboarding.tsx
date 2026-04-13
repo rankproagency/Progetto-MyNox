@@ -192,10 +192,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   bgGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
-  logoBar: { alignItems: 'center', paddingTop: 52 },
+  logoBar: { alignItems: 'center', paddingTop: 28 },
   logoImage: {
-    width: 254,
-    height: 72,
+    width: 220,
+    height: 62,
   },
 
   slider: { flex: 1 },

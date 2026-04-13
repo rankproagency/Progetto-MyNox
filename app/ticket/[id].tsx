@@ -70,127 +70,151 @@ export default function TicketScreen() {
           </View>
         </View>
 
-        {/* Toggle QR */}
-        <View style={styles.toggle}>
-          <TouchableOpacity
-            style={[styles.toggleBtn, activeQR === 'entry' && styles.toggleActive]}
-            onPress={() => { Haptics.selectionAsync(); setActiveQR('entry'); }}
-          >
-            <Text style={[styles.toggleText, activeQR === 'entry' && styles.toggleTextActive]}>Ingresso</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.toggleBtn, activeQR === 'drink' && styles.toggleActive]}
-            onPress={() => { Haptics.selectionAsync(); setActiveQR('drink'); }}
-          >
-            <Text style={[styles.toggleText, activeQR === 'drink' && styles.toggleTextActive]}>Free drink</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Ticket card — toggle + separatore perforato + QR */}
+        <View style={styles.ticketCard}>
 
-        {/* QR Code */}
-        <View style={styles.qrContainer}>
-          {activeQR === 'entry' ? (
-            <>
-              <View style={[styles.qrWrapper, ticket.status === 'used' && styles.qrUsed]}>
-                <QRCode
-                  value={ticket.qrCode}
-                  size={220}
-                  backgroundColor="white"
-                  color={ticket.status === 'used' ? '#aaa' : 'black'}
-                />
-                {ticket.status === 'used' && (
-                  <View style={styles.usedOverlay}>
-                    <Text style={styles.usedText}>USATO</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.qrLabel}>
-                {ticket.status === 'used' ? 'Biglietto già scansionato' : 'Mostra questo QR al buttafuori'}
-              </Text>
-              {ticket.status === 'used' ? (
-                <View style={[styles.usedBadge, { marginBottom: 24 }]}>
-                  <Ionicons name="close-circle" size={14} color={Colors.error} />
-                  <Text style={styles.usedBadgeText}> Ingresso effettuato</Text>
-                </View>
-              ) : (
-                <>
-                  <View style={[styles.validBadge, { marginBottom: 16 }]}>
-                    <Ionicons name="checkmark-circle" size={14} color={Colors.success} />
-                    <Text style={styles.validText}> Valido</Text>
-                  </View>
-                  {isEventToday && (
-                    <>
-                      <TouchableOpacity
-                        style={styles.bouncerBtn}
-                        onPress={() => {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                          markTicketUsed(ticket.id);
-                        }}
-                      >
-                        <Ionicons name="shield-checkmark-outline" size={16} color={Colors.white} />
-                        <Text style={styles.bouncerBtnText}>Segna come usato (buttafuori)</Text>
-                      </TouchableOpacity>
-                      <View style={styles.actionDisclaimer}>
-                        <Ionicons name="warning-outline" size={12} color={Colors.warning} />
-                        <Text style={styles.actionDisclaimerText}>
-                          Attenzione: una volta segnato come usato non è possibile riattivare il biglietto.
-                        </Text>
-                      </View>
-                    </>
+          {/* Toggle */}
+          <View style={styles.toggle}>
+            <TouchableOpacity
+              style={[styles.toggleBtn, activeQR === 'entry' && styles.toggleActive]}
+              onPress={() => { Haptics.selectionAsync(); setActiveQR('entry'); }}
+            >
+              <Ionicons
+                name="scan-outline"
+                size={14}
+                color={activeQR === 'entry' ? Colors.white : Colors.textMuted}
+                style={{ marginRight: 4 }}
+              />
+              <Text style={[styles.toggleText, activeQR === 'entry' && styles.toggleTextActive]}>Ingresso</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.toggleBtn, activeQR === 'drink' && styles.toggleActive]}
+              onPress={() => { Haptics.selectionAsync(); setActiveQR('drink'); }}
+            >
+              <Ionicons
+                name="wine-outline"
+                size={14}
+                color={activeQR === 'drink' ? Colors.white : Colors.textMuted}
+                style={{ marginRight: 4 }}
+              />
+              <Text style={[styles.toggleText, activeQR === 'drink' && styles.toggleTextActive]}>Free drink</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Separatore perforato */}
+          <View style={styles.perforationRow}>
+            <View style={[styles.notch, styles.notchLeft]} />
+            <View style={styles.dashedLine} />
+            <View style={[styles.notch, styles.notchRight]} />
+          </View>
+
+          {/* QR area */}
+          <View style={styles.qrContainer}>
+            {activeQR === 'entry' ? (
+              <>
+                <View style={[styles.qrWrapper, ticket.status === 'used' && styles.qrUsed]}>
+                  <QRCode
+                    value={ticket.qrCode}
+                    size={210}
+                    backgroundColor="white"
+                    color={ticket.status === 'used' ? '#aaa' : 'black'}
+                  />
+                  {ticket.status === 'used' && (
+                    <View style={styles.usedOverlay}>
+                      <Text style={styles.usedText}>USATO</Text>
+                    </View>
                   )}
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              <View style={[styles.qrWrapper, ticket.drinkUsed && styles.qrUsed]}>
-                <QRCode
-                  value={ticket.drinkQrCode}
-                  size={220}
-                  backgroundColor="white"
-                  color={ticket.drinkUsed ? '#aaa' : 'black'}
-                />
-                {ticket.drinkUsed && (
-                  <View style={styles.usedOverlay}>
-                    <Text style={styles.usedText}>USATO</Text>
+                </View>
+                <Text style={styles.qrLabel}>
+                  {ticket.status === 'used' ? 'Biglietto già scansionato' : 'Mostra questo QR al buttafuori'}
+                </Text>
+                {ticket.status === 'used' ? (
+                  <View style={[styles.usedBadge, { marginBottom: 8 }]}>
+                    <Ionicons name="close-circle" size={14} color={Colors.error} />
+                    <Text style={styles.usedBadgeText}> Ingresso effettuato</Text>
+                  </View>
+                ) : (
+                  <>
+                    <View style={[styles.validBadge, { marginBottom: 8 }]}>
+                      <Ionicons name="checkmark-circle" size={14} color={Colors.success} />
+                      <Text style={styles.validText}> Valido</Text>
+                    </View>
+                    {isEventToday && (
+                      <>
+                        <TouchableOpacity
+                          style={styles.bouncerBtn}
+                          onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                            markTicketUsed(ticket.id);
+                          }}
+                        >
+                          <Ionicons name="shield-checkmark-outline" size={16} color={Colors.white} />
+                          <Text style={styles.bouncerBtnText}>Segna come usato (buttafuori)</Text>
+                        </TouchableOpacity>
+                        <View style={styles.actionDisclaimer}>
+                          <Ionicons name="warning-outline" size={12} color={Colors.warning} />
+                          <Text style={styles.actionDisclaimerText}>
+                            Attenzione: una volta segnato come usato non è possibile riattivare il biglietto.
+                          </Text>
+                        </View>
+                      </>
+                    )}
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <View style={[styles.qrWrapper, ticket.drinkUsed && styles.qrUsed]}>
+                  <QRCode
+                    value={ticket.drinkQrCode}
+                    size={210}
+                    backgroundColor="white"
+                    color={ticket.drinkUsed ? '#aaa' : 'black'}
+                  />
+                  {ticket.drinkUsed && (
+                    <View style={styles.usedOverlay}>
+                      <Text style={styles.usedText}>USATO</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.qrLabel}>
+                  {ticket.drinkUsed ? 'Free drink già riscattato' : 'Mostra questo QR al barista'}
+                </Text>
+                {ticket.drinkUsed ? (
+                  <View style={[styles.usedBadge, { marginBottom: 8 }]}>
+                    <Ionicons name="close-circle" size={14} color={Colors.error} />
+                    <Text style={styles.usedBadgeText}> Usato</Text>
+                  </View>
+                ) : (
+                  <View style={[styles.validBadge, { marginBottom: 8 }]}>
+                    <Ionicons name="checkmark-circle" size={14} color={Colors.success} />
+                    <Text style={styles.validText}> Disponibile</Text>
                   </View>
                 )}
-              </View>
-              <Text style={styles.qrLabel}>
-                {ticket.drinkUsed ? 'Free drink già riscattato' : 'Mostra questo QR al barista'}
-              </Text>
-              {ticket.drinkUsed ? (
-                <View style={styles.usedBadge}>
-                  <Ionicons name="close-circle" size={14} color={Colors.error} />
-                  <Text style={styles.usedBadgeText}> Usato</Text>
-                </View>
-              ) : (
-                <View style={styles.validBadge}>
-                  <Ionicons name="checkmark-circle" size={14} color={Colors.success} />
-                  <Text style={styles.validText}> Disponibile</Text>
-                </View>
-              )}
-              {!ticket.drinkUsed && isEventToday && (
-                <>
-                  <TouchableOpacity
-                    style={styles.baristaBtm}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                      markDrinkUsed(ticket.id);
-                    }}
-                  >
-                    <Ionicons name="checkmark" size={16} color={Colors.white} />
-                    <Text style={styles.baristaText}>Segna come usato (barista)</Text>
-                  </TouchableOpacity>
-                  <View style={styles.actionDisclaimer}>
-                    <Ionicons name="warning-outline" size={12} color={Colors.warning} />
-                    <Text style={styles.actionDisclaimerText}>
-                      Attenzione: una volta riscattato il drink non può essere riutilizzato.
-                    </Text>
-                  </View>
-                </>
-              )}
-            </>
-          )}
+                {!ticket.drinkUsed && isEventToday && (
+                  <>
+                    <TouchableOpacity
+                      style={styles.baristaBtm}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                        markDrinkUsed(ticket.id);
+                      }}
+                    >
+                      <Ionicons name="checkmark" size={16} color={Colors.white} />
+                      <Text style={styles.baristaText}>Segna come usato (barista)</Text>
+                    </TouchableOpacity>
+                    <View style={styles.actionDisclaimer}>
+                      <Ionicons name="warning-outline" size={12} color={Colors.warning} />
+                      <Text style={styles.actionDisclaimerText}>
+                        Attenzione: una volta riscattato il drink non può essere riutilizzato.
+                      </Text>
+                    </View>
+                  </>
+                )}
+              </>
+            )}
+          </View>
+
         </View>
 
         {/* Action buttons */}
@@ -277,21 +301,56 @@ const styles = StyleSheet.create({
   },
   ticketBadgeText: { fontSize: 12, fontWeight: '700', color: Colors.white },
 
+  ticketCard: {
+    width: '100%',
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: 24,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 12,
+  },
   toggle: {
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
-    borderRadius: 12, borderWidth: 1, borderColor: Colors.border,
-    padding: 4, marginBottom: 28, width: '100%',
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
+    padding: 4, margin: 16,
   },
-  toggleBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
+  toggleBtn: {
+    flex: 1, flexDirection: 'row', paddingVertical: 10,
+    borderRadius: 10, alignItems: 'center', justifyContent: 'center',
+  },
   toggleActive: { backgroundColor: Colors.accent },
   toggleText: { fontSize: 14, fontWeight: '600', color: Colors.textMuted },
   toggleTextActive: { color: Colors.white },
 
-  qrContainer: { alignItems: 'center', width: '100%' },
+  perforationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 0,
+  },
+  notch: {
+    width: 22, height: 22, borderRadius: 11,
+    backgroundColor: Colors.background,
+    borderWidth: 1, borderColor: Colors.border,
+  },
+  notchLeft: { marginLeft: -11 },
+  notchRight: { marginRight: -11 },
+  dashedLine: {
+    flex: 1,
+    borderTopWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: Colors.border,
+  },
+
+  qrContainer: { alignItems: 'center', padding: 20, paddingTop: 20 },
   qrWrapper: {
-    padding: 16, backgroundColor: Colors.white, borderRadius: 20,
-    marginBottom: 16, position: 'relative',
+    padding: 14, backgroundColor: Colors.white, borderRadius: 16,
+    marginBottom: 14, position: 'relative',
   },
   qrUsed: { opacity: 0.5 },
   usedOverlay: {

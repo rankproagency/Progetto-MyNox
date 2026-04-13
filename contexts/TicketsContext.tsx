@@ -1,120 +1,104 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import { supabase } from '../lib/supabase';
+import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
 export interface MockTicket {
   id: string;
   eventId: string;
   eventName: string;
   clubName: string;
-  rawDate: string;
-  date: string;
+  rawDate: string;    // '2026-04-11'
+  date: string;       // 'Ven 11 Apr'
   startTime: string;
   ticketLabel: string;
   qrCode: string;
   drinkQrCode: string;
   drinkUsed: boolean;
   status: 'valid' | 'used' | 'denied' | 'pending';
+  imageUrl?: string;
 }
 
 interface TicketsCtx {
   tickets: MockTicket[];
-  isLoading: boolean;
-  addTickets: (tickets: MockTicket[]) => Promise<void>;
-  markDrinkUsed: (id: string) => Promise<void>;
-  markTicketUsed: (id: string) => Promise<void>;
-  reload: () => Promise<void>;
+  addTickets: (tickets: MockTicket[]) => void;
+  markDrinkUsed: (id: string) => void;
+  markTicketUsed: (id: string) => void;
 }
 
 const TicketsContext = createContext<TicketsCtx>({
   tickets: [],
-  isLoading: false,
-  addTickets: async () => {},
-  markDrinkUsed: async () => {},
-  markTicketUsed: async () => {},
-  reload: async () => {},
+  addTickets: () => {},
+  markDrinkUsed: () => {},
+  markTicketUsed: () => {},
 });
 
-function rowToTicket(row: any): MockTicket {
-  return {
-    id: row.id,
-    eventId: row.event_id ?? row.event_name ?? '',
-    eventName: row.event_name ?? '',
-    clubName: row.club_name ?? '',
-    rawDate: row.raw_date ?? '',
-    date: row.formatted_date ?? '',
-    startTime: row.start_time ?? '',
-    ticketLabel: row.ticket_label ?? '',
-    qrCode: row.qr_code,
-    drinkQrCode: row.drink_qr_code,
-    drinkUsed: row.drink_used,
-    status: row.status,
-  };
-}
+const INITIAL_TICKETS: MockTicket[] = [
+  {
+    id: 'mock-ticket-1',
+    eventId: '1',
+    eventName: 'NEXUS — Techno Night',
+    clubName: 'Altromondo Studios',
+    rawDate: '2026-04-11',
+    date: 'Ven 11 Apr',
+    startTime: '23:00',
+    ticketLabel: 'Uomo',
+    qrCode: 'MYNOX-TICKET-mock-ticket-1-2026',
+    drinkQrCode: 'MYNOX-DRINK-mock-ticket-1-2026',
+    drinkUsed: true,
+    status: 'used',
+    imageUrl: 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=800&q=80',
+  },
+  {
+    id: 'mock-ticket-2',
+    eventId: '5',
+    eventName: 'NEON — Pop & RnB',
+    clubName: 'Byblos Club',
+    rawDate: '2026-04-18',
+    date: 'Sab 18 Apr',
+    startTime: '22:00',
+    ticketLabel: 'Donna',
+    qrCode: 'MYNOX-TICKET-mock-ticket-2-2026',
+    drinkQrCode: 'MYNOX-DRINK-mock-ticket-2-2026',
+    drinkUsed: false,
+    status: 'valid',
+    imageUrl: 'https://images.unsplash.com/photo-1504680177321-2e6a879aac86?w=800&q=80',
+  },
+  {
+    id: 'mock-ticket-3',
+    eventId: '6',
+    eventName: 'REQUIEM — Special Edition',
+    clubName: 'New Age Club',
+    rawDate: '2026-04-19',
+    date: 'Dom 19 Apr',
+    startTime: '23:00',
+    ticketLabel: 'Uomo',
+    qrCode: 'MYNOX-TICKET-mock-ticket-3-2026',
+    drinkQrCode: 'MYNOX-DRINK-mock-ticket-3-2026',
+    drinkUsed: false,
+    status: 'pending',
+    imageUrl: 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=800&q=80',
+  },
+];
 
 export function TicketsProvider({ children }: { children: ReactNode }) {
-  const [tickets, setTickets] = useState<MockTicket[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [tickets, setTickets] = useState<MockTicket[]>(INITIAL_TICKETS);
 
-  const reload = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { setTickets([]); return; }
-
-    setIsLoading(true);
-    const { data, error } = await supabase
-      .from('tickets')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false });
-
-    if (!error && data) setTickets(data.map(rowToTicket));
-    setIsLoading(false);
+  const addTickets = useCallback((newTickets: MockTicket[]) => {
+    setTickets((prev) => [...prev, ...newTickets]);
   }, []);
 
-  // Ricarica quando cambia la sessione
-  useEffect(() => {
-    reload();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => reload());
-    return () => subscription.unsubscribe();
-  }, [reload]);
-
-  const addTickets = useCallback(async (newTickets: MockTicket[]) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    const rows = newTickets.map((t) => ({
-      user_id: session.user.id,
-      event_id: null,
-      ticket_type_id: null,
-      event_name: t.eventName,
-      club_name: t.clubName,
-      raw_date: t.rawDate,
-      formatted_date: t.date,
-      start_time: t.startTime,
-      ticket_label: t.ticketLabel,
-      qr_code: t.qrCode,
-      drink_qr_code: t.drinkQrCode,
-      drink_used: false,
-      status: t.status,
-    }));
-
-    const { data, error } = await supabase.from('tickets').insert(rows).select();
-    if (!error && data) {
-      setTickets((prev) => [...data.map(rowToTicket), ...prev]);
-    }
+  const markDrinkUsed = useCallback((id: string) => {
+    setTickets((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, drinkUsed: true } : t))
+    );
   }, []);
 
-  const markDrinkUsed = useCallback(async (id: string) => {
-    await supabase.from('tickets').update({ drink_used: true }).eq('id', id);
-    setTickets((prev) => prev.map((t) => t.id === id ? { ...t, drinkUsed: true } : t));
-  }, []);
-
-  const markTicketUsed = useCallback(async (id: string) => {
-    await supabase.from('tickets').update({ status: 'used' }).eq('id', id);
-    setTickets((prev) => prev.map((t) => t.id === id ? { ...t, status: 'used' as const } : t));
+  const markTicketUsed = useCallback((id: string) => {
+    setTickets((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, status: 'used' as const } : t))
+    );
   }, []);
 
   return (
-    <TicketsContext.Provider value={{ tickets, isLoading, addTickets, markDrinkUsed, markTicketUsed, reload }}>
+    <TicketsContext.Provider value={{ tickets, addTickets, markDrinkUsed, markTicketUsed }}>
       {children}
     </TicketsContext.Provider>
   );

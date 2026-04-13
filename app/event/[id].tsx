@@ -71,7 +71,8 @@ export default function EventScreen() {
         <View style={styles.hero}>
           <Image source={{ uri: event.imageUrl }} style={styles.heroImage} resizeMode="cover" />
           <LinearGradient
-            colors={['rgba(7,8,15,0.3)', 'transparent', 'rgba(7,8,15,0.95)']}
+            colors={['rgba(7,8,15,0.2)', 'transparent', 'rgba(7,8,15,0.75)', 'rgba(7,8,15,0.98)']}
+            locations={[0, 0.35, 0.72, 1]}
             style={StyleSheet.absoluteFill}
           />
           <SafeAreaView style={styles.heroTop}>
@@ -190,7 +191,12 @@ export default function EventScreen() {
             </Text>
           </View>
           <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${Math.min(soldPercent, 100)}%` }]} />
+            <LinearGradient
+              colors={['#a855f7', '#ec4899']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.progressFill, { width: `${Math.min(soldPercent, 100)}%` }]}
+            />
           </View>
         </View>
 
@@ -422,7 +428,7 @@ const styles = StyleSheet.create({
   scroll: { paddingBottom: 120 },
 
   // Hero
-  hero: { width, height: 340, position: 'relative' },
+  hero: { width, height: 430, position: 'relative' },
   heroImage: { ...StyleSheet.absoluteFillObject },
   heroTop: {
     paddingHorizontal: 20,
@@ -530,13 +536,12 @@ const styles = StyleSheet.create({
   soldCount: { fontWeight: '700', color: Colors.textPrimary },
   soldPercent: { fontSize: 12, fontWeight: '700', color: Colors.accent },
   progressBar: {
-    height: 4, borderRadius: 2,
+    height: 8, borderRadius: 4,
     backgroundColor: Colors.border,
     overflow: 'hidden',
   },
   progressFill: {
-    height: '100%', borderRadius: 2,
-    backgroundColor: Colors.accent,
+    height: '100%', borderRadius: 4,
   },
 
   // Contact card
@@ -641,6 +646,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: Colors.accent,
     borderRadius: 14, paddingHorizontal: 24, paddingVertical: 14,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 10,
   },
   ctaDisabled: { backgroundColor: Colors.border },
   ctaWaitlistActive: { backgroundColor: Colors.accentDark },

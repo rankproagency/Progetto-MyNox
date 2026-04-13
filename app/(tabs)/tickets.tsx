@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Share } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Share, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -134,11 +134,22 @@ function TicketCard({
     <View style={[styles.ticketCard, isPast && styles.ticketCardPast]}>
       <TouchableOpacity style={styles.ticketMain} activeOpacity={0.85} onPress={onPress}>
         <View style={styles.ticketLeft}>
-          <View style={[
-            styles.statusDot,
-            isPast && styles.statusDotUsed,
-            isPending && styles.statusDotPending,
-          ]} />
+          {ticket.imageUrl ? (
+            <View style={styles.thumbnailWrapper}>
+              <Image source={{ uri: ticket.imageUrl }} style={styles.thumbnail} resizeMode="cover" />
+              <View style={[
+                styles.statusDotOnThumb,
+                isPast && styles.statusDotUsed,
+                isPending && styles.statusDotPending,
+              ]} />
+            </View>
+          ) : (
+            <View style={[
+              styles.statusDot,
+              isPast && styles.statusDotUsed,
+              isPending && styles.statusDotPending,
+            ]} />
+          )}
           <View style={{ flex: 1 }}>
             <Text style={[styles.ticketEvent, isPast && styles.ticketEventMuted]} numberOfLines={1}>
               {ticket.eventName}
@@ -264,6 +275,14 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   ticketLeft: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, flex: 1 },
+  thumbnailWrapper: { position: 'relative', flexShrink: 0 },
+  thumbnail: { width: 52, height: 52, borderRadius: 10 },
+  statusDotOnThumb: {
+    position: 'absolute', bottom: -2, right: -2,
+    width: 12, height: 12, borderRadius: 6,
+    backgroundColor: Colors.success,
+    borderWidth: 2, borderColor: Colors.surface,
+  },
   statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.success, flexShrink: 0, marginTop: 4 },
   statusDotUsed: { backgroundColor: Colors.textMuted },
   statusDotPending: { backgroundColor: Colors.warning },
