@@ -3,8 +3,17 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { Plus, Trash2 } from 'lucide-react';
 
 const GENRES = ['Techno', 'House', 'Deep House', 'Latin', 'Hip-Hop', 'Pop', 'R&B', 'Reggaeton', 'Commercial'];
+
+interface TicketTypeRow {
+  id?: string;
+  label: string;
+  price: string;
+  total_quantity: string;
+  includes_drink: boolean;
+}
 
 interface EventFormProps {
   clubId: string;
@@ -21,9 +30,10 @@ interface EventFormProps {
     is_published: boolean;
     image_url: string | null;
   };
+  initialTicketTypes?: TicketTypeRow[];
 }
 
-export default function EventForm({ clubId, event }: EventFormProps) {
+export default function EventForm({ clubId, event, initialTicketTypes }: EventFormProps) {
   const router = useRouter();
   const isEdit = !!event;
 
@@ -39,6 +49,10 @@ export default function EventForm({ clubId, event }: EventFormProps) {
     genres: event?.genres ?? [] as string[],
     is_published: event?.is_published ?? false,
   });
+
+  const [ticketTypes, setTicketTypes] = useState<TicketTypeRow[]>(
+    initialTicketTypes ?? [{ label: '', price: '', total_quantity: '', includes_drink: true }]
+  );
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -74,6 +88,18 @@ export default function EventForm({ clubId, event }: EventFormProps) {
     }));
   }
 
+  function addTicketType() {
+    setTicketTypes((prev) => [...prev, { label: '', price: '', total_quantity: '', includes_drink: true }]);
+  }
+
+  function removeTicketType(index: number) {
+    setTicketTypes((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function updateTicketType(index: number, field: keyof TicketTypeRow, value: string | boolean) {
+    setTicketTypes((prev) => prev.map((t, i) => i === index ? { ...t, [field]: value } : t));
+  }
+
   async function handleSubmit(publish: boolean) {
     setLoading(true);
     setError('');
@@ -93,17 +119,35 @@ export default function EventForm({ clubId, event }: EventFormProps) {
       is_published: publish,
     };
 
-    const { error: supabaseError } = isEdit
-      ? await supabase.from('events').update(payload).eq('id', event!.id)
-      : await supabase.from('events').insert(payload);
+    let eventId = event?.id;
 
-    setLoading(false);
-
-    if (supabaseError) {
-      setError(supabaseError.message);
-      return;
+    if (isEdit) {
+      const { error: updateError } = await supabase.from('events').update(payload).eq('id', event!.id);
+      if (updateError) { setError(updateError.message); setLoading(false); return; }
+    } else {
+      const { data, error: insertError } = await supabase.from('events').insert(payload).select('id').single();
+      if (insertError || !data) { setError(insertError?.message ?? 'Errore creazione evento'); setLoading(false); return; }
+      eventId = data.id;
     }
 
+    // Salva tipi biglietto: elimina i vecchi e reinserisci
+    const validTickets = ticketTypes.filter((t) => t.label.trim() && t.price);
+    if (validTickets.length > 0 && eventId) {
+      await supabase.from('ticket_types').delete().eq('event_id', eventId);
+      const { error: ticketError } = await supabase.from('ticket_types').insert(
+        validTickets.map((t) => ({
+          event_id: eventId,
+          label: t.label.trim(),
+          price: parseFloat(t.price),
+          total_quantity: t.total_quantity ? parseInt(t.total_quantity) : null,
+          sold_quantity: 0,
+          includes_drink: t.includes_drink,
+        }))
+      );
+      if (ticketError) { setError('Evento salvato ma errore nei biglietti: ' + ticketError.message); setLoading(false); return; }
+    }
+
+    setLoading(false);
     router.push('/club/events');
     router.refresh();
   }
@@ -226,6 +270,80 @@ export default function EventForm({ clubId, event }: EventFormProps) {
           ))}
         </div>
       </Field>
+
+      {/* Tipi di biglietto */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="block text-xs font-medium text-slate-400 uppercase tracking-wide">Tipi di biglietto</label>
+          <button
+            type="button"
+            onClick={addTicketType}
+            className="flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 transition-colors"
+          >
+            <Plus size={13} />
+            Aggiungi
+          </button>
+        </div>
+
+        {ticketTypes.map((ticket, index) => (
+          <div key={index} className="bg-[#111118] border border-white/8 rounded-lg p-4 space-y-3">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-1">
+                <label className="block text-xs text-slate-500 mb-1">Nome biglietto</label>
+                <input
+                  value={ticket.label}
+                  onChange={(e) => updateTicketType(index, 'label', e.target.value)}
+                  placeholder="es. Donna"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-500 mb-1">Prezzo (€)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={ticket.price}
+                  onChange={(e) => updateTicketType(index, 'price', e.target.value)}
+                  placeholder="es. 10"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-500 mb-1">Quantità disponibile</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={ticket.total_quantity}
+                  onChange={(e) => updateTicketType(index, 'total_quantity', e.target.value)}
+                  placeholder="es. 200"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={ticket.includes_drink}
+                  onChange={(e) => updateTicketType(index, 'includes_drink', e.target.checked)}
+                  className="w-4 h-4 rounded accent-purple-500"
+                />
+                <span className="text-sm text-slate-400">Include free drink</span>
+              </label>
+              {ticketTypes.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeTicketType(index)}
+                  className="text-red-400 hover:text-red-300 transition-colors"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
 
       {error && (
         <p className="text-red-400 text-sm">{error}</p>

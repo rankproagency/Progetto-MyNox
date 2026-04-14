@@ -5,6 +5,7 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  Modal,
   Dimensions,
   Share,
   Linking,
@@ -41,6 +42,7 @@ export default function EventScreen() {
   const [selectedTicket, setSelectedTicket] = useState<TicketType | null>(null);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [ticketQty, setTicketQty] = useState(1);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
 
   if (!event) {
     return (
@@ -65,6 +67,18 @@ export default function EventScreen() {
 
   return (
     <View style={styles.container}>
+
+      {/* Modal immagine fullscreen */}
+      <Modal visible={imageModalVisible} transparent animationType="fade" statusBarTranslucent>
+        <View style={styles.imageModal}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={() => setImageModalVisible(false)} />
+          <Image source={{ uri: event.imageUrl }} style={styles.imageModalImg} resizeMode="contain" />
+          <TouchableOpacity style={styles.imageModalClose} onPress={() => setImageModalVisible(false)} activeOpacity={0.8}>
+            <Ionicons name="close" size={22} color={Colors.white} />
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* Hero */}
@@ -100,9 +114,19 @@ export default function EventScreen() {
           </SafeAreaView>
           <View style={styles.heroBottom}>
             <Text style={styles.eventName}>{event.name}</Text>
-            <TouchableOpacity onPress={() => router.push(`/club/${event.clubId}`)}>
-              <Text style={styles.clubName}>{event.club?.name}</Text>
-            </TouchableOpacity>
+            <View style={styles.heroBottomRow}>
+              <TouchableOpacity onPress={() => router.push(`/club/${event.clubId}`)}>
+                <Text style={styles.clubName}>{event.club?.name}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.posterBtn}
+                onPress={() => { Haptics.selectionAsync(); setImageModalVisible(true); }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="expand-outline" size={13} color={Colors.white} />
+                <Text style={styles.posterBtnText}>Locandina</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -450,8 +474,18 @@ const styles = StyleSheet.create({
   heroBottom: {
     position: 'absolute', bottom: 20, left: 20, right: 20,
   },
-  eventName: { fontSize: 28, fontFamily: Font.black, color: Colors.white, marginBottom: 4, letterSpacing: 0.2 },
+  heroBottomRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+  },
+  eventName: { fontSize: 28, fontFamily: Font.black, color: Colors.white, marginBottom: 6, letterSpacing: 0.2 },
   clubName: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.accent },
+  posterBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
+  },
+  posterBtnText: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.white },
 
   // Info row
   infoRow: {
@@ -628,6 +662,19 @@ const styles = StyleSheet.create({
   },
 
   bottomPad: { height: 20 },
+
+  // Image modal
+  imageModal: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.95)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  imageModalImg: { width, height: width * 1.4 },
+  imageModalClose: {
+    position: 'absolute', top: 56, right: 20,
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    justifyContent: 'center', alignItems: 'center',
+  },
 
   // CTA
   ctaContainer: {

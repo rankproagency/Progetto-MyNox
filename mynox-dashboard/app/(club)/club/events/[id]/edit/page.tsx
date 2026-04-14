@@ -9,14 +9,20 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
   if (!profile?.club_id) return <p className="text-slate-400">Club non configurato. Contatta l&apos;amministratore.</p>;
 
   const supabase = await createClient();
-  const { data: event } = await supabase
-    .from('events')
-    .select('*')
-    .eq('id', id)
-    .eq('club_id', profile.club_id)
-    .single();
+  const [{ data: event }, { data: ticketTypes }] = await Promise.all([
+    supabase.from('events').select('*').eq('id', id).eq('club_id', profile.club_id).single(),
+    supabase.from('ticket_types').select('*').eq('event_id', id).order('created_at', { ascending: true }),
+  ]);
 
   if (!event) notFound();
+
+  const initialTicketTypes = (ticketTypes ?? []).map((t: any) => ({
+    id: t.id,
+    label: t.label,
+    price: String(t.price),
+    total_quantity: String(t.total_quantity ?? ''),
+    includes_drink: t.includes_drink,
+  }));
 
   return (
     <div>
@@ -33,7 +39,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
         </div>
         <p className="text-slate-400">{event.name}</p>
       </div>
-      <EventForm clubId={profile.club_id} event={event} />
+      <EventForm clubId={profile.club_id} event={event} initialTicketTypes={initialTicketTypes.length > 0 ? initialTicketTypes : undefined} />
     </div>
   );
 }
