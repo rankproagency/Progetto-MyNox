@@ -22,7 +22,7 @@ import { Font } from '../../constants/typography';
 import EventCard from '../../components/EventCard';
 import EventListItem from '../../components/EventListItem';
 import TonightHero from '../../components/TonightHero';
-import { ALL_GENRES } from '../../lib/mockData';
+import { ALL_GENRES } from '../../constants/genres';
 import { useEvents } from '../../contexts/EventsContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Event, Genre } from '../../types';

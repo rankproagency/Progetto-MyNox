@@ -1,19 +1,105 @@
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, Linking, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useState, useEffect } from 'react';
 import { Colors } from '../../constants/colors';
-import { getClubById, getEventsByClub } from '../../lib/mockData';
+import { supabase } from '../../lib/supabase';
 import EventListItem from '../../components/EventListItem';
+import { Club, Event, TicketType, Table } from '../../types';
 
 const { width } = Dimensions.get('window');
 
 export default function ClubScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const club = getClubById(id);
-  const events = getEventsByClub(id);
+  const [club, setClub] = useState<Club | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      const [clubRes, eventsRes] = await Promise.all([
+        supabase.from('clubs').select('*').eq('id', id).single(),
+        supabase
+          .from('events')
+          .select('*, clubs(*), ticket_types(*), tables(*)')
+          .eq('club_id', id)
+          .eq('is_published', true)
+          .order('date', { ascending: true }),
+      ]);
+
+      if (clubRes.data) {
+        const r = clubRes.data;
+        setClub({
+          id: r.id,
+          name: r.name,
+          city: r.city,
+          address: r.address ?? '',
+          imageUrl: r.image_url ?? '',
+          instagram: r.instagram,
+          tiktok: r.tiktok,
+          email: r.email,
+          phone: r.phone,
+        });
+      }
+
+      if (eventsRes.data) {
+        setEvents(eventsRes.data.map((row: any) => ({
+          id: row.id,
+          clubId: row.club_id,
+          club: {
+            id: row.clubs?.id ?? '',
+            name: row.clubs?.name ?? '',
+            city: row.clubs?.city ?? 'Padova',
+            imageUrl: row.clubs?.image_url ?? '',
+            address: row.clubs?.address ?? '',
+          },
+          name: row.name,
+          date: row.date,
+          startTime: row.start_time,
+          imageUrl: row.image_url ?? '',
+          dressCode: row.dress_code ?? 'No dress code',
+          capacity: row.capacity ?? 500,
+          ticketsSold: row.tickets_sold ?? 0,
+          genres: row.genres ?? [],
+          description: row.description ?? '',
+          lineup: Array.isArray(row.lineup) ? row.lineup : [],
+          ticketTypes: (row.ticket_types ?? []).map((t: any): TicketType => ({
+            id: t.id,
+            eventId: row.id,
+            label: t.label,
+            gender: t.label.toLowerCase().includes('donna') ? 'female'
+                  : t.label.toLowerCase().includes('uomo') ? 'male' : 'any',
+            price: Number(t.price),
+            includesDrink: t.includes_drink,
+            available: (t.total_quantity ?? 999) - (t.sold_quantity ?? 0),
+          })),
+          tables: (row.tables ?? []).map((t: any): Table => ({
+            id: t.id,
+            eventId: row.id,
+            label: t.label,
+            capacity: t.capacity,
+            deposit: Number(t.deposit),
+            available: t.is_available,
+          })),
+        })));
+      }
+
+      setLoading(false);
+    }
+
+    fetchData();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <View style={styles.notFound}>
+        <ActivityIndicator color={Colors.accent} />
+      </View>
+    );
+  }
 
   if (!club) {
     return (

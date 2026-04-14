@@ -16,7 +16,7 @@ import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
-import { ALL_GENRES } from '../lib/mockData';
+import { ALL_GENRES } from '../constants/genres';
 import { Genre } from '../types';
 
 const { width } = Dimensions.get('window');
