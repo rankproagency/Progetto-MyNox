@@ -22,7 +22,8 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, isLoading } = useAuth();
+  const { login, loginWithGoogle, isLoading } = useAuth();
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -135,11 +136,38 @@ export default function LoginScreen() {
               <View style={styles.dividerLine} />
             </View>
 
-            {/* Social login placeholders */}
+            {/* Google */}
+            <TouchableOpacity
+              style={[styles.socialButton, googleLoading && styles.ctaDisabled]}
+              activeOpacity={0.8}
+              disabled={googleLoading}
+              onPress={async () => {
+                setGoogleLoading(true);
+                try {
+                  await loginWithGoogle();
+                  router.replace('/(tabs)');
+                } catch (e: any) {
+                  Alert.alert('Errore', e.message ?? 'Accesso con Google fallito.');
+                } finally {
+                  setGoogleLoading(false);
+                }
+              }}
+            >
+              {googleLoading ? (
+                <ActivityIndicator color={Colors.textPrimary} size="small" />
+              ) : (
+                <>
+                  <Ionicons name="logo-google" size={19} color="#EA4335" />
+                  <Text style={styles.socialText}>Continua con Google</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            {/* Apple */}
             <TouchableOpacity
               style={styles.socialButton}
               activeOpacity={0.8}
-              onPress={() => Alert.alert('Apple Sign In', 'Disponibile nella versione con Supabase Auth.')}
+              onPress={() => Alert.alert('Apple Sign In', 'Disponibile prossimamente.')}
             >
               <Ionicons name="logo-apple" size={20} color={Colors.textPrimary} />
               <Text style={styles.socialText}>Continua con Apple</Text>
@@ -201,11 +229,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
     backgroundColor: Colors.surface,
     borderRadius: 16, borderWidth: 1, borderColor: Colors.border,
-    paddingVertical: 15, marginBottom: 32,
+    paddingVertical: 15, marginBottom: 12,
   },
   socialText: { fontSize: 15, fontWeight: '600', color: Colors.textPrimary },
 
-  registerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  registerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 20 },
   registerText: { fontSize: 14, color: Colors.textSecondary },
   registerLink: { fontSize: 14, fontWeight: '700', color: Colors.accent },
 });

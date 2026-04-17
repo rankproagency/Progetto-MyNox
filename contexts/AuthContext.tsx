@@ -1,6 +1,10 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
+import * as WebBrowser from 'expo-web-browser';
+import * as AuthSession from 'expo-auth-session';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export interface AuthUser {
   id: string;
@@ -14,6 +18,7 @@ interface AuthCtx {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => void;
   completeOnboarding: () => void;
   updateUser: (updates: Partial<Pick<AuthUser, 'name' | 'email'>>) => void;
@@ -27,6 +32,7 @@ const AuthContext = createContext<AuthCtx>({
   isLoading: true,
   login: async () => {},
   register: async () => {},
+  loginWithGoogle: async () => {},
   logout: () => {},
   completeOnboarding: () => {},
   updateUser: () => {},
@@ -101,6 +107,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw new Error(error.message);
   }, []);
 
+  const loginWithGoogle = useCallback(async () => {
+    const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'mynox', path: 'auth/callback' });
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: redirectUrl, skipBrowserRedirect: true },
+    });
+    if (error || !data.url) throw new Error(error?.message ?? 'Errore Google Sign-In');
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+    if (result.type === 'success') {
+      const url = result.url;
+      const code = new URL(url).searchParams.get('code');
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) throw new Error(exchangeError.message);
+      }
+    }
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await supabase.auth.signOut();
@@ -133,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user, isOnboarded, isLoading,
-      login, register, logout, completeOnboarding,
+      login, register, loginWithGoogle, logout, completeOnboarding,
       updateUser, musicGenres, setMusicGenres,
     }}>
       {children}

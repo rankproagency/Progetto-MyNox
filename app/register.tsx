@@ -34,7 +34,8 @@ function formatDOB(date: Date): string {
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { register, isLoading } = useAuth();
+  const { register, loginWithGoogle, isLoading } = useAuth();
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -204,6 +205,38 @@ export default function RegisterScreen() {
               )}
             </TouchableOpacity>
 
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>oppure</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.socialButton, googleLoading && styles.ctaDisabled]}
+              activeOpacity={0.8}
+              disabled={googleLoading}
+              onPress={async () => {
+                setGoogleLoading(true);
+                try {
+                  await loginWithGoogle();
+                  router.replace('/(tabs)');
+                } catch (e: any) {
+                  Alert.alert('Errore', e.message ?? 'Accesso con Google fallito.');
+                } finally {
+                  setGoogleLoading(false);
+                }
+              }}
+            >
+              {googleLoading ? (
+                <ActivityIndicator color={Colors.textPrimary} size="small" />
+              ) : (
+                <>
+                  <Ionicons name="logo-google" size={19} color="#EA4335" />
+                  <Text style={styles.socialText}>Continua con Google</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
             <View style={styles.loginRow}>
               <Text style={styles.loginText}>Hai già un account? </Text>
               <TouchableOpacity onPress={() => router.back()}>
@@ -328,6 +361,18 @@ const styles = StyleSheet.create({
   },
   ctaDisabled: { opacity: 0.6 },
   ctaText: { fontSize: 16, fontWeight: '800', color: Colors.white },
+
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
+  dividerText: { fontSize: 13, color: Colors.textMuted },
+
+  socialButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    backgroundColor: Colors.surface,
+    borderRadius: 16, borderWidth: 1, borderColor: Colors.border,
+    paddingVertical: 15, marginBottom: 24,
+  },
+  socialText: { fontSize: 15, fontWeight: '600', color: Colors.textPrimary },
 
   loginRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   loginText: { fontSize: 14, color: Colors.textSecondary },
