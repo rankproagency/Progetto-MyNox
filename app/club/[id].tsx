@@ -4,16 +4,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
+import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/colors';
 import { supabase } from '../../lib/supabase';
 import EventListItem from '../../components/EventListItem';
 import { Club, Event, TicketType, Table } from '../../types';
+import { useFavorites } from '../../contexts/FavoritesContext';
 
 const { width } = Dimensions.get('window');
 
 export default function ClubScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { isFavoriteClub, toggleFavoriteClub } = useFavorites();
   const [club, setClub] = useState<Club | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -124,6 +127,27 @@ export default function ClubScreen() {
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
             </TouchableOpacity>
+            {club && (
+              <TouchableOpacity
+                style={styles.followButton}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  toggleFavoriteClub({
+                    id: club.id,
+                    name: club.name,
+                    imageUrl: club.imageUrl,
+                    city: club.city,
+                  });
+                }}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name={isFavoriteClub(club.id) ? 'heart' : 'heart-outline'}
+                  size={18}
+                  color={isFavoriteClub(club.id) ? Colors.accent : Colors.textPrimary}
+                />
+              </TouchableOpacity>
+            )}
           </SafeAreaView>
           <View style={styles.heroBottom}>
             <Text style={styles.clubName}>{club.name}</Text>
@@ -215,8 +239,18 @@ const styles = StyleSheet.create({
 
   hero: { width, height: 300, position: 'relative' },
   heroImage: { ...StyleSheet.absoluteFillObject },
-  heroTop: { paddingHorizontal: 20 },
+  heroTop: {
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   backButton: {
+    width: 38, height: 38, borderRadius: 12,
+    backgroundColor: 'rgba(7,8,15,0.6)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  followButton: {
     width: 38, height: 38, borderRadius: 12,
     backgroundColor: 'rgba(7,8,15,0.6)',
     justifyContent: 'center', alignItems: 'center',

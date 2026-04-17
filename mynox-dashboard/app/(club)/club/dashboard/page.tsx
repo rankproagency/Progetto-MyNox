@@ -15,9 +15,9 @@ async function getClubStats(clubId: string) {
 
   const eventIds = (events ?? []).map((e) => e.id);
 
-  // Biglietti e ricavi solo sugli eventi del club
   let totalTickets = 0;
   let revenue = 0;
+  const revenueByEvent: Record<string, number> = {};
 
   if (eventIds.length > 0) {
     const { count } = await supabase
@@ -28,14 +28,17 @@ async function getClubStats(clubId: string) {
 
     const { data: ticketRevenue } = await supabase
       .from('tickets')
-      .select('ticket_types(price)')
+      .select('event_id, ticket_types(price)')
       .in('event_id', eventIds)
       .in('status', ['valid', 'used']);
 
     totalTickets = count ?? 0;
-    revenue = (ticketRevenue ?? []).reduce((sum: number, t: any) => {
-      return sum + (t.ticket_types?.price ?? 0);
-    }, 0);
+
+    for (const t of ticketRevenue ?? []) {
+      const price = (t as any).ticket_types?.price ?? 0;
+      revenue += price;
+      revenueByEvent[(t as any).event_id] = (revenueByEvent[(t as any).event_id] ?? 0) + price;
+    }
   }
 
   const totalEvents = events?.length ?? 0;
@@ -47,6 +50,7 @@ async function getClubStats(clubId: string) {
     totalEvents,
     publishedEvents,
     recentEvents: events ?? [],
+    revenueByEvent,
   };
 }
 
@@ -122,6 +126,7 @@ export default async function ClubDashboardPage() {
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Nome</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Data</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Biglietti</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Ricavi</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
             </tr>
           </thead>
@@ -136,6 +141,9 @@ export default async function ClubDashboardPage() {
                   <td className="px-5 py-4 text-slate-300">
                     {event.tickets_sold}{event.capacity ? ` / ${event.capacity}` : ''}
                   </td>
+                  <td className="px-5 py-4 font-semibold text-purple-400">
+                    €{(stats.revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
                   <td className="px-5 py-4">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
                       event.is_published
@@ -149,7 +157,7 @@ export default async function ClubDashboardPage() {
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="px-5 py-10 text-center text-slate-500">
+                <td colSpan={5} className="px-5 py-10 text-center text-slate-500">
                   Nessun evento ancora.
                 </td>
               </tr>

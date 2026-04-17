@@ -3,10 +3,17 @@ import type { Event } from '@/types';
 
 export default async function AdminEventsPage() {
   const supabase = await createClient();
-  const { data: events } = await supabase
-    .from('events')
-    .select('*, clubs(name)')
-    .order('date', { ascending: false });
+  const [{ data: events }, { data: ticketRevenue }] = await Promise.all([
+    supabase.from('events').select('*, clubs(name)').order('date', { ascending: false }),
+    supabase.from('tickets').select('event_id, ticket_types(price)').in('status', ['valid', 'used']),
+  ]);
+
+  const revenueByEvent: Record<string, number> = {};
+  for (const t of ticketRevenue ?? []) {
+    const id = (t as any).event_id;
+    const price = (t as any).ticket_types?.price ?? 0;
+    if (id) revenueByEvent[id] = (revenueByEvent[id] ?? 0) + price;
+  }
 
   return (
     <div>
@@ -23,6 +30,7 @@ export default async function AdminEventsPage() {
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Discoteca</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Data</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Biglietti venduti</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Ricavi</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
             </tr>
           </thead>
@@ -39,6 +47,9 @@ export default async function AdminEventsPage() {
                     {event.tickets_sold}
                     {event.capacity ? ` / ${event.capacity}` : ''}
                   </td>
+                  <td className="px-5 py-4 font-semibold text-purple-400">
+                    €{(revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
                   <td className="px-5 py-4">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       event.is_published
@@ -52,7 +63,7 @@ export default async function AdminEventsPage() {
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-5 py-12 text-center text-slate-500">
+                <td colSpan={6} className="px-5 py-12 text-center text-slate-500">
                   Nessun evento trovato.
                 </td>
               </tr>

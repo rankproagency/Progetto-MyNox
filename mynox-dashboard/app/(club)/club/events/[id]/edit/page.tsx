@@ -39,7 +39,11 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
         </div>
         <p className="text-slate-400">{event.name}</p>
       </div>
-      <EventForm clubId={profile.club_id} event={event} initialTicketTypes={initialTicketTypes.length > 0 ? initialTicketTypes : undefined} />
+      <EventForm
+        clubId={profile.club_id}
+        event={{ ...event, performers: event.performers ?? [] }}
+        initialTicketTypes={initialTicketTypes.length > 0 ? initialTicketTypes : undefined}
+      />
     </div>
   );
 }

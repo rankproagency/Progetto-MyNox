@@ -3,10 +3,21 @@ import type { Club } from '@/types';
 
 export default async function AdminClubsPage() {
   const supabase = await createClient();
-  const { data: clubs } = await supabase
-    .from('clubs')
-    .select('*')
-    .order('name');
+
+  const [{ data: clubs }, { data: ticketRevenue }] = await Promise.all([
+    supabase.from('clubs').select('*').order('name'),
+    supabase
+      .from('tickets')
+      .select('ticket_types(price), events(club_id)')
+      .in('status', ['valid', 'used']),
+  ]);
+
+  const revenueByClub: Record<string, number> = {};
+  for (const t of ticketRevenue ?? []) {
+    const clubId = (t as any).events?.club_id;
+    const price = (t as any).ticket_types?.price ?? 0;
+    if (clubId) revenueByClub[clubId] = (revenueByClub[clubId] ?? 0) + price;
+  }
 
   return (
     <div>
@@ -21,6 +32,7 @@ export default async function AdminClubsPage() {
             <tr className="border-b border-white/8">
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Nome</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Città</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Ricavi totali</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Email</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Telefono</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Registrata</th>
@@ -32,6 +44,9 @@ export default async function AdminClubsPage() {
                 <tr key={club.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
                   <td className="px-5 py-4 text-white font-medium">{club.name}</td>
                   <td className="px-5 py-4 text-slate-300">{club.city}</td>
+                  <td className="px-5 py-4 font-semibold text-purple-400">
+                    €{(revenueByClub[club.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
                   <td className="px-5 py-4 text-slate-300">{club.email ?? '—'}</td>
                   <td className="px-5 py-4 text-slate-300">{club.phone ?? '—'}</td>
                   <td className="px-5 py-4 text-slate-400">
@@ -41,7 +56,7 @@ export default async function AdminClubsPage() {
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-5 py-12 text-center text-slate-500">
+                <td colSpan={6} className="px-5 py-12 text-center text-slate-500">
                   Nessuna discoteca registrata.
                 </td>
               </tr>

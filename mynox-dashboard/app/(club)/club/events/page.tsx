@@ -14,6 +14,23 @@ export default async function ClubEventsPage() {
     .eq('club_id', profile.club_id)
     .order('date', { ascending: false });
 
+  const eventIds = (events ?? []).map((e) => e.id);
+  const revenueByEvent: Record<string, number> = {};
+
+  if (eventIds.length > 0) {
+    const { data: ticketRevenue } = await supabase
+      .from('tickets')
+      .select('event_id, ticket_types(price)')
+      .in('event_id', eventIds)
+      .in('status', ['valid', 'used']);
+
+    for (const t of ticketRevenue ?? []) {
+      const id = (t as any).event_id;
+      const price = (t as any).ticket_types?.price ?? 0;
+      revenueByEvent[id] = (revenueByEvent[id] ?? 0) + price;
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
@@ -38,6 +55,7 @@ export default async function ClubEventsPage() {
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Data</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Orario</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Biglietti</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Ricavi</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
               <th className="px-5 py-3" />
             </tr>
@@ -53,6 +71,9 @@ export default async function ClubEventsPage() {
                   <td className="px-5 py-4 text-slate-300">{event.start_time}</td>
                   <td className="px-5 py-4 text-slate-300">
                     {event.tickets_sold}{event.capacity ? ` / ${event.capacity}` : ''}
+                  </td>
+                  <td className="px-5 py-4 font-semibold text-purple-400">
+                    €{(revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-5 py-4">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
@@ -76,7 +97,7 @@ export default async function ClubEventsPage() {
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="px-5 py-16 text-center">
+                <td colSpan={7} className="px-5 py-16 text-center">
                   <p className="text-slate-400 font-medium mb-1">Nessun evento ancora</p>
                   <p className="text-slate-500 text-xs mb-4">Crea il tuo primo evento per iniziare a vendere biglietti.</p>
                   <Link

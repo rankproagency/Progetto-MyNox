@@ -26,6 +26,11 @@ export interface LineupArtist {
   time: string;
 }
 
+export interface Performer {
+  name: string;
+  role: 'dj' | 'vocalist';
+}
+
 export interface Event {
   id: string;
   clubId: string;
@@ -42,6 +47,7 @@ export interface Event {
   genres: Genre[];
   description: string;
   lineup: LineupArtist[];
+  performers: Performer[];
 }
 
 export interface TicketType {

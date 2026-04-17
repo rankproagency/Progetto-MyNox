@@ -14,7 +14,7 @@ async function getStats() {
     supabase.from('clubs').select('*', { count: 'exact', head: true }),
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'customer'),
     supabase.from('tickets').select('*', { count: 'exact', head: true }).in('status', ['valid', 'used']),
-    supabase.from('tickets').select('ticket_types(price)').in('status', ['valid', 'used']),
+    supabase.from('tickets').select('event_id, ticket_types(price)').in('status', ['valid', 'used']),
     supabase
       .from('events')
       .select('id, name, date, tickets_sold, capacity, clubs(name)')
@@ -27,12 +27,19 @@ async function getStats() {
     return sum + (t.ticket_types?.price ?? 0);
   }, 0);
 
+  const revenueByEvent: Record<string, number> = {};
+  for (const t of ticketRevenue ?? []) {
+    const id = (t as any).event_id;
+    if (id) revenueByEvent[id] = (revenueByEvent[id] ?? 0) + ((t as any).ticket_types?.price ?? 0);
+  }
+
   return {
     totalClubs: totalClubs ?? 0,
     totalUsers: totalUsers ?? 0,
     totalTickets: totalTickets ?? 0,
     revenue,
     recentEvents: recentEvents ?? [],
+    revenueByEvent,
   };
 }
 
@@ -111,6 +118,7 @@ export default async function AdminDashboardPage() {
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Discoteca</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Data</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Biglietti</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Ricavi</th>
             </tr>
           </thead>
           <tbody>
@@ -126,11 +134,14 @@ export default async function AdminDashboardPage() {
                     {event.tickets_sold}
                     {event.capacity ? ` / ${event.capacity}` : ''}
                   </td>
+                  <td className="px-5 py-4 font-semibold text-purple-400">
+                    €{(stats.revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="px-5 py-10 text-center text-slate-500">
+                <td colSpan={5} className="px-5 py-10 text-center text-slate-500">
                   Nessun evento pubblicato.
                 </td>
               </tr>

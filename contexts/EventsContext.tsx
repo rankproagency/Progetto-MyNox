@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
-import { Event, Club, TicketType, Table, LineupArtist, Genre } from '../types';
+import { Event, Club, TicketType, Table, LineupArtist, Performer, Genre } from '../types';
 
 interface EventsCtx {
   events: Event[];
@@ -52,6 +52,7 @@ function rowToEvent(row: any): Event {
   }));
 
   const lineup: LineupArtist[] = Array.isArray(row.lineup) ? row.lineup : [];
+  const performers: Performer[] = Array.isArray(row.performers) ? row.performers : [];
 
   return {
     id: row.id,
@@ -67,6 +68,7 @@ function rowToEvent(row: any): Event {
     genres: (row.genres ?? []) as Genre[],
     description: row.description ?? '',
     lineup,
+    performers,
     ticketTypes,
     tables,
   };
@@ -78,6 +80,8 @@ export function EventsProvider({ children }: { children: ReactNode }) {
 
   const reload = useCallback(async () => {
     setIsLoading(true);
+    const today = new Date().toISOString().slice(0, 10);
+
     const { data, error } = await supabase
       .from('events')
       .select(`
@@ -87,6 +91,7 @@ export function EventsProvider({ children }: { children: ReactNode }) {
         tables (*)
       `)
       .eq('is_published', true)
+      .gte('date', today)
       .order('date', { ascending: true });
 
     if (error) {

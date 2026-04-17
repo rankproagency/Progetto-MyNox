@@ -105,7 +105,7 @@ export default function TonightHero({ event }: Props) {
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: 20,
-    height: 280,
+    height: 300,
     borderRadius: 24,
     overflow: 'hidden',
     backgroundColor: Colors.surface,

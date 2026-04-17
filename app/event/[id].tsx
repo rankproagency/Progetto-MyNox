@@ -195,6 +195,25 @@ export default function EventScreen() {
           </View>
         )}
 
+        {/* Performers — DJ e Vocalist */}
+        {event.performers?.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Artisti</Text>
+            <View style={styles.performersGrid}>
+              {event.performers.map((p, i) => (
+                <View key={i} style={styles.performerChip}>
+                  <View style={[styles.performerBadge, p.role === 'vocalist' && styles.performerBadgeVocalist]}>
+                    <Text style={[styles.performerBadgeText, p.role === 'vocalist' && styles.performerBadgeTextVocalist]}>
+                      {p.role === 'dj' ? 'DJ' : 'VOCALIST'}
+                    </Text>
+                  </View>
+                  <Text style={styles.performerName}>{p.name}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
         {/* Contatore disponibilità */}
         <View style={styles.section}>
           <View style={styles.soldRow}>
@@ -559,6 +578,23 @@ const styles = StyleSheet.create({
     minWidth: 42,
   },
   lineupName: { fontSize: 14, fontFamily: Font.bold, color: Colors.textPrimary },
+
+  // Performers
+  performersGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  performerChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: Colors.surface,
+    borderRadius: 10, borderWidth: 1, borderColor: Colors.border,
+    paddingHorizontal: 12, paddingVertical: 9,
+  },
+  performerBadge: {
+    backgroundColor: 'rgba(168,85,247,0.15)',
+    borderRadius: 5, paddingHorizontal: 6, paddingVertical: 2,
+  },
+  performerBadgeVocalist: { backgroundColor: 'rgba(236,72,153,0.15)' },
+  performerBadgeText: { fontSize: 9, fontFamily: Font.extraBold, color: Colors.accent, letterSpacing: 0.5 },
+  performerBadgeTextVocalist: { color: '#ec4899' },
+  performerName: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.textPrimary },
 
   // Sold counter
   soldRow: {

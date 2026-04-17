@@ -84,13 +84,13 @@ const styles = StyleSheet.create({
   },
   imageWrapper: {
     position: 'relative',
-    width: 64,
-    height: 64,
+    width: 72,
+    height: 72,
   },
   image: {
-    width: 64,
-    height: 64,
-    borderRadius: 10,
+    width: 72,
+    height: 72,
+    borderRadius: 12,
     backgroundColor: Colors.surfaceElevated,
   },
   soldOverlay: {

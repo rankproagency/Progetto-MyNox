@@ -3,7 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Mic2, Music } from 'lucide-react';
+
+interface PerformerRow {
+  name: string;
+  role: 'dj' | 'vocalist';
+}
 
 const GENRES = ['Techno', 'House', 'Deep House', 'Latin', 'Hip-Hop', 'Pop', 'R&B', 'Reggaeton', 'Commercial'];
 
@@ -27,6 +32,7 @@ interface EventFormProps {
     dress_code: string | null;
     capacity: number;
     genres: string[];
+    performers: PerformerRow[];
     is_published: boolean;
     image_url: string | null;
   };
@@ -49,6 +55,10 @@ export default function EventForm({ clubId, event, initialTicketTypes }: EventFo
     genres: event?.genres ?? [] as string[],
     is_published: event?.is_published ?? false,
   });
+
+  const [performers, setPerformers] = useState<PerformerRow[]>(
+    event?.performers?.length ? event.performers : []
+  );
 
   const [ticketTypes, setTicketTypes] = useState<TicketTypeRow[]>(
     initialTicketTypes ?? [{ label: '', price: '', total_quantity: '', includes_drink: true }]
@@ -88,6 +98,18 @@ export default function EventForm({ clubId, event, initialTicketTypes }: EventFo
     }));
   }
 
+  function addPerformer(role: 'dj' | 'vocalist') {
+    setPerformers((prev) => [...prev, { name: '', role }]);
+  }
+
+  function removePerformer(index: number) {
+    setPerformers((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function updatePerformerName(index: number, name: string) {
+    setPerformers((prev) => prev.map((p, i) => i === index ? { ...p, name } : p));
+  }
+
   function addTicketType() {
     setTicketTypes((prev) => [...prev, { label: '', price: '', total_quantity: '', includes_drink: true }]);
   }
@@ -116,6 +138,7 @@ export default function EventForm({ clubId, event, initialTicketTypes }: EventFo
       capacity: form.capacity ? parseInt(form.capacity) : null,
       image_url: form.image_url || null,
       genres: form.genres,
+      performers: performers.filter((p) => p.name.trim()),
       is_published: publish,
     };
 
@@ -270,6 +293,62 @@ export default function EventForm({ clubId, event, initialTicketTypes }: EventFo
           ))}
         </div>
       </Field>
+
+      {/* Lineup — DJ e Vocalist */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="block text-xs font-medium text-slate-400 uppercase tracking-wide">Lineup</label>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => addPerformer('dj')}
+              className="flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 transition-colors"
+            >
+              <Music size={12} />
+              + DJ
+            </button>
+            <span className="text-white/20">|</span>
+            <button
+              type="button"
+              onClick={() => addPerformer('vocalist')}
+              className="flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 transition-colors"
+            >
+              <Mic2 size={12} />
+              + Vocalist
+            </button>
+          </div>
+        </div>
+
+        {performers.length === 0 && (
+          <p className="text-xs text-slate-600 italic">Nessun artista aggiunto. Usa i pulsanti sopra per aggiungere DJ o vocalist.</p>
+        )}
+
+        {performers.map((performer, index) => (
+          <div key={index} className="flex items-center gap-3 bg-[#111118] border border-white/8 rounded-lg px-4 py-3">
+            <span className={`flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md shrink-0 ${
+              performer.role === 'dj'
+                ? 'bg-purple-500/15 text-purple-300 border border-purple-500/20'
+                : 'bg-pink-500/15 text-pink-300 border border-pink-500/20'
+            }`}>
+              {performer.role === 'dj' ? <Music size={11} /> : <Mic2 size={11} />}
+              {performer.role === 'dj' ? 'DJ' : 'Vocalist'}
+            </span>
+            <input
+              value={performer.name}
+              onChange={(e) => updatePerformerName(index, e.target.value)}
+              placeholder={performer.role === 'dj' ? 'es. DJ Snake' : 'es. Kehlani'}
+              className="flex-1 bg-transparent border-none text-sm text-white placeholder-slate-500 focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => removePerformer(index)}
+              className="text-slate-600 hover:text-red-400 transition-colors shrink-0"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        ))}
+      </div>
 
       {/* Tipi di biglietto */}
       <div className="space-y-3">
