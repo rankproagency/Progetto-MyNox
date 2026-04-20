@@ -62,26 +62,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [musicGenres, setMusicGenresState] = useState<string[]>([]);
 
   useEffect(() => {
-    async function init() {
+    async function loadPrefs() {
       try {
-        const [{ data: { session } }, rawOnboarded, rawGenres] = await Promise.all([
-          supabase.auth.getSession(),
+        const [rawOnboarded, rawGenres] = await Promise.all([
           AsyncStorage.getItem(KEYS.onboarded),
           AsyncStorage.getItem(KEYS.genres),
         ]);
-        if (session) setUser(sessionToUser(session));
         if (rawOnboarded === 'true') setIsOnboarded(true);
         if (rawGenres) setMusicGenresState(JSON.parse(rawGenres));
-      } catch (_) {
-        // start fresh
-      } finally {
+      } catch (_) {}
+    }
+    loadPrefs();
+
+    // INITIAL_SESSION si triggera quando Supabase ha letto la sessione
+    // da AsyncStorage — è il momento giusto per sbloccare il routing
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session ? sessionToUser(session) : null);
+      if (event === 'INITIAL_SESSION') {
         setIsLoading(false);
       }
-    }
-    init();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session ? sessionToUser(session) : null);
     });
     return () => subscription.unsubscribe();
   }, []);

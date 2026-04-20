@@ -20,8 +20,28 @@ interface TicketTypeRow {
   includes_drink: boolean;
 }
 
+interface ClubTableData {
+  id: string;
+  label: string;
+  capacity: number;
+  posX: number;
+  posY: number;
+  defaultDeposit: number;
+}
+
+interface EventTableRow {
+  clubTableId: string;
+  label: string;
+  capacity: number;
+  deposit: string;
+  defaultDeposit: number;
+  isAvailable: boolean;
+}
+
 interface EventFormProps {
   clubId: string;
+  clubFloorPlanUrl?: string | null;
+  clubTables?: ClubTableData[];
   event?: {
     id: string;
     name: string;
@@ -37,9 +57,10 @@ interface EventFormProps {
     image_url: string | null;
   };
   initialTicketTypes?: TicketTypeRow[];
+  initialEventTables?: EventTableRow[];
 }
 
-export default function EventForm({ clubId, event, initialTicketTypes }: EventFormProps) {
+export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event, initialTicketTypes, initialEventTables }: EventFormProps) {
   const router = useRouter();
   const isEdit = !!event;
 
@@ -62,6 +83,23 @@ export default function EventForm({ clubId, event, initialTicketTypes }: EventFo
 
   const [ticketTypes, setTicketTypes] = useState<TicketTypeRow[]>(
     initialTicketTypes ?? [{ label: '', price: '', total_quantity: '', includes_drink: true }]
+  );
+
+  const defaultEventTables = (clubTables ?? []).map((t) => ({
+    clubTableId: t.id,
+    label: t.label,
+    capacity: t.capacity,
+    deposit: String(t.defaultDeposit),
+    defaultDeposit: t.defaultDeposit,
+    isAvailable: true,
+  }));
+
+  const [eventTables, setEventTables] = useState<EventTableRow[]>(
+    initialEventTables ?? defaultEventTables
+  );
+  const [customizeTables, setCustomizeTables] = useState(
+    // Se c'è già una personalizzazione, parte in modalità modifica
+    !!initialEventTables && initialEventTables.some((t) => t.deposit !== String(t.defaultDeposit))
   );
 
   const [loading, setLoading] = useState(false);
@@ -170,6 +208,27 @@ export default function EventForm({ clubId, event, initialTicketTypes }: EventFo
       if (ticketError) { setError('Evento salvato ma errore nei biglietti: ' + ticketError.message); setLoading(false); return; }
     }
 
+    // Salva tavoli evento (con prezzi specifici per questo evento)
+    if (eventId && eventTables.length > 0) {
+      await supabase.from('tables').delete().eq('event_id', eventId);
+      const { error: tablesError } = await supabase.from('tables').insert(
+        eventTables.map((t) => {
+          const clubTable = clubTables?.find((ct) => ct.id === t.clubTableId);
+          return {
+            event_id: eventId,
+            club_table_id: t.clubTableId,
+            label: t.label,
+            capacity: t.capacity,
+            deposit: t.deposit ? parseFloat(t.deposit) : 0,
+            is_available: t.isAvailable,
+            pos_x: clubTable?.posX ?? null,
+            pos_y: clubTable?.posY ?? null,
+          };
+        })
+      );
+      if (tablesError) { setError('Evento salvato ma errore nei tavoli: ' + tablesError.message); setLoading(false); return; }
+    }
+
     setLoading(false);
     router.push('/club/events');
     router.refresh();
@@ -273,6 +332,140 @@ export default function EventForm({ clubId, event, initialTicketTypes }: EventFo
           )}
         </div>
       </Field>
+
+      {/* Tavoli */}
+      {eventTables.length > 0 ? (
+        <div className="space-y-4">
+          <label className="block text-xs font-medium text-slate-400 uppercase tracking-wide">
+            Tavoli
+          </label>
+
+          {/* Piantina — solo estetica */}
+          {clubFloorPlanUrl && clubTables && clubTables.length > 0 && (
+            <div className="relative select-none">
+              {/* Immagine con clip separato */}
+              <div className="overflow-hidden rounded-xl border border-white/10 pointer-events-none">
+                <img
+                  src={clubFloorPlanUrl}
+                  alt="Piantina"
+                  className="w-full object-contain block"
+                />
+              </div>
+
+              {/* Marker — fuori dal clip così i tooltip non vengono tagliati */}
+              {clubTables.map((t) => {
+                const isAvailable = eventTables.find(et => et.clubTableId === t.id)?.isAvailable !== false;
+                const showBelow = t.posY < 0.28;
+                const tooltipAlign =
+                  t.posX < 0.22
+                    ? 'left-0'
+                    : t.posX > 0.78
+                    ? 'right-0'
+                    : 'left-1/2 -translate-x-1/2';
+
+                return (
+                  <div
+                    key={t.id}
+                    className="group absolute"
+                    style={{
+                      left: `${t.posX * 100}%`,
+                      top: `${t.posY * 100}%`,
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 10,
+                    }}
+                  >
+                    <div className={`w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold shadow-lg ${
+                      isAvailable ? 'bg-purple-600' : 'bg-slate-600 opacity-50'
+                    }`}>
+                      {t.capacity}
+                    </div>
+                    <div className={`absolute ${tooltipAlign} ${showBelow ? 'top-full mt-1' : 'bottom-full mb-1'} hidden group-hover:block z-20 pointer-events-none`}>
+                      <div className="whitespace-nowrap bg-[#0d0e1a] border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-white shadow-xl">
+                        <span className="font-semibold">{t.label}</span>
+                        <span className="text-slate-400"> · {t.capacity} posti</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Header prezzi + toggle */}
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-slate-500">
+              {customizeTables ? 'Modifica caparra e disponibilità per questo evento' : 'Prezzi di default — uguali per ogni evento'}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                if (customizeTables) {
+                  // Ripristina defaults mantenendo lo stato di prenotazione
+                  setEventTables(defaultEventTables.map((dt) => ({
+                    ...dt,
+                    isAvailable: eventTables.find((et) => et.clubTableId === dt.clubTableId)?.isAvailable ?? true,
+                  })));
+                }
+                setCustomizeTables((v) => !v);
+              }}
+              className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
+                customizeTables
+                  ? 'border-purple-500/30 text-purple-400 bg-purple-500/10 hover:bg-purple-500/20'
+                  : 'border-white/10 text-slate-400 hover:text-slate-200 hover:border-white/20'
+              }`}
+            >
+              {customizeTables ? '✕ Ripristina default' : 'Modifica per questo evento'}
+            </button>
+          </div>
+
+          {/* Lista tavoli */}
+          <div className="space-y-2">
+            {eventTables.map((t, i) => (
+              <div key={t.clubTableId} className={`flex items-center gap-3 bg-[#111118] border rounded-lg px-4 py-3 transition-colors ${
+                !t.isAvailable ? 'opacity-50 border-white/5' : 'border-white/8'
+              }`}>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{t.label}</p>
+                  <p className="text-xs text-slate-500">{t.capacity} posti</p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-xs text-slate-500">€</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={customizeTables ? t.deposit : t.defaultDeposit}
+                    disabled={!customizeTables}
+                    onChange={(e) => setEventTables((prev) =>
+                      prev.map((row, idx) => idx === i ? { ...row, deposit: e.target.value } : row)
+                    )}
+                    className="w-20 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors text-right disabled:opacity-40 disabled:cursor-not-allowed"
+                  />
+                </div>
+                <label className={`flex items-center gap-1.5 shrink-0 ${customizeTables ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}>
+                  <input
+                    type="checkbox"
+                    checked={t.isAvailable}
+                    disabled={!customizeTables}
+                    onChange={(e) => setEventTables((prev) =>
+                      prev.map((row, idx) => idx === i ? { ...row, isAvailable: e.target.checked } : row)
+                    )}
+                    className="w-3.5 h-3.5 rounded accent-purple-500"
+                  />
+                  <span className="text-xs text-slate-500">Attivo</span>
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="bg-[#111118] border border-white/8 rounded-xl p-5 text-center">
+          <p className="text-sm text-slate-500">Nessun tavolo configurato per questo locale.</p>
+          <a href="/club/venue" className="text-xs text-purple-400 hover:text-purple-300 mt-1 inline-block">
+            Vai a Piantina & Tavoli →
+          </a>
+        </div>
+      )}
 
       {/* Generi musicali */}
       <Field label="Generi musicali">

@@ -1,0 +1,163 @@
+'use client';
+
+import { useState } from 'react';
+import { Search } from 'lucide-react';
+
+type Event = {
+  id: string;
+  name: string;
+  date: string;
+  start_time: string;
+  tickets_sold: number;
+  capacity: number | null;
+  is_published: boolean;
+  clubName: string;
+  revenue: number;
+  commission: number;
+};
+
+export default function EventsTable({
+  futureEvents,
+  pastEvents,
+}: {
+  futureEvents: Event[];
+  pastEvents: Event[];
+}) {
+  const [query, setQuery] = useState('');
+
+  const q = query.trim().toLowerCase();
+
+  const filteredFuture = q
+    ? futureEvents.filter(
+        (e) => e.name.toLowerCase().includes(q) || e.clubName.toLowerCase().includes(q)
+      )
+    : futureEvents;
+
+  const filteredPast = q
+    ? pastEvents.filter(
+        (e) => e.name.toLowerCase().includes(q) || e.clubName.toLowerCase().includes(q)
+      )
+    : pastEvents;
+
+  const empty = filteredFuture.length === 0 && filteredPast.length === 0;
+
+  return (
+    <div>
+      {/* Search bar */}
+      <div className="relative mb-4">
+        <Search
+          size={15}
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+        />
+        <input
+          type="text"
+          placeholder="Cerca per nome evento o discoteca…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="w-full bg-[#111118] border border-white/8 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/50 transition-colors"
+        />
+      </div>
+
+      {/* Table */}
+      <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-white/8">
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Nome</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Discoteca</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Data</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Biglietti</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Ricavi</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Commissione</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
+            </tr>
+          </thead>
+          <tbody>
+            {empty ? (
+              <tr>
+                <td colSpan={7} className="px-5 py-12 text-center text-slate-500">
+                  {q ? `Nessun evento trovato per "${query}".` : 'Nessun evento trovato.'}
+                </td>
+              </tr>
+            ) : null}
+
+            {/* Futuri */}
+            {filteredFuture.map((event) => (
+              <tr
+                key={event.id}
+                className="border-b border-white/5 hover:bg-white/3 transition-colors"
+              >
+                <td className="px-5 py-4 text-white font-medium">{event.name}</td>
+                <td className="px-5 py-4 text-slate-300">{event.clubName}</td>
+                <td className="px-5 py-4 text-slate-300 whitespace-nowrap">
+                  {new Date(event.date).toLocaleDateString('it-IT')} · {event.start_time}
+                </td>
+                <td className="px-5 py-4 text-slate-300">
+                  {event.tickets_sold}{event.capacity ? ` / ${event.capacity}` : ''}
+                </td>
+                <td className="px-5 py-4 font-semibold text-purple-400">
+                  €{event.revenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </td>
+                <td className="px-5 py-4 text-green-400 font-medium">
+                  €{event.commission.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </td>
+                <td className="px-5 py-4">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                      event.is_published
+                        ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                        : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                    }`}
+                  >
+                    {event.is_published ? 'Pubblicato' : 'Bozza'}
+                  </span>
+                </td>
+              </tr>
+            ))}
+
+            {/* Separatore passati */}
+            {filteredPast.length > 0 && (
+              <>
+                <tr>
+                  <td colSpan={7} className="px-5 py-2.5 bg-white/3 border-y border-white/8">
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Eventi passati
+                    </span>
+                  </td>
+                </tr>
+                {filteredPast.map((event, i) => (
+                  <tr
+                    key={event.id}
+                    className={`border-b border-white/5 opacity-55 ${
+                      i === filteredPast.length - 1 ? 'border-b-0' : ''
+                    }`}
+                  >
+                    <td className="px-5 py-4 text-slate-300 font-medium">{event.name}</td>
+                    <td className="px-5 py-4 text-slate-400">{event.clubName}</td>
+                    <td className="px-5 py-4 text-slate-400 whitespace-nowrap">
+                      {new Date(event.date).toLocaleDateString('it-IT')} · {event.start_time}
+                    </td>
+                    <td className="px-5 py-4 text-slate-400">
+                      {event.tickets_sold}{event.capacity ? ` / ${event.capacity}` : ''}
+                    </td>
+                    <td className="px-5 py-4 font-semibold text-purple-400/70">
+                      €{event.revenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-5 py-4 text-green-400/60 font-medium">
+                      €{event.commission.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-slate-500/10 text-slate-500 border-slate-500/20">
+                        Concluso
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

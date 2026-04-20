@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Share } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Share, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -48,7 +48,7 @@ export default function TicketScreen() {
         <TouchableOpacity onPress={() => router.replace('/(tabs)/tickets')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Il mio biglietto</Text>
+        <Text style={styles.headerTitle}>{ticket.type === 'table' ? 'La mia prenotazione' : 'Il mio biglietto'}</Text>
         <TouchableOpacity style={styles.backButton} onPress={handleGift}>
           <Ionicons name="gift-outline" size={20} color={Colors.accent} />
         </TouchableOpacity>
@@ -63,43 +63,81 @@ export default function TicketScreen() {
             {ticket.clubName} · {ticket.date} · {ticket.startTime}
           </Text>
           <View style={styles.badgeRow}>
-            <View style={styles.ticketBadge}>
-              <Text style={styles.ticketBadgeText}>{ticket.ticketLabel}</Text>
+            <View style={[styles.ticketBadge, ticket.type === 'table' && styles.tableBadge]}>
+              <Ionicons
+                name={ticket.type === 'table' ? 'grid-outline' : 'ticket-outline'}
+                size={11}
+                color={Colors.white}
+                style={{ marginRight: 4 }}
+              />
+              <Text style={styles.ticketBadgeText}>
+                {ticket.type === 'table'
+                  ? (ticket.tableName ? `${ticket.ticketLabel} · ${ticket.tableName}` : ticket.ticketLabel)
+                  : ticket.ticketLabel}
+              </Text>
             </View>
             <CountdownInline rawDate={ticket.rawDate} startTime={ticket.startTime} />
           </View>
         </View>
 
-        {/* Ticket card — toggle + separatore perforato + QR */}
+        {/* Ticket card */}
         <View style={styles.ticketCard}>
 
-          {/* Toggle */}
-          <View style={styles.toggle}>
-            <TouchableOpacity
-              style={[styles.toggleBtn, activeQR === 'entry' && styles.toggleActive]}
-              onPress={() => { Haptics.selectionAsync(); setActiveQR('entry'); }}
-            >
-              <Ionicons
-                name="scan-outline"
-                size={14}
-                color={activeQR === 'entry' ? Colors.white : Colors.textMuted}
-                style={{ marginRight: 4 }}
-              />
-              <Text style={[styles.toggleText, activeQR === 'entry' && styles.toggleTextActive]}>Ingresso</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.toggleBtn, activeQR === 'drink' && styles.toggleActive]}
-              onPress={() => { Haptics.selectionAsync(); setActiveQR('drink'); }}
-            >
-              <Ionicons
-                name="wine-outline"
-                size={14}
-                color={activeQR === 'drink' ? Colors.white : Colors.textMuted}
-                style={{ marginRight: 4 }}
-              />
-              <Text style={[styles.toggleText, activeQR === 'drink' && styles.toggleTextActive]}>Free drink</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Toggle drink — solo per prevendita */}
+          {ticket.type === 'ticket' && (
+            <View style={styles.toggle}>
+              <TouchableOpacity
+                style={[styles.toggleBtn, activeQR === 'entry' && styles.toggleActive]}
+                onPress={() => { Haptics.selectionAsync(); setActiveQR('entry'); }}
+              >
+                <Ionicons
+                  name="scan-outline"
+                  size={14}
+                  color={activeQR === 'entry' ? Colors.white : Colors.textMuted}
+                  style={{ marginRight: 4 }}
+                />
+                <Text style={[styles.toggleText, activeQR === 'entry' && styles.toggleTextActive]}>Ingresso</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.toggleBtn, activeQR === 'drink' && styles.toggleActive]}
+                onPress={() => { Haptics.selectionAsync(); setActiveQR('drink'); }}
+              >
+                <Ionicons
+                  name="wine-outline"
+                  size={14}
+                  color={activeQR === 'drink' ? Colors.white : Colors.textMuted}
+                  style={{ marginRight: 4 }}
+                />
+                <Text style={[styles.toggleText, activeQR === 'drink' && styles.toggleTextActive]}>Free drink</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Intestazione tavolo — solo per prenotazioni */}
+          {ticket.type === 'table' && (
+            <View style={styles.tableCardHeader}>
+              <View style={styles.tableCardHeaderLeft}>
+                <Ionicons name="grid-outline" size={16} color={Colors.accent} />
+                <View>
+                  <Text style={styles.tableCardTitle}>{ticket.ticketLabel}</Text>
+                  {ticket.tableName ? (
+                    <Text style={styles.tableCardSub}>"{ticket.tableName}"</Text>
+                  ) : null}
+                </View>
+              </View>
+              <View style={styles.tableCardBadgesCol}>
+                {ticket.tableCapacity != null && (
+                  <View style={styles.capacityBadge}>
+                    <Ionicons name="people-outline" size={11} color={Colors.textSecondary} style={{ marginRight: 3 }} />
+                    <Text style={styles.capacityBadgeText}>{ticket.tableCapacity} posti</Text>
+                  </View>
+                )}
+                <View style={styles.tableCardBadge}>
+                  <Text style={styles.tableCardBadgeText}>Solo ingresso</Text>
+                </View>
+              </View>
+            </View>
+          )}
 
           {/* Separatore perforato */}
           <View style={styles.perforationRow}>
@@ -145,7 +183,21 @@ export default function TicketScreen() {
                           style={styles.bouncerBtn}
                           onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                            markTicketUsed(ticket.id);
+                            Alert.alert(
+                              'Conferma ingresso',
+                              'Stai per segnare questo biglietto come usato. L\'operazione è irreversibile.',
+                              [
+                                {
+                                  text: 'Conferma ingresso',
+                                  style: 'destructive',
+                                  onPress: () => {
+                                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                                    markTicketUsed(ticket.id);
+                                  },
+                                },
+                                { text: 'Annulla', style: 'cancel' },
+                              ]
+                            );
                           }}
                         >
                           <Ionicons name="shield-checkmark-outline" size={16} color={Colors.white} />
@@ -162,11 +214,11 @@ export default function TicketScreen() {
                   </>
                 )}
               </>
-            ) : (
+            ) : ticket.type === 'ticket' ? (
               <>
                 <View style={[styles.qrWrapper, ticket.drinkUsed && styles.qrUsed]}>
                   <QRCode
-                    value={ticket.drinkQrCode}
+                    value={ticket.drinkQrCode!}
                     size={210}
                     backgroundColor="white"
                     color={ticket.drinkUsed ? '#aaa' : 'black'}
@@ -197,7 +249,21 @@ export default function TicketScreen() {
                       style={styles.baristaBtm}
                       onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                        markDrinkUsed(ticket.id);
+                        Alert.alert(
+                          'Conferma free drink',
+                          'Stai per segnare il free drink come riscattato. L\'operazione è irreversibile.',
+                          [
+                            {
+                              text: 'Conferma riscatto',
+                              style: 'destructive',
+                              onPress: () => {
+                                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                                markDrinkUsed(ticket.id);
+                              },
+                            },
+                            { text: 'Annulla', style: 'cancel' },
+                          ]
+                        );
                       }}
                     >
                       <Ionicons name="checkmark" size={16} color={Colors.white} />
@@ -212,7 +278,7 @@ export default function TicketScreen() {
                   </>
                 )}
               </>
-            )}
+            ) : null}
           </View>
 
         </View>
@@ -296,8 +362,13 @@ const styles = StyleSheet.create({
   eventMeta: { fontSize: 13, color: Colors.textSecondary, textAlign: 'center', marginBottom: 10 },
   badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   ticketBadge: {
+    flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.accent,
     borderRadius: 8, paddingHorizontal: 12, paddingVertical: 4,
+  },
+  tableBadge: {
+    backgroundColor: 'rgba(168,85,247,0.25)',
+    borderWidth: 1, borderColor: Colors.accent,
   },
   ticketBadgeText: { fontSize: 12, fontWeight: '700', color: Colors.white },
 
@@ -327,6 +398,64 @@ const styles = StyleSheet.create({
   toggleActive: { backgroundColor: Colors.accent },
   toggleText: { fontSize: 14, fontWeight: '600', color: Colors.textMuted },
   toggleTextActive: { color: Colors.white },
+
+  tableCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  tableCardHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  tableCardTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  tableCardSub: {
+    fontSize: 12,
+    color: Colors.accent,
+    marginTop: 1,
+  },
+  tableCardBadgesCol: {
+    alignItems: 'flex-end',
+    gap: 5,
+  },
+  capacityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  capacityBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+  tableCardBadge: {
+    backgroundColor: 'rgba(168,85,247,0.12)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(168,85,247,0.3)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  tableCardBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.accent,
+  },
 
   perforationRow: {
     flexDirection: 'row',

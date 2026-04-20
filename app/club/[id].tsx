@@ -27,7 +27,7 @@ export default function ClubScreen() {
         supabase.from('clubs').select('*').eq('id', id).single(),
         supabase
           .from('events')
-          .select('*, clubs(*), ticket_types(*), tables(*)')
+          .select('*, clubs(*), ticket_types(*), tables(*, club_tables(pos_x, pos_y))')
           .eq('club_id', id)
           .eq('is_published', true)
           .order('date', { ascending: true }),
@@ -69,6 +69,7 @@ export default function ClubScreen() {
           genres: row.genres ?? [],
           description: row.description ?? '',
           lineup: Array.isArray(row.lineup) ? row.lineup : [],
+          performers: Array.isArray(row.performers) ? row.performers : [],
           ticketTypes: (row.ticket_types ?? []).map((t: any): TicketType => ({
             id: t.id,
             eventId: row.id,
@@ -86,6 +87,8 @@ export default function ClubScreen() {
             capacity: t.capacity,
             deposit: Number(t.deposit),
             available: t.is_available,
+          posX: t.club_tables?.pos_x ?? t.pos_x ?? undefined,
+          posY: t.club_tables?.pos_y ?? t.pos_y ?? undefined,
           })),
         })));
       }

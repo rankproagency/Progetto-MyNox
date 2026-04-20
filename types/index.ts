@@ -39,6 +39,7 @@ export interface Event {
   date: string;
   startTime: string;
   imageUrl: string;
+  floorPlanUrl?: string;
   dressCode: string;
   capacity: number;
   ticketsSold: number;

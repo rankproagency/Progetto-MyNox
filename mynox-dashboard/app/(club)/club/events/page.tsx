@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, Lock } from 'lucide-react';
 
 export default async function ClubEventsPage() {
   const profile = await getProfile();
@@ -30,6 +30,12 @@ export default async function ClubEventsPage() {
       revenueByEvent[id] = (revenueByEvent[id] ?? 0) + price;
     }
   }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const futureEvents = (events ?? []).filter((e) => new Date(e.date) >= today);
+  const pastEvents = (events ?? []).filter((e) => new Date(e.date) < today);
 
   return (
     <div>
@@ -61,10 +67,15 @@ export default async function ClubEventsPage() {
             </tr>
           </thead>
           <tbody>
-            {events && events.length > 0 ? (
-              events.map((event) => (
+            {/* ── Eventi futuri ── */}
+            {futureEvents.length > 0 ? (
+              futureEvents.map((event) => (
                 <tr key={event.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
-                  <td className="px-5 py-4 text-white font-medium">{event.name}</td>
+                  <td className="px-5 py-4 font-medium">
+                    <Link href={`/club/events/${event.id}`} className="text-white hover:text-purple-400 transition-colors">
+                      {event.name}
+                    </Link>
+                  </td>
                   <td className="px-5 py-4 text-slate-300">
                     {new Date(event.date).toLocaleDateString('it-IT')}
                   </td>
@@ -98,7 +109,7 @@ export default async function ClubEventsPage() {
             ) : (
               <tr>
                 <td colSpan={7} className="px-5 py-16 text-center">
-                  <p className="text-slate-400 font-medium mb-1">Nessun evento ancora</p>
+                  <p className="text-slate-400 font-medium mb-1">Nessun evento in programma</p>
                   <p className="text-slate-500 text-xs mb-4">Crea il tuo primo evento per iniziare a vendere biglietti.</p>
                   <Link
                     href="/club/events/new"
@@ -109,6 +120,53 @@ export default async function ClubEventsPage() {
                   </Link>
                 </td>
               </tr>
+            )}
+
+            {/* ── Separatore eventi passati ── */}
+            {pastEvents.length > 0 && (
+              <>
+                <tr>
+                  <td colSpan={7} className="px-5 py-2.5 bg-white/3 border-y border-white/8">
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Eventi passati
+                    </span>
+                  </td>
+                </tr>
+
+                {pastEvents.map((event, i) => (
+                  <tr
+                    key={event.id}
+                    className={`border-b border-white/5 opacity-60 ${i === pastEvents.length - 1 ? 'border-b-0' : ''}`}
+                  >
+                    <td className="px-5 py-4 font-medium">
+                      <Link href={`/club/events/${event.id}`} className="text-slate-300 hover:text-white transition-colors">
+                        {event.name}
+                      </Link>
+                    </td>
+                    <td className="px-5 py-4 text-slate-400">
+                      {new Date(event.date).toLocaleDateString('it-IT')}
+                    </td>
+                    <td className="px-5 py-4 text-slate-400">{event.start_time}</td>
+                    <td className="px-5 py-4 text-slate-400">
+                      {event.tickets_sold}{event.capacity ? ` / ${event.capacity}` : ''}
+                    </td>
+                    <td className="px-5 py-4 font-semibold text-purple-400/70">
+                      €{(revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-slate-500/10 text-slate-500 border-slate-500/20">
+                        Concluso
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <span className="inline-flex items-center gap-1.5 text-xs text-slate-600 select-none">
+                        <Lock size={11} />
+                        Non modificabile
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </>
             )}
           </tbody>
         </table>

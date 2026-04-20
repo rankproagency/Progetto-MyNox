@@ -15,15 +15,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/colors';
-import { useProfile } from '../contexts/ProfileContext';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function EditProfileScreen() {
   const router = useRouter();
-  const { profile, updateProfile } = useProfile();
   const { user, updateUser } = useAuth();
-  const [name, setName] = useState(user?.name ?? profile.name);
-  const [email, setEmail] = useState(user?.email ?? profile.email);
+  const [name, setName] = useState(user?.name ?? '');
+  const [email, setEmail] = useState(user?.email ?? '');
 
   function handleSave() {
     if (!name.trim()) {
@@ -36,7 +34,6 @@ export default function EditProfileScreen() {
     }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     updateUser({ name: name.trim(), email: email.trim() });
-    updateProfile({ name: name.trim(), email: email.trim() });
     router.back();
   }
 

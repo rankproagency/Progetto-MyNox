@@ -7,18 +7,21 @@ import {
   Alert,
   TextInput,
   ActivityIndicator,
+  Modal,
+  Animated,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useEvents } from '../contexts/EventsContext';
 import { notifyTicketConfirmed, scheduleEventReminders } from '../hooks/useNotifications';
 import { useTickets } from '../contexts/TicketsContext';
+import { supabase } from '../lib/supabase';
 
 function generateId(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -35,10 +38,11 @@ const PROMO_CODES: Record<string, { type: 'percent' | 'flat'; value: number; lab
 };
 
 export default function CheckoutScreen() {
-  const { eventId, ticketId, tableId, qty } = useLocalSearchParams<{
+  const { eventId, ticketId, tableId, tableName, qty } = useLocalSearchParams<{
     eventId: string;
     ticketId: string;
     tableId: string;
+    tableName: string;
     qty: string;
   }>();
   const router = useRouter();
@@ -46,28 +50,55 @@ export default function CheckoutScreen() {
 
   const { events } = useEvents();
   const event = events.find((e) => e.id === eventId);
-  const ticket = event?.ticketTypes.find((t) => t.id === ticketId);
+  const ticket = ticketId ? event?.ticketTypes.find((t) => t.id === ticketId) : null;
   const table = tableId ? event?.tables.find((t) => t.id === tableId) : null;
   const quantity = Math.max(1, parseInt(qty ?? '1', 10));
+  const isTableOnly = !ticket && !!table;
 
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<(typeof PROMO_CODES)[string] | null>(null);
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<'apple' | 'card' | 'google'>('apple');
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  if (!event || !ticket) return null;
+  const successScale = useRef(new Animated.Value(0)).current;
+  const successOpacity = useRef(new Animated.Value(0)).current;
 
-  const ticketSubtotal = ticket.price * quantity;
-  const discount = appliedPromo
+  useEffect(() => {
+    if (showSuccess) {
+      Animated.parallel([
+        Animated.spring(successScale, {
+          toValue: 1,
+          useNativeDriver: true,
+          damping: 12,
+          stiffness: 180,
+        }),
+        Animated.timing(successOpacity, {
+          toValue: 1,
+          duration: 220,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      successScale.setValue(0);
+      successOpacity.setValue(0);
+    }
+  }, [showSuccess]);
+
+  if (!event || (!ticket && !table)) return null;
+
+  const ticketSubtotal = ticket ? ticket.price * quantity : 0;
+  const discount = appliedPromo && !isTableOnly
     ? appliedPromo.type === 'percent'
       ? parseFloat(((ticketSubtotal * appliedPromo.value) / 100).toFixed(2))
       : Math.min(appliedPromo.value, ticketSubtotal)
     : 0;
   const discountedSubtotal = ticketSubtotal - discount;
   const tableDeposit = table?.deposit ?? 0;
-  const commission = parseFloat(((discountedSubtotal + tableDeposit) * 0.08).toFixed(2));
-  const total = parseFloat((discountedSubtotal + tableDeposit + commission).toFixed(2));
+  const base = isTableOnly ? tableDeposit : discountedSubtotal + tableDeposit;
+  const commission = parseFloat((base * 0.08).toFixed(2));
+  const total = parseFloat((base + commission).toFixed(2));
 
   async function handleApplyPromo() {
     const code = promoInput.trim().toUpperCase();
@@ -103,26 +134,55 @@ export default function CheckoutScreen() {
             } catch (_) {
               // notification failure must not block ticket creation
             }
+            if (table && tableId) {
+              try {
+                await supabase
+                  .from('tables')
+                  .update({ is_available: false, reserved_by: tableName?.trim() || null })
+                  .eq('id', tableId);
+              } catch (_) {
+                // aggiornamento tavolo fallito — il biglietto viene comunque creato
+              }
+            }
             const formatted = formatDate(event!.date);
-            const newTickets = Array.from({ length: quantity }, () => {
-              const id = generateId();
-              return {
-                id,
-                eventId: event!.id,
-                eventName: event!.name,
-                clubName: event!.club?.name ?? '',
-                rawDate: event!.date,
-                date: formatted,
-                startTime: event!.startTime,
-                ticketLabel: ticket!.label,
-                qrCode: `MYNOX-TICKET-${id}`,
-                drinkQrCode: `MYNOX-DRINK-${id}`,
-                drinkUsed: false,
-                status: 'valid' as const,
-              };
-            });
+            const newTickets = isTableOnly
+              ? [{
+                  id: generateId(),
+                  type: 'table' as const,
+                  eventId: event!.id,
+                  eventName: event!.name,
+                  clubName: event!.club?.name ?? '',
+                  rawDate: event!.date,
+                  date: formatted,
+                  startTime: event!.startTime,
+                  ticketLabel: table!.label,
+                  tableName: tableName?.trim() || undefined,
+                  tableCapacity: table!.capacity,
+                  pricePaid: total,
+                  qrCode: `MYNOX-TABLE-${generateId()}`,
+                  status: 'valid' as const,
+                }]
+              : Array.from({ length: quantity }, () => {
+                  const id = generateId();
+                  return {
+                    id,
+                    type: 'ticket' as const,
+                    eventId: event!.id,
+                    eventName: event!.name,
+                    clubName: event!.club?.name ?? '',
+                    rawDate: event!.date,
+                    date: formatted,
+                    startTime: event!.startTime,
+                    ticketLabel: ticket!.label,
+                    pricePaid: total / quantity,
+                    qrCode: `MYNOX-TICKET-${id}`,
+                    drinkQrCode: `MYNOX-DRINK-${id}`,
+                    drinkUsed: false,
+                    status: 'valid' as const,
+                  };
+                });
             await addTickets(newTickets);
-            router.replace('/(tabs)/tickets');
+            setShowSuccess(true);
           },
         },
         { text: 'Annulla', style: 'cancel' },
@@ -130,7 +190,51 @@ export default function CheckoutScreen() {
     );
   }
 
+  const isTable = isTableOnly;
+  const successLabel = isTable
+    ? table!.label
+    : `${quantity}× ${ticket!.label}`;
+
   return (
+    <>
+      <Modal visible={showSuccess} transparent animationType="fade" statusBarTranslucent>
+        <View style={styles.successOverlay}>
+          <Animated.View style={[styles.successCard, { opacity: successOpacity, transform: [{ scale: successScale }] }]}>
+            <LinearGradient
+              colors={['rgba(168,85,247,0.18)', 'transparent']}
+              style={styles.successGradient}
+              pointerEvents="none"
+            />
+            <View style={styles.successIconRing}>
+              <Ionicons name="checkmark" size={38} color={Colors.white} />
+            </View>
+            <Text style={styles.successTitle}>Acquisto completato!</Text>
+            <Text style={styles.successEventName}>{event!.name}</Text>
+            <Text style={styles.successMeta}>{event!.club?.name} · {formatDate(event!.date)}</Text>
+            <View style={styles.successDivider} />
+            <View style={styles.successDetail}>
+              <Ionicons name="ticket-outline" size={14} color={Colors.accent} />
+              <Text style={styles.successDetailText}>{successLabel}</Text>
+            </View>
+            <View style={styles.successDetail}>
+              <Ionicons name="card-outline" size={14} color={Colors.accent} />
+              <Text style={styles.successDetailText}>€{total} pagati</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.successBtn}
+              activeOpacity={0.85}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.replace('/(tabs)/tickets');
+              }}
+            >
+              <Text style={styles.successBtnText}>Vedi il mio biglietto</Text>
+              <Ionicons name="arrow-forward" size={16} color={Colors.white} />
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+      </Modal>
+
     <View style={styles.outerContainer}>
       <LinearGradient
         colors={['rgba(168,85,247,0.20)', 'transparent']}
@@ -142,7 +246,7 @@ export default function CheckoutScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Checkout</Text>
+        <Text style={styles.headerTitle}>{isTableOnly ? 'Prenota tavolo' : 'Checkout'}</Text>
         <View style={{ width: 38 }} />
       </View>
 
@@ -156,15 +260,24 @@ export default function CheckoutScreen() {
             <Text style={styles.clubName}>{event.club?.name} · {formatDate(event.date)}</Text>
             <View style={styles.divider} />
 
-            {quantity > 1 ? (
-              <Row label={`Biglietto ${ticket.label} × ${quantity}`} value={`€${ticketSubtotal}`} />
-            ) : (
-              <Row label={`Biglietto ${ticket.label}`} value={`€${ticket.price}`} />
+            {ticket && (
+              <>
+                {quantity > 1 ? (
+                  <Row label={`Biglietto ${ticket.label} × ${quantity}`} value={`€${ticketSubtotal}`} />
+                ) : (
+                  <Row label={`Biglietto ${ticket.label}`} value={`€${ticket.price}`} />
+                )}
+                {ticket.includesDrink && (
+                  <Row label={quantity > 1 ? `${quantity} free drink inclusi` : 'Free drink incluso'} value="✓" accent />
+                )}
+              </>
             )}
-            {ticket.includesDrink && (
-              <Row label={quantity > 1 ? `${quantity} free drink inclusi` : 'Free drink incluso'} value="✓" accent />
+            {table && (
+              <Row
+                label={tableName ? `${table.label} · "${tableName}" (caparra)` : `${table.label} (caparra)`}
+                value={`€${tableDeposit}`}
+              />
             )}
-            {table && <Row label={`${table.label} (caparra)`} value={`€${tableDeposit}`} />}
 
             {appliedPromo && (
               <>
@@ -179,8 +292,8 @@ export default function CheckoutScreen() {
           </View>
         </View>
 
-        {/* Codice promo */}
-        <View style={styles.section}>
+        {/* Codice promo — solo per biglietti */}
+        {!isTableOnly && <View style={styles.section}>
           <Text style={styles.sectionTitle}>Hai un codice promo?</Text>
           <View style={styles.promoRow}>
             <TextInput
@@ -227,7 +340,7 @@ export default function CheckoutScreen() {
               <Text style={styles.promoErrorText}>{promoError}</Text>
             </View>
           ) : null}
-        </View>
+        </View>}
 
         {/* Disclaimer */}
         <View style={styles.section}>
@@ -264,6 +377,7 @@ export default function CheckoutScreen() {
       </View>
     </SafeAreaView>
     </View>
+    </>
   );
 }
 
@@ -414,4 +528,62 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   ctaText: { fontSize: 16, fontFamily: Font.extraBold, color: Colors.white },
+
+  // Success overlay
+  successOverlay: {
+    flex: 1, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    paddingHorizontal: 28,
+  },
+  successCard: {
+    width: '100%', backgroundColor: '#111118',
+    borderRadius: 28, borderWidth: 1, borderColor: 'rgba(168,85,247,0.25)',
+    padding: 32, alignItems: 'center', overflow: 'hidden',
+  },
+  successGradient: {
+    position: 'absolute', top: 0, left: 0, right: 0, height: 160,
+  },
+  successIconRing: {
+    width: 80, height: 80, borderRadius: 40,
+    backgroundColor: Colors.accent,
+    justifyContent: 'center', alignItems: 'center',
+    marginBottom: 24,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.55,
+    shadowRadius: 18,
+    elevation: 12,
+  },
+  successTitle: {
+    fontSize: 22, fontFamily: Font.extraBold, color: Colors.white,
+    marginBottom: 8,
+  },
+  successEventName: {
+    fontSize: 16, fontFamily: Font.bold, color: Colors.textPrimary,
+    textAlign: 'center', marginBottom: 4,
+  },
+  successMeta: {
+    fontSize: 13, color: Colors.textMuted, marginBottom: 24, textAlign: 'center',
+  },
+  successDivider: {
+    width: '100%', height: 1, backgroundColor: 'rgba(255,255,255,0.07)', marginBottom: 20,
+  },
+  successDetail: {
+    flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10,
+  },
+  successDetailText: {
+    fontSize: 14, color: Colors.textSecondary, fontFamily: Font.semiBold,
+  },
+  successBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: Colors.accent,
+    borderRadius: 16, paddingVertical: 15, paddingHorizontal: 28,
+    marginTop: 24, width: '100%',
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  successBtnText: { fontSize: 15, fontFamily: Font.bold, color: Colors.white },
 });

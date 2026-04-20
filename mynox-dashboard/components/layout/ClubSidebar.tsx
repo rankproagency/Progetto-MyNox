@@ -8,12 +8,14 @@ import {
   LayoutDashboard,
   CalendarDays,
   BarChart3,
+  Map,
   LogOut,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/club/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/club/events', label: 'I miei eventi', icon: CalendarDays },
+  { href: '/club/venue', label: 'Piantina & Tavoli', icon: Map },
   { href: '/club/analytics', label: 'Analytics', icon: BarChart3 },
 ];
 

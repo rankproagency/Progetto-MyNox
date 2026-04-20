@@ -27,6 +27,7 @@ import { useEvents } from '../../contexts/EventsContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Event, Genre } from '../../types';
 import AppHeader from '../../components/AppHeader';
+import HomeSkeletonLoader from '../../components/HomeSkeletonLoader';
 
 const CARD_WIDTH = Math.round(RNDimensions.get('window').width * 0.78);
 
@@ -113,7 +114,7 @@ function getEventsByDayFromList(events: ReturnType<typeof useEvents>['events']) 
 export default function HomeScreen() {
   const router = useRouter();
   const { musicGenres } = useAuth();
-  const { events, isLoading: eventsLoading } = useEvents();
+  const { events, isLoading: eventsLoading, hasError: eventsError, reload } = useEvents();
 
   const eventsByDay = getEventsByDayFromList(events);
   const eventDateSet = new Set(events.map((e) => e.date));
@@ -135,9 +136,10 @@ export default function HomeScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  function onRefresh() {
+  async function onRefresh() {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 800);
+    await reload();
+    setRefreshing(false);
   }
 
   function toggleGenre(genre: Genre) {
@@ -472,8 +474,19 @@ export default function HomeScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.accent} colors={[Colors.accent]} />
           }
         >
-          {/* Vista per data selezionata */}
-          {eventsForSelectedDate !== null ? (
+          {eventsLoading ? (
+            <HomeSkeletonLoader />
+          ) : eventsError ? (
+            <View style={styles.errorState}>
+              <Ionicons name="cloud-offline-outline" size={48} color={Colors.textMuted} />
+              <Text style={styles.errorTitle}>Nessuna connessione</Text>
+              <Text style={styles.errorSub}>Controlla la rete e riprova.</Text>
+              <TouchableOpacity style={styles.errorBtn} onPress={onRefresh} activeOpacity={0.8}>
+                <Ionicons name="refresh" size={15} color={Colors.white} />
+                <Text style={styles.errorBtnText}>Riprova</Text>
+              </TouchableOpacity>
+            </View>
+          ) : eventsForSelectedDate !== null ? (
             <View>
               <Text style={styles.sectionTitle}>
                 {eventsForSelectedDate.length} {eventsForSelectedDate.length === 1 ? 'evento' : 'eventi'} — {selectedDateLabel}
@@ -717,4 +730,17 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent, borderRadius: 16, paddingVertical: 16, alignItems: 'center',
   },
   filterApplyText: { fontSize: 15, fontFamily: Font.bold, color: Colors.white },
+
+  // Error state
+  errorState: {
+    alignItems: 'center', paddingTop: 80, paddingHorizontal: 40, gap: 10,
+  },
+  errorTitle: { fontSize: 18, fontFamily: Font.bold, color: Colors.textPrimary, marginTop: 8 },
+  errorSub: { fontSize: 14, color: Colors.textMuted, textAlign: 'center' },
+  errorBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: Colors.accent, borderRadius: 14,
+    paddingHorizontal: 22, paddingVertical: 12, marginTop: 16,
+  },
+  errorBtnText: { fontSize: 14, fontFamily: Font.bold, color: Colors.white },
 });

@@ -9,12 +9,15 @@ import {
   Dimensions,
   Share,
   Linking,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
@@ -30,6 +33,7 @@ const { width } = Dimensions.get('window');
 export default function EventScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { isOnWaitlist, addToWaitlist, removeFromWaitlist } = useWaitlist();
   const { addRecentlyViewed } = useRecentlyViewed();
@@ -39,10 +43,25 @@ export default function EventScreen() {
   useEffect(() => {
     if (id) addRecentlyViewed(id);
   }, [id]);
+  const scrollRef = useRef<ScrollView>(null);
+  const tableNameRef = useRef<View>(null);
+  const [bookingMode, setBookingMode] = useState<'ticket' | 'table'>('ticket');
   const [selectedTicket, setSelectedTicket] = useState<TicketType | null>(null);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
+  const [tableName, setTableName] = useState('');
   const [ticketQty, setTicketQty] = useState(1);
   const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [floorPlanModalVisible, setFloorPlanModalVisible] = useState(false);
+
+  const hasTables = (event?.tables?.length ?? 0) > 0;
+
+  function switchMode(mode: 'ticket' | 'table') {
+    setBookingMode(mode);
+    setSelectedTicket(null);
+    setSelectedTable(null);
+    setTableName('');
+    setTicketQty(1);
+  }
 
   if (!event) {
     return (
@@ -52,7 +71,11 @@ export default function EventScreen() {
     );
   }
 
-  const total = (selectedTicket?.price ?? 0) * ticketQty + (selectedTable?.deposit ?? 0);
+  const ticketSubtotal = (selectedTicket?.price ?? 0) * ticketQty;
+  const tableSubtotal = selectedTable?.deposit ?? 0;
+  const total = bookingMode === 'table'
+    ? tableSubtotal
+    : ticketSubtotal + tableSubtotal;
   const isSoldOut = event?.ticketTypes.every((t) => t.available === 0) ?? false;
   const onWaitlist = event ? isOnWaitlist(event.id) : false;
   const soldPercent = Math.round((event.ticketsSold / event.capacity) * 100);
@@ -66,9 +89,8 @@ export default function EventScreen() {
   }
 
   return (
-    <View style={styles.container}>
-
-      {/* Modal immagine fullscreen */}
+    <>
+      {/* Modal immagine fullscreen — fuori dal KAV per evitare interferenze touch */}
       <Modal visible={imageModalVisible} transparent animationType="fade" statusBarTranslucent>
         <View style={styles.imageModal}>
           <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={() => setImageModalVisible(false)} />
@@ -79,7 +101,73 @@ export default function EventScreen() {
         </View>
       </Modal>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      {/* Modal piantina fullscreen — fuori dal KAV per evitare interferenze touch */}
+      <Modal visible={floorPlanModalVisible} transparent animationType="slide" statusBarTranslucent>
+        <View style={styles.floorModal}>
+          <View style={[styles.floorModalHeader, { paddingTop: insets.top }]}>
+            <View style={styles.floorModalHeaderInner}>
+              <View>
+                <Text style={styles.floorModalTitle}>Seleziona il tuo tavolo</Text>
+                <Text style={styles.floorModalSub}>{event.club?.name}</Text>
+              </View>
+              <TouchableOpacity style={styles.floorModalClose} onPress={() => setFloorPlanModalVisible(false)} activeOpacity={0.8}>
+                <Ionicons name="close" size={20} color={Colors.white} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <ScrollView
+            style={styles.floorModalScrollView}
+            contentContainerStyle={styles.floorModalScroll}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.floorModalMap}>
+              <TableMap
+                tables={event.tables}
+                selected={selectedTable}
+                onSelect={(t) => {
+                  setSelectedTable(t);
+                  if (t) setFloorPlanModalVisible(false);
+                }}
+                floorPlanUrl={event.floorPlanUrl}
+              />
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
+      >
+
+      {/* Header sticky — sempre visibile sopra lo scroll */}
+      <SafeAreaView style={styles.stickyHeader} pointerEvents="box-none">
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
+        </TouchableOpacity>
+        <View style={styles.heroTopRight}>
+          <TouchableOpacity style={styles.heroIconBtn} onPress={handleShare}>
+            <Ionicons name="share-outline" size={20} color={Colors.textPrimary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.heroIconBtn}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              toggleFavorite(event.id);
+            }}
+          >
+            <Ionicons
+              name={isFavorite(event.id) ? 'heart' : 'heart-outline'}
+              size={20}
+              color={isFavorite(event.id) ? Colors.accent : Colors.textPrimary}
+            />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
         {/* Hero */}
         <View style={styles.hero}>
@@ -89,29 +177,6 @@ export default function EventScreen() {
             locations={[0, 0.35, 0.72, 1]}
             style={StyleSheet.absoluteFill}
           />
-          <SafeAreaView style={styles.heroTop}>
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
-            </TouchableOpacity>
-            <View style={styles.heroTopRight}>
-              <TouchableOpacity style={styles.heroIconBtn} onPress={handleShare}>
-                <Ionicons name="share-outline" size={20} color={Colors.textPrimary} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.heroIconBtn}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  toggleFavorite(event.id);
-                }}
-              >
-                <Ionicons
-                  name={isFavorite(event.id) ? 'heart' : 'heart-outline'}
-                  size={20}
-                  color={isFavorite(event.id) ? Colors.accent : Colors.textPrimary}
-                />
-              </TouchableOpacity>
-            </View>
-          </SafeAreaView>
           <View style={styles.heroBottom}>
             <Text style={styles.eventName}>{event.name}</Text>
             <View style={styles.heroBottomRow}>
@@ -311,76 +376,147 @@ export default function EventScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Selezione biglietto */}
+        {/* Toggle Prevendita / Tavolo */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Scegli il biglietto</Text>
           {isSoldOut ? (
             <View style={styles.soldOutBox}>
               <Ionicons name="close-circle" size={20} color={Colors.error} />
               <Text style={styles.soldOutText}>Evento esaurito</Text>
             </View>
           ) : (
-            <Text style={styles.sectionSubtitle}>Ogni biglietto include 1 free drink</Text>
-          )}
-          {!isSoldOut && event.ticketTypes.map((ticket) => (
-            <TouchableOpacity
-              key={ticket.id}
-              style={[styles.ticketOption, selectedTicket?.id === ticket.id && styles.ticketSelected]}
-              onPress={() => { setSelectedTicket(ticket); setTicketQty(1); }}
-              activeOpacity={0.8}
-            >
-              <View style={styles.ticketLeft}>
-                <View style={[styles.radio, selectedTicket?.id === ticket.id && styles.radioActive]}>
-                  {selectedTicket?.id === ticket.id && <View style={styles.radioDot} />}
+            <>
+              {/* Segment control — solo se ci sono tavoli */}
+              {hasTables && (
+                <View style={styles.bookingToggle}>
+                  <TouchableOpacity
+                    style={[styles.bookingToggleBtn, bookingMode === 'ticket' && styles.bookingToggleActive]}
+                    onPress={() => { Haptics.selectionAsync(); switchMode('ticket'); }}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="ticket-outline" size={15} color={bookingMode === 'ticket' ? Colors.white : Colors.textMuted} />
+                    <Text style={[styles.bookingToggleText, bookingMode === 'ticket' && styles.bookingToggleTextActive]}>
+                      Prevendita
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.bookingToggleBtn, bookingMode === 'table' && styles.bookingToggleActive]}
+                    onPress={() => { Haptics.selectionAsync(); switchMode('table'); }}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="grid-outline" size={15} color={bookingMode === 'table' ? Colors.white : Colors.textMuted} />
+                    <Text style={[styles.bookingToggleText, bookingMode === 'table' && styles.bookingToggleTextActive]}>
+                      Tavolo
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-                <View>
-                  <Text style={styles.ticketLabel}>{ticket.label}</Text>
-                </View>
-              </View>
-              <View style={styles.ticketRight}>
-                <Text style={styles.ticketPrice}>€{ticket.price}</Text>
-                <Text style={styles.ticketDrink}>+ drink</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-          {!isSoldOut && selectedTicket && (
-            <View style={styles.qtyRow}>
-              <Text style={styles.qtyLabel}>Quanti biglietti?</Text>
-              <View style={styles.qtyStepper}>
-                <TouchableOpacity
-                  style={[styles.qtyBtn, ticketQty <= 1 && styles.qtyBtnDisabled]}
-                  onPress={() => setTicketQty((q) => Math.max(1, q - 1))}
-                  disabled={ticketQty <= 1}
-                >
-                  <Ionicons name="remove" size={18} color={ticketQty <= 1 ? Colors.textMuted : Colors.textPrimary} />
-                </TouchableOpacity>
-                <Text style={styles.qtyValue}>{ticketQty}</Text>
-                <TouchableOpacity
-                  style={[styles.qtyBtn, ticketQty >= Math.min(selectedTicket.available, 10) && styles.qtyBtnDisabled]}
-                  onPress={() => setTicketQty((q) => Math.min(selectedTicket.available, 10, q + 1))}
-                  disabled={ticketQty >= Math.min(selectedTicket.available, 10)}
-                >
-                  <Ionicons name="add" size={18} color={ticketQty >= Math.min(selectedTicket.available, 10) ? Colors.textMuted : Colors.textPrimary} />
-                </TouchableOpacity>
-              </View>
-            </View>
+              )}
+
+              {/* Prevendita */}
+              {bookingMode === 'ticket' && (
+                <>
+                  <Text style={styles.sectionSubtitle}>Ogni biglietto include 1 free drink</Text>
+                  {event.ticketTypes.map((ticket) => (
+                    <TouchableOpacity
+                      key={ticket.id}
+                      style={[styles.ticketOption, selectedTicket?.id === ticket.id && styles.ticketSelected]}
+                      onPress={() => {
+                        Haptics.selectionAsync();
+                        if (selectedTicket?.id === ticket.id) {
+                          setSelectedTicket(null);
+                          setTicketQty(1);
+                        } else {
+                          setSelectedTicket(ticket);
+                          setTicketQty(1);
+                        }
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.ticketLeft}>
+                        <View style={[styles.radio, selectedTicket?.id === ticket.id && styles.radioActive]}>
+                          {selectedTicket?.id === ticket.id && <View style={styles.radioDot} />}
+                        </View>
+                        <Text style={styles.ticketLabel}>{ticket.label}</Text>
+                      </View>
+                      <View style={styles.ticketRight}>
+                        <Text style={styles.ticketPrice}>€{ticket.price}</Text>
+                        <Text style={styles.ticketDrink}>+ drink</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                  {selectedTicket && (
+                    <View style={styles.qtyRow}>
+                      <Text style={styles.qtyLabel}>Quanti biglietti?</Text>
+                      <View style={styles.qtyStepper}>
+                        <TouchableOpacity
+                          style={[styles.qtyBtn, ticketQty <= 1 && styles.qtyBtnDisabled]}
+                          onPress={() => setTicketQty((q) => Math.max(1, q - 1))}
+                          disabled={ticketQty <= 1}
+                        >
+                          <Ionicons name="remove" size={18} color={ticketQty <= 1 ? Colors.textMuted : Colors.textPrimary} />
+                        </TouchableOpacity>
+                        <Text style={styles.qtyValue}>{ticketQty}</Text>
+                        <TouchableOpacity
+                          style={[styles.qtyBtn, ticketQty >= Math.min(selectedTicket.available, 10) && styles.qtyBtnDisabled]}
+                          onPress={() => setTicketQty((q) => Math.min(selectedTicket.available, 10, q + 1))}
+                          disabled={ticketQty >= Math.min(selectedTicket.available, 10)}
+                        >
+                          <Ionicons name="add" size={18} color={ticketQty >= Math.min(selectedTicket.available, 10) ? Colors.textMuted : Colors.textPrimary} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+                </>
+              )}
+
+              {/* Tavolo */}
+              {bookingMode === 'table' && (
+                <>
+                  <View style={styles.tableSectionHeader}>
+                    <Text style={styles.sectionSubtitle}>Solo caparra · il resto si paga in loco</Text>
+                    <TouchableOpacity
+                      style={styles.expandMapBtn}
+                      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setFloorPlanModalVisible(true); }}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="expand-outline" size={15} color={Colors.accent} />
+                      <Text style={styles.expandMapBtnText}>Apri mappa</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <TableMap
+                    tables={event.tables}
+                    selected={selectedTable}
+                    onSelect={(t) => { setSelectedTable(t); if (!t) setTableName(''); }}
+                    floorPlanUrl={event.floorPlanUrl}
+                  />
+                  {selectedTable && (
+                    <View
+                      ref={tableNameRef}
+                      style={styles.tableNameBox}
+                    >
+                      <Ionicons name="bookmark-outline" size={16} color={Colors.accent} />
+                      <TextInput
+                        style={styles.tableNameInput}
+                        value={tableName}
+                        onChangeText={setTableName}
+                        placeholder="Nome tavolo (es. Compleanno Marco)"
+                        placeholderTextColor={Colors.textMuted}
+                        autoCorrect={false}
+                        returnKeyType="done"
+                        onFocus={() => {
+                          setTimeout(() => {
+                            tableNameRef.current?.measureInWindow((_x, y) => {
+                              scrollRef.current?.scrollTo({ y: y - 120, animated: true });
+                            });
+                          }, 350);
+                        }}
+                      />
+                    </View>
+                  )}
+                </>
+              )}
+            </>
           )}
         </View>
-
-        {/* Tavoli (se disponibili) */}
-        {event.tables.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Prenota un tavolo</Text>
-            <Text style={styles.sectionSubtitle}>
-              Tocca un tavolo sulla mappa per selezionarlo · Solo caparra, il resto in loco
-            </Text>
-            <TableMap
-              tables={event.tables}
-              selected={selectedTable}
-              onSelect={setSelectedTable}
-            />
-          </View>
-        )}
 
         <View style={styles.bottomPad} />
       </ScrollView>
@@ -412,27 +548,32 @@ export default function EventScreen() {
         ) : (
           <>
             <View style={styles.ctaInfo}>
-              {selectedTicket ? (
+              {selectedTicket || selectedTable ? (
                 <>
-                  <Text style={styles.ctaLabel}>{ticketQty > 1 ? `${ticketQty} biglietti` : 'Totale'}</Text>
+                  <Text style={styles.ctaLabel}>
+                    {selectedTable ? selectedTable.label : ticketQty > 1 ? `${ticketQty} biglietti` : 'Totale'}
+                  </Text>
                   <Text style={styles.ctaTotal}>€{total}</Text>
                 </>
               ) : (
-                <Text style={styles.ctaHint}>Seleziona un biglietto</Text>
+                <Text style={styles.ctaHint}>
+                  {bookingMode === 'ticket' ? 'Seleziona un biglietto' : 'Seleziona un tavolo'}
+                </Text>
               )}
             </View>
             <TouchableOpacity
-              style={[styles.ctaButton, !selectedTicket && styles.ctaDisabled]}
+              style={[styles.ctaButton, (!selectedTicket && !selectedTable) && styles.ctaDisabled]}
               activeOpacity={0.85}
-              disabled={!selectedTicket}
+              disabled={!selectedTicket && !selectedTable}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 router.push({
                   pathname: '/checkout',
                   params: {
                     eventId: event.id,
-                    ticketId: selectedTicket!.id,
+                    ticketId: selectedTicket?.id ?? '',
                     tableId: selectedTable?.id ?? '',
+                    tableName: tableName.trim(),
                     qty: String(ticketQty),
                   },
                 });
@@ -444,7 +585,8 @@ export default function EventScreen() {
           </>
         )}
       </View>
-    </View>
+      </KeyboardAvoidingView>
+    </>
   );
 }
 
@@ -470,15 +612,22 @@ const styles = StyleSheet.create({
   notFoundText: { color: Colors.textMuted },
   scroll: { paddingBottom: 120 },
 
+  // Sticky header
+  stickyHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+  },
+
   // Hero
   hero: { width, height: 430, position: 'relative' },
   heroImage: { ...StyleSheet.absoluteFillObject },
-  heroTop: {
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
   heroTopRight: { flexDirection: 'row', gap: 8 },
   backButton: {
     width: 38, height: 38, borderRadius: 12,
@@ -738,6 +887,125 @@ const styles = StyleSheet.create({
   ctaDisabled: { backgroundColor: Colors.border },
   ctaWaitlistActive: { backgroundColor: Colors.accentDark },
   ctaText: { fontSize: 15, fontFamily: Font.bold, color: Colors.white },
+
+  // Floor plan modal
+  floorModal: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  floorModalHeader: {
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  floorModalHeaderInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+  },
+  floorModalTitle: {
+    fontSize: 16,
+    fontFamily: Font.bold,
+    color: Colors.textPrimary,
+  },
+  floorModalSub: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  floorModalClose: {
+    width: 36, height: 36, borderRadius: 10,
+    backgroundColor: Colors.surfaceElevated,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  floorModalScrollView: {
+    flex: 1,
+  },
+  floorModalScroll: {
+    padding: 20,
+    paddingBottom: 60,
+  },
+  floorModalMap: {
+    alignItems: 'center',
+  },
+
+  // Booking mode toggle
+  bookingToggle: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 4,
+    marginBottom: 16,
+  },
+  bookingToggleBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    paddingVertical: 11,
+    borderRadius: 10,
+  },
+  bookingToggleActive: {
+    backgroundColor: Colors.accent,
+  },
+  bookingToggleText: {
+    fontSize: 14,
+    fontFamily: Font.semiBold,
+    color: Colors.textMuted,
+  },
+  bookingToggleTextActive: {
+    color: Colors.white,
+  },
+
+  // Table name input
+  tableNameBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 10,
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  tableNameInput: {
+    flex: 1,
+    fontSize: 14,
+    color: Colors.textPrimary,
+    fontFamily: Font.regular,
+  },
+
+  // Table section header
+  tableSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  expandMapBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(168,85,247,0.1)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: 'rgba(168,85,247,0.3)',
+    marginTop: 2,
+  },
+  expandMapBtnText: {
+    fontSize: 12,
+    fontFamily: Font.semiBold,
+    color: Colors.accent,
+  },
 
   // Sold out
   soldOutBox: {

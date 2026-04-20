@@ -4,29 +4,49 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  ScrollView,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useState, useEffect } from 'react';
 import { Table } from '../types';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const MAP_WIDTH = SCREEN_WIDTH - 40;
-const MAP_HEIGHT = MAP_WIDTH * 1.18;
-const TABLE_SIZE = 58;
+const DEFAULT_MAP_HEIGHT = MAP_WIDTH * 1.18;
+const TABLE_SIZE = 48;
 
 interface Props {
   tables: Table[];
   selected: Table | null;
   onSelect: (table: Table | null) => void;
+  floorPlanUrl?: string;
 }
 
-export default function TableMap({ tables, selected, onSelect }: Props) {
-  const hasMappedTables = tables.some((t) => t.posX !== undefined);
+export default function TableMap({ tables, selected, onSelect, floorPlanUrl }: Props) {
+  const [mapHeight, setMapHeight] = useState(DEFAULT_MAP_HEIGHT);
 
-  if (!hasMappedTables) {
+  useEffect(() => {
+    if (floorPlanUrl) {
+      Image.getSize(
+        floorPlanUrl,
+        (w, h) => setMapHeight(MAP_WIDTH * (h / w)),
+        () => setMapHeight(DEFAULT_MAP_HEIGHT),
+      );
+    } else {
+      setMapHeight(DEFAULT_MAP_HEIGHT);
+    }
+  }, [floorPlanUrl]);
+
+  // Tavoli con posizione esplicita → mostrati sulla mappa
+  const mappedTables = tables.filter((t) => t.posX !== undefined);
+  // Tavoli senza posizione → mostrati in lista sotto la mappa
+  const unmappedTables = tables.filter((t) => t.posX === undefined);
+
+  if (mappedTables.length === 0) {
+    // Nessun tavolo posizionato: solo lista
     return <TableList tables={tables} selected={selected} onSelect={onSelect} />;
   }
 
@@ -38,38 +58,46 @@ export default function TableMap({ tables, selected, onSelect }: Props) {
 
   return (
     <View>
-      {/* Mappa interattiva */}
-      <View style={[styles.room, { width: MAP_WIDTH, height: MAP_HEIGHT }]}>
+      {/* Mappa interattiva — solo tavoli con posizione */}
+      <View style={[styles.room, { width: MAP_WIDTH, height: mapHeight }]}>
 
-        {/* DJ BOOTH */}
-        <View style={styles.djBooth}>
-          <Ionicons name="musical-notes" size={12} color="rgba(168,85,247,0.9)" />
-          <Text style={styles.djBoothLabel}>DJ BOOTH</Text>
-        </View>
+        {/* Sfondo: piantina reale o stanza mock */}
+        {floorPlanUrl ? (
+          <Image
+            source={{ uri: floorPlanUrl }}
+            style={StyleSheet.absoluteFill}
+            resizeMode="cover"
+          />
+        ) : (
+          <>
+            {/* DJ BOOTH */}
+            <View style={styles.djBooth}>
+              <Ionicons name="musical-notes" size={12} color="rgba(168,85,247,0.9)" />
+              <Text style={styles.djBoothLabel}>DJ BOOTH</Text>
+            </View>
+            {/* DANCE FLOOR */}
+            <View style={styles.danceFloor}>
+              <Text style={styles.danceFloorLabel}>DANCE FLOOR</Text>
+            </View>
+            {/* BAR */}
+            <View style={styles.bar}>
+              <Ionicons name="wine" size={11} color="rgba(168,85,247,0.7)" />
+              <Text style={styles.barLabel}>BAR</Text>
+            </View>
+            {/* USCITA */}
+            <View style={styles.entrance}>
+              <Ionicons name="exit-outline" size={11} color={Colors.textMuted} />
+              <Text style={styles.entranceLabel}>USCITA</Text>
+            </View>
+          </>
+        )}
 
-        {/* DANCE FLOOR */}
-        <View style={styles.danceFloor}>
-          <Text style={styles.danceFloorLabel}>DANCE FLOOR</Text>
-        </View>
-
-        {/* BAR */}
-        <View style={styles.bar}>
-          <Ionicons name="wine" size={11} color="rgba(168,85,247,0.7)" />
-          <Text style={styles.barLabel}>BAR</Text>
-        </View>
-
-        {/* USCITA */}
-        <View style={styles.entrance}>
-          <Ionicons name="exit-outline" size={11} color={Colors.textMuted} />
-          <Text style={styles.entranceLabel}>USCITA</Text>
-        </View>
-
-        {/* TAVOLI */}
-        {tables.map((table) => {
+        {/* Solo i tavoli con posizione esplicita */}
+        {mappedTables.map((table) => {
           const isSelected = selected?.id === table.id;
           const isOccupied = !table.available;
-          const left = (table.posX ?? 0.5) * MAP_WIDTH - TABLE_SIZE / 2;
-          const top = (table.posY ?? 0.5) * MAP_HEIGHT - TABLE_SIZE / 2;
+          const left = table.posX! * MAP_WIDTH - TABLE_SIZE / 2;
+          const top = table.posY! * mapHeight - TABLE_SIZE / 2;
           const isVIP = table.section === 'VIP';
 
           return (
@@ -92,13 +120,9 @@ export default function TableMap({ tables, selected, onSelect }: Props) {
                 name="people"
                 size={13}
                 color={
-                  isOccupied
-                    ? Colors.textMuted
-                    : isSelected
-                    ? Colors.white
-                    : isVIP
-                    ? Colors.accent
-                    : Colors.textSecondary
+                  isOccupied ? 'rgba(239,68,68,0.6)'
+                  : isSelected ? Colors.white
+                  : 'rgba(34,197,94,0.7)'
                 }
               />
               <Text
@@ -112,12 +136,13 @@ export default function TableMap({ tables, selected, onSelect }: Props) {
               </Text>
               <Text
                 style={[
-                  styles.tableNum,
-                  isSelected && styles.tableNumSelected,
-                  isOccupied && styles.tableNumOccupied,
+                  styles.tableLabel,
+                  isSelected && styles.tableLabelSelected,
+                  isOccupied && styles.tableLabelOccupied,
                 ]}
+                numberOfLines={1}
               >
-                #{table.tableNumber ?? '?'}
+                {table.label}
               </Text>
               {isOccupied && <View style={styles.tableXOverlay}><Text style={styles.tableXText}>✕</Text></View>}
             </TouchableOpacity>
@@ -127,10 +152,9 @@ export default function TableMap({ tables, selected, onSelect }: Props) {
 
       {/* Legenda */}
       <View style={styles.legend}>
-        <LegendDot color={Colors.border} borderColor="rgba(168,85,247,0.6)" label="Disponibile" />
-        <LegendDot color="rgba(168,85,247,0.15)" borderColor={Colors.accent} label="VIP" />
+        <LegendDot color="rgba(34,197,94,0.12)" borderColor="rgba(34,197,94,0.55)" label="Disponibile" />
         <LegendDot color={Colors.accent} borderColor={Colors.accent} label="Selezionato" />
-        <LegendDot color={Colors.surface} borderColor={Colors.border} opacity={0.4} label="Occupato" />
+        <LegendDot color="rgba(239,68,68,0.08)" borderColor="rgba(239,68,68,0.45)" label="Occupato" />
       </View>
 
       {/* Info tavolo selezionato */}
@@ -154,6 +178,12 @@ export default function TableMap({ tables, selected, onSelect }: Props) {
           </View>
         </View>
       )}
+
+      {/* Lista completa di tutti i tavoli — sempre visibile */}
+      <View style={styles.unmappedSection}>
+        <Text style={styles.unmappedTitle}>Seleziona un tavolo</Text>
+        <TableList tables={tables} selected={selected} onSelect={onSelect} />
+      </View>
     </View>
   );
 }
@@ -331,26 +361,26 @@ const styles = StyleSheet.create({
     width: TABLE_SIZE,
     height: TABLE_SIZE,
     borderRadius: TABLE_SIZE / 2,
-    backgroundColor: 'rgba(168,85,247,0.06)',
+    backgroundColor: 'rgba(34,197,94,0.10)',
     borderWidth: 1.5,
-    borderColor: 'rgba(168,85,247,0.35)',
+    borderColor: 'rgba(34,197,94,0.55)',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 1,
   },
   tableBtnVip: {
-    backgroundColor: 'rgba(168,85,247,0.13)',
-    borderColor: Colors.accent,
-    borderWidth: 1.5,
+    backgroundColor: 'rgba(34,197,94,0.14)',
+    borderColor: '#22c55e',
+    borderWidth: 2,
   },
   tableBtnSelected: {
     backgroundColor: Colors.accent,
     borderColor: Colors.accent,
   },
   tableBtnOccupied: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderColor: Colors.border,
-    opacity: 0.45,
+    backgroundColor: 'rgba(239,68,68,0.08)',
+    borderColor: 'rgba(239,68,68,0.45)',
+    opacity: 0.7,
   },
 
   tableVipBadge: {
@@ -368,20 +398,22 @@ const styles = StyleSheet.create({
   tableCapacity: {
     fontSize: 16,
     fontFamily: Font.extraBold,
-    color: Colors.textPrimary,
+    color: 'rgba(34,197,94,0.9)',
     lineHeight: 18,
   },
   tableCapacitySelected: { color: Colors.white },
-  tableCapacityOccupied: { color: Colors.textMuted },
+  tableCapacityOccupied: { color: 'rgba(239,68,68,0.7)' },
 
-  tableNum: {
-    fontSize: 9,
+  tableLabel: {
+    fontSize: 8,
     fontFamily: Font.bold,
-    color: Colors.textMuted,
-    lineHeight: 11,
+    color: 'rgba(34,197,94,0.6)',
+    lineHeight: 10,
+    maxWidth: TABLE_SIZE - 8,
+    textAlign: 'center',
   },
-  tableNumSelected: { color: 'rgba(255,255,255,0.7)' },
-  tableNumOccupied: { color: Colors.border },
+  tableLabelSelected: { color: 'rgba(255,255,255,0.8)' },
+  tableLabelOccupied: { color: 'rgba(239,68,68,0.5)' },
 
   tableXOverlay: {
     position: 'absolute',
@@ -392,7 +424,7 @@ const styles = StyleSheet.create({
   },
   tableXText: {
     fontSize: 18,
-    color: Colors.textMuted,
+    color: 'rgba(239,68,68,0.8)',
     fontWeight: '700',
   },
 
@@ -467,6 +499,16 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: Colors.textMuted,
     marginTop: 1,
+  },
+
+  // ─── Unmapped section ──────────────────────────────────────────────────────
+  unmappedSection: { marginTop: 16 },
+  unmappedTitle: {
+    fontSize: 12,
+    fontFamily: Font.semiBold,
+    color: Colors.textMuted,
+    marginBottom: 8,
+    letterSpacing: 0.5,
   },
 
   // ─── List fallback ─────────────────────────────────────────────────────────

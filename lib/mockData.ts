@@ -34,6 +34,7 @@ export const MOCK_EVENTS: Event[] = [
       { id: 't2', eventId: '1', label: 'Uomo', gender: 'male', price: 15, includesDrink: true, available: 80 },
       { id: 't3', eventId: '1', label: 'Early Bird', gender: 'any', price: 8, includesDrink: true, available: 20 },
     ],
+    performers: [],
     tables: [
       { id: 'tb1', eventId: '1', label: 'Tavolo Standard 4 pax', capacity: 4, deposit: 60, available: true },
       { id: 'tb2', eventId: '1', label: 'Tavolo VIP 6 pax', capacity: 6, deposit: 120, available: true },
@@ -60,6 +61,7 @@ export const MOCK_EVENTS: Event[] = [
       { id: 't4', eventId: '2', label: 'Donna', gender: 'female', price: 8, includesDrink: true, available: 150 },
       { id: 't5', eventId: '2', label: 'Uomo', gender: 'male', price: 12, includesDrink: true, available: 100 },
     ],
+    performers: [],
     tables: [
       { id: 'tb3', eventId: '2', label: 'Tavolo 4 pax', capacity: 4, deposit: 50, available: true },
     ],
@@ -87,6 +89,7 @@ export const MOCK_EVENTS: Event[] = [
       { id: 't7', eventId: '3', label: 'Uomo', gender: 'male', price: 18, includesDrink: true, available: 40 },
       { id: 't8', eventId: '3', label: 'Early Bird', gender: 'any', price: 10, includesDrink: true, available: 10 },
     ],
+    performers: [],
     tables: [],
   },
   {
@@ -110,6 +113,7 @@ export const MOCK_EVENTS: Event[] = [
       { id: 't9', eventId: '4', label: 'Donna', gender: 'female', price: 15, includesDrink: true, available: 80 },
       { id: 't10', eventId: '4', label: 'Uomo', gender: 'male', price: 20, includesDrink: true, available: 50 },
     ],
+    performers: [],
     tables: [
       { id: 'tb4', eventId: '4', label: 'Tavolo VIP 4 pax', capacity: 4, deposit: 80, available: false },
     ],
@@ -135,6 +139,7 @@ export const MOCK_EVENTS: Event[] = [
       { id: 't11', eventId: '5', label: 'Donna', gender: 'female', price: 10, includesDrink: true, available: 200 },
       { id: 't12', eventId: '5', label: 'Uomo', gender: 'male', price: 15, includesDrink: true, available: 150 },
     ],
+    performers: [],
     tables: [],
   },
   {
@@ -159,6 +164,7 @@ export const MOCK_EVENTS: Event[] = [
       { id: 't13', eventId: '6', label: 'Donna', gender: 'female', price: 20, includesDrink: true, available: 0 },
       { id: 't14', eventId: '6', label: 'Uomo', gender: 'male', price: 25, includesDrink: true, available: 0 },
     ],
+    performers: [],
     tables: [],
   },
 ];

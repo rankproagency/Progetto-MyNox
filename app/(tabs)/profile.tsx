@@ -16,10 +16,10 @@ export default function ProfileScreen() {
   const { tickets } = useTickets();
   const { user, logout } = useAuth();
 
-  const displayName = user?.name ?? profile.name;
-  const displayEmail = user?.email ?? profile.email;
-  const totalSpent = profile.totalSpent;
-  const eventsAttended = profile.eventsAttended + tickets.length;
+  const displayName = user?.name ?? '—';
+  const displayEmail = user?.email ?? '—';
+  const totalSpent = tickets.reduce((sum, t) => sum + (t.pricePaid ?? 0), 0);
+  const eventsAttended = tickets.filter((t) => t.status === 'used').length;
 
   function handleLogout() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -67,7 +67,9 @@ export default function ProfileScreen() {
             </View>
             <Text style={styles.name}>{displayName}</Text>
             <Text style={styles.email}>{displayEmail}</Text>
-            <Text style={styles.since}>Membro da {profile.memberSince}</Text>
+            {profile.memberSince && (
+              <Text style={styles.since}>Membro da {profile.memberSince}</Text>
+            )}
           </View>
 
           {/* Statistiche */}
@@ -77,11 +79,13 @@ export default function ProfileScreen() {
               <Text style={styles.statLabel}>Serate</Text>
             </TouchableOpacity>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>€{totalSpent}</Text>
+              <Text style={styles.statValue}>
+                {totalSpent > 0 ? `€${totalSpent.toFixed(0)}` : '—'}
+              </Text>
               <Text style={styles.statLabel}>Spesa totale</Text>
             </View>
             <TouchableOpacity style={styles.statCard} activeOpacity={0.8} onPress={() => router.push('/(tabs)/tickets')}>
-              <Text style={[styles.statValue, styles.statValueSmall]}>{tickets.length > 0 ? tickets.length : '—'}</Text>
+              <Text style={styles.statValue}>{tickets.length > 0 ? tickets.length : '—'}</Text>
               <Text style={styles.statLabel}>Biglietti attivi</Text>
             </TouchableOpacity>
           </View>

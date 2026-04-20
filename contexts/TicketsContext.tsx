@@ -1,17 +1,23 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../lib/supabase';
 
 export interface MockTicket {
   id: string;
+  type: 'ticket' | 'table';
   eventId: string;
   eventName: string;
   clubName: string;
-  rawDate: string;    // '2026-04-11'
-  date: string;       // 'Ven 11 Apr'
+  rawDate: string;
+  date: string;
   startTime: string;
   ticketLabel: string;
+  tableName?: string;
+  tableCapacity?: number;
+  pricePaid?: number;
   qrCode: string;
-  drinkQrCode: string;
-  drinkUsed: boolean;
+  drinkQrCode?: string;
+  drinkUsed?: boolean;
   status: 'valid' | 'used' | 'denied' | 'pending';
   imageUrl?: string;
 }
@@ -30,56 +36,62 @@ const TicketsContext = createContext<TicketsCtx>({
   markTicketUsed: () => {},
 });
 
-const INITIAL_TICKETS: MockTicket[] = [
-  {
-    id: 'mock-ticket-1',
-    eventId: '1',
-    eventName: 'NEXUS — Techno Night',
-    clubName: 'Altromondo Studios',
-    rawDate: '2026-04-11',
-    date: 'Ven 11 Apr',
-    startTime: '23:00',
-    ticketLabel: 'Uomo',
-    qrCode: 'MYNOX-TICKET-mock-ticket-1-2026',
-    drinkQrCode: 'MYNOX-DRINK-mock-ticket-1-2026',
-    drinkUsed: true,
-    status: 'used',
-    imageUrl: 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=800&q=80',
-  },
-  {
-    id: 'mock-ticket-2',
-    eventId: '5',
-    eventName: 'NEON — Pop & RnB',
-    clubName: 'Byblos Club',
-    rawDate: '2026-04-18',
-    date: 'Sab 18 Apr',
-    startTime: '22:00',
-    ticketLabel: 'Donna',
-    qrCode: 'MYNOX-TICKET-mock-ticket-2-2026',
-    drinkQrCode: 'MYNOX-DRINK-mock-ticket-2-2026',
-    drinkUsed: false,
-    status: 'valid',
-    imageUrl: 'https://images.unsplash.com/photo-1504680177321-2e6a879aac86?w=800&q=80',
-  },
-  {
-    id: 'mock-ticket-3',
-    eventId: '6',
-    eventName: 'REQUIEM — Special Edition',
-    clubName: 'New Age Club',
-    rawDate: '2026-04-19',
-    date: 'Dom 19 Apr',
-    startTime: '23:00',
-    ticketLabel: 'Uomo',
-    qrCode: 'MYNOX-TICKET-mock-ticket-3-2026',
-    drinkQrCode: 'MYNOX-DRINK-mock-ticket-3-2026',
-    drinkUsed: false,
-    status: 'pending',
-    imageUrl: 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=800&q=80',
-  },
-];
+function storageKey(userId: string) {
+  return `@mynox_tickets_${userId}`;
+}
 
 export function TicketsProvider({ children }: { children: ReactNode }) {
-  const [tickets, setTickets] = useState<MockTicket[]>(INITIAL_TICKETS);
+  const [tickets, setTickets] = useState<MockTicket[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const currentUserIdRef = useRef<string | null>(null);
+
+  async function loadTickets(userId: string) {
+    setLoaded(false);
+    const raw = await AsyncStorage.getItem(storageKey(userId));
+    if (raw) {
+      try {
+        const saved: MockTicket[] = JSON.parse(raw);
+        setTickets(saved.filter((t) => !t.id.startsWith('mock-')));
+      } catch (_) {
+        setTickets([]);
+      }
+    } else {
+      setTickets([]);
+    }
+    setLoaded(true);
+  }
+
+  // Ascolta i cambi di sessione — carica i biglietti dell'utente giusto
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        currentUserIdRef.current = user.id;
+        loadTickets(user.id);
+      } else {
+        setLoaded(true);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const userId = session?.user?.id ?? null;
+      if (userId && userId !== currentUserIdRef.current) {
+        currentUserIdRef.current = userId;
+        loadTickets(userId);
+      } else if (!userId) {
+        currentUserIdRef.current = null;
+        setTickets([]);
+        setLoaded(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Persiste su AsyncStorage ad ogni cambio, solo per l'utente corrente
+  useEffect(() => {
+    if (!loaded || !currentUserIdRef.current) return;
+    AsyncStorage.setItem(storageKey(currentUserIdRef.current), JSON.stringify(tickets));
+  }, [tickets, loaded]);
 
   const addTickets = useCallback((newTickets: MockTicket[]) => {
     setTickets((prev) => [...prev, ...newTickets]);

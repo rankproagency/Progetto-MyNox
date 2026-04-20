@@ -5,12 +5,14 @@ import { Event, Club, TicketType, Table, LineupArtist, Performer, Genre } from '
 interface EventsCtx {
   events: Event[];
   isLoading: boolean;
+  hasError: boolean;
   reload: () => Promise<void>;
 }
 
 const EventsContext = createContext<EventsCtx>({
   events: [],
   isLoading: true,
+  hasError: false,
   reload: async () => {},
 });
 
@@ -45,8 +47,8 @@ function rowToEvent(row: any): Event {
     capacity: t.capacity,
     deposit: Number(t.deposit),
     available: t.is_available,
-    posX: t.pos_x ?? undefined,
-    posY: t.pos_y ?? undefined,
+    posX: t.club_tables?.pos_x ?? t.pos_x ?? undefined,
+    posY: t.club_tables?.pos_y ?? t.pos_y ?? undefined,
     section: t.section ?? 'Standard',
     tableNumber: t.table_number ?? undefined,
   }));
@@ -67,6 +69,7 @@ function rowToEvent(row: any): Event {
     ticketsSold: row.tickets_sold ?? 0,
     genres: (row.genres ?? []) as Genre[],
     description: row.description ?? '',
+    floorPlanUrl: row.clubs?.floor_plan_url ?? undefined,
     lineup,
     performers,
     ticketTypes,
@@ -77,9 +80,11 @@ function rowToEvent(row: any): Event {
 export function EventsProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   const reload = useCallback(async () => {
     setIsLoading(true);
+    setHasError(false);
     const today = new Date().toISOString().slice(0, 10);
 
     const { data, error } = await supabase
@@ -88,14 +93,14 @@ export function EventsProvider({ children }: { children: ReactNode }) {
         *,
         clubs (*),
         ticket_types (*),
-        tables (*)
+        tables (*, club_tables (pos_x, pos_y))
       `)
       .eq('is_published', true)
       .gte('date', today)
       .order('date', { ascending: true });
 
     if (error) {
-      console.error('[EventsContext] fetch error:', JSON.stringify(error));
+      setHasError(true);
     } else if (data) {
       setEvents(data.map(rowToEvent));
     }
@@ -105,7 +110,7 @@ export function EventsProvider({ children }: { children: ReactNode }) {
   useEffect(() => { reload(); }, [reload]);
 
   return (
-    <EventsContext.Provider value={{ events, isLoading, reload }}>
+    <EventsContext.Provider value={{ events, isLoading, hasError, reload }}>
       {children}
     </EventsContext.Provider>
   );
