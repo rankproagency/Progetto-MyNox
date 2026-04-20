@@ -14,7 +14,7 @@ export default async function ClubEventDetailPage({
 
   const supabase = await createClient();
 
-  const [{ data: event }, { data: tables }, { data: club }] = await Promise.all([
+  const [{ data: event }, { data: tables }, { data: club }, { data: ticketTypes }, { data: soldTickets }, { data: clubTables }] = await Promise.all([
     supabase
       .from('events')
       .select('*')
@@ -23,7 +23,7 @@ export default async function ClubEventDetailPage({
       .single(),
     supabase
       .from('tables')
-      .select('*, club_tables(pos_x, pos_y)')
+      .select('*')
       .eq('event_id', id)
       .order('label', { ascending: true }),
     supabase
@@ -31,6 +31,20 @@ export default async function ClubEventDetailPage({
       .select('floor_plan_url')
       .eq('id', profile.club_id)
       .single(),
+    supabase
+      .from('ticket_types')
+      .select('id, label, price, total_quantity, sold_quantity')
+      .eq('event_id', id)
+      .order('label', { ascending: true }),
+    supabase
+      .from('tickets')
+      .select('ticket_type_id, ticket_types(price)')
+      .eq('event_id', id)
+      .in('status', ['valid', 'used']),
+    supabase
+      .from('club_tables')
+      .select('id, label, capacity, pos_x, pos_y, default_deposit')
+      .eq('club_id', profile.club_id),
   ]);
 
   if (!event) return <p className="text-slate-400">Evento non trovato.</p>;
@@ -39,10 +53,29 @@ export default async function ClubEventDetailPage({
   const reservedTables = tables?.filter((t) => !t.is_available).length ?? 0;
   const floorPlanUrl = club?.floor_plan_url ?? null;
 
-  // Tavoli con posizione disponibile
-  const mappedTables = (tables ?? []).filter(
-    (t) => (t as any).club_tables?.pos_x != null
-  );
+  // Ricavi per tipo biglietto
+  const revenueByType: Record<string, number> = {};
+  for (const t of soldTickets ?? []) {
+    const tid = (t as any).ticket_type_id;
+    const price = (t as any).ticket_types?.price ?? 0;
+    revenueByType[tid] = (revenueByType[tid] ?? 0) + price;
+  }
+  const totalRevenue = Object.values(revenueByType).reduce((s, v) => s + v, 0);
+
+  // Mappa tavoli: usa club_tables per le posizioni, tables per la disponibilità evento
+  // Abbina per label (A, B, C, D...)
+  const eventTableByLabel = new Map((tables ?? []).map((t) => [t.label, t]));
+  const mappedTables = (clubTables ?? []).filter(
+    (ct) => ct.pos_x != null && ct.pos_y != null
+  ).map((ct) => {
+    const eventTable = eventTableByLabel.get(ct.label);
+    return {
+      ...ct,
+      is_available: eventTable ? eventTable.is_available : true,
+      reserved_by: eventTable ? (eventTable as any).reserved_by : null,
+      deposit: eventTable ? eventTable.deposit : ct.default_deposit,
+    };
+  });
   const showMap = floorPlanUrl && mappedTables.length > 0;
 
   return (
@@ -96,6 +129,68 @@ export default async function ClubEventDetailPage({
         </div>
       </div>
 
+      {/* Biglietti per tipo */}
+      {(ticketTypes ?? []).length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-white mb-4">Biglietti per tipo</h2>
+          <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/8">
+                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Tipo</th>
+                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Prezzo</th>
+                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Venduti</th>
+                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Disponibili</th>
+                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Ricavi</th>
+                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Avanzamento</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(ticketTypes ?? []).map((tt, i) => {
+                  const sold = tt.sold_quantity ?? 0;
+                  const total = tt.total_quantity ?? 0;
+                  const available = Math.max(0, total - sold);
+                  const revenue = revenueByType[tt.id] ?? 0;
+                  const pct = total > 0 ? Math.round((sold / total) * 100) : 0;
+                  const isLast = i === (ticketTypes ?? []).length - 1;
+                  return (
+                    <tr key={tt.id} className={`${!isLast ? 'border-b border-white/5' : ''} hover:bg-white/3 transition-colors`}>
+                      <td className="px-5 py-4 text-white font-semibold">{tt.label}</td>
+                      <td className="px-5 py-4 text-slate-300">€{Number(tt.price).toFixed(2)}</td>
+                      <td className="px-5 py-4 text-white font-semibold">{sold}</td>
+                      <td className="px-5 py-4 text-slate-300">{available}</td>
+                      <td className="px-5 py-4 text-purple-400 font-semibold">
+                        €{revenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td className="px-5 py-4 w-40">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-purple-500 rounded-full"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-slate-400 w-8 text-right">{pct}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-white/8 bg-white/3">
+                  <td className="px-5 py-3 text-slate-400 font-medium" colSpan={4}>Totale ricavi biglietti</td>
+                  <td className="px-5 py-3 text-purple-400 font-bold">
+                    €{totalRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
+                  <td />
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Mappa piantina */}
       {showMap && (
         <div className="mb-8">
@@ -117,16 +212,17 @@ export default async function ClubEventDetailPage({
 
                 {/* Marker posizionati sullo stesso sistema percentuale dell'immagine */}
                 {mappedTables.map((table) => {
-                  const pos = (table as any).club_tables;
+                  const posX = table.pos_x as number;
+                  const posY = table.pos_y as number;
                   const isReserved = !table.is_available;
 
                   // Direzione tooltip: verso il basso se il tavolo è in alto, altrimenti verso l'alto
-                  const showBelow = pos.pos_y < 0.28;
+                  const showBelow = posY < 0.28;
                   // Allineamento orizzontale tooltip: evita uscita a sinistra/destra
                   const tooltipAlign =
-                    pos.pos_x < 0.22
+                    posX < 0.22
                       ? 'left-0'
-                      : pos.pos_x > 0.78
+                      : posX > 0.78
                       ? 'right-0'
                       : 'left-1/2 -translate-x-1/2';
 
@@ -135,8 +231,8 @@ export default async function ClubEventDetailPage({
                       key={table.id}
                       className="group absolute"
                       style={{
-                        left: `${pos.pos_x * 100}%`,
-                        top: `${pos.pos_y * 100}%`,
+                        left: `${posX * 100}%`,
+                        top: `${posY * 100}%`,
                         transform: 'translate(-50%, -50%)',
                         zIndex: 10,
                       }}

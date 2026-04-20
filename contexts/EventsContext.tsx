@@ -40,18 +40,26 @@ function rowToEvent(row: any): Event {
     available: (t.total_quantity ?? 999) - (t.sold_quantity ?? 0),
   }));
 
-  const tables: Table[] = (row.tables ?? []).map((t: any) => ({
-    id: t.id,
-    eventId: row.id,
-    label: t.label,
-    capacity: t.capacity,
-    deposit: Number(t.deposit),
-    available: t.is_available,
-    posX: t.club_tables?.pos_x ?? t.pos_x ?? undefined,
-    posY: t.club_tables?.pos_y ?? t.pos_y ?? undefined,
-    section: t.section ?? 'Standard',
-    tableNumber: t.table_number ?? undefined,
-  }));
+  // Build position lookup from club_tables (keyed by label)
+  const clubTableByLabel = new Map<string, { pos_x: number; pos_y: number }>(
+    (row.clubs?.club_tables ?? []).map((ct: any) => [ct.label, ct])
+  );
+
+  const tables: Table[] = (row.tables ?? []).map((t: any) => {
+    const pos = clubTableByLabel.get(t.label);
+    return {
+      id: t.id,
+      eventId: row.id,
+      label: t.label,
+      capacity: t.capacity,
+      deposit: Number(t.deposit),
+      available: t.is_available,
+      posX: pos?.pos_x ?? t.pos_x ?? undefined,
+      posY: pos?.pos_y ?? t.pos_y ?? undefined,
+      section: t.section ?? 'Standard',
+      tableNumber: t.table_number ?? undefined,
+    };
+  });
 
   const lineup: LineupArtist[] = Array.isArray(row.lineup) ? row.lineup : [];
   const performers: Performer[] = Array.isArray(row.performers) ? row.performers : [];
@@ -91,9 +99,9 @@ export function EventsProvider({ children }: { children: ReactNode }) {
       .from('events')
       .select(`
         *,
-        clubs (*),
+        clubs (*, club_tables (label, pos_x, pos_y)),
         ticket_types (*),
-        tables (*, club_tables (pos_x, pos_y))
+        tables (*)
       `)
       .eq('is_published', true)
       .gte('date', today)
