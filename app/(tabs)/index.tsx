@@ -149,6 +149,7 @@ export default function HomeScreen() {
     );
   }
 
+  const today = toDateKey(new Date());
   const hasActiveFilters = maxPrice !== null || onlyAvailable || selectedGenres.length > 0;
 
   const tonightEvent = events.find((e) => e.date === today && e.ticketTypes.some((t) => t.available > 0)) ?? null;
@@ -168,7 +169,6 @@ export default function HomeScreen() {
     : null;
 
   const calendarGrid = getCalendarGrid(calendarMonth.year, calendarMonth.month);
-  const today = toDateKey(new Date());
 
   function prevMonth() {
     setCalendarMonth((prev) =>
