@@ -8,21 +8,31 @@ async function getDashboardData(clubId: string) {
   const today = new Date().toISOString().slice(0, 10);
   const in7Days = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
+  // Prima prendo gli event_id del club per filtrare i biglietti correttamente
+  const { data: clubEventIds } = await supabase
+    .from('events')
+    .select('id')
+    .eq('club_id', clubId);
+
+  const eventIds = (clubEventIds ?? []).map((e) => e.id);
+
   const [{ data: upcomingEvents }, { data: recentTickets }, { data: club }] = await Promise.all([
     supabase
       .from('events')
-      .select('id, name, date, start_time, tickets_sold, capacity, is_published, ticket_types(total_quantity, sold_quantity)')
+      .select('id, name, date, start_time, capacity, is_published, ticket_types(total_quantity, sold_quantity)')
       .eq('club_id', clubId)
       .gte('date', today)
       .lte('date', in7Days)
       .order('date', { ascending: true }),
-    supabase
-      .from('tickets')
-      .select('id, created_at, status, ticket_types(label, price), events!inner(club_id, name)')
-      .eq('events.club_id', clubId)
-      .in('status', ['valid', 'used'])
-      .order('created_at', { ascending: false })
-      .limit(6),
+    eventIds.length > 0
+      ? supabase
+          .from('tickets')
+          .select('id, created_at, status, ticket_types(label, price), events(name)')
+          .in('event_id', eventIds)
+          .in('status', ['valid', 'used'])
+          .order('created_at', { ascending: false })
+          .limit(6)
+      : Promise.resolve({ data: [] }),
     supabase
       .from('clubs')
       .select('name')

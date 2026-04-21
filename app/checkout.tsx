@@ -20,15 +20,42 @@ import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useStripe } from '@stripe/stripe-react-native';
 import { useEvents } from '../contexts/EventsContext';
+import { useAuth } from '../contexts/AuthContext';
 import { notifyTicketConfirmed, scheduleEventReminders } from '../hooks/useNotifications';
-import { useTickets } from '../contexts/TicketsContext';
+import { useTickets, MockTicket } from '../contexts/TicketsContext';
 
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcHJ2bGF5am5jYnhoaGhpZm5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMTAyMjIsImV4cCI6MjA5MTU4NjIyMn0.jhOvoBVj7Y_e3dOjtx9rCQiEGnv6H-1bXiDAksSgv_A';
+const SUPABASE_URL = 'https://xsprvlayjncbxhhhifnn.supabase.co';
 
-function generateId(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
-  });
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+  const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+}
+
+function dbRowToMockTicket(row: any): MockTicket {
+  const ev = row.events as any;
+  const tt = row.ticket_types as any;
+  const isTable = !tt;
+  return {
+    id: row.id,
+    type: isTable ? 'table' : 'ticket',
+    eventId: ev?.id ?? '',
+    eventName: ev?.name ?? '',
+    clubName: ev?.clubs?.name ?? '',
+    rawDate: ev?.date ?? '',
+    date: formatDate(ev?.date ?? ''),
+    startTime: ev?.start_time ?? '',
+    ticketLabel: isTable ? (row.table_name ?? 'Tavolo') : (tt?.label ?? ''),
+    tableName: row.table_name ?? undefined,
+    pricePaid: row.price_paid ?? 0,
+    qrCode: row.qr_code,
+    drinkQrCode: row.drink_qr_code ?? undefined,
+    drinkUsed: row.drink_used ?? false,
+    status: row.status,
+    imageUrl: ev?.clubs?.image_url ?? undefined,
+  };
 }
 
 const PROMO_CODES: Record<string, { type: 'percent' | 'flat'; value: number; label: string }> = {
@@ -49,6 +76,7 @@ export default function CheckoutScreen() {
   const router = useRouter();
   const { addTickets } = useTickets();
 
+  const { user } = useAuth();
   const { events } = useEvents();
   const event = events.find((e) => e.id === eventId);
   const ticket = ticketId ? event?.ticketTypes.find((t) => t.id === ticketId) : null;
@@ -127,9 +155,13 @@ export default function CheckoutScreen() {
     setPaying(true);
 
     try {
-      const userId = 'guest';
+      const userId = user?.id ?? '';
+      if (!userId) {
+        Alert.alert('Errore', 'Devi essere autenticato per acquistare.');
+        return;
+      }
 
-      // 2. Crea PaymentIntent tramite Edge Function
+      // 1. Crea PaymentIntent tramite Edge Function
       const metadata: Record<string, string> = {
         event_id: event!.id,
         user_id: userId,
@@ -142,9 +174,7 @@ export default function CheckoutScreen() {
         metadata.table_name = tableName?.trim() ?? '';
       }
 
-
-      const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcHJ2bGF5am5jYnhoaGhpZm5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMTAyMjIsImV4cCI6MjA5MTU4NjIyMn0.jhOvoBVj7Y_e3dOjtx9rCQiEGnv6H-1bXiDAksSgv_A';
-      const fnRes = await fetch('https://xsprvlayjncbxhhhifnn.supabase.co/functions/v1/create-payment-intent', {
+      const fnRes = await fetch(`${SUPABASE_URL}/functions/v1/create-payment-intent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -154,18 +184,16 @@ export default function CheckoutScreen() {
         body: JSON.stringify({ amount: total, metadata }),
       });
 
-      const fnJson = await fnRes.json() as { clientSecret?: string; error?: string };
+      const fnJson = await fnRes.json() as { clientSecret?: string; paymentIntentId?: string; error?: string };
 
-      if (!fnJson.clientSecret) {
+      if (!fnJson.clientSecret || !fnJson.paymentIntentId) {
         Alert.alert('Errore pagamento', fnJson.error ?? 'Nessun client secret');
         return;
       }
 
-      const clientSecret: string = fnJson.clientSecret;
-
-      // 3. Inizializza il Payment Sheet di Stripe
+      // 2. Inizializza il Payment Sheet di Stripe
       const { error: initError } = await initPaymentSheet({
-        paymentIntentClientSecret: clientSecret,
+        paymentIntentClientSecret: fnJson.clientSecret,
         merchantDisplayName: 'MyNox',
         style: 'alwaysDark',
         appearance: {
@@ -178,7 +206,7 @@ export default function CheckoutScreen() {
         return;
       }
 
-      // 4. Apre il Payment Sheet (carta, Apple Pay, Google Pay)
+      // 3. Apre il Payment Sheet (carta, Apple Pay, Google Pay)
       const { error: payError } = await presentPaymentSheet();
 
       if (payError) {
@@ -188,7 +216,24 @@ export default function CheckoutScreen() {
         return;
       }
 
-      // 5. Pagamento confermato — crea biglietto localmente e mostra successo
+      // 4. Pagamento confermato — chiama confirm-payment per creare i biglietti nel DB
+      const confirmRes = await fetch(`${SUPABASE_URL}/functions/v1/confirm-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': ANON_KEY,
+          'Authorization': `Bearer ${ANON_KEY}`,
+        },
+        body: JSON.stringify({ payment_intent_id: fnJson.paymentIntentId }),
+      });
+
+      const confirmJson = await confirmRes.json() as { tickets?: any[]; error?: string };
+
+      if (!confirmJson.tickets || confirmJson.tickets.length === 0) {
+        Alert.alert('Errore', confirmJson.error ?? 'Impossibile creare i biglietti.');
+        return;
+      }
+
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
       try {
@@ -198,45 +243,7 @@ export default function CheckoutScreen() {
         // notifiche non bloccanti
       }
 
-      const formatted = formatDate(event!.date);
-      const newTickets = isTableOnly
-        ? [{
-            id: generateId(),
-            type: 'table' as const,
-            eventId: event!.id,
-            eventName: event!.name,
-            clubName: event!.club?.name ?? '',
-            rawDate: event!.date,
-            date: formatted,
-            startTime: event!.startTime,
-            ticketLabel: table!.label,
-            tableName: tableName?.trim() || undefined,
-            tableCapacity: table!.capacity,
-            pricePaid: total,
-            qrCode: `MYNOX-TABLE-${generateId()}`,
-            status: 'valid' as const,
-          }]
-        : Array.from({ length: quantity }, () => {
-            const id = generateId();
-            return {
-              id,
-              type: 'ticket' as const,
-              eventId: event!.id,
-              eventName: event!.name,
-              clubName: event!.club?.name ?? '',
-              rawDate: event!.date,
-              date: formatted,
-              startTime: event!.startTime,
-              ticketLabel: ticket!.label,
-              pricePaid: total / quantity,
-              qrCode: `MYNOX-TICKET-${id}`,
-              drinkQrCode: ticket!.includesDrink ? `MYNOX-DRINK-${id}` : undefined,
-              drinkUsed: false,
-              status: 'valid' as const,
-            };
-          });
-
-      addTickets(newTickets);
+      addTickets(confirmJson.tickets.map(dbRowToMockTicket));
       setShowSuccess(true);
 
     } catch (err) {
@@ -479,13 +486,6 @@ function PayMethod({ icon, label, active, onPress }: {
       }
     </TouchableOpacity>
   );
-}
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
-  const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
 }
 
 const rowStyles = StyleSheet.create({

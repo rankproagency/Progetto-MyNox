@@ -9,7 +9,6 @@ async function getDashboardData() {
 
   const [
     { data: recentUsers },
-    { data: recentClubs },
     { data: recentTickets },
     { data: upcomingEvents },
     { count: totalUsers },
@@ -23,11 +22,6 @@ async function getDashboardData() {
       .gte('created_at', since7Days)
       .order('created_at', { ascending: false })
       .limit(5),
-    supabase
-      .from('clubs')
-      .select('id, name, city, created_at')
-      .order('created_at', { ascending: false })
-      .limit(4),
     supabase
       .from('tickets')
       .select('id, created_at, ticket_types(label, price), events(name, clubs(name))')
@@ -48,7 +42,6 @@ async function getDashboardData() {
 
   return {
     recentUsers: recentUsers ?? [],
-    recentClubs: recentClubs ?? [],
     recentTickets: recentTickets ?? [],
     upcomingEvents: upcomingEvents ?? [],
     totalUsers: totalUsers ?? 0,

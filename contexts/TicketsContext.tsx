@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 
 export interface MockTicket {
@@ -36,8 +35,35 @@ const TicketsContext = createContext<TicketsCtx>({
   markTicketUsed: () => {},
 });
 
-function storageKey(userId: string) {
-  return `@mynox_tickets_${userId}`;
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+  const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+}
+
+function dbRowToMockTicket(row: any): MockTicket {
+  const ev = row.events as any;
+  const tt = row.ticket_types as any;
+  const isTable = !tt;
+  return {
+    id: row.id,
+    type: isTable ? 'table' : 'ticket',
+    eventId: ev?.id ?? '',
+    eventName: ev?.name ?? '',
+    clubName: ev?.clubs?.name ?? '',
+    rawDate: ev?.date ?? '',
+    date: formatDate(ev?.date ?? ''),
+    startTime: ev?.start_time ?? '',
+    ticketLabel: isTable ? (row.table_name ?? 'Tavolo') : (tt?.label ?? ''),
+    tableName: row.table_name ?? undefined,
+    pricePaid: row.price_paid ?? 0,
+    qrCode: row.qr_code,
+    drinkQrCode: row.drink_qr_code ?? undefined,
+    drinkUsed: row.drink_used ?? false,
+    status: row.status,
+    imageUrl: ev?.clubs?.image_url ?? undefined,
+  };
 }
 
 export function TicketsProvider({ children }: { children: ReactNode }) {
@@ -47,17 +73,17 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
 
   async function loadTickets(userId: string) {
     setLoaded(false);
-    const raw = await AsyncStorage.getItem(storageKey(userId));
-    if (raw) {
-      try {
-        const saved: MockTicket[] = JSON.parse(raw);
-        setTickets(saved.filter((t) => !t.id.startsWith('mock-')));
-      } catch (_) {
-        setTickets([]);
-      }
-    } else {
-      setTickets([]);
-    }
+    const { data } = await supabase
+      .from('tickets')
+      .select(`
+        id, qr_code, drink_qr_code, status, drink_used, price_paid, table_name,
+        ticket_types(label, includes_drink),
+        events(id, name, date, start_time, clubs(name, image_url))
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    setTickets((data ?? []).map(dbRowToMockTicket));
     setLoaded(true);
   }
 
@@ -86,12 +112,6 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  // Persiste su AsyncStorage ad ogni cambio, solo per l'utente corrente
-  useEffect(() => {
-    if (!loaded || !currentUserIdRef.current) return;
-    AsyncStorage.setItem(storageKey(currentUserIdRef.current), JSON.stringify(tickets));
-  }, [tickets, loaded]);
 
   const addTickets = useCallback((newTickets: MockTicket[]) => {
     setTickets((prev) => [...prev, ...newTickets]);
