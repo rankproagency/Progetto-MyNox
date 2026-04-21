@@ -22,10 +22,7 @@ import { useStripe } from '@stripe/stripe-react-native';
 import { useEvents } from '../contexts/EventsContext';
 import { notifyTicketConfirmed, scheduleEventReminders } from '../hooks/useNotifications';
 import { useTickets } from '../contexts/TicketsContext';
-import { supabase } from '../lib/supabase';
 
-const EDGE_FUNCTION_URL = 'https://xsprvlayjncbxhhhifnn.supabase.co/functions/v1/create-payment-intent';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcHJ2bGF5am5jYnhoaGhpZm5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMTAyMjIsImV4cCI6MjA5MTU4NjIyMn0.NH9sH6pE5FJIvP2Fce0JZLLaUxw8DJm7wBEF2a6vKiA';
 
 function generateId(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -130,17 +127,12 @@ export default function CheckoutScreen() {
     setPaying(true);
 
     try {
-      // 1. Recupera utente
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        Alert.alert('Errore', 'Devi essere loggato per acquistare.');
-        return;
-      }
+      const userId = 'guest';
 
       // 2. Crea PaymentIntent tramite Edge Function
       const metadata: Record<string, string> = {
         event_id: event!.id,
-        user_id: user.id,
+        user_id: userId,
         quantity: String(quantity),
         includes_drink: String(ticket?.includesDrink ?? false),
       };
@@ -150,24 +142,21 @@ export default function CheckoutScreen() {
         metadata.table_name = tableName?.trim() ?? '';
       }
 
-      const res = await fetch(EDGE_FUNCTION_URL, {
+
+      const fnRes = await fetch('http://192.168.1.7:3001', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: total, metadata }),
       });
 
-      const { clientSecret, error: fnError } = await res.json() as {
-        clientSecret?: string;
-        error?: string;
-      };
+      const fnJson = await fnRes.json() as { clientSecret?: string; error?: string };
 
-      if (fnError || !clientSecret) {
-        Alert.alert('Errore', fnError ?? 'Impossibile avviare il pagamento.');
+      if (!fnJson.clientSecret) {
+        Alert.alert('Errore pagamento', fnJson.error ?? 'Nessun client secret');
         return;
       }
+
+      const clientSecret: string = fnJson.clientSecret;
 
       // 3. Inizializza il Payment Sheet di Stripe
       const { error: initError } = await initPaymentSheet({
