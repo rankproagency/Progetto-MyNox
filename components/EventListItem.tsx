@@ -37,6 +37,9 @@ export default function EventListItem({ event }: Props) {
           <Text style={styles.club} numberOfLines={1}>{event.club?.name}</Text>
         </TouchableOpacity>
         <View style={styles.metaRow}>
+          <Ionicons name="calendar-outline" size={11} color={Colors.textMuted} />
+          <Text style={styles.time}> {formatDate(event.date)}</Text>
+          <Text style={styles.timeSep}>·</Text>
           <Ionicons name="time-outline" size={11} color={Colors.textMuted} />
           <Text style={styles.time}> {event.startTime}</Text>
           {event.genres.slice(0, 1).map((g) => (
@@ -69,6 +72,13 @@ export default function EventListItem({ event }: Props) {
       </View>
     </TouchableOpacity>
   );
+}
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+  const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
 }
 
 const styles = StyleSheet.create({
@@ -130,6 +140,10 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   time: {
+    fontSize: 11,
+    color: Colors.textMuted,
+  },
+  timeSep: {
     fontSize: 11,
     color: Colors.textMuted,
   },

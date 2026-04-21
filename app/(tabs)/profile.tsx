@@ -1,25 +1,51 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Linking,
+  Image,
+  FlatList,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/colors';
+import { Font } from '../../constants/typography';
 import { useProfile } from '../../contexts/ProfileContext';
 import { useTickets } from '../../contexts/TicketsContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useFavorites } from '../../contexts/FavoritesContext';
+import { useEvents } from '../../contexts/EventsContext';
 import AppHeader from '../../components/AppHeader';
+
+const GENRE_COLORS = [
+  { bg: 'rgba(168,85,247,0.18)', border: 'rgba(168,85,247,0.4)', text: '#c084fc' },
+  { bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.35)', text: '#60a5fa' },
+  { bg: 'rgba(236,72,153,0.15)', border: 'rgba(236,72,153,0.35)', text: '#f472b6' },
+  { bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.35)', text: '#34d399' },
+  { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.35)', text: '#fbbf24' },
+  { bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.35)', text: '#f87171' },
+];
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { profile } = useProfile();
   const { tickets } = useTickets();
-  const { user, logout } = useAuth();
+  const { user, logout, musicGenres } = useAuth();
+  const { favoriteIds, favoriteClubs } = useFavorites();
+  const { events } = useEvents();
 
   const displayName = user?.name ?? '—';
   const displayEmail = user?.email ?? '—';
-  const totalSpent = tickets.reduce((sum, t) => sum + (t.pricePaid ?? 0), 0);
   const eventsAttended = tickets.filter((t) => t.status === 'used').length;
+  const uniqueClubs = new Set(tickets.map((t) => t.clubName).filter(Boolean)).size;
+
+  const favoriteEvents = events.filter((e) => favoriteIds.includes(e.id));
 
   function handleLogout() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -42,7 +68,7 @@ export default function ProfileScreen() {
   }
 
   function handleSupport() {
-    Linking.openURL('mailto:assistenza@mynox.it?subject=Assistenza%20MyNox');
+    Linking.openURL('mailto:mynoxsupport@gmail.com?subject=Assistenza%20MyNox');
   }
 
   function handleNotifications() {
@@ -60,37 +86,145 @@ export default function ProfileScreen() {
         <AppHeader />
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-          {/* Avatar + nome */}
-          <View style={styles.avatarSection}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarInitial}>{displayName.charAt(0).toUpperCase()}</Text>
+          {/* Header premium */}
+          <View style={styles.headerSection}>
+            <View style={styles.avatarWrapper}>
+              <LinearGradient
+                colors={[Colors.accent, '#9333ea', '#06b6d4']}
+                style={styles.avatarRing}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+              <View style={styles.avatar}>
+                <Text style={styles.avatarInitial}>{displayName.charAt(0).toUpperCase()}</Text>
+              </View>
             </View>
+
             <Text style={styles.name}>{displayName}</Text>
             <Text style={styles.email}>{displayEmail}</Text>
             {profile.memberSince && (
               <Text style={styles.since}>Membro da {profile.memberSince}</Text>
             )}
-          </View>
 
-          {/* Statistiche */}
-          <View style={styles.statsRow}>
-            <TouchableOpacity style={styles.statCard} activeOpacity={0.8} onPress={() => router.push('/(tabs)/tickets')}>
-              <Text style={styles.statValue}>{eventsAttended}</Text>
-              <Text style={styles.statLabel}>Serate</Text>
-            </TouchableOpacity>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>
-                {totalSpent > 0 ? `€${totalSpent.toFixed(0)}` : '—'}
-              </Text>
-              <Text style={styles.statLabel}>Spesa totale</Text>
+            {/* Stats inline */}
+            <View style={styles.statsInline}>
+              <TouchableOpacity
+                style={styles.statItem}
+                activeOpacity={0.8}
+                onPress={() => router.push('/(tabs)/tickets')}
+              >
+                <Text style={styles.statValue}>{eventsAttended > 0 ? eventsAttended : '0'}</Text>
+                <Text style={styles.statLabel}>Serate</Text>
+              </TouchableOpacity>
+
+              <View style={styles.statDivider} />
+
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{uniqueClubs > 0 ? uniqueClubs : '—'}</Text>
+                <Text style={styles.statLabel}>Club visitati</Text>
+              </View>
+
+              <View style={styles.statDivider} />
+
+              <TouchableOpacity
+                style={styles.statItem}
+                activeOpacity={0.8}
+                onPress={() => router.push('/(tabs)/tickets')}
+              >
+                <Text style={styles.statValue}>{tickets.length > 0 ? tickets.length : '—'}</Text>
+                <Text style={styles.statLabel}>Biglietti</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.statCard} activeOpacity={0.8} onPress={() => router.push('/(tabs)/tickets')}>
-              <Text style={styles.statValue}>{tickets.length > 0 ? tickets.length : '—'}</Text>
-              <Text style={styles.statLabel}>Biglietti attivi</Text>
-            </TouchableOpacity>
           </View>
 
-          {/* Storico eventi */}
+          {/* Generi musicali */}
+          {musicGenres.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>I tuoi generi</Text>
+              <View style={styles.genresList}>
+                {musicGenres.map((genre, index) => {
+                  const color = GENRE_COLORS[index % GENRE_COLORS.length];
+                  return (
+                    <View
+                      key={genre}
+                      style={[styles.genreTag, { backgroundColor: color.bg, borderColor: color.border }]}
+                    >
+                      <Text style={[styles.genreTagText, { color: color.text }]}>{genre}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
+          {/* Preferiti */}
+          {(favoriteEvents.length > 0 || favoriteClubs.length > 0) && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Preferiti</Text>
+
+              {favoriteClubs.length > 0 && (
+                <>
+                  <Text style={styles.subSectionTitle}>Club</Text>
+                  <FlatList
+                    data={favoriteClubs}
+                    keyExtractor={(c) => c.id}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.favHorizontalList}
+                    renderItem={({ item: club }) => (
+                      <TouchableOpacity
+                        style={styles.favClubCard}
+                        activeOpacity={0.85}
+                        onPress={() => router.push(`/club/${club.id}`)}
+                      >
+                        <Image
+                          source={{ uri: club.imageUrl }}
+                          style={styles.favClubImage}
+                          resizeMode="cover"
+                        />
+                        <LinearGradient
+                          colors={['transparent', 'rgba(7,8,15,0.85)']}
+                          style={StyleSheet.absoluteFillObject}
+                        />
+                        <Text style={styles.favClubName} numberOfLines={1}>{club.name}</Text>
+                        <Text style={styles.favClubCity}>{club.city}</Text>
+                      </TouchableOpacity>
+                    )}
+                    scrollEnabled={favoriteClubs.length > 2}
+                  />
+                </>
+              )}
+
+              {favoriteEvents.length > 0 && (
+                <>
+                  <Text style={[styles.subSectionTitle, favoriteClubs.length > 0 && { marginTop: 16 }]}>
+                    Eventi
+                  </Text>
+                  {favoriteEvents.map((event) => (
+                    <TouchableOpacity
+                      key={event.id}
+                      style={styles.favEventRow}
+                      activeOpacity={0.8}
+                      onPress={() => router.push(`/event/${event.id}`)}
+                    >
+                      <Image
+                        source={{ uri: event.imageUrl }}
+                        style={styles.favEventThumb}
+                        resizeMode="cover"
+                      />
+                      <View style={styles.favEventInfo}>
+                        <Text style={styles.favEventName} numberOfLines={1}>{event.name}</Text>
+                        <Text style={styles.favEventMeta}>{event.club?.name} · {event.date}</Text>
+                      </View>
+                      <Ionicons name="heart" size={14} color={Colors.accent} />
+                    </TouchableOpacity>
+                  ))}
+                </>
+              )}
+            </View>
+          )}
+
+          {/* Storico serate */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Storico serate</Text>
             {tickets.length === 0 ? (
@@ -155,15 +289,6 @@ export default function ProfileScreen() {
   );
 }
 
-function StatCard({ value, label, small }: { value: string | number; label: string; small?: boolean }) {
-  return (
-    <View style={styles.statCard}>
-      <Text style={[styles.statValue, small && styles.statValueSmall]}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
 function AccountRow({
   icon,
   label,
@@ -189,40 +314,149 @@ const styles = StyleSheet.create({
   bgGradient: {
     position: 'absolute',
     top: 0, left: 0, right: 0,
-    height: 300,
+    height: 320,
   },
   scroll: { paddingBottom: 40 },
 
-  // Avatar
-  avatarSection: { alignItems: 'center', paddingTop: 32, paddingBottom: 24, paddingHorizontal: 20 },
+  // Header premium
+  headerSection: {
+    alignItems: 'center',
+    paddingTop: 28,
+    paddingBottom: 28,
+    paddingHorizontal: 20,
+  },
+  avatarWrapper: {
+    position: 'relative',
+    width: 114,
+    height: 114,
+    marginBottom: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarRing: {
+    position: 'absolute',
+    width: 114,
+    height: 114,
+    borderRadius: 57,
+  },
   avatar: {
-    width: 80, height: 80, borderRadius: 40,
-    backgroundColor: Colors.accent,
-    justifyContent: 'center', alignItems: 'center',
-    marginBottom: 14,
+    width: 106,
+    height: 106,
+    borderRadius: 53,
+    backgroundColor: '#1a1025',
+    borderWidth: 3,
+    borderColor: Colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  avatarInitial: { fontSize: 32, fontWeight: '800', color: Colors.white },
-  name: { fontSize: 20, fontWeight: '800', color: Colors.textPrimary, marginBottom: 4 },
+  avatarInitial: { fontSize: 40, fontWeight: '800', color: Colors.white },
+  name: { fontSize: 22, fontWeight: '800', color: Colors.textPrimary, marginBottom: 4 },
   email: { fontSize: 13, color: Colors.textSecondary, marginBottom: 4 },
-  since: { fontSize: 12, color: Colors.textMuted },
+  since: { fontSize: 12, color: Colors.textMuted, marginBottom: 20 },
 
-  // Stats
-  statsRow: {
-    flexDirection: 'row', gap: 10,
-    paddingHorizontal: 20, marginBottom: 28,
+  // Stats inline
+  statsInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    width: '100%',
   },
-  statCard: {
-    flex: 1, backgroundColor: Colors.surface,
-    borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
-    padding: 14, alignItems: 'center',
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
   },
-  statValue: { fontSize: 22, fontWeight: '800', color: Colors.accent, marginBottom: 4 },
-  statValueSmall: { fontSize: 14 },
-  statLabel: { fontSize: 11, color: Colors.textMuted, textAlign: 'center' },
+  statValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: Colors.accent,
+    marginBottom: 3,
+  },
+  statLabel: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    textAlign: 'center',
+  },
+  statDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: Colors.border,
+  },
 
   // Sections
   section: { paddingHorizontal: 20, marginBottom: 28 },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: Colors.textPrimary, marginBottom: 14 },
+  subSectionTitle: { fontSize: 12, fontWeight: '600', color: Colors.textMuted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.6 },
+
+  // Generi
+  genresList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  genreTag: {
+    borderRadius: 20,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  genreTagText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // Favoriti club
+  favHorizontalList: {
+    gap: 10,
+  },
+  favClubCard: {
+    width: 130,
+    height: 80,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: Colors.surface,
+    justifyContent: 'flex-end',
+    padding: 8,
+  },
+  favClubImage: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  favClubName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.white,
+  },
+  favClubCity: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 1,
+  },
+
+  // Favoriti eventi
+  favEventRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 10,
+    marginBottom: 8,
+  },
+  favEventThumb: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: Colors.surface,
+  },
+  favEventInfo: { flex: 1 },
+  favEventName: { fontSize: 13, fontWeight: '600', color: Colors.textPrimary, marginBottom: 3 },
+  favEventMeta: { fontSize: 11, color: Colors.textMuted },
 
   // History
   historyEmpty: {

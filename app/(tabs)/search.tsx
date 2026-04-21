@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
 import EventListItem from '../../components/EventListItem';
@@ -18,6 +19,7 @@ import { useEvents } from '../../contexts/EventsContext';
 import AppHeader from '../../components/AppHeader';
 
 export default function SearchScreen() {
+  const router = useRouter();
   const [query, setQuery] = useState('');
   const { recentIds } = useRecentlyViewed();
   const { events } = useEvents();
@@ -91,7 +93,7 @@ export default function SearchScreen() {
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>Discoteche</Text>
                   {filteredClubs.map((club) => (
-                    <View key={club.id} style={styles.clubRow}>
+                    <TouchableOpacity key={club.id} style={styles.clubRow} activeOpacity={0.8} onPress={() => router.push(`/club/${club.id}`)}>
                       <View style={styles.clubIcon}>
                         <Ionicons name="business" size={18} color={Colors.accent} />
                       </View>
@@ -100,7 +102,7 @@ export default function SearchScreen() {
                         <Text style={styles.clubCity}>{club.city}</Text>
                       </View>
                       <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
-                    </View>
+                    </TouchableOpacity>
                   ))}
                 </View>
               )}

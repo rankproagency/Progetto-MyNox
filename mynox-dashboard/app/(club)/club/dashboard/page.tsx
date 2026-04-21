@@ -1,56 +1,39 @@
 import { createClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/auth';
-import { Ticket, TrendingUp, CalendarDays, BarChart3 } from 'lucide-react';
+import Link from 'next/link';
+import { CalendarDays, Ticket, Plus, Settings, ChevronRight, Clock } from 'lucide-react';
 
-async function getClubStats(clubId: string) {
+async function getDashboardData(clubId: string) {
   const supabase = await createClient();
+  const today = new Date().toISOString().slice(0, 10);
+  const in7Days = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-  // Prendo gli eventi del club
-  const { data: events } = await supabase
-    .from('events')
-    .select('id, name, date, tickets_sold, capacity, is_published')
-    .eq('club_id', clubId)
-    .order('date', { ascending: false })
-    .limit(5);
-
-  const eventIds = (events ?? []).map((e) => e.id);
-
-  let totalTickets = 0;
-  let revenue = 0;
-  const revenueByEvent: Record<string, number> = {};
-
-  if (eventIds.length > 0) {
-    const { count } = await supabase
+  const [{ data: upcomingEvents }, { data: recentTickets }, { data: club }] = await Promise.all([
+    supabase
+      .from('events')
+      .select('id, name, date, start_time, tickets_sold, capacity, is_published, ticket_types(total_quantity, sold_quantity)')
+      .eq('club_id', clubId)
+      .gte('date', today)
+      .lte('date', in7Days)
+      .order('date', { ascending: true }),
+    supabase
       .from('tickets')
-      .select('*', { count: 'exact', head: true })
-      .in('event_id', eventIds)
-      .in('status', ['valid', 'used']);
-
-    const { data: ticketRevenue } = await supabase
-      .from('tickets')
-      .select('event_id, ticket_types(price)')
-      .in('event_id', eventIds)
-      .in('status', ['valid', 'used']);
-
-    totalTickets = count ?? 0;
-
-    for (const t of ticketRevenue ?? []) {
-      const price = (t as any).ticket_types?.price ?? 0;
-      revenue += price;
-      revenueByEvent[(t as any).event_id] = (revenueByEvent[(t as any).event_id] ?? 0) + price;
-    }
-  }
-
-  const totalEvents = events?.length ?? 0;
-  const publishedEvents = events?.filter((e) => e.is_published).length ?? 0;
+      .select('id, created_at, status, ticket_types(label, price), events!inner(club_id, name)')
+      .eq('events.club_id', clubId)
+      .in('status', ['valid', 'used'])
+      .order('created_at', { ascending: false })
+      .limit(6),
+    supabase
+      .from('clubs')
+      .select('name')
+      .eq('id', clubId)
+      .single(),
+  ]);
 
   return {
-    revenue,
-    totalTickets,
-    totalEvents,
-    publishedEvents,
-    recentEvents: events ?? [],
-    revenueByEvent,
+    clubName: club?.name ?? '',
+    upcomingEvents: upcomingEvents ?? [],
+    recentTickets: recentTickets ?? [],
   };
 }
 
@@ -58,112 +41,150 @@ export default async function ClubDashboardPage() {
   const profile = await getProfile();
   if (!profile?.club_id) return <p className="text-slate-400">Club non configurato. Contatta l&apos;amministratore.</p>;
 
-  const stats = await getClubStats(profile.club_id);
+  const { clubName, upcomingEvents, recentTickets } = await getDashboardData(profile.club_id);
 
-  const kpis = [
-    {
-      label: 'Ricavi totali',
-      value: `€${stats.revenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      icon: TrendingUp,
-      color: 'text-purple-400',
-      bg: 'bg-purple-500/10',
-      border: 'border-purple-500/20',
-    },
-    {
-      label: 'Biglietti venduti',
-      value: stats.totalTickets.toLocaleString('it-IT'),
-      icon: Ticket,
-      color: 'text-blue-400',
-      bg: 'bg-blue-500/10',
-      border: 'border-blue-500/20',
-    },
-    {
-      label: 'Eventi pubblicati',
-      value: stats.publishedEvents.toLocaleString('it-IT'),
-      icon: CalendarDays,
-      color: 'text-green-400',
-      bg: 'bg-green-500/10',
-      border: 'border-green-500/20',
-    },
-    {
-      label: 'Eventi totali',
-      value: stats.totalEvents.toLocaleString('it-IT'),
-      icon: BarChart3,
-      color: 'text-orange-400',
-      bg: 'bg-orange-500/10',
-      border: 'border-orange-500/20',
-    },
-  ];
+  const now = new Date();
+  const greeting =
+    now.getHours() < 12 ? 'Buongiorno' :
+    now.getHours() < 18 ? 'Buon pomeriggio' : 'Buonasera';
 
   return (
     <div>
+      {/* Intestazione */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-slate-400 mt-1">Panoramica della tua discoteca.</p>
+        <p className="text-slate-400 text-sm mb-1">{greeting}</p>
+        <h1 className="text-2xl font-bold text-white">{clubName}</h1>
       </div>
 
-      <div className="grid grid-cols-4 gap-5 mb-10">
-        {kpis.map(({ label, value, icon: Icon, color, bg, border }) => (
-          <div key={label} className="bg-[#111118] border border-white/8 rounded-xl p-5 flex items-start gap-4">
-            <div className={`w-10 h-10 rounded-lg ${bg} border ${border} flex items-center justify-center flex-shrink-0`}>
-              <Icon size={18} className={color} />
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 font-medium mb-1">{label}</p>
-              <p className="text-2xl font-bold text-white">{value}</p>
-            </div>
+      {/* Azioni rapide */}
+      <div className="grid grid-cols-3 gap-3 mb-10">
+        <Link href="/club/events/new"
+          className="flex items-center gap-3 bg-purple-600 hover:bg-purple-500 rounded-xl px-4 py-3.5 transition-colors group">
+          <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+            <Plus size={16} className="text-white" />
           </div>
-        ))}
+          <span className="text-sm font-semibold text-white">Nuovo evento</span>
+        </Link>
+        <Link href="/club/events"
+          className="flex items-center gap-3 bg-[#111118] hover:bg-white/5 border border-white/8 rounded-xl px-4 py-3.5 transition-colors">
+          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+            <CalendarDays size={16} className="text-slate-400" />
+          </div>
+          <span className="text-sm font-medium text-slate-300">I miei eventi</span>
+        </Link>
+        <Link href="/club/settings"
+          className="flex items-center gap-3 bg-[#111118] hover:bg-white/5 border border-white/8 rounded-xl px-4 py-3.5 transition-colors">
+          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+            <Settings size={16} className="text-slate-400" />
+          </div>
+          <span className="text-sm font-medium text-slate-300">Profilo club</span>
+        </Link>
       </div>
 
-      <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/8">
-          <h2 className="text-sm font-semibold text-white">I tuoi eventi recenti</h2>
+      <div className="grid grid-cols-2 gap-6">
+        {/* Prossimi 7 giorni */}
+        <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-white">Prossimi 7 giorni</h2>
+            <Link href="/club/events" className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors">
+              Vedi tutti <ChevronRight size={12} />
+            </Link>
+          </div>
+
+          {upcomingEvents.length === 0 ? (
+            <div className="px-5 py-10 text-center">
+              <CalendarDays size={32} className="text-slate-600 mx-auto mb-3" />
+              <p className="text-slate-500 text-sm">Nessun evento nei prossimi 7 giorni</p>
+              <Link href="/club/events/new" className="inline-flex items-center gap-1.5 mt-3 text-xs text-purple-400 hover:text-purple-300 transition-colors">
+                <Plus size={12} /> Crea un evento
+              </Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-white/5">
+              {upcomingEvents.map((event: any) => {
+                const totalQty = (event.ticket_types ?? []).reduce((s: number, t: any) => s + (t.total_quantity ?? 0), 0);
+                const soldQty = (event.ticket_types ?? []).reduce((s: number, t: any) => s + (t.sold_quantity ?? 0), 0);
+                const remaining = totalQty > 0 ? totalQty - soldQty : null;
+                const fillPct = totalQty > 0 ? Math.round((soldQty / totalQty) * 100) : 0;
+
+                return (
+                  <Link key={event.id} href={`/club/events/${event.id}`}
+                    className="flex items-center gap-4 px-5 py-4 hover:bg-white/3 transition-colors group">
+                    <div className="text-center shrink-0 w-10">
+                      <p className="text-xs text-slate-500 uppercase">
+                        {new Date(event.date).toLocaleDateString('it-IT', { weekday: 'short' })}
+                      </p>
+                      <p className="text-lg font-bold text-white leading-none">
+                        {new Date(event.date).getDate()}
+                      </p>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{event.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Clock size={10} className="text-slate-500 shrink-0" />
+                        <span className="text-xs text-slate-500">{event.start_time}</span>
+                        {!event.is_published && (
+                          <span className="text-xs text-amber-400 bg-amber-400/10 border border-amber-400/20 px-1.5 py-0.5 rounded-full">
+                            Bozza
+                          </span>
+                        )}
+                      </div>
+                      {remaining !== null && (
+                        <div className="mt-2">
+                          <div className="flex justify-between text-xs text-slate-500 mb-1">
+                            <span>{soldQty} venduti</span>
+                            <span>{remaining} rimasti</span>
+                          </div>
+                          <div className="h-1 bg-white/8 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-purple-500 rounded-full transition-all"
+                              style={{ width: `${fillPct}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <ChevronRight size={14} className="text-slate-600 group-hover:text-slate-400 transition-colors shrink-0" />
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-white/8">
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Nome</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Data</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Biglietti</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Ricavi</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stats.recentEvents.length > 0 ? (
-              stats.recentEvents.map((event) => (
-                <tr key={event.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
-                  <td className="px-5 py-4 text-white font-medium">{event.name}</td>
-                  <td className="px-5 py-4 text-slate-300">
-                    {new Date(event.date).toLocaleDateString('it-IT')}
-                  </td>
-                  <td className="px-5 py-4 text-slate-300">
-                    {event.tickets_sold}{event.capacity ? ` / ${event.capacity}` : ''}
-                  </td>
-                  <td className="px-5 py-4 font-semibold text-purple-400">
-                    €{(stats.revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                      event.is_published
-                        ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                        : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                    }`}>
-                      {event.is_published ? 'Pubblicato' : 'Bozza'}
-                    </span>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={5} className="px-5 py-10 text-center text-slate-500">
-                  Nessun evento ancora.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+
+        {/* Biglietti recenti */}
+        <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-white">Ultimi biglietti venduti</h2>
+            <Ticket size={14} className="text-slate-500" />
+          </div>
+
+          {recentTickets.length === 0 ? (
+            <div className="px-5 py-10 text-center">
+              <Ticket size={32} className="text-slate-600 mx-auto mb-3" />
+              <p className="text-slate-500 text-sm">Nessun biglietto venduto ancora</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-white/5">
+              {recentTickets.map((ticket: any) => (
+                <div key={ticket.id} className="flex items-center justify-between px-5 py-3.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-white font-medium truncate">{ticket.events?.name ?? '—'}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{ticket.ticket_types?.label ?? '—'}</p>
+                  </div>
+                  <div className="text-right shrink-0 ml-4">
+                    <p className="text-sm font-semibold text-purple-400">
+                      €{Number(ticket.ticket_types?.price ?? 0).toFixed(2)}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {new Date(ticket.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

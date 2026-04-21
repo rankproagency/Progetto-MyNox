@@ -16,8 +16,8 @@ import { Font } from '../constants/typography';
 import { useFavorites } from '../contexts/FavoritesContext';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.78;
-const CARD_HEIGHT = 300;
+const CARD_WIDTH = width * 0.70;
+const CARD_HEIGHT = 420;
 
 interface Props {
   event: Event;

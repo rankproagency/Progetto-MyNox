@@ -29,7 +29,7 @@ import { Event, Genre } from '../../types';
 import AppHeader from '../../components/AppHeader';
 import HomeSkeletonLoader from '../../components/HomeSkeletonLoader';
 
-const CARD_WIDTH = Math.round(RNDimensions.get('window').width * 0.78);
+const CARD_WIDTH = Math.round(RNDimensions.get('window').width * 0.70);
 
 const CITIES = [
   { id: 'padova', name: 'Padova', available: true },
@@ -170,7 +170,11 @@ export default function HomeScreen() {
 
   const calendarGrid = getCalendarGrid(calendarMonth.year, calendarMonth.month);
 
+  const now = new Date();
+  const isCurrentMonth = calendarMonth.year === now.getFullYear() && calendarMonth.month === now.getMonth();
+
   function prevMonth() {
+    if (isCurrentMonth) return;
     setCalendarMonth((prev) =>
       prev.month === 0 ? { year: prev.year - 1, month: 11 } : { ...prev, month: prev.month - 1 }
     );
@@ -248,8 +252,8 @@ export default function HomeScreen() {
 
                 {/* Navigazione mese */}
                 <View style={styles.calHeader}>
-                  <TouchableOpacity onPress={prevMonth} style={styles.calNavBtn}>
-                    <Ionicons name="chevron-back" size={20} color={Colors.textPrimary} />
+                  <TouchableOpacity onPress={prevMonth} style={[styles.calNavBtn, isCurrentMonth && styles.calNavBtnDisabled]} disabled={isCurrentMonth}>
+                    <Ionicons name="chevron-back" size={20} color={isCurrentMonth ? Colors.border : Colors.textPrimary} />
                   </TouchableOpacity>
                   <Text style={styles.calMonthLabel}>
                     {MONTH_NAMES[calendarMonth.month]} {calendarMonth.year}
@@ -511,11 +515,11 @@ export default function HomeScreen() {
                 </>
               )}
 
-              {/* Consigliati per te */}
-              {recommended.length > 0 && (
+              {/* Carousel contestuale: "Per te" se ha generi, "In evidenza" altrimenti */}
+              {recommended.length > 0 ? (
                 <>
                   <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitleInline}>Consigliati per te</Text>
+                    <Text style={styles.sectionTitleInline}>Per te</Text>
                     <View style={styles.forYouBadge}>
                       <Ionicons name="sparkles" size={11} color={Colors.accent} />
                       <Text style={styles.forYouText}>
@@ -534,23 +538,24 @@ export default function HomeScreen() {
                     decelerationRate="fast"
                   />
                 </>
+              ) : (
+                <>
+                  <Text style={styles.sectionTitle}>In evidenza</Text>
+                  <FlatList
+                    data={events.slice(0, 5)}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => <EventCard event={item} />}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.carouselContainer}
+                    snapToInterval={CARD_WIDTH + 14}
+                    decelerationRate="fast"
+                  />
+                </>
               )}
 
-              {/* In evidenza */}
-              <Text style={[styles.sectionTitle, recommended.length > 0 && styles.sectionSpacing]}>In evidenza</Text>
-              <FlatList
-                data={events.slice(0, 3)}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => <EventCard event={item} />}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.carouselContainer}
-                snapToInterval={CARD_WIDTH + 14}
-                decelerationRate="fast"
-              />
-
-              {/* Questa settimana */}
-              <Text style={[styles.sectionTitle, styles.sectionSpacing]}>Questa settimana</Text>
+              {/* Prossimi eventi */}
+              <Text style={[styles.sectionTitle, styles.sectionSpacing, { marginTop: 28 }]}>Prossimi eventi</Text>
               {eventsByDay.map(({ day, label, events: dayEvents }) => (
                 <View key={day} style={styles.dayGroup}>
                   <View style={styles.dayHeader}>
@@ -667,6 +672,7 @@ const styles = StyleSheet.create({
   calHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: Colors.border },
   calHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
   calNavBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: 10, backgroundColor: Colors.surfaceElevated },
+  calNavBtnDisabled: { opacity: 0.4 },
   calMonthLabel: { fontSize: 18, fontFamily: Font.bold, color: Colors.textPrimary },
   calDayHeaders: { flexDirection: 'row', marginBottom: 8 },
   calDayHeader: {

@@ -5,18 +5,20 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import {
-  LayoutDashboard,
+  Home,
   CalendarDays,
   BarChart3,
   Map,
   LogOut,
+  Settings,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { href: '/club/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/club/dashboard', label: 'Home', icon: Home },
   { href: '/club/events', label: 'I miei eventi', icon: CalendarDays },
   { href: '/club/venue', label: 'Piantina & Tavoli', icon: Map },
   { href: '/club/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/club/settings', label: 'Profilo club', icon: Settings },
 ];
 
 // URL prefix that the (club) layout applies to

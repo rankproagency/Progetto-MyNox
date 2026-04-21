@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { Camera, Globe, Mail, Phone, MapPin, Building2, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface Club {
   id: string;
@@ -27,8 +28,44 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
     phone: club.phone ?? '',
   });
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setError('Carica un file immagine (JPG, PNG, WebP).');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("L'immagine non può superare 5MB.");
+      return;
+    }
+
+    setUploadingImage(true);
+    setError('');
+    const supabase = createClient();
+    const ext = file.name.split('.').pop();
+    const path = `clubs/${club.id}/cover.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('club-images')
+      .upload(path, file, { upsert: true });
+
+    if (uploadError) {
+      setError('Errore nel caricamento immagine: ' + uploadError.message);
+      setUploadingImage(false);
+      return;
+    }
+
+    const { data } = supabase.storage.from('club-images').getPublicUrl(path);
+    setForm((prev) => ({ ...prev, image_url: data.publicUrl + '?t=' + Date.now() }));
+    setUploadingImage(false);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,88 +88,185 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
     setLoading(false);
     if (updateError) { setError(updateError.message); return; }
     setSuccess(true);
-    setTimeout(() => setSuccess(false), 3000);
+    setTimeout(() => setSuccess(false), 4000);
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl">
+    <form onSubmit={handleSubmit} className="max-w-2xl space-y-8">
 
-      {/* Info base */}
-      <section className="space-y-5">
-        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider border-b border-white/8 pb-3">Informazioni</h2>
+      {/* Cover + avatar preview */}
+      <div className="relative rounded-2xl overflow-hidden bg-[#0d0d14] border border-white/8">
+        {/* Cover */}
+        <div className="h-40 relative">
+          {form.image_url ? (
+            <img src={form.image_url} alt="Cover club" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900/30 to-[#0d0d14]">
+              <Building2 size={40} className="text-slate-600" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d14]/80 to-transparent" />
+        </div>
+
+        {/* Info sotto la cover */}
+        <div className="px-6 pb-5 pt-3 flex items-end justify-between">
+          <div>
+            <p className="text-white font-bold text-xl">{form.name || 'Nome club'}</p>
+            <p className="text-slate-400 text-sm flex items-center gap-1.5 mt-0.5">
+              <MapPin size={12} />
+              {form.city || 'Città'}{form.address ? ` · ${form.address}` : ''}
+            </p>
+          </div>
+
+          {/* Bottone upload */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingImage}
+            className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-medium px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
+          >
+            {uploadingImage
+              ? <><Loader2 size={13} className="animate-spin" /> Caricamento...</>
+              : <><Camera size={13} /> Cambia foto</>
+            }
+          </button>
+        </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageUpload}
+        />
+      </div>
+
+      {/* Informazioni base */}
+      <section className="space-y-4">
+        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider pb-2 border-b border-white/8">
+          Informazioni
+        </h2>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Nome club *">
-            <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Nome della discoteca" className={inputClass} />
+          <Field label="Nome club *" icon={<Building2 size={14} />}>
+            <input
+              required
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Nome della discoteca"
+              className={inputClass}
+            />
           </Field>
-          <Field label="Città">
-            <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
-              placeholder="es. Padova" className={inputClass} />
+          <Field label="Città" icon={<MapPin size={14} />}>
+            <input
+              value={form.city}
+              onChange={(e) => setForm({ ...form, city: e.target.value })}
+              placeholder="es. Padova"
+              className={inputClass}
+            />
           </Field>
         </div>
 
-        <Field label="Indirizzo">
-          <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })}
-            placeholder="es. Via Roma 1, Padova" className={inputClass} />
-        </Field>
-
-        <Field label="URL immagine">
-          <input type="url" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-            placeholder="https://..." className={inputClass} />
+        <Field label="Indirizzo" icon={<MapPin size={14} />}>
+          <input
+            value={form.address}
+            onChange={(e) => setForm({ ...form, address: e.target.value })}
+            placeholder="es. Via Roma 1, 35122 Padova"
+            className={inputClass}
+          />
         </Field>
       </section>
 
-      {/* Social */}
-      <section className="space-y-5">
-        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider border-b border-white/8 pb-3">Social & Contatti</h2>
+      {/* Social & Contatti */}
+      <section className="space-y-4">
+        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider pb-2 border-b border-white/8">
+          Social & Contatti
+        </h2>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Instagram">
-            <div className="flex items-center">
-              <span className="bg-[#0d0d14] border border-r-0 border-white/10 rounded-l-lg px-3 py-2.5 text-sm text-slate-500">@</span>
-              <input value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })}
-                placeholder="username" className={inputClass + ' rounded-l-none border-l-0'} />
+          <Field label="Instagram" icon={<Globe size={14} />}>
+            <div className="flex">
+              <span className="bg-[#0d0d14] border border-r-0 border-white/10 rounded-l-lg px-3 flex items-center text-sm text-slate-500">@</span>
+              <input
+                value={form.instagram}
+                onChange={(e) => setForm({ ...form, instagram: e.target.value })}
+                placeholder="username"
+                className={inputClass + ' rounded-l-none border-l-0'}
+              />
             </div>
           </Field>
-          <Field label="TikTok">
-            <div className="flex items-center">
-              <span className="bg-[#0d0d14] border border-r-0 border-white/10 rounded-l-lg px-3 py-2.5 text-sm text-slate-500">@</span>
-              <input value={form.tiktok} onChange={(e) => setForm({ ...form, tiktok: e.target.value })}
-                placeholder="username" className={inputClass + ' rounded-l-none border-l-0'} />
+
+          <Field label="TikTok" icon={<Globe size={14} />}>
+            <div className="flex">
+              <span className="bg-[#0d0d14] border border-r-0 border-white/10 rounded-l-lg px-3 flex items-center text-sm text-slate-500">@</span>
+              <input
+                value={form.tiktok}
+                onChange={(e) => setForm({ ...form, tiktok: e.target.value })}
+                placeholder="username"
+                className={inputClass + ' rounded-l-none border-l-0'}
+              />
             </div>
           </Field>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Email">
-            <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="info@tuoclub.it" className={inputClass} />
+          <Field label="Email" icon={<Mail size={14} />}>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="info@tuoclub.it"
+              className={inputClass}
+            />
           </Field>
-          <Field label="Telefono">
-            <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder="+39 049 000 0000" className={inputClass} />
+          <Field label="Telefono" icon={<Phone size={14} />}>
+            <input
+              type="tel"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              placeholder="+39 049 000 0000"
+              className={inputClass}
+            />
           </Field>
         </div>
       </section>
 
-      {error && <p className="text-red-400 text-sm bg-red-400/5 border border-red-400/20 rounded-lg px-4 py-3">{error}</p>}
-      {success && <p className="text-green-400 text-sm bg-green-400/5 border border-green-400/20 rounded-lg px-4 py-3">Modifiche salvate.</p>}
+      {/* Feedback */}
+      {error && (
+        <div className="flex items-start gap-3 text-red-400 text-sm bg-red-400/5 border border-red-400/20 rounded-xl px-4 py-3">
+          <AlertCircle size={16} className="mt-0.5 shrink-0" />
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="flex items-center gap-3 text-green-400 text-sm bg-green-400/5 border border-green-400/20 rounded-xl px-4 py-3">
+          <CheckCircle size={16} className="shrink-0" />
+          Modifiche salvate. Le informazioni saranno visibili nell&apos;app entro pochi minuti.
+        </div>
+      )}
 
-      <div className="pt-2 border-t border-white/8">
-        <button type="submit" disabled={loading}
-          className="bg-purple-600 hover:bg-purple-500 disabled:opacity-60 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors">
+      <div className="pt-2 border-t border-white/8 flex items-center gap-4">
+        <button
+          type="submit"
+          disabled={loading || uploadingImage}
+          className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-60 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors"
+        >
+          {loading && <Loader2 size={14} className="animate-spin" />}
           {loading ? 'Salvataggio...' : 'Salva modifiche'}
         </button>
+        <p className="text-xs text-slate-500">Le modifiche sono visibili nell&apos;app MyNox in tempo reale.</p>
       </div>
     </form>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, icon, children }: { label: string; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-xs font-medium text-slate-400 uppercase tracking-wide">{label}</label>
+      <label className="flex items-center gap-1.5 text-xs font-medium text-slate-400 uppercase tracking-wide">
+        {icon && <span className="text-slate-500">{icon}</span>}
+        {label}
+      </label>
       {children}
     </div>
   );

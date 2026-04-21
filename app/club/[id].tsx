@@ -30,6 +30,7 @@ export default function ClubScreen() {
           .select('*, clubs(*), ticket_types(*), tables(*, club_tables(pos_x, pos_y))')
           .eq('club_id', id)
           .eq('is_published', true)
+          .gte('date', new Date().toISOString().slice(0, 10))
           .order('date', { ascending: true }),
       ]);
 

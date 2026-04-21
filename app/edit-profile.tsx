@@ -16,12 +16,21 @@ import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/colors';
 import { useAuth } from '../contexts/AuthContext';
+import { ALL_GENRES } from '../constants/genres';
 
 export default function EditProfileScreen() {
   const router = useRouter();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, musicGenres, setMusicGenres } = useAuth();
   const [name, setName] = useState(user?.name ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
+  const [selectedGenres, setSelectedGenres] = useState<string[]>(musicGenres);
+
+  function toggleGenre(genre: string) {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedGenres((prev) =>
+      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
+    );
+  }
 
   function handleSave() {
     if (!name.trim()) {
@@ -34,6 +43,7 @@ export default function EditProfileScreen() {
     }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     updateUser({ name: name.trim(), email: email.trim() });
+    setMusicGenres(selectedGenres);
     router.back();
   }
 
@@ -86,6 +96,27 @@ export default function EditProfileScreen() {
               autoCapitalize="none"
               autoCorrect={false}
             />
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.fieldLabel}>Generi musicali</Text>
+            <View style={styles.genresList}>
+              {ALL_GENRES.map((genre) => {
+                const active = selectedGenres.includes(genre);
+                return (
+                  <TouchableOpacity
+                    key={genre}
+                    onPress={() => toggleGenre(genre)}
+                    activeOpacity={0.75}
+                    style={[styles.genreTag, active && styles.genreTagActive]}
+                  >
+                    <Text style={[styles.genreTagText, active && styles.genreTagTextActive]}>
+                      {genre}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
 
           <View style={styles.section}>
@@ -180,4 +211,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   ctaText: { fontSize: 16, fontWeight: '800', color: Colors.white },
+
+  genresList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  genreTag: {
+    borderRadius: 20, borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: 14, paddingVertical: 8,
+  },
+  genreTagActive: {
+    backgroundColor: 'rgba(168,85,247,0.18)',
+    borderColor: Colors.accent,
+  },
+  genreTagText: { fontSize: 13, fontWeight: '600', color: Colors.textMuted },
+  genreTagTextActive: { color: Colors.accent },
 });

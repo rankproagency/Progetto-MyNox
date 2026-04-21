@@ -23,7 +23,7 @@ const SECTIONS = [
   },
   {
     title: 'Cancellazione account',
-    body: 'Puoi richiedere la cancellazione del tuo account e di tutti i dati associati scrivendo a privacy@mynox.it.',
+    body: 'Puoi richiedere la cancellazione del tuo account e di tutti i dati associati scrivendo a mynoxsupport@gmail.com.',
   },
 ];
 
@@ -54,7 +54,7 @@ export default function PrivacyScreen() {
 
         <View style={styles.footer}>
           <Ionicons name="mail-outline" size={14} color={Colors.textMuted} />
-          <Text style={styles.footerText}>Per domande: privacy@mynox.it</Text>
+          <Text style={styles.footerText}>Per domande: mynoxsupport@gmail.com</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
