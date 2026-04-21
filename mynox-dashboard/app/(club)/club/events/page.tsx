@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { getProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { Plus, Pencil, Lock } from 'lucide-react';
-import PublishToggle from '@/components/club/PublishToggle';
 import DuplicateEventButton from '@/components/club/DuplicateEventButton';
+import PublishToggle from '@/components/club/PublishToggle';
 
 export default async function ClubEventsPage() {
   const profile = await getProfile();
@@ -89,7 +89,7 @@ export default async function ClubEventsPage() {
                     €{(revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-5 py-4">
-                    <PublishToggle eventId={event.id} initialPublished={event.is_published} />
+                    <PublishToggle eventId={event.id} isPublished={event.is_published} />
                   </td>
                   <td className="px-5 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">

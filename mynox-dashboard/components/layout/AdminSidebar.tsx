@@ -9,11 +9,13 @@ import {
   Building2,
   CalendarDays,
   Users,
+  BarChart2,
   LogOut,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/analytics', label: 'Analytics', icon: BarChart2 },
   { href: '/admin/clubs', label: 'Discoteche', icon: Building2 },
   { href: '/admin/events', label: 'Eventi', icon: CalendarDays },
   { href: '/admin/users', label: 'Utenti', icon: Users },

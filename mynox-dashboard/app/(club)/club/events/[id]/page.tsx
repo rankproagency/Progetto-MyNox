@@ -1,5 +1,6 @@
 import { getProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import Link from 'next/link';
 import { Pencil, ArrowLeft, Users, CircleCheck, Circle } from 'lucide-react';
 import ParticipantsTable from '@/components/club/ParticipantsTable';
@@ -15,7 +16,9 @@ export default async function ClubEventDetailPage({
 
   const supabase = await createClient();
 
-  const [{ data: event }, { data: tables }, { data: club }, { data: ticketTypes }, { data: soldTickets }, { data: clubTables }, { data: participantsRaw }] = await Promise.all([
+  const adminSupabase = createAdminClient();
+
+  const [{ data: event }, { data: tables }, { data: club }, { data: ticketTypes }, { data: soldTickets }, { data: clubTables }, { data: rawParticipants }] = await Promise.all([
     supabase
       .from('events')
       .select('*')
@@ -46,12 +49,11 @@ export default async function ClubEventDetailPage({
       .from('club_tables')
       .select('id, label, capacity, pos_x, pos_y, default_deposit')
       .eq('club_id', profile.club_id),
-    supabase
+    adminSupabase
       .from('tickets')
-      .select('id, status, created_at, ticket_types(label, price), profiles(name, email)')
+      .select('id, status, drink_used, created_at, user_id, ticket_type_id, ticket_types(label, price), profiles(name, email)')
       .eq('event_id', id)
-      .in('status', ['valid', 'used'])
-      .order('created_at', { ascending: false }),
+      .order('created_at', { ascending: true }),
   ]);
 
   if (!event) return <p className="text-slate-400">Evento non trovato.</p>;
@@ -69,15 +71,15 @@ export default async function ClubEventDetailPage({
   }
   const totalRevenue = Object.values(revenueByType).reduce((s, v) => s + v, 0);
 
-  // Partecipanti
-  const participants = (participantsRaw ?? []).map((t: any) => ({
+  const participants = (rawParticipants ?? []).map((t: any) => ({
+    id: t.id,
     name: t.profiles?.name ?? '—',
     email: t.profiles?.email ?? '—',
-    ticketType: t.ticket_types?.label ?? '—',
-    quantity: 1,
-    total: Number(t.ticket_types?.price ?? 0),
-    purchasedAt: t.created_at,
+    ticketLabel: t.ticket_types?.label ?? '—',
+    price: t.ticket_types?.price ?? 0,
     status: t.status,
+    drinkUsed: t.drink_used,
+    createdAt: t.created_at,
   }));
 
   // Mappa tavoli: usa club_tables per le posizioni, tables per la disponibilità evento
@@ -305,6 +307,11 @@ export default async function ClubEventDetailPage({
         </div>
       )}
 
+      {/* Partecipanti */}
+      <div className="mb-8">
+        <ParticipantsTable participants={participants} eventName={event.name} />
+      </div>
+
       {/* Tabella prenotazioni */}
       <div>
         <h2 className="text-lg font-semibold text-white mb-4">Prenotazioni tavoli</h2>
@@ -359,12 +366,6 @@ export default async function ClubEventDetailPage({
             </table>
           </div>
         )}
-      </div>
-
-      {/* Partecipanti */}
-      <div className="mt-8">
-        <h2 className="text-lg font-semibold text-white mb-4">Partecipanti</h2>
-        <ParticipantsTable participants={participants} eventName={event.name} />
       </div>
     </div>
   );

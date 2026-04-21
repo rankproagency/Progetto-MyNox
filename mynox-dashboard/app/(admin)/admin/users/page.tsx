@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 import { Users } from 'lucide-react';
 import UserRoleEditor from '@/components/admin/UserRoleEditor';
 
@@ -16,6 +17,7 @@ const ROLE_STYLES: Record<string, string> = {
 
 export default async function AdminUsersPage() {
   const supabase = createAdminClient();
+  const supabaseServer = await createClient();
 
   // Tutti gli utenti registrati in Supabase Auth
   const { data: authData, error } = await supabase.auth.admin.listUsers({ perPage: 1000 });
@@ -25,11 +27,8 @@ export default async function AdminUsersPage() {
     .from('profiles')
     .select('id, name, role, club_id, member_since');
 
-  // Lista club per UserRoleEditor
-  const { data: clubs } = await supabase
-    .from('clubs')
-    .select('id, name')
-    .order('name', { ascending: true });
+  // Club per il dropdown
+  const { data: clubs } = await supabaseServer.from('clubs').select('id, name').order('name');
 
   const profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]));
 
@@ -40,6 +39,7 @@ export default async function AdminUsersPage() {
       email:       u.email ?? '—',
       name:        profile?.name ?? u.user_metadata?.name ?? '—',
       role:        profile?.role ?? 'customer',
+      clubId:      profile?.club_id ?? null,
       memberSince: profile?.member_since ?? null,
       createdAt:   u.created_at,
       lastSignIn:  u.last_sign_in_at ?? null,
@@ -83,7 +83,6 @@ export default async function AdminUsersPage() {
                 <th className="text-left px-5 py-3 text-slate-400 font-medium">Registrato il</th>
                 <th className="text-left px-5 py-3 text-slate-400 font-medium">Ultimo accesso</th>
                 <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
-                <th className="px-5 py-3" />
               </tr>
             </thead>
             <tbody>
@@ -93,11 +92,12 @@ export default async function AdminUsersPage() {
                     <td className="px-5 py-4 text-white font-medium">{user.name}</td>
                     <td className="px-5 py-4 text-slate-300">{user.email}</td>
                     <td className="px-5 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                        ROLE_STYLES[user.role] ?? ROLE_STYLES.customer
-                      }`}>
-                        {ROLE_LABELS[user.role] ?? user.role}
-                      </span>
+                      <UserRoleEditor
+                        userId={user.id}
+                        currentRole={user.role}
+                        currentClubId={user.clubId}
+                        clubs={clubs ?? []}
+                      />
                     </td>
                     <td className="px-5 py-4 text-slate-400">
                       {new Date(user.createdAt).toLocaleDateString('it-IT', {
@@ -121,14 +121,6 @@ export default async function AdminUsersPage() {
                           In attesa
                         </span>
                       )}
-                    </td>
-                    <td className="px-5 py-4">
-                      <UserRoleEditor
-                        userId={user.id}
-                        initialRole={user.role}
-                        initialClubId={profileMap[user.id]?.club_id ?? null}
-                        clubs={(clubs ?? []).map((c: any) => ({ id: c.id, name: c.name }))}
-                      />
                     </td>
                   </tr>
                 ))

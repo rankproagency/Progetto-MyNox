@@ -51,7 +51,11 @@ async function getAnalyticsData(clubId: string) {
   const totalTickets = tickets.length;
   const avgTicketPrice = totalTickets > 0 ? totalRevenue / totalTickets : 0;
 
-  return { salesByEvent, revenueData, totalRevenue, totalTickets, avgTicketPrice };
+  const totalCapacity = (events ?? []).reduce((sum, e) => sum + (e.capacity ?? 0), 0);
+  const totalSold = (events ?? []).reduce((sum, e) => sum + (e.tickets_sold ?? 0), 0);
+  const fillRate = totalCapacity > 0 ? Math.round((totalSold / totalCapacity) * 100) : 0;
+
+  return { salesByEvent, revenueData, totalRevenue, totalTickets, avgTicketPrice, fillRate };
 }
 
 export default async function ClubAnalyticsPage() {
@@ -67,7 +71,7 @@ export default async function ClubAnalyticsPage() {
         <p className="text-slate-400 mt-1">Performance dei tuoi eventi.</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-5 mb-8">
+      <div className="grid grid-cols-4 gap-5 mb-8">
         <div className="bg-[#111118] border border-white/8 rounded-xl p-5">
           <p className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wide">Ricavi totali</p>
           <p className="text-2xl font-bold text-white">
@@ -83,6 +87,10 @@ export default async function ClubAnalyticsPage() {
           <p className="text-2xl font-bold text-white">
             €{data.avgTicketPrice.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
+        </div>
+        <div className="bg-[#111118] border border-white/8 rounded-xl p-5">
+          <p className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wide">Tasso di riempimento</p>
+          <p className="text-2xl font-bold text-white">{data.fillRate}%</p>
         </div>
       </div>
 
