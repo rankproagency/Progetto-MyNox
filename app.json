@@ -14,7 +14,11 @@
       "backgroundColor": "#07080f"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.mynox",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -41,7 +45,21 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      "expo-web-browser"
-    ]
+      "expo-web-browser",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.mynox.app",
+          "enableGooglePay": true
+        }
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "22880ea8-b6d4-48f2-a496-3fffcba2c0cf"
+      }
+    },
+    "owner": "mynoxsupports-organization"
   }
 }

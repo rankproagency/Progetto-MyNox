@@ -18,10 +18,14 @@ import * as Haptics from 'expo-haptics';
 import { useState, useRef, useEffect } from 'react';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
+import { useStripe } from '@stripe/stripe-react-native';
 import { useEvents } from '../contexts/EventsContext';
 import { notifyTicketConfirmed, scheduleEventReminders } from '../hooks/useNotifications';
 import { useTickets } from '../contexts/TicketsContext';
 import { supabase } from '../lib/supabase';
+
+const EDGE_FUNCTION_URL = 'https://xsprvlayjncbxhhhifnn.supabase.co/functions/v1/create-payment-intent';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcHJ2bGF5am5jYnhoaGhpZm5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMTAyMjIsImV4cCI6MjA5MTU4NjIyMn0.NH9sH6pE5FJIvP2Fce0JZLLaUxw8DJm7wBEF2a6vKiA';
 
 function generateId(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -61,6 +65,9 @@ export default function CheckoutScreen() {
   const [promoLoading, setPromoLoading] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<'apple' | 'card' | 'google'>('apple');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [paying, setPaying] = useState(false);
+
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   const successScale = useRef(new Animated.Value(0)).current;
   const successOpacity = useRef(new Animated.Value(0)).current;
@@ -118,76 +125,131 @@ export default function CheckoutScreen() {
     }
   }
 
-  function handlePay() {
+  async function handlePay() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert(
-      'Pagamento simulato',
-      'In produzione qui si apre Stripe. Per ora procediamo come se il pagamento fosse andato a buon fine.',
-      [
-        {
-          text: 'Conferma acquisto',
-          onPress: async () => {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            try {
-              await notifyTicketConfirmed(event!.id, event!.name, event!.club?.name ?? '');
-              await scheduleEventReminders(event!.id, event!.name, event!.club?.name ?? '', event!.date, event!.startTime);
-            } catch (_) {
-              // notification failure must not block ticket creation
-            }
-            if (table && tableId) {
-              try {
-                await supabase
-                  .from('tables')
-                  .update({ is_available: false, reserved_by: tableName?.trim() || null })
-                  .eq('id', tableId);
-              } catch (_) {
-                // aggiornamento tavolo fallito — il biglietto viene comunque creato
-              }
-            }
-            const formatted = formatDate(event!.date);
-            const newTickets = isTableOnly
-              ? [{
-                  id: generateId(),
-                  type: 'table' as const,
-                  eventId: event!.id,
-                  eventName: event!.name,
-                  clubName: event!.club?.name ?? '',
-                  rawDate: event!.date,
-                  date: formatted,
-                  startTime: event!.startTime,
-                  ticketLabel: table!.label,
-                  tableName: tableName?.trim() || undefined,
-                  tableCapacity: table!.capacity,
-                  pricePaid: total,
-                  qrCode: `MYNOX-TABLE-${generateId()}`,
-                  status: 'valid' as const,
-                }]
-              : Array.from({ length: quantity }, () => {
-                  const id = generateId();
-                  return {
-                    id,
-                    type: 'ticket' as const,
-                    eventId: event!.id,
-                    eventName: event!.name,
-                    clubName: event!.club?.name ?? '',
-                    rawDate: event!.date,
-                    date: formatted,
-                    startTime: event!.startTime,
-                    ticketLabel: ticket!.label,
-                    pricePaid: total / quantity,
-                    qrCode: `MYNOX-TICKET-${id}`,
-                    drinkQrCode: `MYNOX-DRINK-${id}`,
-                    drinkUsed: false,
-                    status: 'valid' as const,
-                  };
-                });
-            await addTickets(newTickets);
-            setShowSuccess(true);
-          },
+    setPaying(true);
+
+    try {
+      // 1. Recupera utente
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        Alert.alert('Errore', 'Devi essere loggato per acquistare.');
+        return;
+      }
+
+      // 2. Crea PaymentIntent tramite Edge Function
+      const metadata: Record<string, string> = {
+        event_id: event!.id,
+        user_id: user.id,
+        quantity: String(quantity),
+        includes_drink: String(ticket?.includesDrink ?? false),
+      };
+      if (ticket) metadata.ticket_type_id = ticket.id;
+      if (tableId) {
+        metadata.table_id = tableId;
+        metadata.table_name = tableName?.trim() ?? '';
+      }
+
+      const res = await fetch(EDGE_FUNCTION_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         },
-        { text: 'Annulla', style: 'cancel' },
-      ]
-    );
+        body: JSON.stringify({ amount: total, metadata }),
+      });
+
+      const { clientSecret, error: fnError } = await res.json() as {
+        clientSecret?: string;
+        error?: string;
+      };
+
+      if (fnError || !clientSecret) {
+        Alert.alert('Errore', fnError ?? 'Impossibile avviare il pagamento.');
+        return;
+      }
+
+      // 3. Inizializza il Payment Sheet di Stripe
+      const { error: initError } = await initPaymentSheet({
+        paymentIntentClientSecret: clientSecret,
+        merchantDisplayName: 'MyNox',
+        style: 'alwaysDark',
+        appearance: {
+          colors: { primary: '#a855f7', background: '#07080f', componentBackground: '#12151f' },
+        },
+      });
+
+      if (initError) {
+        Alert.alert('Errore', initError.message);
+        return;
+      }
+
+      // 4. Apre il Payment Sheet (carta, Apple Pay, Google Pay)
+      const { error: payError } = await presentPaymentSheet();
+
+      if (payError) {
+        if (payError.code !== 'Canceled') {
+          Alert.alert('Pagamento fallito', payError.message);
+        }
+        return;
+      }
+
+      // 5. Pagamento confermato — crea biglietto localmente e mostra successo
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      try {
+        await notifyTicketConfirmed(event!.id, event!.name, event!.club?.name ?? '');
+        await scheduleEventReminders(event!.id, event!.name, event!.club?.name ?? '', event!.date, event!.startTime);
+      } catch (_) {
+        // notifiche non bloccanti
+      }
+
+      const formatted = formatDate(event!.date);
+      const newTickets = isTableOnly
+        ? [{
+            id: generateId(),
+            type: 'table' as const,
+            eventId: event!.id,
+            eventName: event!.name,
+            clubName: event!.club?.name ?? '',
+            rawDate: event!.date,
+            date: formatted,
+            startTime: event!.startTime,
+            ticketLabel: table!.label,
+            tableName: tableName?.trim() || undefined,
+            tableCapacity: table!.capacity,
+            pricePaid: total,
+            qrCode: `MYNOX-TABLE-${generateId()}`,
+            status: 'valid' as const,
+          }]
+        : Array.from({ length: quantity }, () => {
+            const id = generateId();
+            return {
+              id,
+              type: 'ticket' as const,
+              eventId: event!.id,
+              eventName: event!.name,
+              clubName: event!.club?.name ?? '',
+              rawDate: event!.date,
+              date: formatted,
+              startTime: event!.startTime,
+              ticketLabel: ticket!.label,
+              pricePaid: total / quantity,
+              qrCode: `MYNOX-TICKET-${id}`,
+              drinkQrCode: ticket!.includesDrink ? `MYNOX-DRINK-${id}` : undefined,
+              drinkUsed: false,
+              status: 'valid' as const,
+            };
+          });
+
+      addTickets(newTickets);
+      setShowSuccess(true);
+
+    } catch (err) {
+      Alert.alert('Errore imprevisto', String(err));
+    } finally {
+      setPaying(false);
+    }
   }
 
   const isTable = isTableOnly;
@@ -364,15 +426,21 @@ export default function CheckoutScreen() {
       </ScrollView>
 
       <View style={styles.ctaContainer}>
-        <TouchableOpacity style={styles.ctaButton} activeOpacity={0.85} onPress={handlePay}>
-          <Ionicons
-            name={selectedMethod === 'apple' ? 'logo-apple' : selectedMethod === 'google' ? 'phone-portrait-outline' : 'card-outline'}
-            size={16}
-            color={Colors.white}
-          />
-          <Text style={styles.ctaText}>
-            {selectedMethod === 'apple' ? 'Paga con Apple Pay' : selectedMethod === 'google' ? 'Paga con Google Pay' : `Paga €${total}`}
-          </Text>
+        <TouchableOpacity style={[styles.ctaButton, paying && { opacity: 0.7 }]} activeOpacity={0.85} onPress={handlePay} disabled={paying}>
+          {paying ? (
+            <ActivityIndicator size="small" color={Colors.white} />
+          ) : (
+            <>
+              <Ionicons
+                name={selectedMethod === 'apple' ? 'logo-apple' : selectedMethod === 'google' ? 'phone-portrait-outline' : 'card-outline'}
+                size={16}
+                color={Colors.white}
+              />
+              <Text style={styles.ctaText}>
+                {selectedMethod === 'apple' ? 'Paga con Apple Pay' : selectedMethod === 'google' ? 'Paga con Google Pay' : `Paga €${total}`}
+              </Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>

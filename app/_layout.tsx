@@ -1,6 +1,7 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
+import { StripeProvider } from '@stripe/stripe-react-native';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { FavoritesProvider } from '../contexts/FavoritesContext';
 import { TicketsProvider } from '../contexts/TicketsContext';
@@ -42,6 +43,7 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
+    <StripeProvider publishableKey="pk_test_51TLomNPanZbf0jho10XcgrBg8Zr3qozUnM3BALBYB8ocQOQlG1GWqsemiMV3EtX8iLwkhrBiY5Qrq3lj4NvJBsE400s1LwLnXN">
     <AuthProvider>
       <ProfileProvider>
         <EventsProvider>
@@ -57,6 +59,7 @@ export default function RootLayout() {
         </EventsProvider>
       </ProfileProvider>
     </AuthProvider>
+    </StripeProvider>
   );
 }
 
