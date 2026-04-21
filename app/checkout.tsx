@@ -143,11 +143,13 @@ export default function CheckoutScreen() {
       }
 
 
+      const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcHJ2bGF5am5jYnhoaGhpZm5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMTAyMjIsImV4cCI6MjA5MTU4NjIyMn0.jhOvoBVj7Y_e3dOjtx9rCQiEGnv6H-1bXiDAksSgv_A';
       const fnRes = await fetch('https://xsprvlayjncbxhhhifnn.supabase.co/functions/v1/create-payment-intent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcHJ2bGF5am5jYnhoaGhpZm5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMTAyMjIsImV4cCI6MjA5MTU4NjIyMn0.jhOvoBVj7Y_e3dOjtx9rCQiEGnv6H-1bXiDAksSgv_A',
+          'apikey': ANON_KEY,
+          'Authorization': `Bearer ${ANON_KEY}`,
         },
         body: JSON.stringify({ amount: total, metadata }),
       });
