@@ -143,9 +143,12 @@ export default function CheckoutScreen() {
       }
 
 
-      const fnRes = await fetch('http://192.168.1.7:3001', {
+      const fnRes = await fetch('https://xsprvlayjncbxhhhifnn.supabase.co/functions/v1/create-payment-intent', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcHJ2bGF5am5jYnhoaGhpZm5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMTAyMjIsImV4cCI6MjA5MTU4NjIyMn0.jhOvoBVj7Y_e3dOjtx9rCQiEGnv6H-1bXiDAksSgv_A',
+        },
         body: JSON.stringify({ amount: total, metadata }),
       });
 
