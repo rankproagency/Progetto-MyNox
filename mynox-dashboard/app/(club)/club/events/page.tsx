@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { getProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { Plus, Pencil, Lock } from 'lucide-react';
+import PublishToggle from '@/components/club/PublishToggle';
+import DuplicateEventButton from '@/components/club/DuplicateEventButton';
 
 export default async function ClubEventsPage() {
   const profile = await getProfile();
@@ -87,22 +89,19 @@ export default async function ClubEventsPage() {
                     €{(revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-5 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                      event.is_published
-                        ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                        : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                    }`}>
-                      {event.is_published ? 'Pubblicato' : 'Bozza'}
-                    </span>
+                    <PublishToggle eventId={event.id} initialPublished={event.is_published} />
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <Link
-                      href={`/club/events/${event.id}/edit`}
-                      className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg transition-colors"
-                    >
-                      <Pencil size={12} />
-                      Modifica
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      <DuplicateEventButton eventId={event.id} />
+                      <Link
+                        href={`/club/events/${event.id}/edit`}
+                        className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        <Pencil size={12} />
+                        Modifica
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))

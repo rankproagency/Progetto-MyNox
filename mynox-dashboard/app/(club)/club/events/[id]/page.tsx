@@ -2,6 +2,7 @@ import { getProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Pencil, ArrowLeft, Users, CircleCheck, Circle } from 'lucide-react';
+import ParticipantsTable from '@/components/club/ParticipantsTable';
 
 export default async function ClubEventDetailPage({
   params,
@@ -14,7 +15,7 @@ export default async function ClubEventDetailPage({
 
   const supabase = await createClient();
 
-  const [{ data: event }, { data: tables }, { data: club }, { data: ticketTypes }, { data: soldTickets }, { data: clubTables }] = await Promise.all([
+  const [{ data: event }, { data: tables }, { data: club }, { data: ticketTypes }, { data: soldTickets }, { data: clubTables }, { data: participantsRaw }] = await Promise.all([
     supabase
       .from('events')
       .select('*')
@@ -45,6 +46,12 @@ export default async function ClubEventDetailPage({
       .from('club_tables')
       .select('id, label, capacity, pos_x, pos_y, default_deposit')
       .eq('club_id', profile.club_id),
+    supabase
+      .from('tickets')
+      .select('id, status, created_at, ticket_types(label, price), profiles(name, email)')
+      .eq('event_id', id)
+      .in('status', ['valid', 'used'])
+      .order('created_at', { ascending: false }),
   ]);
 
   if (!event) return <p className="text-slate-400">Evento non trovato.</p>;
@@ -61,6 +68,17 @@ export default async function ClubEventDetailPage({
     revenueByType[tid] = (revenueByType[tid] ?? 0) + price;
   }
   const totalRevenue = Object.values(revenueByType).reduce((s, v) => s + v, 0);
+
+  // Partecipanti
+  const participants = (participantsRaw ?? []).map((t: any) => ({
+    name: t.profiles?.name ?? '—',
+    email: t.profiles?.email ?? '—',
+    ticketType: t.ticket_types?.label ?? '—',
+    quantity: 1,
+    total: Number(t.ticket_types?.price ?? 0),
+    purchasedAt: t.created_at,
+    status: t.status,
+  }));
 
   // Mappa tavoli: usa club_tables per le posizioni, tables per la disponibilità evento
   // Abbina per label (A, B, C, D...)
@@ -341,6 +359,12 @@ export default async function ClubEventDetailPage({
             </table>
           </div>
         )}
+      </div>
+
+      {/* Partecipanti */}
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold text-white mb-4">Partecipanti</h2>
+        <ParticipantsTable participants={participants} eventName={event.name} />
       </div>
     </div>
   );

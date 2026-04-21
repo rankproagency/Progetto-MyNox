@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Users } from 'lucide-react';
+import UserRoleEditor from '@/components/admin/UserRoleEditor';
 
 const ROLE_LABELS: Record<string, string> = {
   admin:      'Admin',
@@ -23,6 +24,12 @@ export default async function AdminUsersPage() {
   const { data: profiles } = await supabase
     .from('profiles')
     .select('id, name, role, club_id, member_since');
+
+  // Lista club per UserRoleEditor
+  const { data: clubs } = await supabase
+    .from('clubs')
+    .select('id, name')
+    .order('name', { ascending: true });
 
   const profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]));
 
@@ -76,6 +83,7 @@ export default async function AdminUsersPage() {
                 <th className="text-left px-5 py-3 text-slate-400 font-medium">Registrato il</th>
                 <th className="text-left px-5 py-3 text-slate-400 font-medium">Ultimo accesso</th>
                 <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
+                <th className="px-5 py-3" />
               </tr>
             </thead>
             <tbody>
@@ -113,6 +121,14 @@ export default async function AdminUsersPage() {
                           In attesa
                         </span>
                       )}
+                    </td>
+                    <td className="px-5 py-4">
+                      <UserRoleEditor
+                        userId={user.id}
+                        initialRole={user.role}
+                        initialClubId={profileMap[user.id]?.club_id ?? null}
+                        clubs={(clubs ?? []).map((c: any) => ({ id: c.id, name: c.name }))}
+                      />
                     </td>
                   </tr>
                 ))
