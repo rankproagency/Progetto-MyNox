@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -51,9 +52,12 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="w-full max-w-sm bg-[#111118] border-white/8">
+    <Card className="w-full max-w-sm bg-[#111118] border-purple-500/20">
       <CardHeader className="text-center pb-6">
-        <div className="text-2xl font-black tracking-widest text-white mb-1">MYNOX</div>
+        <div className="flex flex-col items-center gap-2 mb-4">
+          <Image src="/logo.png" alt="MyNox" width={120} height={44} className="object-contain" />
+          <p className="text-xs text-purple-400 tracking-widest uppercase">Il futuro della nightlife</p>
+        </div>
         <CardTitle className="text-lg font-semibold text-white">Dashboard</CardTitle>
         <CardDescription className="text-slate-400">
           Accedi con il tuo account

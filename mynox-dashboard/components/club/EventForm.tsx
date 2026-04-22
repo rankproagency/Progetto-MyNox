@@ -328,7 +328,9 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
             <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
           </label>
           {form.image_url && (
-            <img src={form.image_url} alt="Anteprima" className="w-full h-40 object-cover rounded-lg border border-white/10" />
+            <div className="relative w-full aspect-[3/4] max-h-96 rounded-lg overflow-hidden border border-white/10">
+              <img src={form.image_url} alt="Anteprima" className="w-full h-full object-contain bg-black/40" />
+            </div>
           )}
         </div>
       </Field>
