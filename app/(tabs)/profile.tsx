@@ -42,8 +42,8 @@ export default function ProfileScreen() {
 
   const displayName = user?.name ?? '—';
   const displayEmail = user?.email ?? '—';
-  const eventsAttended = tickets.filter((t) => t.status === 'used').length;
-  const uniqueClubs = new Set(tickets.map((t) => t.clubName).filter(Boolean)).size;
+  const eventsAttended = new Set(tickets.filter((t) => t.status === 'used').map((t) => t.eventId).filter(Boolean)).size;
+  const uniqueClubs = new Set(tickets.filter((t) => t.status === 'used').map((t) => t.clubName).filter(Boolean)).size;
 
   const favoriteEvents = events.filter((e) => favoriteIds.includes(e.id));
 
@@ -113,14 +113,14 @@ export default function ProfileScreen() {
                 activeOpacity={0.8}
                 onPress={() => router.push('/(tabs)/tickets')}
               >
-                <Text style={styles.statValue}>{eventsAttended > 0 ? eventsAttended : '0'}</Text>
+                <Text style={styles.statValue}>{eventsAttended}</Text>
                 <Text style={styles.statLabel}>Serate</Text>
               </TouchableOpacity>
 
               <View style={styles.statDivider} />
 
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{uniqueClubs > 0 ? uniqueClubs : '—'}</Text>
+                <Text style={styles.statValue}>{uniqueClubs}</Text>
                 <Text style={styles.statLabel}>Club visitati</Text>
               </View>
 
@@ -131,7 +131,7 @@ export default function ProfileScreen() {
                 activeOpacity={0.8}
                 onPress={() => router.push('/(tabs)/tickets')}
               >
-                <Text style={styles.statValue}>{tickets.length > 0 ? tickets.length : '—'}</Text>
+                <Text style={styles.statValue}>{tickets.length}</Text>
                 <Text style={styles.statLabel}>Biglietti</Text>
               </TouchableOpacity>
             </View>
