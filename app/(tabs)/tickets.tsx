@@ -11,7 +11,7 @@ import { useTickets, MockTicket } from '../../contexts/TicketsContext';
 import { useCountdown } from '../../hooks/useCountdown';
 import AppHeader from '../../components/AppHeader';
 
-type Tab = 'future' | 'pending' | 'past';
+type Tab = 'future' | 'past';
 
 function CountdownBadge({ rawDate, startTime }: { rawDate: string; startTime: string }) {
   const { label, isExpired } = useCountdown(rawDate, startTime);
@@ -36,14 +36,12 @@ function isDatePast(rawDate: string): boolean {
 }
 
 function categorize(ticket: MockTicket): Tab {
-  if (ticket.status === 'pending') return 'pending';
   if (ticket.status === 'used' || isDatePast(ticket.rawDate)) return 'past';
   return 'future';
 }
 
 const TAB_CONFIG: { key: Tab; label: string }[] = [
   { key: 'future', label: 'Futuri' },
-  { key: 'pending', label: 'In attesa' },
   { key: 'past', label: 'Passati' },
 ];
 
@@ -55,7 +53,6 @@ export default function TicketsScreen() {
   const filtered = tickets.filter((t) => categorize(t) === activeTab);
   const counts: Record<Tab, number> = {
     future: tickets.filter((t) => categorize(t) === 'future').length,
-    pending: tickets.filter((t) => categorize(t) === 'pending').length,
     past: tickets.filter((t) => categorize(t) === 'past').length,
   };
 
@@ -128,7 +125,7 @@ function TicketCard({
   onGift: () => void;
 }) {
   const isPast = tab === 'past';
-  const isPending = tab === 'pending';
+  const isPending = false;
 
   return (
     <View style={[styles.ticketCard, isPast && styles.ticketCardPast]}>
@@ -207,12 +204,7 @@ function EmptyState({ tab, onExplore }: { tab: Tab; onExplore: () => void }) {
       title: 'Nessun biglietto futuro',
       sub: 'I tuoi prossimi eventi appariranno qui',
     },
-    pending: {
-      icon: 'time-outline' as const,
-      title: 'Nessun pagamento in attesa',
-      sub: 'I pagamenti in elaborazione appariranno qui',
-    },
-    past: {
+past: {
       icon: 'calendar-outline' as const,
       title: 'Nessuna serata passata',
       sub: 'Il tuo storico eventi sarà visibile qui',

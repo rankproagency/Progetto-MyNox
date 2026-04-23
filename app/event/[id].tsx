@@ -482,17 +482,8 @@ export default function EventScreen() {
                       <Text style={styles.expandMapBtnText}>Apri mappa</Text>
                     </TouchableOpacity>
                   </View>
-                  <TableMap
-                    tables={event.tables}
-                    selected={selectedTable}
-                    onSelect={(t) => { setSelectedTable(t); if (!t) setTableName(''); }}
-                    floorPlanUrl={event.floorPlanUrl}
-                  />
                   {selectedTable && (
-                    <View
-                      ref={tableNameRef}
-                      style={styles.tableNameBox}
-                    >
+                    <View ref={tableNameRef} style={styles.tableNameBox}>
                       <Ionicons name="bookmark-outline" size={16} color={Colors.accent} />
                       <TextInput
                         style={styles.tableNameInput}
@@ -502,16 +493,15 @@ export default function EventScreen() {
                         placeholderTextColor={Colors.textMuted}
                         autoCorrect={false}
                         returnKeyType="done"
-                        onFocus={() => {
-                          setTimeout(() => {
-                            tableNameRef.current?.measureInWindow((_x, y) => {
-                              scrollRef.current?.scrollTo({ y: y - 120, animated: true });
-                            });
-                          }, 350);
-                        }}
                       />
                     </View>
                   )}
+                  <TableMap
+                    tables={event.tables}
+                    selected={selectedTable}
+                    onSelect={(t) => { setSelectedTable(t); if (!t) setTableName(''); }}
+                    floorPlanUrl={event.floorPlanUrl}
+                  />
                 </>
               )}
             </>
