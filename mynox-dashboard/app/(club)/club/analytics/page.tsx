@@ -16,14 +16,22 @@ async function getAnalyticsData(clubId: string) {
   const eventIds = (events ?? []).map((e) => e.id);
 
   let tickets: any[] = [];
+  let availableTables: any[] = [];
   if (eventIds.length > 0) {
-    const { data } = await supabase
-      .from('tickets')
-      .select('created_at, status, ticket_types(price)')
-      .in('event_id', eventIds)
-      .in('status', ['valid', 'used'])
-      .order('created_at', { ascending: true });
-    tickets = data ?? [];
+    const [{ data: ticketsData }, { data: tablesData }] = await Promise.all([
+      supabase
+        .from('tickets')
+        .select('event_id, created_at, status, price_paid, ticket_types(price)')
+        .in('event_id', eventIds)
+        .in('status', ['valid', 'used'])
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('tables')
+        .select('event_id')
+        .in('event_id', eventIds),
+    ]);
+    tickets = ticketsData ?? [];
+    availableTables = tablesData ?? [];
   }
 
   // Ricavi per mese (ultimi 6 mesi)
@@ -40,8 +48,8 @@ async function getAnalyticsData(clubId: string) {
     const d = new Date(t.created_at);
     const key = d.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
     if (key in revenueByMonth) {
-      revenueByMonth[key] += t.ticket_types?.price ?? 0;
-      ticketsByMonth[key] = (ticketsByMonth[key] ?? 0) + 1;
+      revenueByMonth[key] += t.ticket_types?.price ?? t.price_paid ?? 0;
+      if (t.ticket_types !== null) ticketsByMonth[key] = (ticketsByMonth[key] ?? 0) + 1;
     }
   });
   const revenueData = Object.entries(revenueByMonth).map(([mese, ricavi]) => ({ mese, ricavi }));
@@ -61,13 +69,23 @@ async function getAnalyticsData(clubId: string) {
     return Math.round(((curr - prev) / prev) * 100);
   }
 
-  const totalRevenue = tickets.reduce((sum: number, t: any) => sum + (t.ticket_types?.price ?? 0), 0);
-  const totalTickets = tickets.length;
-  const avgTicketPrice = totalTickets > 0 ? totalRevenue / totalTickets : 0;
+  const totalRevenue = tickets.reduce((sum: number, t: any) => sum + (t.ticket_types?.price ?? t.price_paid ?? 0), 0);
+  const ticketsOnly = tickets.filter((t: any) => t.ticket_types !== null);
+  const totalTickets = ticketsOnly.length;
+  const avgTicketPrice = ticketsOnly.length > 0
+    ? ticketsOnly.reduce((sum: number, t: any) => sum + (t.ticket_types?.price ?? 0), 0) / ticketsOnly.length
+    : 0;
 
   const totalCapacity = (events ?? []).reduce((sum, e) => sum + (e.capacity ?? 0), 0);
   const totalSold = (events ?? []).reduce((sum, e) => sum + (e.tickets_sold ?? 0), 0);
   const fillRate = totalCapacity > 0 ? Math.round((totalSold / totalCapacity) * 100) : 0;
+
+  const tablesOnly = tickets.filter((t: any) => t.ticket_types === null);
+  const totalTableRevenue = tablesOnly.reduce((sum: number, t: any) => sum + (t.price_paid ?? 0), 0);
+
+  const eventsWithTables = new Set(tablesOnly.map((t: any) => t.event_id).filter(Boolean)).size;
+  const avgTablesPerEvent = eventsWithTables > 0 ? tablesOnly.length / eventsWithTables : 0;
+  const avgTableRevenuePerEvent = eventsWithTables > 0 ? totalTableRevenue / eventsWithTables : 0;
 
   const salesByEvent = (events ?? []).map((e) => ({
     name: e.name.length > 20 ? e.name.slice(0, 20) + '…' : e.name,
@@ -88,6 +106,9 @@ async function getAnalyticsData(clubId: string) {
     prevTickets,
     revenuePct: pct(currentRevenue, prevRevenue),
     ticketsPct: pct(currentTickets, prevTickets),
+    totalTableRevenue,
+    avgTablesPerEvent,
+    avgTableRevenuePerEvent,
   };
 }
 
@@ -142,6 +163,23 @@ export default async function ClubAnalyticsPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* KPI Tavoli */}
+      <div className="mb-8">
+        <p className="text-xs text-slate-500 uppercase tracking-widest font-medium mb-4">Tavoli</p>
+        <div className="grid grid-cols-3 gap-5">
+          {[
+            { label: 'Media tavoli per serata', value: Math.round(data.avgTablesPerEvent).toLocaleString('it-IT') },
+            { label: 'Ricavi totali tavoli', value: `€${data.totalTableRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
+            { label: 'Media ricavi tavoli per serata', value: `€${data.avgTableRevenuePerEvent.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
+          ].map(({ label, value }) => (
+            <div key={label} className="bg-[#111118] border border-white/8 rounded-xl p-5">
+              <p className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wide">{label}</p>
+              <p className="text-2xl font-bold text-white">{value}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <AnalyticsCharts salesByEvent={data.salesByEvent} revenueData={data.revenueData} />

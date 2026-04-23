@@ -27,7 +27,7 @@ async function getDashboardData(clubId: string) {
     eventIds.length > 0
       ? supabase
           .from('tickets')
-          .select('id, created_at, status, ticket_types(label, price), events(name)')
+          .select('id, created_at, status, table_name, price_paid, ticket_types(label, price), events(name)')
           .in('event_id', eventIds)
           .in('status', ['valid', 'used'])
           .order('created_at', { ascending: false })
@@ -180,11 +180,11 @@ export default async function ClubDashboardPage() {
                 <div key={ticket.id} className="flex items-center justify-between px-5 py-3.5">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-white font-medium truncate">{ticket.events?.name ?? '—'}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{ticket.ticket_types?.label ?? '—'}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{ticket.ticket_types?.label ?? (ticket.table_name ? `Tavolo – ${ticket.table_name}` : '—')}</p>
                   </div>
                   <div className="text-right shrink-0 ml-4">
                     <p className="text-sm font-semibold text-purple-400">
-                      €{Number(ticket.ticket_types?.price ?? 0).toFixed(2)}
+                      €{Number(ticket.ticket_types?.price ?? ticket.price_paid ?? 0).toFixed(2)}
                     </p>
                     <p className="text-xs text-slate-500">
                       {new Date(ticket.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}
