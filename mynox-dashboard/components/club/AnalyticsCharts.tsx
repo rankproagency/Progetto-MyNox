@@ -8,6 +8,7 @@ import {
 interface Props {
   salesByEvent: { name: string; venduti: number; capacita: number }[];
   revenueData: { mese: string; ricavi: number }[];
+  tablesByEvent: { name: string; prenotati: number; disponibili: number }[];
 }
 
 const tooltipStyle = {
@@ -18,7 +19,7 @@ const tooltipStyle = {
   fontSize: 12,
 };
 
-export default function AnalyticsCharts({ salesByEvent, revenueData }: Props) {
+export default function AnalyticsCharts({ salesByEvent, revenueData, tablesByEvent }: Props) {
   return (
     <div className="space-y-6">
       {/* Ricavi per mese */}
@@ -68,6 +69,24 @@ export default function AnalyticsCharts({ salesByEvent, revenueData }: Props) {
               <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="venduti" name="Venduti" fill="#a855f7" radius={[4, 4, 0, 0]} />
               <Bar dataKey="capacita" name="Capacità" fill="rgba(168,85,247,0.2)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+      {/* Tavoli per evento */}
+      <div className="bg-[#111118] border border-white/8 rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-white mb-6">Tavoli per evento</h2>
+        {tablesByEvent.length === 0 ? (
+          <EmptyChart />
+        ) : (
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={tablesByEvent} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <Tooltip contentStyle={tooltipStyle} />
+              <Bar dataKey="prenotati" name="Prenotati" fill="#a855f7" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="disponibili" name="Disponibili" fill="rgba(168,85,247,0.2)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}

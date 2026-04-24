@@ -1,5 +1,7 @@
 import { getProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+
+export const dynamic = 'force-dynamic';
 import AnalyticsCharts from '@/components/club/AnalyticsCharts';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
@@ -87,11 +89,29 @@ async function getAnalyticsData(clubId: string) {
   const avgTablesPerEvent = eventsWithTables > 0 ? tablesOnly.length / eventsWithTables : 0;
   const avgTableRevenuePerEvent = eventsWithTables > 0 ? totalTableRevenue / eventsWithTables : 0;
 
+  // Conteggio tavoli disponibili e prenotati per evento
+  const availableByEvent: Record<string, number> = {};
+  availableTables.forEach((t: any) => {
+    if (t.event_id) availableByEvent[t.event_id] = (availableByEvent[t.event_id] ?? 0) + 1;
+  });
+  const bookedByEvent: Record<string, number> = {};
+  tablesOnly.forEach((t: any) => {
+    if (t.event_id) bookedByEvent[t.event_id] = (bookedByEvent[t.event_id] ?? 0) + 1;
+  });
+
   const salesByEvent = (events ?? []).map((e) => ({
     name: e.name.length > 20 ? e.name.slice(0, 20) + '…' : e.name,
     venduti: e.tickets_sold,
     capacita: e.capacity ?? 0,
   }));
+
+  const tablesByEvent = (events ?? [])
+    .filter((e) => (availableByEvent[e.id] ?? 0) > 0 || (bookedByEvent[e.id] ?? 0) > 0)
+    .map((e) => ({
+      name: e.name.length > 20 ? e.name.slice(0, 20) + '…' : e.name,
+      prenotati: bookedByEvent[e.id] ?? 0,
+      disponibili: availableByEvent[e.id] ?? 0,
+    }));
 
   return {
     salesByEvent,
@@ -101,14 +121,13 @@ async function getAnalyticsData(clubId: string) {
     avgTicketPrice,
     fillRate,
     currentRevenue,
-    prevRevenue,
     currentTickets,
-    prevTickets,
     revenuePct: pct(currentRevenue, prevRevenue),
     ticketsPct: pct(currentTickets, prevTickets),
     totalTableRevenue,
     avgTablesPerEvent,
     avgTableRevenuePerEvent,
+    tablesByEvent,
   };
 }
 
@@ -122,7 +141,7 @@ export default async function ClubAnalyticsPage() {
     {
       label: 'Ricavi totali',
       value: `€${data.totalRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      sub: `€${data.currentRevenue.toFixed(2)} questo mese`,
+      sub: `Biglietti e tavoli · €${data.currentRevenue.toFixed(2)} questo mese`,
       trend: data.revenuePct,
     },
     {
@@ -165,8 +184,8 @@ export default async function ClubAnalyticsPage() {
         ))}
       </div>
 
-      {/* KPI Tavoli */}
-      <div className="mb-8">
+      {/* KPI Tavoli — nascosto se nessun tavolo configurato */}
+      {data.tablesByEvent.length > 0 && <div className="mb-8">
         <p className="text-xs text-slate-500 uppercase tracking-widest font-medium mb-4">Tavoli</p>
         <div className="grid grid-cols-3 gap-5">
           {[
@@ -180,9 +199,9 @@ export default async function ClubAnalyticsPage() {
             </div>
           ))}
         </div>
-      </div>
+      </div>}
 
-      <AnalyticsCharts salesByEvent={data.salesByEvent} revenueData={data.revenueData} />
+      <AnalyticsCharts salesByEvent={data.salesByEvent} revenueData={data.revenueData} tablesByEvent={data.tablesByEvent} />
     </div>
   );
 }

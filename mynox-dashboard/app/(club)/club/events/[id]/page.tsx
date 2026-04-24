@@ -1,9 +1,7 @@
 import { getProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import Link from 'next/link';
 import { Pencil, ArrowLeft, Users, CircleCheck, Circle } from 'lucide-react';
-import ParticipantsTable from '@/components/club/ParticipantsTable';
 
 export default async function ClubEventDetailPage({
   params,
@@ -16,9 +14,7 @@ export default async function ClubEventDetailPage({
 
   const supabase = await createClient();
 
-  const adminSupabase = createAdminClient();
-
-  const [{ data: event }, { data: tables }, { data: club }, { data: ticketTypes }, { data: soldTickets }, { data: clubTables }, { data: rawParticipants }] = await Promise.all([
+  const [{ data: event }, { data: tables }, { data: club }, { data: ticketTypes }, { data: soldTickets }, { data: clubTables }] = await Promise.all([
     supabase
       .from('events')
       .select('*')
@@ -42,18 +38,13 @@ export default async function ClubEventDetailPage({
       .order('label', { ascending: true }),
     supabase
       .from('tickets')
-      .select('ticket_type_id, ticket_types(price)')
+      .select('ticket_type_id, price_paid, ticket_types(price)')
       .eq('event_id', id)
       .in('status', ['valid', 'used']),
     supabase
       .from('club_tables')
       .select('id, label, capacity, pos_x, pos_y, default_deposit')
       .eq('club_id', profile.club_id),
-    adminSupabase
-      .from('tickets')
-      .select('id, status, drink_used, created_at, user_id, ticket_type_id, ticket_types(label, price), profiles(name, email)')
-      .eq('event_id', id)
-      .order('created_at', { ascending: true }),
   ]);
 
   if (!event) return <p className="text-slate-400">Evento non trovato.</p>;
@@ -62,28 +53,24 @@ export default async function ClubEventDetailPage({
   const reservedTables = tables?.filter((t) => !t.is_available).length ?? 0;
   const floorPlanUrl = club?.floor_plan_url ?? null;
 
-  // Ricavi per tipo biglietto
+  // Conteggio e ricavi per tipo biglietto — calcolati da tickets reali (non da sold_quantity)
+  const soldCountByType: Record<string, number> = {};
   const revenueByType: Record<string, number> = {};
   for (const t of soldTickets ?? []) {
     const tid = (t as any).ticket_type_id;
+    if (tid === null) continue; // tavoli — esclusi
     const price = (t as any).ticket_types?.price ?? 0;
+    soldCountByType[tid] = (soldCountByType[tid] ?? 0) + 1;
     revenueByType[tid] = (revenueByType[tid] ?? 0) + price;
   }
   const totalRevenue = Object.values(revenueByType).reduce((s, v) => s + v, 0);
 
-  const participants = (rawParticipants ?? []).map((t: any) => ({
-    id: t.id,
-    name: t.profiles?.name ?? '—',
-    email: t.profiles?.email ?? '—',
-    ticketLabel: t.ticket_types?.label ?? '—',
-    price: t.ticket_types?.price ?? 0,
-    status: t.status,
-    drinkUsed: t.drink_used,
-    createdAt: t.created_at,
-  }));
+  // Ricavi caparre tavoli
+  const totalTableRevenue = (soldTickets ?? [])
+    .filter((t: any) => t.ticket_type_id === null)
+    .reduce((s: number, t: any) => s + (t.price_paid ?? 0), 0);
 
-  // Mappa tavoli: usa club_tables per le posizioni, tables per la disponibilità evento
-  // Abbina per label (A, B, C, D...)
+  // Mappa tavoli
   const eventTableByLabel = new Map((tables ?? []).map((t) => [t.label, t]));
   const mappedTables = (clubTables ?? []).filter(
     (ct) => ct.pos_x != null && ct.pos_y != null
@@ -139,13 +126,15 @@ export default async function ClubEventDetailPage({
         </div>
         <div className="bg-[#111118] border border-white/8 rounded-xl p-4">
           <p className="text-slate-400 text-xs mb-1">Tavoli prenotati</p>
-          <p className="text-2xl font-bold text-white">{reservedTables}</p>
-          <p className="text-slate-500 text-xs mt-1">su {totalTables} tavoli</p>
+          <p className="text-2xl font-bold text-white">{reservedTables}/{totalTables}</p>
+          <p className="text-slate-500 text-xs mt-1">{totalTables - reservedTables} ancora disponibili</p>
         </div>
         <div className="bg-[#111118] border border-white/8 rounded-xl p-4">
-          <p className="text-slate-400 text-xs mb-1">Tavoli liberi</p>
-          <p className="text-2xl font-bold text-green-400">{totalTables - reservedTables}</p>
-          <p className="text-slate-500 text-xs mt-1">disponibili</p>
+          <p className="text-slate-400 text-xs mb-1">Ricavi caparre tavoli</p>
+          <p className="text-2xl font-bold text-purple-400">
+            €{totalTableRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+          <p className="text-slate-500 text-xs mt-1">da {reservedTables} prenotazioni</p>
         </div>
       </div>
 
@@ -167,7 +156,7 @@ export default async function ClubEventDetailPage({
               </thead>
               <tbody>
                 {(ticketTypes ?? []).map((tt, i) => {
-                  const sold = tt.sold_quantity ?? 0;
+                  const sold = soldCountByType[tt.id] ?? 0;
                   const total = tt.total_quantity ?? 0;
                   const available = Math.max(0, total - sold);
                   const revenue = revenueByType[tt.id] ?? 0;
@@ -217,9 +206,7 @@ export default async function ClubEventDetailPage({
           <h2 className="text-lg font-semibold text-white mb-4">Mappa tavoli</h2>
           <div className="bg-[#111118] border border-white/8 rounded-xl p-4">
             <div className="flex justify-center">
-              {/* Contenitore posizionamento — NO overflow-hidden così i tooltip non vengono tagliati */}
               <div className="relative select-none w-full" style={{ maxWidth: '560px' }}>
-                {/* Immagine con il suo clip separato */}
                 <div className="overflow-hidden rounded-xl border border-white/10">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -230,15 +217,11 @@ export default async function ClubEventDetailPage({
                   />
                 </div>
 
-                {/* Marker posizionati sullo stesso sistema percentuale dell'immagine */}
                 {mappedTables.map((table) => {
                   const posX = table.pos_x as number;
                   const posY = table.pos_y as number;
                   const isReserved = !table.is_available;
-
-                  // Direzione tooltip: verso il basso se il tavolo è in alto, altrimenti verso l'alto
                   const showBelow = posY < 0.28;
-                  // Allineamento orizzontale tooltip: evita uscita a sinistra/destra
                   const tooltipAlign =
                     posX < 0.22
                       ? 'left-0'
@@ -257,7 +240,6 @@ export default async function ClubEventDetailPage({
                         zIndex: 10,
                       }}
                     >
-                      {/* Marker */}
                       <div
                         className={`w-10 h-10 rounded-full border-2 flex flex-col items-center justify-center shadow-lg transition-transform group-hover:scale-110 cursor-default ${
                           isReserved
@@ -269,7 +251,6 @@ export default async function ClubEventDetailPage({
                         <span className="text-[9px] leading-none mt-0.5 opacity-70">{table.label}</span>
                       </div>
 
-                      {/* Tooltip — direzione e allineamento adattivi */}
                       <div
                         className={`absolute ${tooltipAlign} ${showBelow ? 'top-full mt-2' : 'bottom-full mb-2'} hidden group-hover:block z-30 pointer-events-none`}
                       >
@@ -291,7 +272,6 @@ export default async function ClubEventDetailPage({
               </div>
             </div>
 
-            {/* Legenda */}
             <div className="flex items-center gap-6 mt-3">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-green-500/20 border-2 border-green-400" />
@@ -307,22 +287,10 @@ export default async function ClubEventDetailPage({
         </div>
       )}
 
-      {/* Partecipanti */}
-      <div className="mb-8">
-        <ParticipantsTable participants={participants} eventName={event.name} />
-      </div>
-
-      {/* Tabella prenotazioni */}
-      <div>
-        <h2 className="text-lg font-semibold text-white mb-4">Prenotazioni tavoli</h2>
-
-        {totalTables === 0 ? (
-          <div className="bg-[#111118] border border-white/8 rounded-xl p-10 text-center">
-            <Users size={32} className="text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400 font-medium">Nessun tavolo configurato per questo evento</p>
-            <p className="text-slate-500 text-sm mt-1">Modifica l&apos;evento per aggiungere i tavoli.</p>
-          </div>
-        ) : (
+      {/* Prenotazioni tavoli */}
+      {totalTables > 0 && (
+        <div>
+          <h2 className="text-lg font-semibold text-white mb-4">Prenotazioni tavoli</h2>
           <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
@@ -365,8 +333,8 @@ export default async function ClubEventDetailPage({
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

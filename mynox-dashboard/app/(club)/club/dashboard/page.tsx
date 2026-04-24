@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/auth';
+
+export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { CalendarDays, Ticket, Plus, Settings, ChevronRight, Clock } from 'lucide-react';
 
@@ -8,7 +10,6 @@ async function getDashboardData(clubId: string) {
   const today = new Date().toISOString().slice(0, 10);
   const in7Days = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-  // Prima prendo gli event_id del club per filtrare i biglietti correttamente
   const { data: clubEventIds } = await supabase
     .from('events')
     .select('id')
@@ -16,14 +17,18 @@ async function getDashboardData(clubId: string) {
 
   const eventIds = (clubEventIds ?? []).map((e) => e.id);
 
-  const [{ data: upcomingEvents }, { data: recentTickets }, { data: club }] = await Promise.all([
-    supabase
-      .from('events')
-      .select('id, name, date, start_time, capacity, is_published, ticket_types(total_quantity, sold_quantity)')
-      .eq('club_id', clubId)
-      .gte('date', today)
-      .lte('date', in7Days)
-      .order('date', { ascending: true }),
+  // Prendo prima gli eventi prossimi (senza ticket_types join)
+  const { data: upcomingEventsRaw } = await supabase
+    .from('events')
+    .select('id, name, date, start_time, capacity, is_published')
+    .eq('club_id', clubId)
+    .gte('date', today)
+    .lte('date', in7Days)
+    .order('date', { ascending: true });
+
+  const upcomingEventIds = (upcomingEventsRaw ?? []).map((e) => e.id);
+
+  const [{ data: recentTickets }, { data: club }, { data: soldTicketRows }, { data: totalQtyRows }] = await Promise.all([
     eventIds.length > 0
       ? supabase
           .from('tickets')
@@ -38,11 +43,42 @@ async function getDashboardData(clubId: string) {
       .select('name')
       .eq('id', clubId)
       .single(),
+    upcomingEventIds.length > 0
+      ? supabase
+          .from('tickets')
+          .select('event_id')
+          .in('event_id', upcomingEventIds)
+          .in('status', ['valid', 'used'])
+      : Promise.resolve({ data: [] }),
+    upcomingEventIds.length > 0
+      ? supabase
+          .from('ticket_types')
+          .select('event_id, total_quantity')
+          .in('event_id', upcomingEventIds)
+      : Promise.resolve({ data: [] }),
   ]);
+
+  // Conta biglietti venduti reali per evento
+  const soldByEvent: Record<string, number> = {};
+  (soldTicketRows ?? []).forEach((t: any) => {
+    soldByEvent[t.event_id] = (soldByEvent[t.event_id] ?? 0) + 1;
+  });
+
+  // Somma posti totali per evento (da ticket_types)
+  const totalQtyByEvent: Record<string, number> = {};
+  (totalQtyRows ?? []).forEach((t: any) => {
+    totalQtyByEvent[t.event_id] = (totalQtyByEvent[t.event_id] ?? 0) + (t.total_quantity ?? 0);
+  });
+
+  const upcomingEvents = (upcomingEventsRaw ?? []).map((e) => ({
+    ...e,
+    soldQty: soldByEvent[e.id] ?? 0,
+    totalQty: totalQtyByEvent[e.id] ?? 0,
+  }));
 
   return {
     clubName: club?.name ?? '',
-    upcomingEvents: upcomingEvents ?? [],
+    upcomingEvents,
     recentTickets: recentTickets ?? [],
   };
 }
@@ -112,8 +148,7 @@ export default async function ClubDashboardPage() {
           ) : (
             <div className="divide-y divide-white/5">
               {upcomingEvents.map((event: any) => {
-                const totalQty = (event.ticket_types ?? []).reduce((s: number, t: any) => s + (t.total_quantity ?? 0), 0);
-                const soldQty = (event.ticket_types ?? []).reduce((s: number, t: any) => s + (t.sold_quantity ?? 0), 0);
+                const { soldQty, totalQty } = event;
                 const remaining = totalQty > 0 ? totalQty - soldQty : null;
                 const fillPct = totalQty > 0 ? Math.round((soldQty / totalQty) * 100) : 0;
 
