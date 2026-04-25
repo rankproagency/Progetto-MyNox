@@ -8,7 +8,7 @@ export default async function AdminClubsPage() {
     supabase.from('clubs').select('*').order('name'),
     supabase
       .from('tickets')
-      .select('ticket_types(price), events(club_id)')
+      .select('price_paid, ticket_types(price), events(club_id)')
       .in('status', ['valid', 'used']),
     supabase
       .from('events')
@@ -18,7 +18,7 @@ export default async function AdminClubsPage() {
   const revenueByClub: Record<string, number> = {};
   for (const t of ticketRevenue ?? []) {
     const clubId = (t as any).events?.club_id;
-    const price = (t as any).ticket_types?.price ?? 0;
+    const price = (t as any).ticket_types?.price ?? (t as any).price_paid ?? 0;
     if (clubId) revenueByClub[clubId] = (revenueByClub[clubId] ?? 0) + price;
   }
 

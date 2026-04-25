@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,8 @@ import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isUnauthorized = searchParams.get('error') === 'unauthorized';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -63,6 +65,15 @@ export default function LoginPage() {
           Accedi con il tuo account
         </CardDescription>
       </CardHeader>
+      {isUnauthorized && (
+        <div className="mx-6 mb-0 -mt-2 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3">
+          <p className="text-sm font-medium text-red-400">Accesso non autorizzato</p>
+          <p className="text-xs text-red-400/70 mt-0.5">
+            Il tuo account non ha i permessi per accedere a questa dashboard.
+            Contatta l&apos;amministratore di MyNox.
+          </p>
+        </div>
+      )}
       <CardContent>
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">

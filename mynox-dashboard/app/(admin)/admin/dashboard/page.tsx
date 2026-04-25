@@ -17,14 +17,14 @@ async function getDashboardData() {
   ] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, full_name, email, created_at, role')
+      .select('id, name, email, created_at, role')
       .eq('role', 'customer')
       .gte('created_at', since7Days)
       .order('created_at', { ascending: false })
       .limit(5),
     supabase
       .from('tickets')
-      .select('id, created_at, ticket_types(label, price), events(name, clubs(name))')
+      .select('id, created_at, table_name, price_paid, ticket_types(label, price), events(name, clubs(name))')
       .in('status', ['valid', 'used'])
       .order('created_at', { ascending: false })
       .limit(6),
@@ -37,7 +37,7 @@ async function getDashboardData() {
       .limit(5),
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'customer'),
     supabase.from('clubs').select('*', { count: 'exact', head: true }),
-    supabase.from('tickets').select('*', { count: 'exact', head: true }).in('status', ['valid', 'used']),
+    supabase.from('tickets').select('*', { count: 'exact', head: true }).in('status', ['valid', 'used']).not('ticket_type_id', 'is', null),
   ]);
 
   return {
@@ -111,11 +111,11 @@ export default async function AdminDashboardPage() {
                   <div className="flex items-center gap-3">
                     <div className="w-7 h-7 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center shrink-0">
                       <span className="text-xs font-bold text-purple-400">
-                        {(u.full_name || u.email || '?').charAt(0).toUpperCase()}
+                        {(u.name || u.email || '?').charAt(0).toUpperCase()}
                       </span>
                     </div>
                     <div>
-                      <p className="text-sm text-white font-medium">{u.full_name || '—'}</p>
+                      <p className="text-sm text-white font-medium">{u.name || '—'}</p>
                       <p className="text-xs text-slate-500">{u.email}</p>
                     </div>
                   </div>
@@ -145,11 +145,11 @@ export default async function AdminDashboardPage() {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-white font-medium truncate">{(t.events as any)?.name ?? '—'}</p>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      {(t.events as any)?.clubs?.name ?? '—'} · {t.ticket_types?.label ?? '—'}
+                      {(t.events as any)?.clubs?.name ?? '—'} · {t.ticket_types?.label ?? (t.table_name ? `Tavolo – ${t.table_name}` : '—')}
                     </p>
                   </div>
                   <div className="text-right shrink-0 ml-4">
-                    <p className="text-sm font-semibold text-purple-400">€{Number(t.ticket_types?.price ?? 0).toFixed(2)}</p>
+                    <p className="text-sm font-semibold text-purple-400">€{Number(t.ticket_types?.price ?? t.price_paid ?? 0).toFixed(2)}</p>
                     <p className="text-xs text-slate-500">
                       {new Date(t.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}
                     </p>

@@ -12,14 +12,14 @@ export default async function AdminEventsPage() {
       .order('date', { ascending: false }),
     supabase
       .from('tickets')
-      .select('event_id, ticket_types(price)')
+      .select('event_id, price_paid, ticket_types(price)')
       .in('status', ['valid', 'used']),
   ]);
 
   const revenueByEvent: Record<string, number> = {};
   for (const t of ticketRevenue ?? []) {
     const id = (t as any).event_id;
-    const price = (t as any).ticket_types?.price ?? 0;
+    const price = (t as any).ticket_types?.price ?? (t as any).price_paid ?? 0;
     if (id) revenueByEvent[id] = (revenueByEvent[id] ?? 0) + price;
   }
 

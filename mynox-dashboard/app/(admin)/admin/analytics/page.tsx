@@ -7,7 +7,7 @@ async function getAnalyticsData() {
 
   const { data: tickets } = await supabase
     .from('tickets')
-    .select('created_at, event_id, ticket_types(price), events(name, clubs(name))')
+    .select('created_at, event_id, price_paid, ticket_type_id, ticket_types(price), events(name, clubs(name))')
     .in('status', ['valid', 'used'])
     .order('created_at', { ascending: true });
 
@@ -27,8 +27,8 @@ async function getAnalyticsData() {
   all.forEach((t: any) => {
     const key = new Date(t.created_at).toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
     if (key in revenueByMonth) {
-      revenueByMonth[key] += t.ticket_types?.price ?? 0;
-      ticketsByMonth[key] += 1;
+      revenueByMonth[key] += t.ticket_types?.price ?? t.price_paid ?? 0;
+      if (t.ticket_type_id !== null) ticketsByMonth[key] += 1;
     }
   });
   const revenueByMonthData = Object.entries(revenueByMonth).map(([mese, ricavi]) => ({
@@ -57,8 +57,8 @@ async function getAnalyticsData() {
   all.forEach((t: any) => {
     const name = (t.events as any)?.clubs?.name ?? 'Sconosciuto';
     if (!byClub[name]) byClub[name] = { biglietti: 0, ricavi: 0 };
-    byClub[name].biglietti += 1;
-    byClub[name].ricavi += t.ticket_types?.price ?? 0;
+    if (t.ticket_type_id !== null) byClub[name].biglietti += 1;
+    byClub[name].ricavi += t.ticket_types?.price ?? t.price_paid ?? 0;
   });
   const ticketsByClub = Object.entries(byClub)
     .map(([club, d]) => ({ club, biglietti: d.biglietti, ricavi: +d.ricavi.toFixed(2) }))
@@ -73,15 +73,15 @@ async function getAnalyticsData() {
     const name = (t.events as any)?.name ?? '—';
     const club = (t.events as any)?.clubs?.name ?? '—';
     if (!byEvent[id]) byEvent[id] = { name, club, biglietti: 0, ricavi: 0 };
-    byEvent[id].biglietti += 1;
-    byEvent[id].ricavi += t.ticket_types?.price ?? 0;
+    if (t.ticket_type_id !== null) byEvent[id].biglietti += 1;
+    byEvent[id].ricavi += t.ticket_types?.price ?? t.price_paid ?? 0;
   });
   const topEvents = Object.values(byEvent)
     .sort((a, b) => b.ricavi - a.ricavi)
     .slice(0, 5)
     .map((e) => ({ ...e, ricavi: +e.ricavi.toFixed(2) }));
 
-  const totalRevenue = all.reduce((sum: number, t: any) => sum + (t.ticket_types?.price ?? 0), 0);
+  const totalRevenue = all.reduce((sum: number, t: any) => sum + (t.ticket_types?.price ?? t.price_paid ?? 0), 0);
   const totalCommission = totalRevenue * 0.08;
 
   return {
