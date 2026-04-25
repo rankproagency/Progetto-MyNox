@@ -22,13 +22,13 @@ export default async function ClubEventsPage() {
   if (eventIds.length > 0) {
     const { data: ticketRevenue } = await supabase
       .from('tickets')
-      .select('event_id, ticket_types(price)')
+      .select('event_id, price_paid, ticket_types(price)')
       .in('event_id', eventIds)
       .in('status', ['valid', 'used']);
 
     for (const t of ticketRevenue ?? []) {
       const id = (t as any).event_id;
-      const price = (t as any).ticket_types?.price ?? 0;
+      const price = (t as any).ticket_types?.price ?? (t as any).price_paid ?? 0;
       revenueByEvent[id] = (revenueByEvent[id] ?? 0) + price;
     }
   }

@@ -12,8 +12,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="flex min-h-screen bg-[#0a0a0f]">
       <AdminSidebar />
-      <main className="ml-56 flex-1 p-8">
-        {children}
+      <main className="ml-56 flex-1 p-8 relative">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(ellipse_80%_40%_at_50%_0%,rgba(168,85,247,0.10),transparent)] z-0" />
+        <div className="relative z-10">
+          {children}
+        </div>
       </main>
     </div>
   );

@@ -3,7 +3,7 @@ import { getProfile } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 import Link from 'next/link';
-import { CalendarDays, Ticket, Plus, Settings, ChevronRight, Clock } from 'lucide-react';
+import { CalendarDays, Ticket, Plus, Settings, ChevronRight, Clock, BarChart2 } from 'lucide-react';
 
 async function getDashboardData(clubId: string) {
   const supabase = await createClient();
@@ -103,7 +103,7 @@ export default async function ClubDashboardPage() {
       </div>
 
       {/* Azioni rapide */}
-      <div className="grid grid-cols-3 gap-3 mb-10">
+      <div className="grid grid-cols-4 gap-3 mb-10">
         <Link href="/club/events/new"
           className="flex items-center gap-3 bg-purple-600 hover:bg-purple-500 rounded-xl px-4 py-3.5 transition-colors group">
           <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
@@ -117,6 +117,13 @@ export default async function ClubDashboardPage() {
             <CalendarDays size={16} className="text-slate-400" />
           </div>
           <span className="text-sm font-medium text-slate-300">I miei eventi</span>
+        </Link>
+        <Link href="/club/analytics"
+          className="flex items-center gap-3 bg-[#111118] hover:bg-white/5 border border-white/8 rounded-xl px-4 py-3.5 transition-colors">
+          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+            <BarChart2 size={16} className="text-slate-400" />
+          </div>
+          <span className="text-sm font-medium text-slate-300">Analytics</span>
         </Link>
         <Link href="/club/settings"
           className="flex items-center gap-3 bg-[#111118] hover:bg-white/5 border border-white/8 rounded-xl px-4 py-3.5 transition-colors">
