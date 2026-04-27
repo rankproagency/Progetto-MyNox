@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import ClubRowActions from '@/components/admin/ClubRowActions';
+import Link from 'next/link';
+import { Plus } from 'lucide-react';
 
 export default async function AdminClubsPage() {
   const supabase = await createClient();
@@ -29,13 +31,22 @@ export default async function AdminClubsPage() {
   }
 
   const totalRevenue = Object.values(revenueByClub).reduce((a, b) => a + b, 0);
-  const activeClubs = (clubs ?? []).filter((c: any) => c.is_active !== false).length;
+  const activeClubs = (clubs ?? []).filter((c: any) => c.is_active === true).length;
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Discoteche</h1>
-        <p className="text-slate-400 mt-1">Gestisci le discoteche registrate sulla piattaforma.</p>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Discoteche</h1>
+          <p className="text-slate-400 mt-1">Gestisci le discoteche registrate sulla piattaforma.</p>
+        </div>
+        <Link
+          href="/admin/clubs/new"
+          className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
+        >
+          <Plus size={16} />
+          Nuova discoteca
+        </Link>
       </div>
 
       {/* KPI */}
@@ -62,27 +73,33 @@ export default async function AdminClubsPage() {
           <tbody>
             {clubs && clubs.length > 0 ? (
               clubs.map((club: any) => {
-                const isActive = club.is_active !== false;
+                const isActive = club.is_active === true;
+                const isPending = club.is_active === false;
+                const textColor = isActive ? 'text-white' : 'text-slate-500';
+
+                let statusBadge;
+                if (isActive) {
+                  statusBadge = <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-green-500/10 text-green-400 border-green-500/20">Attiva</span>;
+                } else if (isPending) {
+                  statusBadge = <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-amber-500/10 text-amber-400 border-amber-500/20">In configurazione</span>;
+                } else {
+                  statusBadge = <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-slate-500/10 text-slate-400 border-slate-500/20">Sospesa</span>;
+                }
+
                 return (
                   <tr key={club.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        {club.image_url && (
+                        {club.image_url ? (
                           <img src={club.image_url} alt={club.name} className="w-8 h-8 rounded-lg object-cover shrink-0" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 shrink-0" />
                         )}
-                        <span className={`font-medium ${isActive ? 'text-white' : 'text-slate-500'}`}>{club.name}</span>
+                        <span className={`font-medium ${textColor}`}>{club.name}</span>
                       </div>
                     </td>
                     <td className="px-5 py-4 text-slate-300">{club.city}</td>
-                    <td className="px-5 py-4">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
-                        isActive
-                          ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                          : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                      }`}>
-                        {isActive ? 'Attiva' : 'Sospesa'}
-                      </span>
-                    </td>
+                    <td className="px-5 py-4">{statusBadge}</td>
                     <td className="px-5 py-4 text-slate-300">{eventCountByClub[club.id] ?? 0}</td>
                     <td className="px-5 py-4 font-semibold text-purple-400">
                       €{(revenueByClub[club.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

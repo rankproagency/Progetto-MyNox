@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getProfile } from '@/lib/auth';
 import ClubSidebar from '@/components/layout/ClubSidebar';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export default async function ClubLayout({ children }: { children: React.ReactNode }) {
   const profile = await getProfile();
@@ -13,9 +14,18 @@ export default async function ClubLayout({ children }: { children: React.ReactNo
   const supabase = await createClient();
   const { data: club } = await supabase
     .from('clubs')
-    .select('name')
+    .select('name, is_active')
     .eq('id', profile.club_id!)
     .single();
+
+  // Attiva il club al primo accesso del gestore alla dashboard
+  if (club && club.is_active === false) {
+    const adminSupabase = createAdminClient();
+    await adminSupabase
+      .from('clubs')
+      .update({ is_active: true })
+      .eq('id', profile.club_id!);
+  }
 
   return (
     <div className="flex min-h-screen bg-[#0a0a0f]">

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { deleteClub, toggleClubActive } from '@/app/(admin)/admin/clubs/actions';
 import { Pencil, Trash2, PowerOff, Power, Loader2 } from 'lucide-react';
 
 interface Props {
@@ -16,20 +16,24 @@ export default function ClubRowActions({ clubId, clubName, isActive }: Props) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [loadingToggle, setLoadingToggle] = useState(false);
   const [loadingDelete, setLoadingDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   async function handleToggleActive() {
     setLoadingToggle(true);
-    const supabase = createClient();
-    await supabase.from('clubs').update({ is_active: !isActive }).eq('id', clubId);
+    await toggleClubActive(clubId, isActive);
     setLoadingToggle(false);
     router.refresh();
   }
 
   async function handleDelete() {
     setLoadingDelete(true);
-    const supabase = createClient();
-    await supabase.from('clubs').delete().eq('id', clubId);
+    setDeleteError('');
+    const result = await deleteClub(clubId);
     setLoadingDelete(false);
+    if (result.error) {
+      setDeleteError(result.error);
+      return;
+    }
     setShowDeleteDialog(false);
     router.refresh();
   }
@@ -87,6 +91,9 @@ export default function ClubRowActions({ clubId, clubName, isActive }: Props) {
             <p className="text-slate-500 text-xs text-center mb-6">
               Tutti gli eventi, biglietti e tavoli associati verranno eliminati. Questa azione è irreversibile.
             </p>
+            {deleteError && (
+              <p className="text-red-400 text-xs text-center mb-4 bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2">{deleteError}</p>
+            )}
 
             <div className="flex gap-3">
               <button

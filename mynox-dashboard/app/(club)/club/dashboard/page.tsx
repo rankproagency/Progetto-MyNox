@@ -3,12 +3,26 @@ import { getProfile } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 import Link from 'next/link';
-import { CalendarDays, Ticket, Plus, Settings, ChevronRight, Clock, BarChart2 } from 'lucide-react';
+import { CalendarDays, Ticket, Plus, Settings, ChevronRight, Clock, BarChart2, CheckCircle2, Circle } from 'lucide-react';
 
 async function getDashboardData(clubId: string) {
   const supabase = await createClient();
   const today = new Date().toISOString().slice(0, 10);
   const in7Days = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  const { data: clubData } = await supabase
+    .from('clubs')
+    .select('image_url, name, city, address')
+    .eq('id', clubId)
+    .single();
+
+  const { data: publishedEvent } = await supabase
+    .from('events')
+    .select('id')
+    .eq('club_id', clubId)
+    .eq('is_published', true)
+    .limit(1)
+    .maybeSingle();
 
   const { data: clubEventIds } = await supabase
     .from('events')
@@ -76,10 +90,16 @@ async function getDashboardData(clubId: string) {
     totalQty: totalQtyByEvent[e.id] ?? 0,
   }));
 
+  const checklist = {
+    hasImage: !!clubData?.image_url,
+    hasPublishedEvent: !!publishedEvent,
+  };
+
   return {
     clubName: club?.name ?? '',
     upcomingEvents,
     recentTickets: recentTickets ?? [],
+    checklist,
   };
 }
 
@@ -87,7 +107,8 @@ export default async function ClubDashboardPage() {
   const profile = await getProfile();
   if (!profile?.club_id) return <p className="text-slate-400">Club non configurato. Contatta l&apos;amministratore.</p>;
 
-  const { clubName, upcomingEvents, recentTickets } = await getDashboardData(profile.club_id);
+  const { clubName, upcomingEvents, recentTickets, checklist } = await getDashboardData(profile.club_id);
+  const isProfileComplete = checklist.hasImage && checklist.hasPublishedEvent;
 
   const now = new Date();
   const greeting =
@@ -101,6 +122,17 @@ export default async function ClubDashboardPage() {
         <p className="text-slate-400 text-sm mb-1">{greeting}</p>
         <h1 className="text-2xl font-bold text-white">{clubName}</h1>
       </div>
+
+      {/* Checklist setup — visibile solo se incompleto */}
+      {!isProfileComplete && (
+        <div className="mb-8 bg-amber-500/5 border border-amber-500/20 rounded-xl px-5 py-4">
+          <p className="text-sm font-semibold text-amber-400 mb-3">Completa il tuo profilo per essere visibile sull&apos;app</p>
+          <div className="space-y-2">
+            <CheckItem done={checklist.hasImage} label="Carica un'immagine copertina" href="/club/settings" />
+            <CheckItem done={checklist.hasPublishedEvent} label="Pubblica il tuo primo evento" href="/club/events/new" />
+          </div>
+        </div>
+      )}
 
       {/* Azioni rapide */}
       <div className="grid grid-cols-4 gap-3 mb-10">
@@ -238,6 +270,21 @@ export default async function ClubDashboardPage() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function CheckItem({ done, label, href }: { done: boolean; label: string; href: string }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      {done
+        ? <CheckCircle2 size={15} className="text-green-400 shrink-0" />
+        : <Circle size={15} className="text-amber-400/50 shrink-0" />
+      }
+      {done
+        ? <span className="text-sm text-slate-500 line-through">{label}</span>
+        : <Link href={href} className="text-sm text-amber-300 hover:text-amber-200 transition-colors">{label} →</Link>
+      }
     </div>
   );
 }

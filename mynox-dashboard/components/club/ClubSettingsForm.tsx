@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Camera, Globe, Mail, Phone, MapPin, Building2, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Camera, Globe, Mail, Phone, MapPin, Building2, Loader2, CheckCircle, AlertCircle, Lock } from 'lucide-react';
 
 interface Club {
   id: string;
@@ -92,6 +92,7 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-8">
 
       {/* Cover + avatar preview */}
@@ -257,6 +258,16 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
         <p className="text-xs text-slate-500">Le modifiche sono visibili nell&apos;app MyNox in tempo reale.</p>
       </div>
     </form>
+
+    {/* Sezione sicurezza — separata dal form principale */}
+    <div className="max-w-2xl mt-10 space-y-6">
+      <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider pb-2 border-b border-white/8 flex items-center gap-2">
+        <Lock size={13} /> Sicurezza account
+      </h2>
+      <EmailChangeForm />
+      <PasswordChangeForm />
+    </div>
+    </>
   );
 }
 
@@ -274,3 +285,129 @@ function Field({ label, icon, children }: { label: string; icon?: React.ReactNod
 
 const inputClass =
   'w-full bg-[#0d0d14] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors';
+
+function EmailChangeForm() {
+  const [newEmail, setNewEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess(false);
+    const supabase = createClient();
+    const { error: err } = await supabase.auth.updateUser({ email: newEmail });
+    setLoading(false);
+    if (err) { setError(err.message); return; }
+    setSuccess(true);
+    setNewEmail('');
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-[#0d0d14] border border-white/8 rounded-xl p-5 space-y-4">
+      <div>
+        <p className="text-sm font-medium text-white">Cambia email</p>
+        <p className="text-xs text-slate-500 mt-0.5">Riceverai un link di conferma al nuovo indirizzo prima che il cambio diventi effettivo.</p>
+      </div>
+      <Field label="Nuova email">
+        <input
+          required
+          type="email"
+          value={newEmail}
+          onChange={(e) => setNewEmail(e.target.value)}
+          placeholder="nuova@email.it"
+          className={inputClass}
+        />
+      </Field>
+      {error && <p className="text-sm text-red-400">{error}</p>}
+      {success && (
+        <div className="flex items-center gap-2 text-green-400 text-sm">
+          <CheckCircle size={14} /> Controlla la tua nuova email per confermare il cambio.
+        </div>
+      )}
+      <button type="submit" disabled={loading}
+        className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 disabled:opacity-60 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+        {loading && <Loader2 size={13} className="animate-spin" />}
+        {loading ? 'Invio...' : 'Aggiorna email'}
+      </button>
+    </form>
+  );
+}
+
+function PasswordChangeForm() {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess(false);
+    const supabase = createClient();
+
+    // Verifica la password attuale
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email: user?.email ?? '',
+      password: currentPassword,
+    });
+    if (signInErr) {
+      setError('Password attuale non corretta.');
+      setLoading(false);
+      return;
+    }
+
+    const { error: updateErr } = await supabase.auth.updateUser({ password: newPassword });
+    setLoading(false);
+    if (updateErr) { setError(updateErr.message); return; }
+    setSuccess(true);
+    setCurrentPassword('');
+    setNewPassword('');
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-[#0d0d14] border border-white/8 rounded-xl p-5 space-y-4">
+      <div>
+        <p className="text-sm font-medium text-white">Cambia password</p>
+        <p className="text-xs text-slate-500 mt-0.5">Inserisci la password attuale per confermare la tua identità.</p>
+      </div>
+      <Field label="Password attuale">
+        <input
+          required
+          type="password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          placeholder="••••••••"
+          className={inputClass}
+        />
+      </Field>
+      <Field label="Nuova password">
+        <input
+          required
+          type="password"
+          minLength={6}
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          placeholder="Minimo 6 caratteri"
+          className={inputClass}
+        />
+      </Field>
+      {error && <p className="text-sm text-red-400">{error}</p>}
+      {success && (
+        <div className="flex items-center gap-2 text-green-400 text-sm">
+          <CheckCircle size={14} /> Password aggiornata con successo.
+        </div>
+      )}
+      <button type="submit" disabled={loading}
+        className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 disabled:opacity-60 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+        {loading && <Loader2 size={13} className="animate-spin" />}
+        {loading ? 'Aggiornamento...' : 'Aggiorna password'}
+      </button>
+    </form>
+  );
+}

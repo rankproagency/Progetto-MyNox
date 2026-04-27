@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { updateUserRole } from '@/app/(admin)/admin/users/actions';
 import { Check, X } from 'lucide-react';
 
 interface Club { id: string; name: string }
@@ -22,12 +22,9 @@ export default function UserRoleEditor({ userId, currentRole, currentClubId, clu
 
   async function save() {
     setSaving(true);
-    const supabase = createClient();
-    await supabase
-      .from('profiles')
-      .update({ role, club_id: clubId || null })
-      .eq('id', userId);
+    const result = await updateUserRole(userId, role, clubId || null);
     setSaving(false);
+    if (result.error) return;
     setSaved(true);
     setEditing(false);
     setTimeout(() => setSaved(false), 2000);
