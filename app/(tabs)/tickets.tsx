@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Share, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Share, Image, Modal, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
 import { useTickets, MockTicket } from '../../contexts/TicketsContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useCountdown } from '../../hooks/useCountdown';
 import AppHeader from '../../components/AppHeader';
 
@@ -48,7 +49,11 @@ const TAB_CONFIG: { key: Tab; label: string }[] = [
 export default function TicketsScreen() {
   const router = useRouter();
   const { tickets } = useTickets();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('future');
+  const [claimModalOpen, setClaimModalOpen] = useState(false);
+  const [claimCode, setClaimCode] = useState('');
+  const [claimLoading, setClaimLoading] = useState(false);
 
   const filtered = tickets.filter((t) => categorize(t) === activeTab);
   const counts: Record<Tab, number> = {
@@ -57,13 +62,49 @@ export default function TicketsScreen() {
   };
 
   async function handleGift(ticket: MockTicket) {
+    if (!user?.id) { Alert.alert('Accedi per regalare un biglietto'); return; }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await Share.share({
-      message:
-        `Ti regalo un biglietto per ${ticket.eventName} @ ${ticket.clubName}!\n\n` +
-        `Codice: ${ticket.qrCode}\n\nScarica MyNox e usa questo codice per riscattare il biglietto.`,
-      title: `Biglietto per ${ticket.eventName}`,
-    });
+    try {
+      const res = await fetch('https://mynox-stripe-proxy.onrender.com/gift-ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticket_id: ticket.id, gifter_id: user.id }),
+      });
+      const json = await res.json() as { code?: string; error?: string };
+      if (!json.code) { Alert.alert('Errore', json.error ?? 'Impossibile creare il codice regalo'); return; }
+      await Share.share({
+        message:
+          `🎁 Ti regalo un biglietto per ${ticket.eventName} @ ${ticket.clubName}!\n\n` +
+          `Il tuo codice regalo è: ${json.code}\n\n` +
+          `Scarica MyNox, vai su "I miei biglietti" → "Riscatta regalo" e inserisci il codice.`,
+        title: `Biglietto per ${ticket.eventName}`,
+      });
+    } catch {
+      Alert.alert('Errore', 'Impossibile creare il codice regalo');
+    }
+  }
+
+  async function handleClaim() {
+    if (!user?.id) { Alert.alert('Accedi per riscattare un regalo'); return; }
+    if (!claimCode.trim()) return;
+    setClaimLoading(true);
+    try {
+      const res = await fetch('https://mynox-stripe-proxy.onrender.com/claim-gift', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: claimCode.trim().toUpperCase(), claimer_id: user.id }),
+      });
+      const json = await res.json() as { success?: boolean; error?: string };
+      setClaimLoading(false);
+      if (!json.success) { Alert.alert('Errore', json.error ?? 'Codice non valido'); return; }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setClaimModalOpen(false);
+      setClaimCode('');
+      Alert.alert('🎁 Biglietto ricevuto!', 'Il biglietto è stato aggiunto ai tuoi biglietti.');
+    } catch {
+      setClaimLoading(false);
+      Alert.alert('Errore', 'Impossibile riscattare il codice');
+    }
   }
 
   return (
@@ -71,6 +112,12 @@ export default function TicketsScreen() {
       <LinearGradient colors={['rgba(168,85,247,0.22)', 'transparent']} style={styles.bgGradient} pointerEvents="none" />
       <SafeAreaView style={{ flex: 1 }}>
         <AppHeader />
+
+        {/* Riscatta regalo */}
+        <TouchableOpacity style={styles.claimBanner} onPress={() => setClaimModalOpen(true)} activeOpacity={0.8}>
+          <Ionicons name="gift-outline" size={16} color={Colors.accent} />
+          <Text style={styles.claimBannerText}>Hai ricevuto un codice regalo? <Text style={{ color: Colors.accent }}>Riscatta qui</Text></Text>
+        </TouchableOpacity>
 
         {/* Sub-tabs */}
         <View style={styles.tabBar}>
@@ -112,6 +159,41 @@ export default function TicketsScreen() {
         </ScrollView>
 
       </SafeAreaView>
+
+      {/* Modal riscatta codice regalo */}
+      <Modal visible={claimModalOpen} transparent animationType="fade" onRequestClose={() => setClaimModalOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Riscatta regalo</Text>
+            <Text style={styles.modalSub}>Inserisci il codice che hai ricevuto</Text>
+            <TextInput
+              style={styles.codeInput}
+              value={claimCode}
+              onChangeText={(t) => setClaimCode(t.toUpperCase())}
+              placeholder="Es. AB12CD34"
+              placeholderTextColor="#475569"
+              autoCapitalize="characters"
+              autoCorrect={false}
+              maxLength={8}
+            />
+            <TouchableOpacity
+              style={[styles.claimBtn, claimLoading && { opacity: 0.6 }]}
+              onPress={handleClaim}
+              disabled={claimLoading}
+              activeOpacity={0.8}
+            >
+              {claimLoading
+                ? <ActivityIndicator color="#fff" size="small" />
+                : <Text style={styles.claimBtnText}>Riscatta biglietto</Text>
+              }
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => { setClaimModalOpen(false); setClaimCode(''); }} style={{ marginTop: 12 }}>
+              <Text style={{ color: '#64748b', fontSize: 14, textAlign: 'center' }}>Annulla</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 }
@@ -305,4 +387,28 @@ const styles = StyleSheet.create({
   emptySubtitle: { fontSize: 14, color: Colors.textMuted, textAlign: 'center', marginBottom: 24 },
   exploreBtn: { backgroundColor: Colors.accent, borderRadius: 14, paddingHorizontal: 24, paddingVertical: 12 },
   exploreBtnText: { fontSize: 14, fontFamily: Font.bold, color: Colors.white },
+
+  // Riscatta regalo
+  claimBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginHorizontal: 20, marginBottom: 12,
+    backgroundColor: 'rgba(168,85,247,0.08)',
+    borderWidth: 1, borderColor: 'rgba(168,85,247,0.2)',
+    borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10,
+  },
+  claimBannerText: { fontSize: 13, color: Colors.textMuted, flex: 1 },
+
+  // Modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 24 },
+  modalCard: { backgroundColor: '#111118', borderWidth: 1, borderColor: 'rgba(168,85,247,0.2)', borderRadius: 20, padding: 28, width: '100%' },
+  modalTitle: { fontSize: 20, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 6 },
+  modalSub: { fontSize: 14, color: Colors.textMuted, marginBottom: 20 },
+  codeInput: {
+    backgroundColor: '#0d0d14', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
+    fontSize: 22, fontFamily: Font.bold, color: Colors.textPrimary,
+    textAlign: 'center', letterSpacing: 4, marginBottom: 16,
+  },
+  claimBtn: { backgroundColor: Colors.accent, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
+  claimBtnText: { fontSize: 15, fontFamily: Font.bold, color: Colors.white },
 });

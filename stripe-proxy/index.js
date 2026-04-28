@@ -42,31 +42,32 @@ function callStripe(path, body) {
   });
 }
 
-function callSupabase(path, body) {
+function supabaseRequest(method, path, body) {
   return new Promise((resolve, reject) => {
-    const bodyStr = JSON.stringify(body);
+    const bodyStr = body ? JSON.stringify(body) : '';
     const url = new URL(SUPABASE_URL + path);
-    const options = {
-      hostname: url.hostname,
-      path: url.pathname + url.search,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_SERVICE_ROLE_KEY,
-        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        'Content-Length': Buffer.byteLength(bodyStr),
-      },
+    const headers = {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_SERVICE_ROLE_KEY,
+      'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      'Prefer': 'return=representation',
     };
+    if (bodyStr) headers['Content-Length'] = Buffer.byteLength(bodyStr);
+    const options = { hostname: url.hostname, path: url.pathname + url.search, method, headers };
     const req = https.request(options, (res) => {
       let data = '';
       res.on('data', (chunk) => data += chunk);
-      res.on('end', () => resolve(JSON.parse(data)));
+      res.on('end', () => { try { resolve(JSON.parse(data)); } catch { resolve({}); } });
     });
     req.on('error', reject);
-    req.write(bodyStr);
+    if (bodyStr) req.write(bodyStr);
     req.end();
   });
 }
+
+function callSupabase(path, body) { return supabaseRequest('POST', path, body); }
+function callSupabaseGet(path) { return supabaseRequest('GET', path, null); }
+function callSupabasePatch(path, body) { return supabaseRequest('PATCH', path, body); }
 
 function readBody(req) {
   return new Promise((resolve) => {
@@ -136,6 +137,89 @@ const server = http.createServer(async (req, res) => {
       const result = await callSupabase('/functions/v1/confirm-payment', body);
       res.writeHead(200, CORS_HEADERS);
       res.end(JSON.stringify(result));
+    } catch (err) {
+      res.writeHead(500, CORS_HEADERS);
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // POST /gift-ticket — crea un codice regalo per un biglietto
+  if (req.url === '/gift-ticket') {
+    try {
+      const { ticket_id, gifter_id } = body;
+      if (!ticket_id || !gifter_id) {
+        res.writeHead(400, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'ticket_id e gifter_id obbligatori' }));
+        return;
+      }
+
+      // Genera codice 8 caratteri uppercase
+      const code = Math.random().toString(36).substring(2, 6).toUpperCase() +
+                   Math.random().toString(36).substring(2, 6).toUpperCase();
+
+      // Salva in Supabase
+      const result = await callSupabase('/rest/v1/gift_codes', {
+        code,
+        ticket_id,
+        gifter_id,
+        status: 'pending',
+      });
+
+      if (result.error || (Array.isArray(result) && result[0]?.code)) {
+        res.writeHead(400, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Errore creazione codice regalo' }));
+        return;
+      }
+
+      res.writeHead(200, CORS_HEADERS);
+      res.end(JSON.stringify({ code }));
+    } catch (err) {
+      res.writeHead(500, CORS_HEADERS);
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // POST /claim-gift — riscatta un codice regalo
+  if (req.url === '/claim-gift') {
+    try {
+      const { code, claimer_id } = body;
+      if (!code || !claimer_id) {
+        res.writeHead(400, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'code e claimer_id obbligatori' }));
+        return;
+      }
+
+      // Cerca il codice
+      const gifts = await callSupabaseGet(`/rest/v1/gift_codes?code=eq.${encodeURIComponent(code)}&status=eq.pending&select=*`);
+
+      if (!Array.isArray(gifts) || gifts.length === 0) {
+        res.writeHead(404, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Codice non valido o già usato' }));
+        return;
+      }
+
+      const gift = gifts[0];
+
+      if (gift.gifter_id === claimer_id) {
+        res.writeHead(400, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Non puoi riscattare il tuo stesso biglietto' }));
+        return;
+      }
+
+      // Trasferisci il biglietto al nuovo proprietario
+      await callSupabasePatch(`/rest/v1/tickets?id=eq.${gift.ticket_id}`, { user_id: claimer_id });
+
+      // Segna il codice come usato
+      await callSupabasePatch(`/rest/v1/gift_codes?code=eq.${code}`, {
+        status: 'claimed',
+        claimed_by: claimer_id,
+        claimed_at: new Date().toISOString(),
+      });
+
+      res.writeHead(200, CORS_HEADERS);
+      res.end(JSON.stringify({ success: true, ticket_id: gift.ticket_id }));
     } catch (err) {
       res.writeHead(500, CORS_HEADERS);
       res.end(JSON.stringify({ error: err.message }));
