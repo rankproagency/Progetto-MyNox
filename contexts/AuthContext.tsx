@@ -76,9 +76,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // INITIAL_SESSION si triggera quando Supabase ha letto la sessione
     // da AsyncStorage — è il momento giusto per sbloccare il routing
+    // Se il refresh token è scaduto, pulisce la sessione silenziosamente
+    supabase.auth.getSession().then(({ error }) => {
+      if (error?.message?.toLowerCase().includes('refresh token')) {
+        supabase.auth.signOut();
+      }
+    });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session ? sessionToUser(session) : null);
-      if (event === 'INITIAL_SESSION') {
+      if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+        setIsLoading(false);
+      }
+      if (event === 'INITIAL_SESSION' && !session) {
         setIsLoading(false);
       }
     });
