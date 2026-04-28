@@ -74,25 +74,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     loadPrefs();
 
-    // INITIAL_SESSION si triggera quando Supabase ha letto la sessione
-    // da AsyncStorage — è il momento giusto per sbloccare il routing
-    // Se il refresh token è scaduto, pulisce la sessione silenziosamente
-    supabase.auth.getSession().then(({ error }) => {
-      if (error?.message?.toLowerCase().includes('refresh token')) {
-        supabase.auth.signOut();
+    // Fallback: se INITIAL_SESSION non scatta entro 3s (TLS issue), sblocca il routing
+    const fallback = setTimeout(() => setIsLoading(false), 3000);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') {
+        clearTimeout(fallback);
+        // Se il refresh token è scaduto, pulisce la sessione
+        if (!session) {
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+        setUser(sessionToUser(session as any));
+        setIsLoading(false);
+      } else if (event === 'SIGNED_IN') {
+        setUser(session ? sessionToUser(session) : null);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session ? sessionToUser(session) : null);
-      if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
-        setIsLoading(false);
-      }
-      if (event === 'INITIAL_SESSION' && !session) {
-        setIsLoading(false);
-      }
-    });
-    return () => subscription.unsubscribe();
+    return () => { subscription.unsubscribe(); clearTimeout(fallback); };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
