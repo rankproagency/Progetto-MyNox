@@ -176,7 +176,7 @@ export default function CheckoutScreen() {
       const fnRes = await fetch(`${PROXY_URL}/create-payment-intent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: total, metadata }),
+        body: JSON.stringify({ amount: Math.round(total * 100), metadata }),
       });
 
       const fnJson = await fnRes.json() as { clientSecret?: string; paymentIntentId?: string; error?: string };
