@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: mynox-stripe-proxy
+    runtime: node
+    rootDir: stripe-proxy
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: SUPABASE_URL
+        value: https://xsprvlayjncbxhhhifnn.supabase.co
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

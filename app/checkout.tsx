@@ -24,8 +24,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { notifyTicketConfirmed, scheduleEventReminders } from '../hooks/useNotifications';
 import { useTickets, MockTicket } from '../contexts/TicketsContext';
 
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcHJ2bGF5am5jYnhoaGhpZm5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMTAyMjIsImV4cCI6MjA5MTU4NjIyMn0.jhOvoBVj7Y_e3dOjtx9rCQiEGnv6H-1bXiDAksSgv_A';
-const SUPABASE_URL = 'https://xsprvlayjncbxhhhifnn.supabase.co';
+const PROXY_URL = 'https://mynox-stripe-proxy.onrender.com';
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
@@ -174,13 +173,9 @@ export default function CheckoutScreen() {
         metadata.table_name = tableName?.trim() ?? '';
       }
 
-      const fnRes = await fetch(`${SUPABASE_URL}/functions/v1/create-payment-intent`, {
+      const fnRes = await fetch(`${PROXY_URL}/create-payment-intent`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': ANON_KEY,
-          'Authorization': `Bearer ${ANON_KEY}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: total, metadata }),
       });
 
@@ -217,13 +212,9 @@ export default function CheckoutScreen() {
       }
 
       // 4. Pagamento confermato — chiama confirm-payment per creare i biglietti nel DB
-      const confirmRes = await fetch(`${SUPABASE_URL}/functions/v1/confirm-payment`, {
+      const confirmRes = await fetch(`${PROXY_URL}/confirm-payment`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': ANON_KEY,
-          'Authorization': `Bearer ${ANON_KEY}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ payment_intent_id: fnJson.paymentIntentId }),
       });
 
