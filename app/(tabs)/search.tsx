@@ -5,24 +5,147 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  Animated,
+  PanResponder,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
 import EventListItem from '../../components/EventListItem';
 import { useRecentlyViewed } from '../../contexts/RecentlyViewedContext';
 import { useEvents } from '../../contexts/EventsContext';
 import AppHeader from '../../components/AppHeader';
+import { ALL_GENRES } from '../../constants/genres';
+import { Genre } from '../../types';
+
+const GENRE_CONFIG: Record<Genre, { icon: string; color: string }> = {
+  'Techno':      { icon: 'flash',         color: '#a855f7' },
+  'House':       { icon: 'musical-notes', color: '#3b82f6' },
+  'Hip-Hop':     { icon: 'mic',           color: '#eab308' },
+  'Trap':        { icon: 'skull',          color: '#ef4444' },
+  'Pop':         { icon: 'star',          color: '#ec4899' },
+  'R&B':         { icon: 'heart',         color: '#f43f5e' },
+  'Reggaeton':   { icon: 'sunny',         color: '#f59e0b' },
+  'Commercial':  { icon: 'radio',         color: '#06b6d4' },
+};
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const DELETE_BTN_WIDTH = 80;
+const ITEM_MARGIN_BOTTOM = 10; // corrisponde a marginBottom di EventListItem
+
+function SwipeableRecentItem({
+  event, onDelete, resetKey,
+}: {
+  event: { id: string }; onDelete: () => void; resetKey: number;
+}) {
+  const translateX = useRef(new Animated.Value(0)).current;
+  const startValue = useRef(0);
+
+  // Reset fluido quando si torna sulla schermata
+  useEffect(() => {
+    Animated.spring(translateX, { toValue: 0, useNativeDriver: true, tension: 100, friction: 12 }).start();
+    startValue.current = 0;
+  }, [resetKey]);
+
+  // Ref sempre aggiornato a onDelete corrente (evita stale closure nel panResponder)
+  const triggerDeleteRef = useRef(() => {});
+  triggerDeleteRef.current = () => {
+    Animated.timing(translateX, { toValue: -SCREEN_WIDTH, duration: 200, useNativeDriver: true }).start(onDelete);
+  };
+
+  const panResponder = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => false,
+    // Cattura qualsiasi gesto chiaramente orizzontale (sia apertura che chiusura)
+    onMoveShouldSetPanResponder: (_, g) =>
+      Math.abs(g.dx) > Math.abs(g.dy) * 2 && Math.abs(g.dx) > 5,
+    onPanResponderTerminationRequest: () => false,
+    onPanResponderGrant: () => {
+      translateX.stopAnimation();
+      // @ts-ignore
+      startValue.current = translateX._value;
+    },
+    onPanResponderMove: (_, g) => {
+      const alreadyOpen = startValue.current <= -DELETE_BTN_WIDTH;
+      // Se già aperto, permetti di scorrere ulteriormente a sinistra per il delete
+      const minX = alreadyOpen ? -SCREEN_WIDTH : -DELETE_BTN_WIDTH;
+      translateX.setValue(Math.max(minX, Math.min(0, startValue.current + g.dx)));
+    },
+    onPanResponderRelease: (_, g) => {
+      const alreadyOpen = startValue.current <= -DELETE_BTN_WIDTH;
+      // Secondo swipe a sinistra > 50px con bottone già aperto → elimina
+      if (alreadyOpen && g.dx < -50) {
+        triggerDeleteRef.current();
+        return;
+      }
+      const projected = startValue.current + g.dx;
+      const target = projected < -(DELETE_BTN_WIDTH / 2) ? -DELETE_BTN_WIDTH : 0;
+      startValue.current = target;
+      Animated.spring(translateX, { toValue: target, useNativeDriver: true, tension: 100, friction: 12 }).start();
+    },
+    onPanResponderTerminate: () => {
+      // @ts-ignore
+      const cur = translateX._value;
+      const target = cur < -DELETE_BTN_WIDTH / 2 ? -DELETE_BTN_WIDTH : 0;
+      startValue.current = target;
+      Animated.spring(translateX, { toValue: target, useNativeDriver: true }).start();
+    },
+  })).current;
+
+  const deleteOpacity = translateX.interpolate({
+    inputRange: [-DELETE_BTN_WIDTH, -16, 0],
+    outputRange: [1, 0.3, 0],
+    extrapolate: 'clamp',
+  });
+
+  return (
+    <View style={{ position: 'relative', overflow: 'hidden', borderRadius: 14 }}>
+      {/* Layer rosso a piena larghezza — la card lo copre scorrendo, l'icona resta fissa a destra */}
+      <Animated.View style={[swipeStyles.deleteBtn, { opacity: deleteOpacity }]}>
+        <TouchableOpacity
+          onPress={() => triggerDeleteRef.current()}
+          style={swipeStyles.deleteBtnInner}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="trash-outline" size={20} color="#fff" />
+        </TouchableOpacity>
+      </Animated.View>
+      <Animated.View style={{ transform: [{ translateX }] }} {...panResponder.panHandlers}>
+        <EventListItem event={event as any} />
+      </Animated.View>
+    </View>
+  );
+}
+
+const swipeStyles = StyleSheet.create({
+  deleteBtn: {
+    // Copre tutta la larghezza — la card la nasconde scorrendo sopra
+    position: 'absolute', left: 0, right: 0, top: 0, bottom: ITEM_MARGIN_BOTTOM,
+    backgroundColor: '#ef4444',
+    borderRadius: 14,
+    justifyContent: 'center',
+    // Icona centrata nell'area destra di DELETE_BTN_WIDTH
+    alignItems: 'flex-end',
+    paddingRight: (DELETE_BTN_WIDTH - 20) / 2,
+  },
+  deleteBtnInner: { justifyContent: 'center', alignItems: 'center' },
+});
 
 export default function SearchScreen() {
   const router = useRouter();
   const [query, setQuery] = useState('');
-  const { recentIds } = useRecentlyViewed();
+  const [resetKey, setResetKey] = useState(0);
+  const { recentIds, removeRecentlyViewed, clearRecentlyViewed } = useRecentlyViewed();
   const { events } = useEvents();
+
+  // Quando si esce dalla schermata, resetta le posizioni di tutti gli item
+  useFocusEffect(useCallback(() => {
+    return () => setResetKey((k) => k + 1);
+  }, []));
 
   const recentEvents = recentIds
     .map((id) => events.find((e) => e.id === id))
@@ -129,9 +252,19 @@ export default function SearchScreen() {
               {/* Recently viewed */}
               {recentEvents.length > 0 && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Visualizzati di recente</Text>
+                  <View style={styles.sectionRow}>
+                    <Text style={styles.sectionTitle}>Visualizzati di recente</Text>
+                    <TouchableOpacity onPress={clearRecentlyViewed} activeOpacity={0.7}>
+                      <Text style={styles.clearAll}>Cancella tutti</Text>
+                    </TouchableOpacity>
+                  </View>
                   {recentEvents.map((event) => (
-                    <EventListItem key={event.id} event={event} />
+                    <SwipeableRecentItem
+                      key={event.id}
+                      event={event}
+                      onDelete={() => removeRecentlyViewed(event.id)}
+                      resetKey={resetKey}
+                    />
                   ))}
                 </View>
               )}
@@ -140,18 +273,36 @@ export default function SearchScreen() {
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Esplora per genere</Text>
                 <View style={styles.genreGrid}>
-                  {(['Techno','House','Deep House','Latin','Hip-Hop','Pop','R&B','Reggaeton','Commercial'] as const).map((genre) => {
+                  {[...ALL_GENRES].sort().map((genre) => {
                     const count = events.filter((e) => e.genres.includes(genre)).length;
+                    const cfg = GENRE_CONFIG[genre];
                     return (
-                      <TouchableOpacity
-                        key={genre}
-                        style={styles.genreCard}
-                        activeOpacity={0.8}
-                        onPress={() => setQuery(genre)}
-                      >
-                        <Text style={styles.genreCardText}>{genre}</Text>
-                        <Text style={styles.genreCardCount}>{count} serate</Text>
-                      </TouchableOpacity>
+                      <View key={genre} style={[styles.genreCardOuter, { shadowColor: cfg.color }]}>
+                        <TouchableOpacity
+                          style={[styles.genreCard, { borderColor: cfg.color + '50' }]}
+                          activeOpacity={0.75}
+                          onPress={() => setQuery(genre)}
+                        >
+                          <LinearGradient
+                            colors={[cfg.color + '80', cfg.color + '20', '#07080f']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1.2, y: 1.2 }}
+                            style={StyleSheet.absoluteFill}
+                          />
+                          <Ionicons
+                            name={cfg.icon as any}
+                            size={80}
+                            color={cfg.color}
+                            style={styles.genreWatermark}
+                          />
+                          <Text style={styles.genreCardText}>{genre}</Text>
+                          <View style={[styles.genreCountPill, { backgroundColor: cfg.color + '25' }]}>
+                            <Text style={[styles.genreCardCount, { color: cfg.color }]}>
+                              {`${count} serate`}
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                      </View>
                     );
                   })}
                 </View>
@@ -179,7 +330,9 @@ const styles = StyleSheet.create({
 
   scroll: { paddingHorizontal: 20, paddingBottom: 100 },
   section: { marginBottom: 28 },
-  sectionTitle: { fontSize: 14, fontFamily: Font.extraBold, color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12 },
+  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  sectionTitle: { fontSize: 14, fontFamily: Font.extraBold, color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 },
+  clearAll: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.accent },
 
   // Club row
   clubRow: {
@@ -202,13 +355,33 @@ const styles = StyleSheet.create({
   emptySub: { fontSize: 13, color: Colors.textMuted },
 
   // Genre grid
-  genreGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  genreCard: {
+  genreGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingBottom: 60 },
+  genreCardOuter: {
     width: '47%',
-    backgroundColor: Colors.surface,
-    borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
-    padding: 16,
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
   },
-  genreCardText: { fontSize: 14, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 4 },
-  genreCardCount: { fontSize: 12, color: Colors.accent },
+  genreCard: {
+    height: 120,
+    backgroundColor: '#0d0d18',
+    borderRadius: 18, borderWidth: 1,
+    padding: 16,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+    gap: 6,
+  },
+  genreWatermark: {
+    position: 'absolute', right: -14, top: -14,
+    opacity: 0.15,
+    transform: [{ rotate: '15deg' }],
+  },
+  genreCardText: { fontSize: 16, fontFamily: Font.extraBold, color: Colors.textPrimary },
+  genreCountPill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 20,
+  },
+  genreCardCount: { fontSize: 11, fontFamily: Font.semiBold },
 });

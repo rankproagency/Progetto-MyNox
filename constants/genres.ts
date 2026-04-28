@@ -1,5 +1,5 @@
 import { Genre } from '../types';
 
 export const ALL_GENRES: Genre[] = [
-  'Techno', 'House', 'Deep House', 'Latin', 'Hip-Hop', 'Rap', 'Trap', 'Pop', 'R&B', 'Reggaeton', 'Commercial',
+  'Techno', 'House', 'Hip-Hop', 'Trap', 'Pop', 'R&B', 'Reggaeton', 'Commercial',
 ];

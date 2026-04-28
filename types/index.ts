@@ -13,9 +13,8 @@ export interface Club {
 export type Genre =
   | 'Techno'
   | 'House'
-  | 'Deep House'
-  | 'Latin'
   | 'Hip-Hop'
+  | 'Trap'
   | 'Pop'
   | 'R&B'
   | 'Reggaeton'

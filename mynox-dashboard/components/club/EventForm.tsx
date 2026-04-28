@@ -10,7 +10,7 @@ interface PerformerRow {
   role: 'dj' | 'vocalist';
 }
 
-const GENRES = ['Techno', 'House', 'Deep House', 'Latin', 'Hip-Hop', 'Pop', 'R&B', 'Reggaeton', 'Commercial'];
+const GENRES = ['Techno', 'House', 'Hip-Hop', 'Trap', 'Pop', 'R&B', 'Reggaeton', 'Commercial'];
 
 interface TicketTypeRow {
   id?: string;

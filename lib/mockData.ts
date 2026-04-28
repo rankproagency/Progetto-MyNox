@@ -1,7 +1,7 @@
 import { Club, Event, Genre } from '../types';
 
 export const ALL_GENRES: Genre[] = [
-  'Techno', 'House', 'Deep House', 'Latin', 'Hip-Hop', 'Pop', 'R&B', 'Reggaeton', 'Commercial',
+  'Techno', 'House', 'Hip-Hop', 'Trap', 'Pop', 'R&B', 'Reggaeton', 'Commercial',
 ];
 
 export const MOCK_CLUBS: Club[] = [
@@ -51,7 +51,7 @@ export const MOCK_EVENTS: Event[] = [
     dressCode: 'Smart casual',
     capacity: 600,
     ticketsSold: 87,
-    genres: ['Latin', 'Reggaeton'],
+    genres: ['Reggaeton'],
     description: 'La serata latina più calda di Padova torna al Byblos. Salsa, bachata, reggaeton e i migliori hit latini del momento. Dance floor aperto dalle 22:30, lezione di ballo alle 23:00.',
     lineup: [
       { name: 'DJ MAMBO', time: '22:30' },
@@ -77,7 +77,7 @@ export const MOCK_EVENTS: Event[] = [
     dressCode: 'No dress code',
     capacity: 400,
     ticketsSold: 56,
-    genres: ['House', 'Deep House'],
+    genres: ['House'],
     description: 'Una serata dedicata alle sonorità più profonde della house music. Atmosfera intima, luci calde e un sound che ti porta in un viaggio dalle radici Chicago fino ai club di Ibiza.',
     lineup: [
       { name: 'SUNKEN', time: '23:30' },

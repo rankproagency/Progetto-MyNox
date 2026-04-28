@@ -161,6 +161,9 @@ export default function HomeScreen() {
       )
     : [];
 
+  const filteredEvents = applyFilters(events, maxPrice, onlyAvailable, selectedGenres);
+  const filteredEventsByDay = getEventsByDayFromList(filteredEvents);
+
   const eventsForSelectedDate = selectedDate
     ? applyFilters(
         events.filter((e) => e.date === selectedDate),
@@ -556,17 +559,25 @@ export default function HomeScreen() {
 
               {/* Prossimi eventi */}
               <Text style={[styles.sectionTitle, styles.sectionSpacing, { marginTop: 28 }]}>Prossimi eventi</Text>
-              {eventsByDay.map(({ day, label, events: dayEvents }) => (
-                <View key={day} style={styles.dayGroup}>
-                  <View style={styles.dayHeader}>
-                    <Text style={styles.dayLabel}>{label}</Text>
-                    <View style={styles.dayLine} />
-                  </View>
-                  {dayEvents.map((event) => (
-                    <EventListItem key={event.id} event={event} />
-                  ))}
+              {filteredEventsByDay.length === 0 ? (
+                <View style={styles.noResults}>
+                  <Ionicons name="search-outline" size={40} color={Colors.textMuted} />
+                  <Text style={styles.noResultsText}>Nessun evento trovato</Text>
+                  <Text style={styles.noResultsSub}>Prova a cambiare i filtri</Text>
                 </View>
-              ))}
+              ) : (
+                filteredEventsByDay.map(({ day, label, events: dayEvents }) => (
+                  <View key={day} style={styles.dayGroup}>
+                    <View style={styles.dayHeader}>
+                      <Text style={styles.dayLabel}>{label}</Text>
+                      <View style={styles.dayLine} />
+                    </View>
+                    {dayEvents.map((event) => (
+                      <EventListItem key={event.id} event={event} />
+                    ))}
+                  </View>
+                ))
+              )}
             </>
           )}
         </ScrollView>
