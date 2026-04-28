@@ -78,8 +78,14 @@ async function getAnalyticsData(clubId: string) {
     ? ticketsOnly.reduce((sum: number, t: any) => sum + (t.ticket_types?.price ?? 0), 0) / ticketsOnly.length
     : 0;
 
+  const soldByEvent: Record<string, number> = {};
+  tickets.forEach((t: any) => {
+    if (t.ticket_types !== null && t.event_id) {
+      soldByEvent[t.event_id] = (soldByEvent[t.event_id] ?? 0) + 1;
+    }
+  });
   const totalCapacity = (events ?? []).reduce((sum, e) => sum + (e.capacity ?? 0), 0);
-  const totalSold = (events ?? []).reduce((sum, e) => sum + (e.tickets_sold ?? 0), 0);
+  const totalSold = (events ?? []).reduce((sum, e) => sum + (soldByEvent[e.id] ?? 0), 0);
   const fillRate = totalCapacity > 0 ? Math.round((totalSold / totalCapacity) * 100) : 0;
 
   const tablesOnly = tickets.filter((t: any) => t.ticket_types === null);

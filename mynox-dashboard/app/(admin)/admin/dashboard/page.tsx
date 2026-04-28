@@ -1,9 +1,9 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import Link from 'next/link';
 import { Building2, Users, CalendarDays, ChevronRight, Ticket, Clock } from 'lucide-react';
 
 async function getDashboardData() {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const since7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const today = new Date().toISOString().slice(0, 10);
 
