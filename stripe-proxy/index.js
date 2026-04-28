@@ -155,22 +155,12 @@ const server = http.createServer(async (req, res) => {
       }
 
       // Genera codice 8 caratteri uppercase
-      const code = Math.random().toString(36).substring(2, 6).toUpperCase() +
-                   Math.random().toString(36).substring(2, 6).toUpperCase();
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let code = '';
+      for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
 
-      // Salva in Supabase
-      const result = await callSupabase('/rest/v1/gift_codes', {
-        code,
-        ticket_id,
-        gifter_id,
-        status: 'pending',
-      });
-
-      if (result && !Array.isArray(result) && result.error) {
-        res.writeHead(400, CORS_HEADERS);
-        res.end(JSON.stringify({ error: result.message ?? 'Errore creazione codice regalo' }));
-        return;
-      }
+      // Salva in Supabase — se fallisce lancia eccezione catturata dal catch
+      await callSupabase('/rest/v1/gift_codes', { code, ticket_id, gifter_id, status: 'pending' });
 
       res.writeHead(200, CORS_HEADERS);
       res.end(JSON.stringify({ code }));
