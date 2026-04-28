@@ -166,9 +166,9 @@ const server = http.createServer(async (req, res) => {
         status: 'pending',
       });
 
-      if (result.error || (Array.isArray(result) && result[0]?.code)) {
+      if (result && !Array.isArray(result) && result.error) {
         res.writeHead(400, CORS_HEADERS);
-        res.end(JSON.stringify({ error: 'Errore creazione codice regalo' }));
+        res.end(JSON.stringify({ error: result.message ?? 'Errore creazione codice regalo' }));
         return;
       }
 
