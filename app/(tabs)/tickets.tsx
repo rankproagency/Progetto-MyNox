@@ -48,7 +48,7 @@ const TAB_CONFIG: { key: Tab; label: string }[] = [
 
 export default function TicketsScreen() {
   const router = useRouter();
-  const { tickets } = useTickets();
+  const { tickets, removeTicket, refreshTickets } = useTickets();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('future');
   const [claimModalOpen, setClaimModalOpen] = useState(false);
@@ -63,25 +63,43 @@ export default function TicketsScreen() {
 
   async function handleGift(ticket: MockTicket) {
     if (!user?.id) { Alert.alert('Accedi per regalare un biglietto'); return; }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    try {
-      const res = await fetch('https://mynox-stripe-proxy.onrender.com/gift-ticket', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticket_id: ticket.id, gifter_id: user.id }),
-      });
-      const json = await res.json() as { code?: string; error?: string };
-      if (!json.code) { Alert.alert('Errore', json.error ?? 'Impossibile creare il codice regalo'); return; }
-      await Share.share({
-        message:
-          `🎁 Ti regalo un biglietto per ${ticket.eventName} @ ${ticket.clubName}!\n\n` +
-          `Il tuo codice regalo è: ${json.code}\n\n` +
-          `Scarica MyNox, vai su "I miei biglietti" → "Riscatta regalo" e inserisci il codice.`,
-        title: `Biglietto per ${ticket.eventName}`,
-      });
-    } catch {
-      Alert.alert('Errore', 'Impossibile creare il codice regalo');
-    }
+
+    Alert.alert(
+      'Regala biglietto',
+      `Attenzione: se regali questo biglietto non potrai più usarlo tu. Il biglietto verrà trasferito alla persona che inserisce il codice.\n\nVuoi continuare?`,
+      [
+        { text: 'Annulla', style: 'cancel' },
+        {
+          text: 'Sì, regala',
+          style: 'destructive',
+          onPress: async () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            try {
+              const res = await fetch('https://mynox-stripe-proxy.onrender.com/gift-ticket', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ticket_id: ticket.id, gifter_id: user.id }),
+              });
+              const json = await res.json() as { code?: string; error?: string };
+              if (!json.code) { Alert.alert('Errore', json.error ?? 'Impossibile creare il codice regalo'); return; }
+
+              // Rimuovi subito il biglietto dalla lista del regalante
+              removeTicket(ticket.id);
+
+              await Share.share({
+                message:
+                  `🎁 Ti regalo un biglietto per ${ticket.eventName} @ ${ticket.clubName}!\n\n` +
+                  `Il tuo codice regalo è: ${json.code}\n\n` +
+                  `Scarica MyNox, vai su "I miei biglietti" → "Riscatta regalo" e inserisci il codice.`,
+                title: `Biglietto per ${ticket.eventName}`,
+              });
+            } catch {
+              Alert.alert('Errore', 'Impossibile creare il codice regalo');
+            }
+          },
+        },
+      ]
+    );
   }
 
   async function handleClaim() {
@@ -100,6 +118,7 @@ export default function TicketsScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setClaimModalOpen(false);
       setClaimCode('');
+      await refreshTickets();
       Alert.alert('🎁 Biglietto ricevuto!', 'Il biglietto è stato aggiunto ai tuoi biglietti.');
     } catch {
       setClaimLoading(false);

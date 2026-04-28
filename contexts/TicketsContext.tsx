@@ -26,6 +26,8 @@ interface TicketsCtx {
   addTickets: (tickets: MockTicket[]) => void;
   markDrinkUsed: (id: string) => void;
   markTicketUsed: (id: string) => void;
+  removeTicket: (id: string) => void;
+  refreshTickets: () => Promise<void>;
 }
 
 const TicketsContext = createContext<TicketsCtx>({
@@ -33,6 +35,8 @@ const TicketsContext = createContext<TicketsCtx>({
   addTickets: () => {},
   markDrinkUsed: () => {},
   markTicketUsed: () => {},
+  removeTicket: () => {},
+  refreshTickets: async () => {},
 });
 
 function formatDate(dateStr: string): string {
@@ -129,8 +133,17 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const removeTicket = useCallback((id: string) => {
+    setTickets((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const refreshTickets = useCallback(async () => {
+    const userId = currentUserIdRef.current;
+    if (userId) await loadTickets(userId);
+  }, []);
+
   return (
-    <TicketsContext.Provider value={{ tickets, addTickets, markDrinkUsed, markTicketUsed }}>
+    <TicketsContext.Provider value={{ tickets, addTickets, markDrinkUsed, markTicketUsed, removeTicket, refreshTickets }}>
       {children}
     </TicketsContext.Provider>
   );
