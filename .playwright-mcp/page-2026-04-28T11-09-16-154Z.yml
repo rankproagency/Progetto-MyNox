@@ -1,0 +1,34 @@
+- generic [active] [ref=e1]:
+  - table [ref=e3]:
+    - rowgroup [ref=e4]:
+      - row "MyNox" [ref=e5]:
+        - cell "MyNox" [ref=e6]:
+          - img "MyNox" [ref=e8]
+  - table [ref=e10]:
+    - rowgroup [ref=e11]:
+      - row "Invito gestore Benvenuto sulla dashboard MyNox Sei stato invitato a gestire la tua discoteca sulla piattaforma MyNox. Clicca il bottone qui sotto per impostare la tua password e accedere alla dashboard. Imposta password e accedi → Il link scade tra 24 ore. Se non hai richiesto questo invito, puoi ignorare questa email. MYNOX © 2025 MyNox — Padova, Italia" [ref=e12]:
+        - cell "Invito gestore Benvenuto sulla dashboard MyNox Sei stato invitato a gestire la tua discoteca sulla piattaforma MyNox. Clicca il bottone qui sotto per impostare la tua password e accedere alla dashboard. Imposta password e accedi → Il link scade tra 24 ore. Se non hai richiesto questo invito, puoi ignorare questa email. MYNOX © 2025 MyNox — Padova, Italia" [ref=e13]:
+          - table [ref=e14]:
+            - rowgroup [ref=e15]:
+              - row "Invito gestore Benvenuto sulla dashboard MyNox Sei stato invitato a gestire la tua discoteca sulla piattaforma MyNox. Clicca il bottone qui sotto per impostare la tua password e accedere alla dashboard. Imposta password e accedi → Il link scade tra 24 ore. Se non hai richiesto questo invito, puoi ignorare questa email." [ref=e16]:
+                - cell "Invito gestore Benvenuto sulla dashboard MyNox Sei stato invitato a gestire la tua discoteca sulla piattaforma MyNox. Clicca il bottone qui sotto per impostare la tua password e accedere alla dashboard. Imposta password e accedi → Il link scade tra 24 ore. Se non hai richiesto questo invito, puoi ignorare questa email." [ref=e17]:
+                  - paragraph [ref=e19]: Invito gestore
+                  - heading "Benvenuto sulla dashboard MyNox" [level=1] [ref=e20]:
+                    - text: Benvenuto sulla
+                    - text: dashboard MyNox
+                  - paragraph [ref=e21]: Sei stato invitato a gestire la tua discoteca sulla piattaforma MyNox. Clicca il bottone qui sotto per impostare la tua password e accedere alla dashboard.
+                  - table [ref=e22]:
+                    - rowgroup [ref=e23]:
+                      - row "Imposta password e accedi →" [ref=e24]:
+                        - cell "Imposta password e accedi →" [ref=e25]:
+                          - link "Imposta password e accedi →" [ref=e26] [cursor=pointer]:
+                            - /url: "{{ .ConfirmationURL }}"
+                  - paragraph [ref=e28]:
+                    - text: Il link scade tra
+                    - strong [ref=e29]: 24 ore
+                    - text: .
+                  - paragraph [ref=e30]: Se non hai richiesto questo invito, puoi ignorare questa email.
+              - row "MYNOX © 2025 MyNox — Padova, Italia" [ref=e31]:
+                - cell "MYNOX © 2025 MyNox — Padova, Italia" [ref=e32]:
+                  - paragraph [ref=e33]: MYNOX
+                  - paragraph [ref=e34]: © 2025 MyNox — Padova, Italia
