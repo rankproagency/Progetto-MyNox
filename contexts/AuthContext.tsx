@@ -98,8 +98,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw new Error(error.message);
+      const res = await fetch('https://mynox-stripe-proxy.onrender.com/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const json = await res.json();
+      if (json.error || json.error_description) throw new Error(json.error_description ?? json.error ?? 'Errore login');
+      await supabase.auth.setSession({ access_token: json.access_token, refresh_token: json.refresh_token });
     } finally {
       setIsLoading(false);
     }
@@ -107,13 +113,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (name: string, email: string, password: string) => {
     setIsLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name } },
-    });
-    setIsLoading(false);
-    if (error) throw new Error(error.message);
+    try {
+      const res = await fetch('https://mynox-stripe-proxy.onrender.com/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name }),
+      });
+      const json = await res.json();
+      if (json.error || json.error_description) throw new Error(json.error_description ?? json.error ?? 'Errore registrazione');
+      if (json.access_token) {
+        await supabase.auth.setSession({ access_token: json.access_token, refresh_token: json.refresh_token });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   const loginWithGoogle = useCallback(async () => {

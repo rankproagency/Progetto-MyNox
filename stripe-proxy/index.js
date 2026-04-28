@@ -69,6 +69,31 @@ function callSupabase(path, body) { return supabaseRequest('POST', path, body); 
 function callSupabaseGet(path) { return supabaseRequest('GET', path, null); }
 function callSupabasePatch(path, body) { return supabaseRequest('PATCH', path, body); }
 
+function supabaseAuthRequest(path, body) {
+  return new Promise((resolve, reject) => {
+    const bodyStr = JSON.stringify(body);
+    const url = new URL(SUPABASE_URL + path);
+    const options = {
+      hostname: url.hostname,
+      path: url.pathname + url.search,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_SERVICE_ROLE_KEY,
+        'Content-Length': Buffer.byteLength(bodyStr),
+      },
+    };
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => data += chunk);
+      res.on('end', () => { try { resolve(JSON.parse(data)); } catch { resolve({}); } });
+    });
+    req.on('error', reject);
+    req.write(bodyStr);
+    req.end();
+  });
+}
+
 function readBody(req) {
   return new Promise((resolve) => {
     let body = '';
@@ -94,6 +119,37 @@ const server = http.createServer(async (req, res) => {
   }
 
   const body = await readBody(req);
+
+  // POST /auth/signup
+  if (req.url === '/auth/signup') {
+    try {
+      const { email, password, name, birthdate } = body;
+      const result = await supabaseAuthRequest('/auth/v1/signup', {
+        email, password,
+        data: { name, birthdate },
+      });
+      res.writeHead(result.error ? 400 : 200, CORS_HEADERS);
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      res.writeHead(500, CORS_HEADERS);
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // POST /auth/signin
+  if (req.url === '/auth/signin') {
+    try {
+      const { email, password } = body;
+      const result = await supabaseAuthRequest('/auth/v1/token?grant_type=password', { email, password });
+      res.writeHead(result.error ? 400 : 200, CORS_HEADERS);
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      res.writeHead(500, CORS_HEADERS);
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
 
   // POST /create-payment-intent
   if (req.url === '/create-payment-intent' || req.url === '/functions/v1/create-payment-intent') {
