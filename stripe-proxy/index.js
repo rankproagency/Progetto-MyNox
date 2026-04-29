@@ -126,7 +126,7 @@ const server = http.createServer(async (req, res) => {
       const { email, password, name, birthdate } = body;
       const result = await supabaseAuthRequest('/auth/v1/signup', {
         email, password,
-        data: { name, birthdate },
+        data: { name, birthdate, onboarded: false },
       });
       res.writeHead(result.error ? 400 : 200, CORS_HEADERS);
       res.end(JSON.stringify(result));
