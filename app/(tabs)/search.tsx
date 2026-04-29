@@ -265,25 +265,25 @@ export default function SearchScreen() {
                   {[...ALL_GENRES].sort().map((genre) => {
                     const count = events.filter((e) => e.genres.includes(genre)).length;
                     const cfg = GENRE_CONFIG[genre];
+                    const borderColor = cfg.color.replace(/[\d.]+\)$/, '0.45)');
+                    const glowColor = cfg.color.replace(/[\d.]+\)$/, '0.3)');
                     return (
-                      <View key={genre} style={[styles.genreCardOuter, { shadowColor: cfg.color }]}>
-                        <TouchableOpacity
-                          style={styles.genreCard}
-                          activeOpacity={0.75}
-                          onPress={() => setQuery(genre)}
-                        >
-                          <LinearGradient
-                            colors={['#07080f', cfg.colorEnd, cfg.color]}
-                            start={{ x: 1, y: 0 }}
-                            end={{ x: 0, y: 1 }}
-                            style={StyleSheet.absoluteFill}
-                          />
-                          <Text style={styles.genreCardText}>{genre}</Text>
-                          <Text style={styles.genreCardCount}>
-                            {`${count} serate`}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
+                      <TouchableOpacity
+                        key={genre}
+                        style={[styles.genreCard, { borderColor, shadowColor: glowColor }]}
+                        activeOpacity={0.75}
+                        onPress={() => setQuery(genre)}
+                      >
+                        <LinearGradient
+                          colors={[cfg.color.replace(/[\d.]+\)$/, '0.10)'), 'transparent']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={StyleSheet.absoluteFill}
+                        />
+                        <View style={[styles.genreAccent, { backgroundColor: cfg.color }]} />
+                        <Text style={styles.genreCardText}>{genre}</Text>
+                        <Text style={styles.genreCardCount}>{count} {count === 1 ? 'serata' : 'serate'}</Text>
+                      </TouchableOpacity>
                     );
                   })}
                 </View>
@@ -336,26 +336,28 @@ const styles = StyleSheet.create({
   emptySub: { fontSize: 13, color: Colors.textMuted },
 
   // Genre grid
-  genreGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingBottom: 60 },
-  genreCardOuter: {
-    width: '47%',
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 8,
-  },
+  genreGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingBottom: 60 },
   genreCard: {
-    height: 110,
-    backgroundColor: '#0d0d18',
+    width: '47.5%',
+    height: 100,
+    backgroundColor: Colors.surface,
     borderRadius: 16,
+    borderWidth: 1,
     padding: 14,
     overflow: 'hidden',
     justifyContent: 'flex-end',
-    gap: 3,
+    gap: 2,
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  genreAccent: {
+    position: 'absolute', top: 0, left: 0, right: 0,
+    height: 2, borderTopLeftRadius: 16, borderTopRightRadius: 16,
   },
   genreCardText: {
-    fontSize: 16, fontFamily: Font.extraBold, color: '#ffffff',
-    textTransform: 'uppercase', letterSpacing: 1.5,
+    fontSize: 15, fontFamily: Font.bold, color: Colors.textPrimary, letterSpacing: 0.2,
   },
-  genreCardCount: { fontSize: 11, fontFamily: Font.medium, color: 'rgba(255,255,255,0.45)' },
+  genreCardCount: { fontSize: 11, fontFamily: Font.medium, color: Colors.textMuted },
 });

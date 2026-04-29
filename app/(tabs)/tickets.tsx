@@ -302,9 +302,9 @@ function TicketCard({
     <View style={[styles.ticketCard, isPast && styles.ticketCardPast, isGifted && styles.ticketCardGifted]}>
       <TouchableOpacity style={styles.ticketMain} activeOpacity={isGifted ? 1 : 0.85} onPress={isGifted ? undefined : onPress}>
         <View style={styles.ticketLeft}>
-          {ticket.imageUrl ? (
+          {ticket.eventImageUrl ? (
             <View style={styles.thumbnailWrapper}>
-              <Image source={{ uri: ticket.imageUrl }} style={styles.thumbnail} resizeMode="cover" />
+              <Image source={{ uri: ticket.eventImageUrl }} style={styles.thumbnail} resizeMode="cover" />
               <View style={[
                 styles.statusDotOnThumb,
                 isPast && styles.statusDotUsed,
@@ -368,18 +368,20 @@ function TicketCard({
         </View>
       </TouchableOpacity>
 
-      {isGifted && ticket.giftCode && (
+      {isGifted && (
         <>
-          <View style={styles.giftCodeRow}>
-            <View style={styles.giftCodeBox}>
-              <Text style={styles.giftCodeLabel}>Codice regalo</Text>
-              <Text style={styles.giftCodeValue}>{ticket.giftCode}</Text>
+          {ticket.giftCode && (
+            <View style={styles.giftCodeRow}>
+              <View style={styles.giftCodeBox}>
+                <Text style={styles.giftCodeLabel}>Codice regalo</Text>
+                <Text style={styles.giftCodeValue}>{ticket.giftCode}</Text>
+              </View>
+              <TouchableOpacity style={styles.reshareBtn} activeOpacity={0.8} onPress={onReshare}>
+                <Ionicons name="share-outline" size={15} color={Colors.accent} />
+                <Text style={styles.reshareText}>Condividi</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.reshareBtn} activeOpacity={0.8} onPress={onReshare}>
-              <Ionicons name="share-outline" size={15} color={Colors.accent} />
-              <Text style={styles.reshareText}>Condividi</Text>
-            </TouchableOpacity>
-          </View>
+          )}
           <TouchableOpacity style={styles.reclaimButton} activeOpacity={0.8} onPress={onReclaim}>
             <Ionicons name="arrow-undo-outline" size={14} color={Colors.textMuted} />
             <Text style={styles.reclaimText}>Riprendi biglietto</Text>

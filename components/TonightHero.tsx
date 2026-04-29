@@ -3,10 +3,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { Event } from '../types';
+import { Event, Genre } from '../types';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useFavorites } from '../contexts/FavoritesContext';
+import { GENRE_CONFIG } from '../constants/genres';
 
 const { width } = Dimensions.get('window');
 
@@ -65,11 +66,17 @@ export default function TonightHero({ event }: Props) {
 
         {/* Genre tags */}
         <View style={styles.genreRow}>
-          {event.genres.slice(0, 2).map((g) => (
-            <View key={g} style={styles.genreTag}>
-              <Text style={styles.genreText}>{g}</Text>
-            </View>
-          ))}
+          {event.genres.slice(0, 2).map((g) => {
+            const cfg = GENRE_CONFIG[g as Genre];
+            const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : 'rgba(168,85,247,0.10)';
+            const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : 'rgba(168,85,247,0.35)';
+            const text = cfg ? cfg.color.replace(/[\d.]+\)$/, '1)') : Colors.accent;
+            return (
+              <View key={g} style={[styles.genreTag, { backgroundColor: bg, borderColor: border }]}>
+                <Text style={[styles.genreText, { color: text }]}>{g}</Text>
+              </View>
+            );
+          })}
         </View>
 
         {/* Bottom: lineup preview + CTA */}
@@ -181,15 +188,14 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   genreTag: {
-    backgroundColor: 'rgba(168,85,247,0.2)',
     borderRadius: 6,
+    borderWidth: 1,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
   genreText: {
     fontSize: 11,
     fontFamily: Font.bold,
-    color: Colors.accent,
   },
   bottomRow: {
     flexDirection: 'row',

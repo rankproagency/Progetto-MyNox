@@ -173,56 +173,72 @@ export default function CheckoutScreen() {
         metadata.table_name = tableName?.trim() ?? '';
       }
 
-      const fnRes = await fetch(`${PROXY_URL}/create-payment-intent`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: Math.round(total * 100), metadata }),
-      });
+      let createdTickets: any[];
 
-      const fnJson = await fnRes.json() as { clientSecret?: string; paymentIntentId?: string; error?: string };
-
-      if (!fnJson.clientSecret || !fnJson.paymentIntentId) {
-        Alert.alert('Errore pagamento', fnJson.error ?? 'Nessun client secret');
-        return;
-      }
-
-      // 2. Inizializza il Payment Sheet di Stripe
-      const { error: initError } = await initPaymentSheet({
-        paymentIntentClientSecret: fnJson.clientSecret,
-        merchantDisplayName: 'MyNox',
-        style: 'alwaysDark',
-        appearance: {
-          colors: { primary: '#a855f7', background: '#07080f', componentBackground: '#12151f' },
-        },
-      });
-
-      if (initError) {
-        Alert.alert('Errore', initError.message);
-        return;
-      }
-
-      // 3. Apre il Payment Sheet (carta, Apple Pay, Google Pay)
-      const { error: payError } = await presentPaymentSheet();
-
-      if (payError) {
-        if (payError.code !== 'Canceled') {
-          Alert.alert('Pagamento fallito', payError.message);
+      if (total === 0) {
+        // Biglietto gratuito — bypass Stripe
+        const freeRes = await fetch(`${PROXY_URL}/create-free-ticket`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ metadata }),
+        });
+        const freeJson = await freeRes.json() as { tickets?: any[]; error?: string };
+        if (!freeJson.tickets || freeJson.tickets.length === 0) {
+          Alert.alert('Errore', freeJson.error ?? 'Impossibile creare i biglietti.');
+          return;
         }
-        return;
-      }
+        createdTickets = freeJson.tickets;
+      } else {
+        // Flusso Stripe normale
+        const fnRes = await fetch(`${PROXY_URL}/create-payment-intent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: Math.round(total * 100), metadata }),
+        });
 
-      // 4. Pagamento confermato — chiama confirm-payment per creare i biglietti nel DB
-      const confirmRes = await fetch(`${PROXY_URL}/confirm-payment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payment_intent_id: fnJson.paymentIntentId }),
-      });
+        const fnJson = await fnRes.json() as { clientSecret?: string; paymentIntentId?: string; error?: string };
 
-      const confirmJson = await confirmRes.json() as { tickets?: any[]; error?: string };
+        if (!fnJson.clientSecret || !fnJson.paymentIntentId) {
+          Alert.alert('Errore pagamento', fnJson.error ?? 'Nessun client secret');
+          return;
+        }
 
-      if (!confirmJson.tickets || confirmJson.tickets.length === 0) {
-        Alert.alert('Errore', confirmJson.error ?? 'Impossibile creare i biglietti.');
-        return;
+        const { error: initError } = await initPaymentSheet({
+          paymentIntentClientSecret: fnJson.clientSecret,
+          merchantDisplayName: 'MyNox',
+          style: 'alwaysDark',
+          appearance: {
+            colors: { primary: '#a855f7', background: '#07080f', componentBackground: '#12151f' },
+          },
+        });
+
+        if (initError) {
+          Alert.alert('Errore', initError.message);
+          return;
+        }
+
+        const { error: payError } = await presentPaymentSheet();
+
+        if (payError) {
+          if (payError.code !== 'Canceled') {
+            Alert.alert('Pagamento fallito', payError.message);
+          }
+          return;
+        }
+
+        const confirmRes = await fetch(`${PROXY_URL}/confirm-payment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payment_intent_id: fnJson.paymentIntentId }),
+        });
+
+        const confirmJson = await confirmRes.json() as { tickets?: any[]; error?: string };
+
+        if (!confirmJson.tickets || confirmJson.tickets.length === 0) {
+          Alert.alert('Errore', confirmJson.error ?? 'Impossibile creare i biglietti.');
+          return;
+        }
+        createdTickets = confirmJson.tickets;
       }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -234,7 +250,7 @@ export default function CheckoutScreen() {
         // notifiche non bloccanti
       }
 
-      addTickets(confirmJson.tickets.map(dbRowToMockTicket));
+      addTickets(createdTickets.map(dbRowToMockTicket));
       setShowSuccess(true);
 
     } catch (err) {

@@ -10,10 +10,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { Event } from '../types';
+import { Event, Genre } from '../types';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useFavorites } from '../contexts/FavoritesContext';
+import { GENRE_CONFIG } from '../constants/genres';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.70;
@@ -60,11 +61,17 @@ export default function EventCard({ event }: Props) {
           <Text style={styles.eventName} numberOfLines={2}>{event.name}</Text>
           <View style={styles.bottomRow}>
             <View style={styles.metaLeft}>
-              {event.genres.slice(0, 1).map((g) => (
-                <View key={g} style={styles.genreTag}>
-                  <Text style={styles.genreText}>{g}</Text>
-                </View>
-              ))}
+              {event.genres.slice(0, 1).map((g) => {
+                const cfg = GENRE_CONFIG[g as Genre];
+                const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : 'rgba(168,85,247,0.10)';
+                const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : 'rgba(168,85,247,0.35)';
+                const text = cfg ? cfg.color.replace(/[\d.]+\)$/, '1)') : Colors.accent;
+                return (
+                  <View key={g} style={[styles.genreTag, { backgroundColor: bg, borderColor: border }]}>
+                    <Text style={[styles.genreText, { color: text }]}>{g}</Text>
+                  </View>
+                );
+              })}
               <Text style={styles.timeText}>{event.startTime}</Text>
             </View>
             {isSoldOut ? (
@@ -194,13 +201,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   genreTag: {
-    backgroundColor: 'rgba(168,85,247,0.2)',
     borderRadius: 5,
+    borderWidth: 1,
     paddingHorizontal: 7,
     paddingVertical: 2,
   },
   genreText: {
-    color: Colors.accent,
     fontSize: 10,
     fontWeight: '700',
   },

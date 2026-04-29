@@ -236,17 +236,14 @@ export default function EventScreen() {
             {event.genres.length > 0 && (
               <View style={styles.heroGenres}>
                 {event.genres.map((g) => {
-                  const cfg = GENRE_CONFIG[g as Genre] ?? { color: '#a855f7', colorEnd: '#6d28d9' };
+                  const cfg = GENRE_CONFIG[g as Genre];
+                  const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : 'rgba(168,85,247,0.10)';
+                  const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : 'rgba(168,85,247,0.35)';
+                  const text = cfg ? cfg.color.replace(/[\d.]+\)$/, '1)') : Colors.accent;
                   return (
-                    <LinearGradient
-                      key={g}
-                      colors={[cfg.color, cfg.colorEnd]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.heroGenreTag}
-                    >
-                      <Text style={styles.heroGenreTagText}>{g}</Text>
-                    </LinearGradient>
+                    <View key={g} style={[styles.heroGenreTag, { backgroundColor: bg, borderColor: border }]}>
+                      <Text style={[styles.heroGenreTagText, { color: text }]}>{g}</Text>
+                    </View>
                   );
                 })}
               </View>
@@ -378,7 +375,7 @@ export default function EventScreen() {
               {bookingMode === 'ticket' && (
                 <>
                   {!hasTables && <Text style={styles.bookingLabel}>Biglietti</Text>}
-                  {event.ticketTypes.some((t) => t.includesDrink) && (
+                  {event.ticketTypes.every((t) => t.includesDrink) && (
                     <View style={styles.drinkBadge}>
                       <Ionicons name="wine-outline" size={13} color={Colors.accent} />
                       <Text style={styles.drinkBadgeText}>Ogni biglietto include 1 free drink</Text>
@@ -622,10 +619,11 @@ const styles = StyleSheet.create({
   },
   heroGenreTag: {
     borderRadius: 20,
+    borderWidth: 1,
     paddingHorizontal: 12, paddingVertical: 6,
   },
   heroGenreTagText: {
-    fontSize: 12, fontWeight: '700', color: '#fff',
+    fontSize: 12, fontWeight: '700',
   },
 
   // Contenuto principale

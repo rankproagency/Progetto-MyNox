@@ -2,10 +2,11 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { Event } from '../types';
+import { Event, Genre } from '../types';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useFavorites } from '../contexts/FavoritesContext';
+import { GENRE_CONFIG } from '../constants/genres';
 
 interface Props {
   event: Event;
@@ -42,11 +43,17 @@ export default function EventListItem({ event }: Props) {
           <Text style={styles.timeSep}>·</Text>
           <Ionicons name="time-outline" size={11} color={Colors.textMuted} />
           <Text style={styles.time}> {event.startTime}</Text>
-          {event.genres.slice(0, 1).map((g) => (
-            <View key={g} style={styles.genreTag}>
-              <Text style={styles.genreText}>{g}</Text>
-            </View>
-          ))}
+          {event.genres.slice(0, 1).map((g) => {
+            const cfg = GENRE_CONFIG[g as Genre];
+            const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : 'rgba(168,85,247,0.10)';
+            const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : 'rgba(168,85,247,0.35)';
+            const text = cfg ? cfg.color.replace(/[\d.]+\)$/, '1)') : Colors.accent;
+            return (
+              <View key={g} style={[styles.genreTag, { backgroundColor: bg, borderColor: border }]}>
+                <Text style={[styles.genreText, { color: text }]}>{g}</Text>
+              </View>
+            );
+          })}
         </View>
       </View>
       <View style={styles.right}>
@@ -148,15 +155,14 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
   },
   genreTag: {
-    backgroundColor: 'rgba(168,85,247,0.14)',
     borderRadius: 4,
+    borderWidth: 1,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
   genreText: {
     fontSize: 10,
     fontWeight: '700',
-    color: Colors.accent,
   },
   right: {
     alignItems: 'flex-end',

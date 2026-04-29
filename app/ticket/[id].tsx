@@ -46,8 +46,8 @@ export default function TicketScreen() {
 
         {/* Info evento — centrata sopra la card */}
         <View style={styles.eventInfo}>
-          {ticket.imageUrl ? (
-            <Image source={{ uri: ticket.imageUrl }} style={styles.eventThumbnail} resizeMode="cover" />
+          {ticket.eventImageUrl ? (
+            <Image source={{ uri: ticket.eventImageUrl }} style={styles.eventThumbnail} resizeMode="cover" />
           ) : (
             <View style={styles.eventThumbnailFallback}>
               <Ionicons name="business-outline" size={22} color={Colors.textMuted} />

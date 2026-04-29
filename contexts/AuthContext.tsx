@@ -44,6 +44,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const KEYS = {
   onboarded: '@mynox_onboarded',
+  onboardedUid: '@mynox_onboarded_uid',
   genres: '@mynox_genres',
 };
 
@@ -76,9 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (meta?.onboarded === true) {
         setIsOnboarded(true);
       } else if (meta?.onboarded == null) {
-        // Utente esistente senza flag — leggi AsyncStorage e migra silenziosamente
+        // Utente esistente senza flag — migra solo se il flag AsyncStorage appartiene a questo utente
         const raw = await AsyncStorage.getItem(KEYS.onboarded);
-        const local = raw === 'true';
+        const storedUid = await AsyncStorage.getItem(KEYS.onboardedUid);
+        const local = raw === 'true' && storedUid === session.user.id;
         setIsOnboarded(local);
         if (local) supabase.auth.updateUser({ data: { onboarded: true } });
       } else {
@@ -143,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const json = await res.json();
       if (json.error || json.error_description) throw new Error(json.error_description ?? json.error ?? 'Errore registrazione');
       if (json.access_token) {
+        setIsOnboarded(false); // nuovo utente — forza onboarding senza aspettare il listener
         await supabase.auth.setSession({ access_token: json.access_token, refresh_token: json.refresh_token });
       }
     } finally {
@@ -164,6 +167,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (code) {
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
         if (exchangeError) throw new Error(exchangeError.message);
+        const { data: { session: gs } } = await supabase.auth.getSession();
+        if (gs && gs.user.user_metadata?.onboarded !== true) {
+          setIsOnboarded(false);
+        }
       }
     }
   }, []);
@@ -178,10 +185,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const completeOnboarding = useCallback(async () => {
     setIsOnboarded(true);
-    await AsyncStorage.setItem(KEYS.onboarded, 'true');
-    // Se c'è già una sessione attiva (es. onboarding post-login), salva su Supabase
     const { data: { session } } = await supabase.auth.getSession();
-    if (session) await supabase.auth.updateUser({ data: { onboarded: true } });
+    await AsyncStorage.setItem(KEYS.onboarded, 'true');
+    if (session) {
+      await AsyncStorage.setItem(KEYS.onboardedUid, session.user.id);
+      await supabase.auth.updateUser({ data: { onboarded: true } });
+    }
   }, []);
 
   const updateUser = useCallback(async (updates: Partial<Pick<AuthUser, 'name' | 'email'>>) => {

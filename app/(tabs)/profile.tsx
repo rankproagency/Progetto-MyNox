@@ -152,17 +152,14 @@ export default function ProfileScreen() {
               <Text style={styles.sectionTitle}>I tuoi generi</Text>
               <View style={styles.genresList}>
                 {musicGenres.map((genre) => {
-                  const cfg = GENRE_CONFIG[genre as Genre] ?? { color: '#a855f7', colorEnd: '#6d28d9' };
+                  const cfg = GENRE_CONFIG[genre as Genre];
+                  const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : 'rgba(168,85,247,0.10)';
+                  const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : 'rgba(168,85,247,0.35)';
+                  const text = cfg ? cfg.color.replace(/[\d.]+\)$/, '1)') : Colors.accent;
                   return (
-                    <LinearGradient
-                      key={genre}
-                      colors={[cfg.color, cfg.colorEnd]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.genreTag}
-                    >
-                      <Text style={styles.genreTagText}>{genre}</Text>
-                    </LinearGradient>
+                    <View key={genre} style={[styles.genreTag, { backgroundColor: bg, borderColor: border }]}>
+                      <Text style={[styles.genreTagText, { color: text }]}>{genre}</Text>
+                    </View>
                   );
                 })}
               </View>
@@ -411,13 +408,13 @@ const styles = StyleSheet.create({
   },
   genreTag: {
     borderRadius: 20,
+    borderWidth: 1,
     paddingHorizontal: 14,
     paddingVertical: 7,
   },
   genreTagText: {
     fontSize: 13,
     fontFamily: Font.semiBold,
-    color: '#ffffff',
   },
 
   // Favoriti club

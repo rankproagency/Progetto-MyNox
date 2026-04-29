@@ -57,6 +57,7 @@ function dbRowToMockTicket(row: any): MockTicket {
   const ev = row.events as any;
   const tt = row.ticket_types as any;
   const isTable = !tt;
+  const pendingGift = (row.gift_codes as any[])?.find((g) => g.status === 'pending');
   return {
     id: row.id,
     type: isTable ? 'table' : 'ticket',
@@ -74,6 +75,7 @@ function dbRowToMockTicket(row: any): MockTicket {
     drinkQrCode: row.drink_qr_code ?? undefined,
     drinkUsed: row.drink_used ?? false,
     status: row.status,
+    giftCode: pendingGift?.code ?? undefined,
     imageUrl: ev?.clubs?.image_url ?? undefined,
     eventImageUrl: ev?.image_url ?? undefined,
   };
@@ -91,7 +93,8 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
       .select(`
         id, qr_code, drink_qr_code, status, drink_used, price_paid, table_name,
         ticket_types(label, includes_drink),
-        events(id, name, date, start_time, end_time, image_url, clubs(name, image_url))
+        events(id, name, date, start_time, end_time, image_url, clubs(name, image_url)),
+        gift_codes(code, status)
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });

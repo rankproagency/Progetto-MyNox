@@ -14,7 +14,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../constants/colors';
 import { useAuth } from '../contexts/AuthContext';
 import { ALL_GENRES, GENRE_CONFIG } from '../constants/genres';
@@ -112,20 +111,17 @@ export default function EditProfileScreen() {
                     onPress={() => toggleGenre(genre)}
                     activeOpacity={0.75}
                   >
-                    {active ? (
-                      <LinearGradient
-                        colors={[cfg.color, cfg.colorEnd]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.genreTag}
-                      >
-                        <Text style={styles.genreTagTextActive}>{genre}</Text>
-                      </LinearGradient>
-                    ) : (
-                      <View style={styles.genreTag}>
-                        <Text style={styles.genreTagText}>{genre}</Text>
-                      </View>
-                    )}
+                    <View style={[
+                      styles.genreTag,
+                      active
+                        ? { backgroundColor: cfg.color.replace(/[\d.]+\)$/, '0.15)'), borderColor: cfg.color.replace(/[\d.]+\)$/, '0.6)') }
+                        : undefined,
+                    ]}>
+                      <Text style={[
+                        styles.genreTagText,
+                        active && { color: cfg.color.replace(/[\d.]+\)$/, '1)'), fontWeight: '700' },
+                      ]}>{genre}</Text>
+                    </View>
                   </TouchableOpacity>
                 );
               })}
