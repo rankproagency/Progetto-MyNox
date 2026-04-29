@@ -137,7 +137,7 @@ export default function EditProfileScreen() {
             <TouchableOpacity
               style={styles.changePasswordBtn}
               activeOpacity={0.8}
-              onPress={() => Alert.alert('Password', 'Cambio password tramite email — funzionalità in arrivo con Supabase Auth.')}
+              onPress={() => router.push('/change-password')}
             >
               <Ionicons name="lock-closed-outline" size={16} color={Colors.textSecondary} />
               <Text style={styles.changePasswordText}>Cambia password</Text>

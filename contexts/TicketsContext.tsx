@@ -18,15 +18,19 @@ export interface MockTicket {
   qrCode: string;
   drinkQrCode?: string;
   drinkUsed?: boolean;
-  status: 'valid' | 'used' | 'denied' | 'pending';
+  status: 'valid' | 'used' | 'denied' | 'pending' | 'gifted';
+  giftCode?: string;
   imageUrl?: string;
+  eventImageUrl?: string;
 }
 
 interface TicketsCtx {
   tickets: MockTicket[];
   addTickets: (tickets: MockTicket[]) => void;
-  markDrinkUsed: (id: string) => void;
-  markTicketUsed: (id: string) => void;
+  markDrinkUsed: (id: string) => Promise<void>;
+  markTicketUsed: (id: string) => Promise<void>;
+  markTicketGifted: (id: string, code: string) => Promise<void>;
+  markTicketReclaimed: (id: string) => Promise<void>;
   removeTicket: (id: string) => void;
   refreshTickets: () => Promise<void>;
 }
@@ -36,6 +40,8 @@ const TicketsContext = createContext<TicketsCtx>({
   addTickets: () => {},
   markDrinkUsed: () => {},
   markTicketUsed: () => {},
+  markTicketGifted: () => {},
+  markTicketReclaimed: () => {},
   removeTicket: () => {},
   refreshTickets: async () => {},
 });
@@ -69,6 +75,7 @@ function dbRowToMockTicket(row: any): MockTicket {
     drinkUsed: row.drink_used ?? false,
     status: row.status,
     imageUrl: ev?.clubs?.image_url ?? undefined,
+    eventImageUrl: ev?.image_url ?? undefined,
   };
 }
 
@@ -84,7 +91,7 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
       .select(`
         id, qr_code, drink_qr_code, status, drink_used, price_paid, table_name,
         ticket_types(label, includes_drink),
-        events(id, name, date, start_time, end_time, clubs(name, image_url))
+        events(id, name, date, start_time, end_time, image_url, clubs(name, image_url))
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -123,16 +130,32 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
     setTickets((prev) => [...prev, ...newTickets]);
   }, []);
 
-  const markDrinkUsed = useCallback((id: string) => {
+  const markDrinkUsed = useCallback(async (id: string) => {
     setTickets((prev) =>
       prev.map((t) => (t.id === id ? { ...t, drinkUsed: true } : t))
     );
+    await supabase.from('tickets').update({ drink_used: true }).eq('id', id);
   }, []);
 
-  const markTicketUsed = useCallback((id: string) => {
+  const markTicketUsed = useCallback(async (id: string) => {
     setTickets((prev) =>
       prev.map((t) => (t.id === id ? { ...t, status: 'used' as const } : t))
     );
+    await supabase.from('tickets').update({ status: 'used' }).eq('id', id);
+  }, []);
+
+  const markTicketGifted = useCallback(async (id: string, code: string) => {
+    setTickets((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, status: 'gifted' as const, giftCode: code } : t))
+    );
+    await supabase.from('tickets').update({ status: 'gifted' }).eq('id', id);
+  }, []);
+
+  const markTicketReclaimed = useCallback(async (id: string) => {
+    setTickets((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, status: 'valid' as const, giftCode: undefined } : t))
+    );
+    await supabase.from('tickets').update({ status: 'valid' }).eq('id', id);
   }, []);
 
   const removeTicket = useCallback((id: string) => {
@@ -145,7 +168,7 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <TicketsContext.Provider value={{ tickets, addTickets, markDrinkUsed, markTicketUsed, removeTicket, refreshTickets }}>
+    <TicketsContext.Provider value={{ tickets, addTickets, markDrinkUsed, markTicketUsed, markTicketGifted, markTicketReclaimed, removeTicket, refreshTickets }}>
       {children}
     </TicketsContext.Provider>
   );

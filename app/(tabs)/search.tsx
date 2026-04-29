@@ -273,9 +273,9 @@ export default function SearchScreen() {
                           onPress={() => setQuery(genre)}
                         >
                           <LinearGradient
-                            colors={[cfg.color, cfg.colorEnd, '#07080f']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1.4 }}
+                            colors={['#07080f', cfg.colorEnd, cfg.color]}
+                            start={{ x: 1, y: 0 }}
+                            end={{ x: 0, y: 1 }}
                             style={StyleSheet.absoluteFill}
                           />
                           <Text style={styles.genreCardText}>{genre}</Text>
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 20, paddingBottom: 100 },
   section: { marginBottom: 28 },
   sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  sectionTitle: { fontSize: 14, fontFamily: Font.extraBold, color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 },
+  sectionTitle: { fontSize: 13, fontFamily: Font.extraBold, color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 },
   clearAll: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.accent },
 
   // Club row

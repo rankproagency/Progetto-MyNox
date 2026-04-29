@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Share, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,16 +31,6 @@ export default function TicketScreen() {
     );
   }
 
-  async function handleGift() {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await Share.share({
-      message:
-        `Ti regalo un biglietto per ${ticket!.eventName} @ ${ticket!.clubName}!\n\n` +
-        `Codice: ${ticket!.qrCode}\n\n` +
-        `Scarica MyNox e usa questo codice per riscattare il biglietto.`,
-      title: `Biglietto per ${ticket!.eventName}`,
-    });
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -49,38 +39,43 @@ export default function TicketScreen() {
           <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{ticket.type === 'table' ? 'La mia prenotazione' : 'Il mio biglietto'}</Text>
-        <TouchableOpacity style={styles.backButton} onPress={handleGift}>
-          <Ionicons name="gift-outline" size={20} color={Colors.accent} />
-        </TouchableOpacity>
+        <View style={{ width: 38 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        {/* Info evento */}
+        {/* Info evento — centrata sopra la card */}
         <View style={styles.eventInfo}>
-          <Text style={styles.eventName}>{ticket.eventName}</Text>
-          <Text style={styles.eventMeta}>
-            {ticket.clubName} · {ticket.date} · {ticket.startTime}
-          </Text>
-          <View style={styles.badgeRow}>
-            <View style={[styles.ticketBadge, ticket.type === 'table' && styles.tableBadge]}>
-              <Ionicons
-                name={ticket.type === 'table' ? 'grid-outline' : 'ticket-outline'}
-                size={11}
-                color={Colors.white}
-                style={{ marginRight: 4 }}
-              />
-              <Text style={styles.ticketBadgeText}>
-                {ticket.type === 'table'
-                  ? (ticket.tableName ? `${ticket.ticketLabel} · ${ticket.tableName}` : ticket.ticketLabel)
-                  : ticket.ticketLabel}
-              </Text>
+          {ticket.imageUrl ? (
+            <Image source={{ uri: ticket.imageUrl }} style={styles.eventThumbnail} resizeMode="cover" />
+          ) : (
+            <View style={styles.eventThumbnailFallback}>
+              <Ionicons name="business-outline" size={22} color={Colors.textMuted} />
             </View>
-            <CountdownInline rawDate={ticket.rawDate} startTime={ticket.startTime} />
+          )}
+          <View style={styles.eventTextGroup}>
+            <Text style={styles.eventName} numberOfLines={2}>{ticket.eventName}</Text>
+            <Text style={styles.eventMeta}>{ticket.clubName} · {ticket.date} · {ticket.startTime}</Text>
+            <View style={styles.badgeRow}>
+              <View style={[styles.ticketBadge, ticket.type === 'table' && styles.tableBadge]}>
+                <Ionicons
+                  name={ticket.type === 'table' ? 'grid-outline' : 'ticket-outline'}
+                  size={11}
+                  color={Colors.white}
+                  style={{ marginRight: 4 }}
+                />
+                <Text style={styles.ticketBadgeText}>
+                  {ticket.type === 'table'
+                    ? (ticket.tableName ? `${ticket.ticketLabel} · ${ticket.tableName}` : ticket.ticketLabel)
+                    : ticket.ticketLabel}
+                </Text>
+              </View>
+              <CountdownInline rawDate={ticket.rawDate} startTime={ticket.startTime} />
+            </View>
           </View>
         </View>
 
-        {/* Ticket card */}
+        {/* Ticket card — solo QR */}
         <View style={styles.ticketCard}>
 
           {/* Toggle drink — solo per prevendita */}
@@ -289,17 +284,8 @@ export default function TicketScreen() {
           onPress={() => { Haptics.selectionAsync(); setWalletVisible(true); }}
           activeOpacity={0.85}
         >
-          <Ionicons name="wallet-outline" size={18} color={Colors.white} />
+          <Ionicons name="wallet-outline" size={18} color={Colors.accent} />
           <Text style={styles.walletButtonText}>Aggiungi al Wallet</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.giftButton} onPress={handleGift} activeOpacity={0.85}>
-          <Ionicons name="gift-outline" size={18} color={Colors.accent} />
-          <View style={styles.giftText}>
-            <Text style={styles.giftTitle}>Regala questo biglietto</Text>
-            <Text style={styles.giftSubtitle}>Condividi il codice con un amico</Text>
-          </View>
-          <Ionicons name="share-social-outline" size={18} color={Colors.accent} />
         </TouchableOpacity>
 
         <View style={styles.disclaimer}>
@@ -355,12 +341,31 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border,
     justifyContent: 'center', alignItems: 'center',
   },
-  scroll: { padding: 20, paddingBottom: 40, alignItems: 'center' },
+  scroll: { padding: 20, paddingBottom: 110, alignItems: 'center' },
 
-  eventInfo: { alignItems: 'center', marginBottom: 24 },
-  eventName: { fontSize: 20, fontWeight: '800', color: Colors.textPrimary, textAlign: 'center', marginBottom: 6 },
-  eventMeta: { fontSize: 13, color: Colors.textSecondary, textAlign: 'center', marginBottom: 10 },
+  // Info evento centrata sopra la card
+  eventInfo: {
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'center', gap: 14,
+    width: '100%', marginBottom: 24,
+  },
+  eventThumbnail: {
+    width: 56, height: 56, borderRadius: 14, flexShrink: 0,
+  },
+  eventThumbnailFallback: {
+    width: 56, height: 56, borderRadius: 14, flexShrink: 0,
+    backgroundColor: Colors.surfaceElevated,
+    borderWidth: 1, borderColor: Colors.border,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  eventTextGroup: { flexShrink: 1 },
+  eventName: {
+    fontSize: 19, fontWeight: '800', color: Colors.textPrimary,
+    marginBottom: 3, lineHeight: 24,
+  },
+  eventMeta: { fontSize: 12, color: Colors.textSecondary, marginBottom: 8 },
   badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+
   ticketBadge: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.accent,
@@ -520,27 +525,15 @@ const styles = StyleSheet.create({
 
   walletButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: Colors.accent,
-    borderRadius: 14, paddingVertical: 14,
-    width: '100%', marginBottom: 12,
-  },
-  walletButtonText: { fontSize: 15, fontWeight: '700', color: Colors.white },
-
-  giftButton: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: Colors.surface,
-    borderRadius: 14, borderWidth: 1, borderColor: Colors.accent,
-    padding: 14, width: '100%', marginBottom: 16,
+    borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
+    paddingVertical: 14, width: '100%', marginBottom: 12,
   },
-  giftText: { flex: 1 },
-  giftTitle: { fontSize: 14, fontWeight: '700', color: Colors.textPrimary },
-  giftSubtitle: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
+  walletButtonText: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary },
 
   disclaimer: {
     flexDirection: 'row', gap: 8, width: '100%',
-    backgroundColor: Colors.surface,
-    borderRadius: 12, borderWidth: 1, borderColor: Colors.border,
-    padding: 14,
+    paddingHorizontal: 4, paddingTop: 4,
   },
   disclaimerText: { flex: 1, fontSize: 12, color: Colors.textMuted, lineHeight: 18 },
 });

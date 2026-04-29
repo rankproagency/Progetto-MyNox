@@ -51,6 +51,7 @@ function isDatePast(rawDate: string, endTime?: string): boolean {
 
 function categorize(ticket: MockTicket): Tab {
   if (ticket.status === 'used' || isDatePast(ticket.rawDate, ticket.endTime)) return 'past';
+  // I biglietti regalati ma non ancora riscattati restano nei futuri
   return 'future';
 }
 
@@ -61,7 +62,7 @@ const TAB_CONFIG: { key: Tab; label: string }[] = [
 
 export default function TicketsScreen() {
   const router = useRouter();
-  const { tickets, removeTicket, refreshTickets } = useTickets();
+  const { tickets, removeTicket, markTicketGifted, markTicketReclaimed, refreshTickets } = useTickets();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('future');
   const [claimModalOpen, setClaimModalOpen] = useState(false);
@@ -73,6 +74,59 @@ export default function TicketsScreen() {
     future: tickets.filter((t) => categorize(t) === 'future').length,
     past: tickets.filter((t) => categorize(t) === 'past').length,
   };
+
+  function buildGiftMessage(ticket: MockTicket, code: string): string {
+    return (
+      `MYNOX ✦\n\n` +
+      `Ti mando un posto per questa serata.\n\n` +
+      `${ticket.eventName.toUpperCase()}\n` +
+      `📍 ${ticket.clubName}  ·  ${ticket.date}  ·  ${ticket.startTime}\n\n` +
+      `Il tuo codice:\n` +
+      `[ ${code} ]\n\n` +
+      `Scarica MyNox → Biglietti → Riscatta regalo.`
+    );
+  }
+
+  async function handleReshare(ticket: MockTicket) {
+    if (!ticket.giftCode) return;
+    await Share.share({
+      message: buildGiftMessage(ticket, ticket.giftCode),
+      title: `Biglietto per ${ticket.eventName}`,
+    });
+  }
+
+  async function handleReclaim(ticket: MockTicket) {
+    if (!user?.id) return;
+    Alert.alert(
+      'Riprendi biglietto',
+      'Sei sicuro? Il codice regalo verrà annullato e il biglietto tornerà a te. Funziona solo se il destinatario non lo ha ancora riscattato.',
+      [
+        { text: 'Annulla', style: 'cancel' },
+        {
+          text: 'Riprendi',
+          onPress: async () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            try {
+              const res = await fetch('https://mynox-stripe-proxy.onrender.com/cancel-gift', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ticket_id: ticket.id, gifter_id: user.id }),
+              });
+              const json = await res.json() as { success?: boolean; error?: string };
+              if (!json.success) {
+                Alert.alert('Errore', json.error ?? 'Impossibile riprendere il biglietto. Potrebbe essere già stato riscattato.');
+                return;
+              }
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              markTicketReclaimed(ticket.id);
+            } catch {
+              Alert.alert('Errore', 'Impossibile completare l\'operazione');
+            }
+          },
+        },
+      ]
+    );
+  }
 
   async function handleGift(ticket: MockTicket) {
     if (!user?.id) { Alert.alert('Accedi per regalare un biglietto'); return; }
@@ -96,14 +150,11 @@ export default function TicketsScreen() {
               const json = await res.json() as { code?: string; error?: string };
               if (!json.code) { Alert.alert('Errore', json.error ?? 'Impossibile creare il codice regalo'); return; }
 
-              // Rimuovi subito il biglietto dalla lista del regalante
-              removeTicket(ticket.id);
+              // Segna il biglietto come regalato (resta visibile finché non viene riscattato)
+              markTicketGifted(ticket.id, json.code);
 
               await Share.share({
-                message:
-                  `🎁 Ti regalo un biglietto per ${ticket.eventName} @ ${ticket.clubName}!\n\n` +
-                  `Il tuo codice regalo è: ${json.code}\n\n` +
-                  `Scarica MyNox, vai su "I miei biglietti" → "Riscatta regalo" e inserisci il codice.`,
+                message: buildGiftMessage(ticket, json.code),
                 title: `Biglietto per ${ticket.eventName}`,
               });
             } catch {
@@ -145,12 +196,6 @@ export default function TicketsScreen() {
       <SafeAreaView style={{ flex: 1 }}>
         <AppHeader />
 
-        {/* Riscatta regalo */}
-        <TouchableOpacity style={styles.claimBanner} onPress={() => setClaimModalOpen(true)} activeOpacity={0.8}>
-          <Ionicons name="gift-outline" size={16} color={Colors.accent} />
-          <Text style={styles.claimBannerText}>Hai ricevuto un codice regalo? <Text style={{ color: Colors.accent }}>Riscatta qui</Text></Text>
-        </TouchableOpacity>
-
         {/* Sub-tabs */}
         <View style={styles.tabBar}>
           {TAB_CONFIG.map(({ key, label }) => (
@@ -185,12 +230,21 @@ export default function TicketsScreen() {
                 tab={activeTab}
                 onPress={() => router.push(`/ticket/${ticket.id}`)}
                 onGift={() => handleGift(ticket)}
+                onReshare={() => handleReshare(ticket)}
+                onReclaim={() => handleReclaim(ticket)}
               />
             ))
           )}
         </ScrollView>
 
       </SafeAreaView>
+
+      {/* Riscatta regalo — ancorato sopra la tab bar */}
+      <TouchableOpacity style={styles.claimBanner} onPress={() => setClaimModalOpen(true)} activeOpacity={0.8}>
+        <Ionicons name="gift-outline" size={15} color={Colors.accent} />
+        <Text style={styles.claimBannerText}>Hai un codice regalo? <Text style={{ color: Colors.accent, fontFamily: Font.semiBold }}>Riscatta qui</Text></Text>
+        <Ionicons name="chevron-forward" size={13} color={Colors.accent} />
+      </TouchableOpacity>
 
       {/* Modal riscatta codice regalo */}
       <Modal visible={claimModalOpen} transparent animationType="fade" onRequestClose={() => setClaimModalOpen(false)}>
@@ -231,19 +285,22 @@ export default function TicketsScreen() {
 }
 
 function TicketCard({
-  ticket, tab, onPress, onGift,
+  ticket, tab, onPress, onGift, onReshare, onReclaim,
 }: {
   ticket: MockTicket;
   tab: Tab;
   onPress: () => void;
   onGift: () => void;
+  onReshare: () => void;
+  onReclaim: () => void;
 }) {
   const isPast = tab === 'past';
-  const isPending = false;
+  const isPending = ticket.status === 'pending';
+  const isGifted = ticket.status === 'gifted';
 
   return (
-    <View style={[styles.ticketCard, isPast && styles.ticketCardPast]}>
-      <TouchableOpacity style={styles.ticketMain} activeOpacity={0.85} onPress={onPress}>
+    <View style={[styles.ticketCard, isPast && styles.ticketCardPast, isGifted && styles.ticketCardGifted]}>
+      <TouchableOpacity style={styles.ticketMain} activeOpacity={isGifted ? 1 : 0.85} onPress={isGifted ? undefined : onPress}>
         <View style={styles.ticketLeft}>
           {ticket.imageUrl ? (
             <View style={styles.thumbnailWrapper}>
@@ -252,6 +309,7 @@ function TicketCard({
                 styles.statusDotOnThumb,
                 isPast && styles.statusDotUsed,
                 isPending && styles.statusDotPending,
+                isGifted && styles.statusDotGifted,
               ]} />
             </View>
           ) : (
@@ -259,6 +317,7 @@ function TicketCard({
               styles.statusDot,
               isPast && styles.statusDotUsed,
               isPending && styles.statusDotPending,
+              isGifted && styles.statusDotGifted,
             ]} />
           )}
           <View style={{ flex: 1 }}>
@@ -270,7 +329,7 @@ function TicketCard({
               <Ionicons name="calendar-outline" size={11} color={Colors.textMuted} />
               <Text style={styles.ticketMetaText}> {ticket.date} · {ticket.startTime}</Text>
             </View>
-            {!isPast && !isPending && (
+            {!isPast && !isPending && !isGifted && (
               <CountdownBadge rawDate={ticket.rawDate} startTime={ticket.startTime} />
             )}
             {isPending && (
@@ -279,13 +338,19 @@ function TicketCard({
                 <Text style={styles.pendingText}>Pagamento in elaborazione</Text>
               </View>
             )}
+            {isGifted && (
+              <View style={styles.pendingRow}>
+                <Ionicons name="gift-outline" size={11} color={Colors.accent} />
+                <Text style={styles.giftedText}>In attesa di riscatto</Text>
+              </View>
+            )}
           </View>
         </View>
         <View style={styles.ticketRight}>
-          <View style={[styles.typeBadge, isPending && styles.typeBadgePending]}>
-            <Text style={styles.typeBadgeText}>{ticket.ticketLabel}</Text>
+          <View style={[styles.typeBadge, isPending && styles.typeBadgePending, isGifted && styles.typeBadgeGifted]}>
+            <Text style={styles.typeBadgeText}>{isGifted ? 'Regalo' : ticket.ticketLabel}</Text>
           </View>
-          {!isPending && (
+          {!isPending && !isGifted && (
             <View style={styles.drinkStatus}>
               <Ionicons
                 name={ticket.drinkUsed ? 'checkmark-circle' : 'wine-outline'}
@@ -297,11 +362,32 @@ function TicketCard({
               </Text>
             </View>
           )}
-          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} style={{ marginTop: 4 }} />
+          {!isGifted && (
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} style={{ marginTop: 4 }} />
+          )}
         </View>
       </TouchableOpacity>
 
-      {!isPast && !isPending && (
+      {isGifted && ticket.giftCode && (
+        <>
+          <View style={styles.giftCodeRow}>
+            <View style={styles.giftCodeBox}>
+              <Text style={styles.giftCodeLabel}>Codice regalo</Text>
+              <Text style={styles.giftCodeValue}>{ticket.giftCode}</Text>
+            </View>
+            <TouchableOpacity style={styles.reshareBtn} activeOpacity={0.8} onPress={onReshare}>
+              <Ionicons name="share-outline" size={15} color={Colors.accent} />
+              <Text style={styles.reshareText}>Condividi</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={styles.reclaimButton} activeOpacity={0.8} onPress={onReclaim}>
+            <Ionicons name="arrow-undo-outline" size={14} color={Colors.textMuted} />
+            <Text style={styles.reclaimText}>Riprendi biglietto</Text>
+          </TouchableOpacity>
+        </>
+      )}
+
+      {!isPast && !isPending && !isGifted && (
         <TouchableOpacity style={styles.giftButton} activeOpacity={0.8} onPress={onGift}>
           <Ionicons name="gift-outline" size={14} color={Colors.accent} />
           <Text style={styles.giftText}>Regala questo biglietto</Text>
@@ -367,7 +453,7 @@ const styles = StyleSheet.create({
   tabBadgeText: { fontSize: 10, fontFamily: Font.bold, color: Colors.textMuted },
   tabBadgeTextActive: { color: Colors.white },
 
-  scroll: { padding: 20, paddingTop: 0 },
+  scroll: { padding: 20, paddingTop: 0, paddingBottom: 140 },
 
   // Ticket card
   ticketCard: {
@@ -376,6 +462,7 @@ const styles = StyleSheet.create({
     marginBottom: 12, overflow: 'hidden',
   },
   ticketCardPast: { opacity: 0.65 },
+  ticketCardGifted: { borderColor: 'rgba(168,85,247,0.35)' },
   ticketMain: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     padding: 16,
@@ -392,6 +479,7 @@ const styles = StyleSheet.create({
   statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.success, flexShrink: 0, marginTop: 4 },
   statusDotUsed: { backgroundColor: Colors.textMuted },
   statusDotPending: { backgroundColor: Colors.warning },
+  statusDotGifted: { backgroundColor: Colors.accent },
   ticketEvent: { fontSize: 14, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 3 },
   ticketEventMuted: { color: Colors.textSecondary },
   ticketClub: { fontSize: 12, color: Colors.textSecondary, marginBottom: 4 },
@@ -399,9 +487,11 @@ const styles = StyleSheet.create({
   ticketMetaText: { fontSize: 11, color: Colors.textMuted },
   pendingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
   pendingText: { fontSize: 11, fontFamily: Font.semiBold, color: Colors.warning },
+  giftedText: { fontSize: 11, fontFamily: Font.semiBold, color: Colors.accent },
   ticketRight: { alignItems: 'flex-end', gap: 6 },
   typeBadge: { backgroundColor: Colors.accent, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   typeBadgePending: { backgroundColor: Colors.warning },
+  typeBadgeGifted: { backgroundColor: 'rgba(168,85,247,0.2)', borderWidth: 1, borderColor: 'rgba(168,85,247,0.4)' },
   typeBadgeText: { fontSize: 11, fontFamily: Font.bold, color: Colors.white },
   drinkStatus: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   drinkText: { fontSize: 11, color: Colors.success, fontWeight: '500' },
@@ -413,6 +503,30 @@ const styles = StyleSheet.create({
   },
   giftText: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.accent },
 
+  giftCodeRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingHorizontal: 16, paddingVertical: 12,
+    borderTopWidth: 1, borderTopColor: 'rgba(168,85,247,0.15)',
+    backgroundColor: 'rgba(168,85,247,0.05)',
+  },
+  giftCodeBox: { flex: 1 },
+  giftCodeLabel: { fontSize: 10, fontFamily: Font.semiBold, color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 },
+  giftCodeValue: { fontSize: 18, fontFamily: Font.bold, color: Colors.accent, letterSpacing: 3 },
+  reshareBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 12, paddingVertical: 8,
+    backgroundColor: 'rgba(168,85,247,0.1)',
+    borderWidth: 1, borderColor: 'rgba(168,85,247,0.3)',
+    borderRadius: 10,
+  },
+  reshareText: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.accent },
+  reclaimButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 10,
+    borderTopWidth: 1, borderTopColor: Colors.border,
+  },
+  reclaimText: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.textMuted },
+
   // Empty state
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40, paddingTop: 80 },
   emptyTitle: { fontSize: 18, fontFamily: Font.bold, color: Colors.textPrimary, marginTop: 16, marginBottom: 8 },
@@ -420,15 +534,16 @@ const styles = StyleSheet.create({
   exploreBtn: { backgroundColor: Colors.accent, borderRadius: 14, paddingHorizontal: 24, paddingVertical: 12 },
   exploreBtnText: { fontSize: 14, fontFamily: Font.bold, color: Colors.white },
 
-  // Riscatta regalo
+  // Riscatta regalo — box floating sopra la tab bar
   claimBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    marginHorizontal: 20, marginBottom: 12,
+    position: 'absolute', left: 20, right: 20, bottom: 96,
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingHorizontal: 16, paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1, borderColor: 'rgba(168,85,247,0.25)',
     backgroundColor: 'rgba(168,85,247,0.08)',
-    borderWidth: 1, borderColor: 'rgba(168,85,247,0.2)',
-    borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10,
   },
-  claimBannerText: { fontSize: 13, color: Colors.textMuted, flex: 1 },
+  claimBannerText: { fontSize: 13, fontFamily: Font.regular, color: Colors.textMuted, flex: 1 },
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 24 },

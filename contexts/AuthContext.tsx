@@ -62,36 +62,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [musicGenres, setMusicGenresState] = useState<string[]>([]);
 
   useEffect(() => {
-    async function loadPrefs() {
+    async function loadGenres() {
       try {
-        const [rawOnboarded, rawGenres] = await Promise.all([
-          AsyncStorage.getItem(KEYS.onboarded),
-          AsyncStorage.getItem(KEYS.genres),
-        ]);
-        if (rawOnboarded === 'true') setIsOnboarded(true);
-        if (rawGenres) setMusicGenresState(JSON.parse(rawGenres));
+        const raw = await AsyncStorage.getItem(KEYS.genres);
+        if (raw) setMusicGenresState(JSON.parse(raw));
       } catch (_) {}
     }
-    loadPrefs();
+    loadGenres();
+
+    // Risolve isOnboarded dal user_metadata Supabase, con fallback su AsyncStorage per utenti esistenti
+    async function resolveOnboarded(session: Session) {
+      const meta = session.user.user_metadata;
+      if (meta?.onboarded === true) {
+        setIsOnboarded(true);
+      } else if (meta?.onboarded == null) {
+        // Utente esistente senza flag — leggi AsyncStorage e migra silenziosamente
+        const raw = await AsyncStorage.getItem(KEYS.onboarded);
+        const local = raw === 'true';
+        setIsOnboarded(local);
+        if (local) supabase.auth.updateUser({ data: { onboarded: true } });
+      } else {
+        // onboarded = false esplicito → nuovo utente su dispositivo già usato
+        setIsOnboarded(false);
+      }
+    }
 
     // Fallback: se INITIAL_SESSION non scatta entro 3s (TLS issue), sblocca il routing
     const fallback = setTimeout(() => setIsLoading(false), 3000);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'INITIAL_SESSION') {
         clearTimeout(fallback);
-        // Se il refresh token è scaduto, pulisce la sessione
         if (!session) {
           setUser(null);
+          const raw = await AsyncStorage.getItem(KEYS.onboarded);
+          setIsOnboarded(raw === 'true');
           setIsLoading(false);
           return;
         }
         setUser(sessionToUser(session as any));
+        await resolveOnboarded(session as any);
         setIsLoading(false);
       } else if (event === 'SIGNED_IN') {
         setUser(session ? sessionToUser(session) : null);
+        if (session) await resolveOnboarded(session);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
+        const raw = await AsyncStorage.getItem(KEYS.onboarded);
+        setIsOnboarded(raw === 'true');
       }
     });
 
@@ -161,6 +179,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const completeOnboarding = useCallback(async () => {
     setIsOnboarded(true);
     await AsyncStorage.setItem(KEYS.onboarded, 'true');
+    // Se c'è già una sessione attiva (es. onboarding post-login), salva su Supabase
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) await supabase.auth.updateUser({ data: { onboarded: true } });
   }, []);
 
   const updateUser = useCallback(async (updates: Partial<Pick<AuthUser, 'name' | 'email'>>) => {

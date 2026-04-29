@@ -35,8 +35,24 @@ export default function ProfileScreen() {
 
   const displayName = user?.name ?? '—';
   const displayEmail = user?.email ?? '—';
-  const eventsAttended = new Set(tickets.filter((t) => t.status === 'used').map((t) => t.eventId).filter(Boolean)).size;
-  const uniqueClubs = new Set(tickets.filter((t) => t.status === 'used').map((t) => t.clubName).filter(Boolean)).size;
+  function isTicketPast(t: typeof tickets[number]): boolean {
+    if (!t.rawDate) return false;
+    if (t.endTime) {
+      const [hh, mm] = t.endTime.split(':').map(Number);
+      const cutoff = new Date(t.rawDate);
+      if (hh < 12) cutoff.setDate(cutoff.getDate() + 1);
+      cutoff.setHours(hh, mm, 0, 0);
+      return new Date() > cutoff;
+    }
+    const cutoff = new Date(t.rawDate);
+    cutoff.setDate(cutoff.getDate() + 1);
+    cutoff.setHours(12, 0, 0, 0);
+    return new Date() > cutoff;
+  }
+
+  const pastTickets = tickets.filter(isTicketPast);
+  const eventsAttended = new Set(pastTickets.map((t) => t.eventId).filter(Boolean)).size;
+  const uniqueClubs = new Set(pastTickets.map((t) => t.clubName).filter(Boolean)).size;
 
   const favoriteEvents = events.filter((e) => favoriteIds.includes(e.id));
 
@@ -222,20 +238,7 @@ export default function ProfileScreen() {
 
           {/* Storico serate */}
           {(() => {
-            const past = tickets.filter((t) => {
-              if (!t.rawDate) return false;
-              if (t.endTime) {
-                const [hh, mm] = t.endTime.split(':').map(Number);
-                const cutoff = new Date(t.rawDate);
-                if (hh < 12) cutoff.setDate(cutoff.getDate() + 1);
-                cutoff.setHours(hh, mm, 0, 0);
-                return new Date() > cutoff;
-              }
-              const cutoff = new Date(t.rawDate);
-              cutoff.setDate(cutoff.getDate() + 1);
-              cutoff.setHours(12, 0, 0, 0);
-              return new Date() > cutoff;
-            });
+            const past = pastTickets;
             return (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Storico serate</Text>

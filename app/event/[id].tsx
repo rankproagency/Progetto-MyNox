@@ -87,9 +87,16 @@ export default function EventScreen() {
 
   async function handleShare() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const e = event!;
+    const dateStr = new Date(e.date).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
     await Share.share({
-      message: `Vieni con me a ${event!.name} @ ${event!.club?.name}!\nCompra il biglietto su MyNox`,
-      title: event!.name,
+      message:
+        `MYNOX ✦\n\n` +
+        `Vieni con me a questa serata.\n\n` +
+        `${e.name.toUpperCase()}\n` +
+        `📍 ${e.club?.name}  ·  ${dateStr}  ·  ${e.startTime}\n\n` +
+        `Compra il biglietto su MyNox.`,
+      title: e.name,
     });
   }
 
