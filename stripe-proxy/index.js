@@ -273,6 +273,41 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // POST /cancel-gift — annulla un codice regalo non ancora riscattato
+  if (req.url === '/cancel-gift') {
+    try {
+      const { ticket_id, gifter_id } = body;
+      if (!ticket_id || !gifter_id) {
+        res.writeHead(400, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'ticket_id e gifter_id obbligatori' }));
+        return;
+      }
+
+      // Cerca il codice pending per questo biglietto
+      const gifts = await callSupabaseGet(
+        `/rest/v1/gift_codes?ticket_id=eq.${ticket_id}&gifter_id=eq.${gifter_id}&status=eq.pending&select=*`
+      );
+
+      if (!Array.isArray(gifts) || gifts.length === 0) {
+        res.writeHead(404, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Codice regalo non trovato o già riscattato' }));
+        return;
+      }
+
+      const gift = gifts[0];
+
+      // Annulla il codice regalo
+      await callSupabasePatch(`/rest/v1/gift_codes?code=eq.${gift.code}`, { status: 'cancelled' });
+
+      res.writeHead(200, CORS_HEADERS);
+      res.end(JSON.stringify({ success: true }));
+    } catch (err) {
+      res.writeHead(500, CORS_HEADERS);
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
   res.writeHead(404, CORS_HEADERS);
   res.end(JSON.stringify({ error: 'Route non trovata' }));
 });
