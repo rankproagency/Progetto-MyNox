@@ -20,19 +20,8 @@ import EventListItem from '../../components/EventListItem';
 import { useRecentlyViewed } from '../../contexts/RecentlyViewedContext';
 import { useEvents } from '../../contexts/EventsContext';
 import AppHeader from '../../components/AppHeader';
-import { ALL_GENRES } from '../../constants/genres';
+import { ALL_GENRES, GENRE_CONFIG } from '../../constants/genres';
 import { Genre } from '../../types';
-
-const GENRE_CONFIG: Record<Genre, { icon: string; color: string }> = {
-  'Techno':      { icon: 'flash',         color: '#a855f7' },
-  'House':       { icon: 'musical-notes', color: '#3b82f6' },
-  'Hip-Hop':     { icon: 'mic',           color: '#eab308' },
-  'Trap':        { icon: 'skull',          color: '#ef4444' },
-  'Pop':         { icon: 'star',          color: '#ec4899' },
-  'R&B':         { icon: 'heart',         color: '#f43f5e' },
-  'Reggaeton':   { icon: 'sunny',         color: '#f59e0b' },
-  'Commercial':  { icon: 'radio',         color: '#06b6d4' },
-};
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const DELETE_BTN_WIDTH = 80;
@@ -279,28 +268,20 @@ export default function SearchScreen() {
                     return (
                       <View key={genre} style={[styles.genreCardOuter, { shadowColor: cfg.color }]}>
                         <TouchableOpacity
-                          style={[styles.genreCard, { borderColor: cfg.color + '50' }]}
+                          style={styles.genreCard}
                           activeOpacity={0.75}
                           onPress={() => setQuery(genre)}
                         >
                           <LinearGradient
-                            colors={[cfg.color + '80', cfg.color + '20', '#07080f']}
+                            colors={[cfg.color, cfg.colorEnd, '#07080f']}
                             start={{ x: 0, y: 0 }}
-                            end={{ x: 1.2, y: 1.2 }}
+                            end={{ x: 1, y: 1.4 }}
                             style={StyleSheet.absoluteFill}
                           />
-                          <Ionicons
-                            name={cfg.icon as any}
-                            size={80}
-                            color={cfg.color}
-                            style={styles.genreWatermark}
-                          />
                           <Text style={styles.genreCardText}>{genre}</Text>
-                          <View style={[styles.genreCountPill, { backgroundColor: cfg.color + '25' }]}>
-                            <Text style={[styles.genreCardCount, { color: cfg.color }]}>
-                              {`${count} serate`}
-                            </Text>
-                          </View>
+                          <Text style={styles.genreCardCount}>
+                            {`${count} serate`}
+                          </Text>
                         </TouchableOpacity>
                       </View>
                     );
@@ -364,24 +345,17 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   genreCard: {
-    height: 120,
+    height: 110,
     backgroundColor: '#0d0d18',
-    borderRadius: 18, borderWidth: 1,
-    padding: 16,
+    borderRadius: 16,
+    padding: 14,
     overflow: 'hidden',
     justifyContent: 'flex-end',
-    gap: 6,
+    gap: 3,
   },
-  genreWatermark: {
-    position: 'absolute', right: -14, top: -14,
-    opacity: 0.15,
-    transform: [{ rotate: '15deg' }],
+  genreCardText: {
+    fontSize: 16, fontFamily: Font.extraBold, color: '#ffffff',
+    textTransform: 'uppercase', letterSpacing: 1.5,
   },
-  genreCardText: { fontSize: 16, fontFamily: Font.extraBold, color: Colors.textPrimary },
-  genreCountPill: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 20,
-  },
-  genreCardCount: { fontSize: 11, fontFamily: Font.semiBold },
+  genreCardCount: { fontSize: 11, fontFamily: Font.medium, color: 'rgba(255,255,255,0.45)' },
 });

@@ -37,6 +37,7 @@ export interface Event {
   name: string;
   date: string;
   startTime: string;
+  endTime?: string;
   imageUrl: string;
   floorPlanUrl?: string;
   dressCode: string;

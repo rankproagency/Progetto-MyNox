@@ -10,6 +10,7 @@ export interface MockTicket {
   rawDate: string;
   date: string;
   startTime: string;
+  endTime?: string;
   ticketLabel: string;
   tableName?: string;
   tableCapacity?: number;
@@ -59,6 +60,7 @@ function dbRowToMockTicket(row: any): MockTicket {
     rawDate: ev?.date ?? '',
     date: formatDate(ev?.date ?? ''),
     startTime: ev?.start_time ?? '',
+    endTime: ev?.end_time ?? undefined,
     ticketLabel: isTable ? (row.table_name ?? 'Tavolo') : (tt?.label ?? ''),
     tableName: row.table_name ?? undefined,
     pricePaid: row.price_paid ?? 0,
@@ -82,7 +84,7 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
       .select(`
         id, qr_code, drink_qr_code, status, drink_used, price_paid, table_name,
         ticket_types(label, includes_drink),
-        events(id, name, date, start_time, clubs(name, image_url))
+        events(id, name, date, start_time, end_time, clubs(name, image_url))
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });

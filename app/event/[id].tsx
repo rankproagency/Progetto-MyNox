@@ -21,8 +21,9 @@ import { useState, useEffect, useRef } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
+import { GENRE_CONFIG } from '../../constants/genres';
 import { useEvents } from '../../contexts/EventsContext';
-import { TicketType, Table } from '../../types';
+import { TicketType, Table, Genre } from '../../types';
 import TableMap from '../../components/TableMap';
 import { useFavorites } from '../../contexts/FavoritesContext';
 import { useWaitlist } from '../../contexts/WaitlistContext';
@@ -79,6 +80,10 @@ export default function EventScreen() {
   const isSoldOut = event?.ticketTypes.every((t) => t.available === 0) ?? false;
   const onWaitlist = event ? isOnWaitlist(event.id) : false;
   const soldPercent = Math.round((event.ticketsSold / event.capacity) * 100);
+  const remaining = event.capacity - event.ticketsSold;
+  const isLowStock = soldPercent >= 80;
+  const isMediumStock = soldPercent >= 50 && soldPercent < 80;
+  const showScarcity = !isSoldOut;
 
   async function handleShare() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -164,6 +169,13 @@ export default function EventScreen() {
               color={isFavorite(event.id) ? Colors.accent : Colors.textPrimary}
             />
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.heroIconBtn}
+            onPress={() => { Haptics.selectionAsync(); setImageModalVisible(true); }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="expand-outline" size={20} color={Colors.textPrimary} />
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
 
@@ -173,211 +185,120 @@ export default function EventScreen() {
         <View style={styles.hero}>
           <Image source={{ uri: event.imageUrl }} style={styles.heroImage} resizeMode="cover" />
           <LinearGradient
-            colors={['rgba(7,8,15,0.2)', 'transparent', 'rgba(7,8,15,0.75)', 'rgba(7,8,15,0.98)']}
-            locations={[0, 0.35, 0.72, 1]}
+            colors={['rgba(7,8,15,0.1)', 'transparent', 'rgba(7,8,15,0.6)', 'rgba(7,8,15,0.97)']}
+            locations={[0, 0.3, 0.65, 1]}
             style={StyleSheet.absoluteFill}
           />
           <View style={styles.heroBottom}>
+
+            {/* Nome evento */}
             <Text style={styles.eventName}>{event.name}</Text>
-            <View style={styles.heroBottomRow}>
-              <TouchableOpacity onPress={() => router.push(`/club/${event.clubId}`)}>
+
+            {/* Club + indirizzo */}
+            <View style={styles.heroClubBlock}>
+              <TouchableOpacity activeOpacity={0.75} onPress={() => router.push(`/club/${event.clubId}`)}>
                 <Text style={styles.clubName}>{event.club?.name}</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.posterBtn}
-                onPress={() => { Haptics.selectionAsync(); setImageModalVisible(true); }}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="expand-outline" size={13} color={Colors.white} />
-                <Text style={styles.posterBtnText}>Locandina</Text>
-              </TouchableOpacity>
+              {event.club?.address && (
+                <TouchableOpacity
+                  style={styles.heroAddressRow}
+                  activeOpacity={0.75}
+                  onPress={() => {
+                    const query = encodeURIComponent(event.club!.address);
+                    Linking.openURL(`https://maps.apple.com/?q=${query}`);
+                  }}
+                >
+                  <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.5)" />
+                  <Text style={styles.heroAddressText}>{event.club.address}</Text>
+                </TouchableOpacity>
+              )}
             </View>
-          </View>
-        </View>
 
-        {/* Info rapide */}
-        <View style={styles.infoRow}>
-          <InfoChip icon="calendar-outline" label={formatDate(event.date)} />
-          <InfoChip icon="time-outline" label={event.startTime} />
-          <InfoChip icon="people-outline" label={`${event.capacity} cap.`} />
-        </View>
-
-        {/* Venue */}
-        {event.club?.address && (
-          <TouchableOpacity
-            style={styles.venueRow}
-            activeOpacity={0.8}
-            onPress={() => {
-              const query = encodeURIComponent(event.club!.address);
-              Linking.openURL(`https://maps.apple.com/?q=${query}`);
-            }}
-          >
-            <Ionicons name="location-outline" size={15} color={Colors.accent} />
-            <Text style={styles.venueText}>{event.club.address}</Text>
-            <View style={styles.mapsBtn}>
-              <Text style={styles.mapsBtnText}>Apri</Text>
-              <Ionicons name="navigate-outline" size={12} color={Colors.accent} />
+            {/* Data · orario · dress code */}
+            <View style={styles.heroMeta}>
+              <Text style={styles.heroMetaText}>{formatDate(event.date)}</Text>
+              <Text style={styles.heroMetaDot}>·</Text>
+              <Text style={styles.heroMetaText}>
+                {event.endTime ? `${event.startTime} – ${event.endTime}` : event.startTime}
+              </Text>
+              <Text style={styles.heroMetaDot}>·</Text>
+              <Text style={styles.heroMetaText}>{event.dressCode}</Text>
             </View>
-          </TouchableOpacity>
-        )}
 
-        {/* Generi + Dress code */}
-        <View style={styles.section}>
-          <View style={styles.tagsRow}>
-            {event.genres.map((g) => (
-              <View key={g} style={styles.genreTag}>
-                <Text style={styles.genreTagText}>{g}</Text>
+            {/* Generi — dentro l'hero, zero gap */}
+            {event.genres.length > 0 && (
+              <View style={styles.heroGenres}>
+                {event.genres.map((g) => {
+                  const cfg = GENRE_CONFIG[g as Genre] ?? { color: '#a855f7', colorEnd: '#6d28d9' };
+                  return (
+                    <LinearGradient
+                      key={g}
+                      colors={[cfg.color, cfg.colorEnd]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.heroGenreTag}
+                    >
+                      <Text style={styles.heroGenreTagText}>{g}</Text>
+                    </LinearGradient>
+                  );
+                })}
               </View>
-            ))}
-            <View style={styles.dressCodeChip}>
-              <Ionicons name="shirt-outline" size={12} color={Colors.textMuted} />
-              <Text style={styles.dressCodeText}> {event.dressCode}</Text>
-            </View>
+            )}
+
           </View>
         </View>
 
-        {/* Descrizione */}
-        {event.description ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>L'evento</Text>
-            <Text style={styles.descriptionText}>{event.description}</Text>
-          </View>
-        ) : null}
+        {/* Contenuto principale — non renderizzato se vuoto */}
+        {(!!event.description || event.lineup.length > 0 || (event.performers?.length ?? 0) > 0) && (
+          <View style={styles.content}>
 
-        {/* Lineup */}
-        {event.lineup.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Lineup</Text>
-            <View style={styles.lineupCard}>
-              {event.lineup.map((artist, i) => (
-                <View key={artist.name} style={[styles.lineupRow, i > 0 && styles.lineupRowBorder]}>
-                  <View style={styles.lineupDot} />
-                  <Text style={styles.lineupTime}>{artist.time}</Text>
-                  <Text style={styles.lineupName}>{artist.name}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
+            {/* Descrizione */}
+            {!!event.description && (
+              <Text style={styles.descriptionText}>{event.description}</Text>
+            )}
 
-        {/* Performers — DJ e Vocalist */}
-        {event.performers?.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Artisti</Text>
-            <View style={styles.performersGrid}>
-              {event.performers.map((p, i) => (
-                <View key={i} style={styles.performerChip}>
-                  <View style={[styles.performerBadge, p.role === 'vocalist' && styles.performerBadgeVocalist]}>
-                    <Text style={[styles.performerBadgeText, p.role === 'vocalist' && styles.performerBadgeTextVocalist]}>
-                      {p.role === 'dj' ? 'DJ' : 'VOCALIST'}
-                    </Text>
+            {/* Lineup */}
+            {event.lineup.length > 0 && (
+              <>
+                {!!event.description && <View style={styles.divider} />}
+                <Text style={styles.blockLabel}>Lineup</Text>
+                {event.lineup.map((artist, i) => (
+                  <View key={artist.name} style={[styles.lineupRow, i > 0 && styles.lineupRowBorder]}>
+                    <View style={styles.lineupDot} />
+                    <Text style={styles.lineupTime}>{artist.time}</Text>
+                    <Text style={styles.lineupName}>{artist.name}</Text>
                   </View>
-                  <Text style={styles.performerName}>{p.name}</Text>
+                ))}
+              </>
+            )}
+
+            {/* Performers */}
+            {(event.performers?.length ?? 0) > 0 && (
+              <>
+                <View style={styles.divider} />
+                <View style={styles.performersGrid}>
+                  {event.performers.map((p, i) => (
+                    <View key={i} style={styles.performerChip}>
+                      <View style={[styles.performerBadge, p.role === 'vocalist' && styles.performerBadgeVocalist]}>
+                        <Text style={[styles.performerBadgeText, p.role === 'vocalist' && styles.performerBadgeTextVocalist]}>
+                          {p.role === 'dj' ? 'DJ' : 'VOCALIST'}
+                        </Text>
+                      </View>
+                      <Text style={styles.performerName}>{p.name}</Text>
+                    </View>
+                  ))}
                 </View>
-              ))}
-            </View>
+              </>
+            )}
+
           </View>
         )}
 
-        {/* Contatore disponibilità */}
-        <View style={styles.section}>
-          <View style={styles.soldRow}>
-            <View style={styles.soldLeft}>
-              <Ionicons name="flame" size={16} color={Colors.accent} />
-              {event.ticketsSold > 0 ? (
-                <Text style={styles.soldText}>
-                  <Text style={styles.soldCount}>{event.ticketsSold}</Text> persone hanno già acquistato
-                </Text>
-              ) : (
-                <Text style={styles.soldText}>
-                  <Text style={styles.soldCount}>{event.capacity}</Text> posti disponibili
-                </Text>
-              )}
-            </View>
-            <Text style={styles.soldPercent}>
-              {event.ticketsSold > 0 ? `${soldPercent}%` : 'Biglietti aperti'}
-            </Text>
-          </View>
-          <View style={styles.progressBar}>
-            <LinearGradient
-              colors={['#a855f7', '#ec4899']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[styles.progressFill, { width: `${Math.min(soldPercent, 100)}%` }]}
-            />
-          </View>
-        </View>
+        {/* Separatore zona acquisto */}
+        <View style={styles.bookingDivider} />
 
-        {/* Social & Contatti club */}
-        {event.club && (event.club.instagram || event.club.tiktok || event.club.email || event.club.phone) && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Contatti</Text>
-            <View style={styles.contactCard}>
-              <View style={styles.socialRow}>
-                {event.club.instagram && (
-                  <TouchableOpacity
-                    style={styles.socialBtn}
-                    onPress={() => Linking.openURL(`https://instagram.com/${event.club!.instagram}`)}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="logo-instagram" size={18} color={Colors.textPrimary} />
-                    <Text style={styles.socialLabel}>@{event.club.instagram}</Text>
-                  </TouchableOpacity>
-                )}
-                {event.club.tiktok && (
-                  <TouchableOpacity
-                    style={styles.socialBtn}
-                    onPress={() => Linking.openURL(`https://tiktok.com/@${event.club!.tiktok}`)}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="logo-tiktok" size={18} color={Colors.textPrimary} />
-                    <Text style={styles.socialLabel}>@{event.club.tiktok}</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-              {(event.club.email || event.club.phone) && (
-                <View style={styles.contactDivider} />
-              )}
-              {event.club.email && (
-                <TouchableOpacity
-                  style={styles.contactRow}
-                  onPress={() => Linking.openURL(`mailto:${event.club!.email}`)}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="mail-outline" size={15} color={Colors.accent} />
-                  <Text style={styles.contactText}>{event.club.email}</Text>
-                  <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
-                </TouchableOpacity>
-              )}
-              {event.club.phone && (
-                <TouchableOpacity
-                  style={styles.contactRow}
-                  onPress={() => Linking.openURL(`tel:${event.club!.phone}`)}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="call-outline" size={15} color={Colors.accent} />
-                  <Text style={styles.contactText}>{event.club.phone}</Text>
-                  <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        )}
-
-        {/* Invita un amico */}
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.inviteButton} onPress={handleShare} activeOpacity={0.85}>
-            <Ionicons name="person-add-outline" size={18} color={Colors.accent} />
-            <View style={styles.inviteText}>
-              <Text style={styles.inviteTitle}>Invita un amico</Text>
-              <Text style={styles.inviteSubtitle}>Condividi l'evento e venite insieme</Text>
-            </View>
-            <Ionicons name="share-social-outline" size={18} color={Colors.accent} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Toggle Prevendita / Tavolo */}
-        <View style={styles.section}>
+        {/* Prevendita / Tavolo */}
+        <View style={styles.bookingSection}>
           {isSoldOut ? (
             <View style={styles.soldOutBox}>
               <Ionicons name="close-circle" size={20} color={Colors.error} />
@@ -411,10 +332,51 @@ export default function EventScreen() {
                 </View>
               )}
 
+              {/* Scarsità — sopra i biglietti, dove crea urgenza */}
+              {showScarcity && bookingMode === 'ticket' && (
+                <View style={styles.scarcityBox}>
+                  {isLowStock || isMediumStock ? (
+                    <>
+                      <View style={styles.soldRow}>
+                        <View style={styles.soldLeft}>
+                          <Ionicons name="flame" size={15} color={isLowStock ? '#ef4444' : '#f59e0b'} />
+                          <Text style={styles.soldText}>
+                            {isLowStock ? (
+                              <><Text style={[styles.soldCount, { color: '#ef4444' }]}>Solo {remaining}</Text>{' posti rimasti!'}</>
+                            ) : (
+                              'Poca disponibilità — affrettati'
+                            )}
+                          </Text>
+                        </View>
+                        <Text style={[styles.soldPercent, isLowStock && { color: '#ef4444' }]}>{soldPercent}%</Text>
+                      </View>
+                      <View style={styles.progressBar}>
+                        <LinearGradient
+                          colors={isLowStock ? ['#ef4444', '#dc2626'] : ['#f59e0b', '#d97706']}
+                          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                          style={[styles.progressFill, { width: `${Math.min(soldPercent, 100)}%` }]}
+                        />
+                      </View>
+                    </>
+                  ) : (
+                    <View style={styles.soldLeft}>
+                      <Ionicons name="checkmark-circle-outline" size={15} color={Colors.success} />
+                      <Text style={styles.scarcityNeutralText}>Acquista ora, entra senza fila</Text>
+                    </View>
+                  )}
+                </View>
+              )}
+
               {/* Prevendita */}
               {bookingMode === 'ticket' && (
                 <>
-                  <Text style={styles.sectionSubtitle}>Ogni biglietto include 1 free drink</Text>
+                  {!hasTables && <Text style={styles.bookingLabel}>Biglietti</Text>}
+                  {event.ticketTypes.some((t) => t.includesDrink) && (
+                    <View style={styles.drinkBadge}>
+                      <Ionicons name="wine-outline" size={13} color={Colors.accent} />
+                      <Text style={styles.drinkBadgeText}>Ogni biglietto include 1 free drink</Text>
+                    </View>
+                  )}
                   {event.ticketTypes.map((ticket) => (
                     <TouchableOpacity
                       key={ticket.id}
@@ -439,7 +401,9 @@ export default function EventScreen() {
                       </View>
                       <View style={styles.ticketRight}>
                         <Text style={styles.ticketPrice}>€{ticket.price}</Text>
-                        <Text style={styles.ticketDrink}>+ drink</Text>
+                        {ticket.includesDrink && (
+                          <Text style={styles.ticketDrink}>+ drink</Text>
+                        )}
                       </View>
                     </TouchableOpacity>
                   ))}
@@ -580,14 +544,6 @@ export default function EventScreen() {
   );
 }
 
-function InfoChip({ icon, label }: { icon: React.ComponentProps<typeof Ionicons>['name']; label: string }) {
-  return (
-    <View style={styles.chip}>
-      <Ionicons name={icon} size={13} color={Colors.accent} />
-      <Text style={styles.chipText}> {label}</Text>
-    </View>
-  );
-}
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
@@ -616,7 +572,7 @@ const styles = StyleSheet.create({
   },
 
   // Hero
-  hero: { width, height: 430, position: 'relative' },
+  hero: { width, height: 480, position: 'relative' },
   heroImage: { ...StyleSheet.absoluteFillObject },
   heroTopRight: { flexDirection: 'row', gap: 8 },
   backButton: {
@@ -630,49 +586,59 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   heroBottom: {
-    position: 'absolute', bottom: 20, left: 20, right: 20,
+    position: 'absolute', bottom: 16, left: 20, right: 20,
   },
-  heroBottomRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+  eventName: {
+    fontSize: 32, fontFamily: Font.black, color: Colors.white,
+    marginBottom: 10, letterSpacing: 0.2, lineHeight: 38,
   },
-  eventName: { fontSize: 28, fontFamily: Font.black, color: Colors.white, marginBottom: 6, letterSpacing: 0.2 },
-  clubName: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.accent },
-  posterBtn: {
+  heroClubBlock: {
+    marginBottom: 12,
+  },
+  clubName: {
+    fontSize: 17, fontFamily: Font.bold, color: Colors.accent, marginBottom: 4,
+  },
+  heroAddressRow: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
   },
-  posterBtnText: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.white },
+  heroAddressText: {
+    fontSize: 13, color: 'rgba(255,255,255,0.55)', fontWeight: '400',
+  },
+  heroMeta: {
+    flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6,
+    marginBottom: 14,
+  },
+  heroMetaText: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '600' },
+  heroMetaDot: { fontSize: 13, color: 'rgba(255,255,255,0.3)' },
+  heroGenres: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 7,
+  },
+  heroGenreTag: {
+    borderRadius: 20,
+    paddingHorizontal: 12, paddingVertical: 6,
+  },
+  heroGenreTagText: {
+    fontSize: 12, fontWeight: '700', color: '#fff',
+  },
 
-  // Info row
-  infoRow: {
-    flexDirection: 'row', gap: 8,
-    paddingHorizontal: 20, paddingTop: 18, paddingBottom: 4,
+  // Contenuto principale
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 18,
   },
-  chip: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: 8, borderWidth: 1, borderColor: Colors.border,
-    paddingHorizontal: 10, paddingVertical: 6,
+  divider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginVertical: 20,
   },
-  chipText: { fontSize: 12, color: Colors.textSecondary, fontWeight: '500' },
-
-  // Venue
-  venueRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    marginHorizontal: 20, marginTop: 12,
-    backgroundColor: Colors.surface,
-    borderRadius: 12, borderWidth: 1, borderColor: Colors.border,
-    paddingHorizontal: 14, paddingVertical: 10,
+  blockLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 14,
   },
-  venueText: { flex: 1, fontSize: 13, color: Colors.textSecondary },
-  mapsBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(168,85,247,0.1)',
-    borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4,
-  },
-  mapsBtnText: { fontSize: 12, fontWeight: '700', color: Colors.accent },
 
   // Tags row
   tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -682,13 +648,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 5,
   },
   genreTagText: { fontSize: 12, fontWeight: '700', color: Colors.accent },
-  dressCodeChip: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: 8, borderWidth: 1, borderColor: Colors.border,
-    paddingHorizontal: 12, paddingVertical: 5,
-  },
-  dressCodeText: { fontSize: 12, color: Colors.textMuted },
 
   // Description
   descriptionText: {
@@ -697,18 +656,13 @@ const styles = StyleSheet.create({
   },
 
   // Lineup
-  lineupCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
-    overflow: 'hidden',
-  },
   lineupRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingHorizontal: 16, paddingVertical: 14,
+    paddingVertical: 12,
   },
   lineupRowBorder: { borderTopWidth: 1, borderTopColor: Colors.border },
   lineupDot: {
-    width: 8, height: 8, borderRadius: 4,
+    width: 6, height: 6, borderRadius: 3,
     backgroundColor: Colors.accent,
     flexShrink: 0,
   },
@@ -744,49 +698,40 @@ const styles = StyleSheet.create({
   soldText: { fontSize: 13, color: Colors.textSecondary },
   soldCount: { fontWeight: '700', color: Colors.textPrimary },
   soldPercent: { fontSize: 12, fontWeight: '700', color: Colors.accent },
+  scarcityNeutralText: { fontSize: 13, color: Colors.success, fontWeight: '600' },
   progressBar: {
-    height: 8, borderRadius: 4,
+    height: 6, borderRadius: 3,
     backgroundColor: Colors.border,
     overflow: 'hidden',
   },
   progressFill: {
-    height: '100%', borderRadius: 4,
+    height: '100%', borderRadius: 3,
   },
 
-  // Contact card
-  contactCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
-    overflow: 'hidden',
+  // Separatore zona acquisto
+  bookingDivider: {
+    marginHorizontal: 20,
+    marginTop: 28,
+    marginBottom: 28,
+    height: 1,
+    backgroundColor: Colors.border,
   },
-  socialRow: { flexDirection: 'row' },
-  socialBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingVertical: 14, paddingHorizontal: 14,
-  },
-  socialLabel: { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' },
-  contactDivider: { height: 1, backgroundColor: Colors.border },
-  contactRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingVertical: 12, paddingHorizontal: 14,
-    borderTopWidth: 1, borderTopColor: Colors.border,
-  },
-  contactText: { flex: 1, fontSize: 13, color: Colors.textSecondary },
 
-  // Invite button
-  inviteButton: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: Colors.surface,
-    borderRadius: 14, borderWidth: 1, borderColor: Colors.accent,
-    padding: 14,
+  // Sezione prenotazione
+  bookingSection: { paddingHorizontal: 20 },
+  bookingLabel: {
+    fontSize: 11, fontWeight: '700', color: Colors.textMuted,
+    textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12,
   },
-  inviteText: { flex: 1 },
-  inviteTitle: { fontSize: 14, fontWeight: '700', color: Colors.textPrimary },
-  inviteSubtitle: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
-
-  // Sections
-  section: { paddingHorizontal: 20, marginTop: 20 },
-  sectionTitle: { fontSize: 16, fontFamily: Font.extraBold, color: Colors.textPrimary, marginBottom: 4 },
+  scarcityBox: { marginBottom: 16 },
+  drinkBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 7,
+    backgroundColor: 'rgba(168,85,247,0.08)',
+    borderRadius: 10, borderWidth: 1, borderColor: 'rgba(168,85,247,0.25)',
+    paddingHorizontal: 12, paddingVertical: 9,
+    marginBottom: 12,
+  },
+  drinkBadgeText: { fontSize: 13, fontWeight: '600', color: Colors.accent },
   sectionSubtitle: { fontSize: 12, color: Colors.textMuted, marginBottom: 12 },
 
   // Ticket options

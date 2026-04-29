@@ -30,14 +30,27 @@ const countdownStyles = StyleSheet.create({
   text: { fontSize: 11, fontWeight: '700', color: Colors.accent },
 });
 
-function isDatePast(rawDate: string): boolean {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return new Date(rawDate) < today;
+function isDatePast(rawDate: string, endTime?: string): boolean {
+  if (!rawDate) return false;
+  if (endTime) {
+    // L'endTime è nel formato HH:MM. Se è <= "12:00" assume che la serata
+    // finisca il giorno dopo (es. "05:00" → giorno +1 alle 05:00).
+    const [hh, mm] = endTime.split(':').map(Number);
+    const cutoff = new Date(rawDate);
+    const endsNextDay = hh < 12;
+    if (endsNextDay) cutoff.setDate(cutoff.getDate() + 1);
+    cutoff.setHours(hh, mm, 0, 0);
+    return new Date() > cutoff;
+  }
+  // Fallback: mezzogiorno del giorno successivo
+  const cutoff = new Date(rawDate);
+  cutoff.setDate(cutoff.getDate() + 1);
+  cutoff.setHours(12, 0, 0, 0);
+  return new Date() > cutoff;
 }
 
 function categorize(ticket: MockTicket): Tab {
-  if (ticket.status === 'used' || isDatePast(ticket.rawDate)) return 'past';
+  if (ticket.status === 'used' || isDatePast(ticket.rawDate, ticket.endTime)) return 'past';
   return 'future';
 }
 

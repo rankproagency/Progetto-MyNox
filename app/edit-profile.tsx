@@ -14,9 +14,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../constants/colors';
 import { useAuth } from '../contexts/AuthContext';
-import { ALL_GENRES } from '../constants/genres';
+import { ALL_GENRES, GENRE_CONFIG } from '../constants/genres';
+import { Genre } from '../types';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -103,16 +105,27 @@ export default function EditProfileScreen() {
             <View style={styles.genresList}>
               {ALL_GENRES.map((genre) => {
                 const active = selectedGenres.includes(genre);
+                const cfg = GENRE_CONFIG[genre as Genre];
                 return (
                   <TouchableOpacity
                     key={genre}
                     onPress={() => toggleGenre(genre)}
                     activeOpacity={0.75}
-                    style={[styles.genreTag, active && styles.genreTagActive]}
                   >
-                    <Text style={[styles.genreTagText, active && styles.genreTagTextActive]}>
-                      {genre}
-                    </Text>
+                    {active ? (
+                      <LinearGradient
+                        colors={[cfg.color, cfg.colorEnd]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.genreTag}
+                      >
+                        <Text style={styles.genreTagTextActive}>{genre}</Text>
+                      </LinearGradient>
+                    ) : (
+                      <View style={styles.genreTag}>
+                        <Text style={styles.genreTagText}>{genre}</Text>
+                      </View>
+                    )}
                   </TouchableOpacity>
                 );
               })}
@@ -214,15 +227,12 @@ const styles = StyleSheet.create({
 
   genresList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   genreTag: {
-    borderRadius: 20, borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 14, paddingVertical: 8,
+    borderWidth: 1,
     borderColor: Colors.border,
     backgroundColor: Colors.surface,
-    paddingHorizontal: 14, paddingVertical: 8,
-  },
-  genreTagActive: {
-    backgroundColor: 'rgba(168,85,247,0.18)',
-    borderColor: Colors.accent,
   },
   genreTagText: { fontSize: 13, fontWeight: '600', color: Colors.textMuted },
-  genreTagTextActive: { color: Colors.accent },
+  genreTagTextActive: { fontSize: 13, fontWeight: '600', color: '#ffffff' },
 });

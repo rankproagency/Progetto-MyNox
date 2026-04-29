@@ -71,6 +71,7 @@ function rowToEvent(row: any): Event {
     name: row.name,
     date: row.date,
     startTime: row.start_time,
+    endTime: row.end_time ?? undefined,
     imageUrl: row.image_url ?? '',
     dressCode: row.dress_code ?? 'No dress code',
     capacity: row.capacity ?? 500,

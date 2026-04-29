@@ -22,15 +22,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useFavorites } from '../../contexts/FavoritesContext';
 import { useEvents } from '../../contexts/EventsContext';
 import AppHeader from '../../components/AppHeader';
-
-const GENRE_COLORS = [
-  { bg: 'rgba(168,85,247,0.18)', border: 'rgba(168,85,247,0.4)', text: '#c084fc' },
-  { bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.35)', text: '#60a5fa' },
-  { bg: 'rgba(236,72,153,0.15)', border: 'rgba(236,72,153,0.35)', text: '#f472b6' },
-  { bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.35)', text: '#34d399' },
-  { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.35)', text: '#fbbf24' },
-  { bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.35)', text: '#f87171' },
-];
+import { GENRE_CONFIG } from '../../constants/genres';
+import { Genre } from '../../types';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -142,15 +135,18 @@ export default function ProfileScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>I tuoi generi</Text>
               <View style={styles.genresList}>
-                {musicGenres.map((genre, index) => {
-                  const color = GENRE_COLORS[index % GENRE_COLORS.length];
+                {musicGenres.map((genre) => {
+                  const cfg = GENRE_CONFIG[genre as Genre] ?? { color: '#a855f7', colorEnd: '#6d28d9' };
                   return (
-                    <View
+                    <LinearGradient
                       key={genre}
-                      style={[styles.genreTag, { backgroundColor: color.bg, borderColor: color.border }]}
+                      colors={[cfg.color, cfg.colorEnd]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.genreTag}
                     >
-                      <Text style={[styles.genreTagText, { color: color.text }]}>{genre}</Text>
-                    </View>
+                      <Text style={styles.genreTagText}>{genre}</Text>
+                    </LinearGradient>
                   );
                 })}
               </View>
@@ -225,32 +221,44 @@ export default function ProfileScreen() {
           )}
 
           {/* Storico serate */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Storico serate</Text>
-            {tickets.length === 0 ? (
-              <View style={styles.historyEmpty}>
-                <Ionicons name="calendar-outline" size={32} color={Colors.textMuted} />
-                <Text style={styles.historyEmptyText}>Nessuna serata ancora</Text>
-                <Text style={styles.historyEmptySubtext}>I tuoi biglietti acquistati appariranno qui</Text>
-              </View>
-            ) : (
-              tickets.slice().reverse().map((ticket) => (
-                <TouchableOpacity
-                  key={ticket.id}
-                  style={styles.historyItem}
-                  activeOpacity={0.8}
-                  onPress={() => router.push(`/event/${ticket.eventId}`)}
-                >
-                  <View style={[styles.historyDot, ticket.status === 'used' && styles.historyDotUsed]} />
-                  <View style={styles.historyInfo}>
-                    <Text style={styles.historyEvent} numberOfLines={1}>{ticket.eventName}</Text>
-                    <Text style={styles.historyMeta}>{ticket.clubName} · {ticket.date}</Text>
+          {(() => {
+            const past = tickets.filter((t) => {
+              if (!t.rawDate) return false;
+              if (t.endTime) {
+                const [hh, mm] = t.endTime.split(':').map(Number);
+                const cutoff = new Date(t.rawDate);
+                if (hh < 12) cutoff.setDate(cutoff.getDate() + 1);
+                cutoff.setHours(hh, mm, 0, 0);
+                return new Date() > cutoff;
+              }
+              const cutoff = new Date(t.rawDate);
+              cutoff.setDate(cutoff.getDate() + 1);
+              cutoff.setHours(12, 0, 0, 0);
+              return new Date() > cutoff;
+            });
+            return (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Storico serate</Text>
+                {past.length === 0 ? (
+                  <View style={styles.historyEmpty}>
+                    <Ionicons name="calendar-outline" size={32} color={Colors.textMuted} />
+                    <Text style={styles.historyEmptyText}>Nessuna serata ancora</Text>
+                    <Text style={styles.historyEmptySubtext}>Le serate passate appariranno qui</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
-                </TouchableOpacity>
-              ))
-            )}
-          </View>
+                ) : (
+                  past.map((ticket) => (
+                    <View key={ticket.id} style={styles.historyItem}>
+                      <View style={[styles.historyDot, ticket.status === 'used' && styles.historyDotUsed]} />
+                      <View style={styles.historyInfo}>
+                        <Text style={styles.historyEvent} numberOfLines={1}>{ticket.eventName}</Text>
+                        <Text style={styles.historyMeta}>{ticket.clubName} · {ticket.date}</Text>
+                      </View>
+                    </View>
+                  ))
+                )}
+              </View>
+            );
+          })()}
 
           {/* Azioni account */}
           <View style={styles.section}>
@@ -400,13 +408,13 @@ const styles = StyleSheet.create({
   },
   genreTag: {
     borderRadius: 20,
-    borderWidth: 1,
     paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingVertical: 7,
   },
   genreTagText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: Font.semiBold,
+    color: '#ffffff',
   },
 
   // Favoriti club
