@@ -308,6 +308,58 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // POST /create-free-ticket
+  if (req.url === '/create-free-ticket') {
+    try {
+      const { metadata = {} } = body;
+      const { event_id, user_id, ticket_type_id, table_id, table_name, quantity: qty, includes_drink } = metadata;
+      const quantity = parseInt(qty ?? '1', 10);
+      const includesDrink = includes_drink === 'true';
+
+      const toInsert = Array.from({ length: quantity }, () => {
+        const id = crypto.randomUUID();
+        return {
+          id,
+          event_id,
+          user_id,
+          ticket_type_id: ticket_type_id || null,
+          table_id: table_id || null,
+          table_name: table_name || null,
+          qr_code: `MYNOX-TICKET-${id}`,
+          drink_qr_code: includesDrink ? `MYNOX-DRINK-${id}` : null,
+          drink_used: false,
+          status: 'valid',
+          price_paid: 0,
+          stripe_payment_intent_id: null,
+        };
+      });
+
+      const selectQuery = 'id,qr_code,drink_qr_code,status,drink_used,price_paid,table_name,ticket_types(label,includes_drink),events(id,name,date,start_time,clubs(name,image_url))';
+      const inserted = await supabaseRequest('POST', `/rest/v1/tickets?select=${encodeURIComponent(selectQuery)}`, toInsert);
+
+      if (!Array.isArray(inserted) || inserted.length === 0) {
+        res.writeHead(400, CORS_HEADERS);
+        res.end(JSON.stringify({ error: inserted?.message ?? 'Errore creazione biglietto gratuito' }));
+        return;
+      }
+
+      if (ticket_type_id) {
+        await callSupabase('/rest/v1/rpc/increment_ticket_sold', { p_ticket_type_id: ticket_type_id, p_qty: quantity });
+      }
+
+      if (table_id) {
+        await callSupabasePatch(`/rest/v1/tables?id=eq.${table_id}`, { is_available: false, reserved_by: table_name || null });
+      }
+
+      res.writeHead(200, CORS_HEADERS);
+      res.end(JSON.stringify({ tickets: inserted }));
+    } catch (err) {
+      res.writeHead(500, CORS_HEADERS);
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
   res.writeHead(404, CORS_HEADERS);
   res.end(JSON.stringify({ error: 'Route non trovata' }));
 });
