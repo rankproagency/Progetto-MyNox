@@ -60,6 +60,10 @@ function dbRowToMockTicket(row: any): MockTicket {
   const tbl = row.tables as any;
   const isTable = !tt;
   const pendingGift = (row.gift_codes as any[])?.find((g) => g.status === 'pending');
+  // Se il biglietto risulta 'gifted' ma non ha gift code pending, significa che è già
+  // stato riscattato da qualcun altro ma il proxy non ha resettato lo status → trattalo come valid.
+  const effectiveStatus: MockTicket['status'] =
+    row.status === 'gifted' && !pendingGift ? 'valid' : row.status;
   return {
     id: row.id,
     type: isTable ? 'table' : 'ticket',
@@ -78,7 +82,7 @@ function dbRowToMockTicket(row: any): MockTicket {
     qrCode: row.qr_code,
     drinkQrCode: row.drink_qr_code ?? undefined,
     drinkUsed: row.drink_used ?? false,
-    status: row.status,
+    status: effectiveStatus,
     giftCode: pendingGift?.code ?? undefined,
     imageUrl: ev?.clubs?.image_url ?? undefined,
     eventImageUrl: ev?.image_url ?? undefined,

@@ -254,8 +254,8 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      // Trasferisci il biglietto al nuovo proprietario
-      await callSupabasePatch(`/rest/v1/tickets?id=eq.${gift.ticket_id}`, { user_id: claimer_id });
+      // Trasferisci il biglietto al nuovo proprietario e ripristina lo status
+      await callSupabasePatch(`/rest/v1/tickets?id=eq.${gift.ticket_id}`, { user_id: claimer_id, status: 'valid' });
 
       // Segna il codice come usato
       await callSupabasePatch(`/rest/v1/gift_codes?code=eq.${code}`, {
