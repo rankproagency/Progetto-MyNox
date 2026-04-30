@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Modal,
   Animated,
+  BackHandler,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -96,6 +97,28 @@ export default function CheckoutScreen() {
 
   const successScale = useRef(new Animated.Value(0)).current;
   const successOpacity = useRef(new Animated.Value(0)).current;
+
+  function confirmLeave() {
+    if (paying || showSuccess) return;
+    Alert.alert(
+      'Abbandonare il checkout?',
+      'Il tuo ordine non verrà completato.',
+      [
+        { text: 'Rimani', style: 'cancel' },
+        { text: 'Esci', style: 'destructive', onPress: () => router.back() },
+      ]
+    );
+  }
+
+  // Android hardware back
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (showSuccess) return false;
+      confirmLeave();
+      return true;
+    });
+    return () => sub.remove();
+  }, [paying, showSuccess]);
 
   useEffect(() => {
     if (showSuccess) {
@@ -314,7 +337,7 @@ export default function CheckoutScreen() {
       />
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={confirmLeave} style={styles.backButton}>
           <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{isTableOnly ? 'Prenota tavolo' : 'Checkout'}</Text>

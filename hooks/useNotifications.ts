@@ -139,6 +139,79 @@ export async function cancelEventNotifications(eventId: string): Promise<void> {
   );
 }
 
+// ─── Reminder evento salvato nei preferiti ───────────────────────────────────
+
+function favoriteNotifIds(eventId: string) {
+  return {
+    dayBefore: `fav-reminder-24h-${eventId}`,
+    sameDay:   `fav-reminder-sameday-${eventId}`,
+  };
+}
+
+export async function scheduleFavoriteReminder(
+  eventId: string,
+  eventName: string,
+  clubName: string,
+  eventDate: string,
+  startTime: string,
+  hasTicket: boolean,
+): Promise<void> {
+  const ids = favoriteNotifIds(eventId);
+
+  // Giorno prima alle 18:00
+  const dayBefore = new Date(eventDate + 'T12:00:00');
+  dayBefore.setDate(dayBefore.getDate() - 1);
+  dayBefore.setHours(18, 0, 0, 0);
+  const secsDayBefore = secondsUntil(dayBefore);
+  if (secsDayBefore > 0) {
+    await Notifications.scheduleNotificationAsync({
+      identifier: ids.dayBefore,
+      content: hasTicket ? {
+        title: 'Domani si balla!',
+        body: `Sei pronto per ${eventName} @ ${clubName}? Il QR è nella sezione Biglietti.`,
+        data: { route: '/(tabs)/tickets' },
+        sound: 'default',
+      } : {
+        title: 'Posti limitati!',
+        body: `${eventName} è domani sera — acquista ora prima che si esauriscano.`,
+        data: { eventId },
+        sound: 'default',
+      },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: secsDayBefore },
+    });
+  }
+
+  // Giorno stesso alle 12:00
+  const sameDay = new Date(eventDate + 'T12:00:00');
+  sameDay.setHours(12, 0, 0, 0);
+  const secsSameDay = secondsUntil(sameDay);
+  if (secsSameDay > 0) {
+    await Notifications.scheduleNotificationAsync({
+      identifier: ids.sameDay,
+      content: hasTicket ? {
+        title: `Stasera: ${eventName}`,
+        body: `Inizia alle ${startTime} @ ${clubName}. Tieni il QR a portata di mano!`,
+        data: { route: '/(tabs)/tickets' },
+        sound: 'default',
+      } : {
+        title: 'Ultima chance!',
+        body: `${eventName} è stasera — non perdere i posti rimasti. Compra ora!`,
+        data: { eventId },
+        sound: 'default',
+      },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: secsSameDay },
+    });
+  }
+}
+
+export async function cancelFavoriteReminder(eventId: string): Promise<void> {
+  await Promise.all(
+    Object.values(favoriteNotifIds(eventId)).map((id) =>
+      Notifications.cancelScheduledNotificationAsync(id).catch(() => {})
+    )
+  );
+}
+
 // ─── Vecchia firma — compatibilità con codice esistente ──────────────────────
 
 export async function scheduleEventReminder(

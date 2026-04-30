@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Share, Image, Modal, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Share, Image, Modal, TextInput, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -68,6 +68,7 @@ export default function TicketsScreen() {
   const [claimModalOpen, setClaimModalOpen] = useState(false);
   const [claimCode, setClaimCode] = useState('');
   const [claimLoading, setClaimLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const filtered = tickets.filter((t) => categorize(t) === activeTab);
   const counts: Record<Tab, number> = {
@@ -219,7 +220,18 @@ export default function TicketsScreen() {
           ))}
         </View>
 
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={async () => { setRefreshing(true); await refreshTickets(); setRefreshing(false); }}
+              tintColor={Colors.accent}
+              colors={[Colors.accent]}
+            />
+          }
+        >
           {filtered.length === 0 ? (
             <EmptyState tab={activeTab} onExplore={() => router.push('/(tabs)')} />
           ) : (

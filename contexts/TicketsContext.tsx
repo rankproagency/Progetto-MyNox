@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from 'react';
+import { AppState } from 'react-native';
 import { supabase } from '../lib/supabase';
 
 export interface MockTicket {
@@ -136,6 +137,16 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
+  }, []);
+
+  // Ricarica i biglietti ogni volta che l'app torna in foreground
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && currentUserIdRef.current) {
+        loadTickets(currentUserIdRef.current);
+      }
+    });
+    return () => sub.remove();
   }, []);
 
   const addTickets = useCallback((newTickets: MockTicket[]) => {

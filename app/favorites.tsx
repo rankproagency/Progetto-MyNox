@@ -95,7 +95,7 @@ export default function FavoritesScreen() {
               title={allPast ? 'Le serate salvate sono passate' : 'Nessuna serata salvata'}
               sub={allPast ? 'Esplora i prossimi eventi e salvane di nuovi.' : 'Salva le serate che ti interessano per ritrovarle qui prima di acquistare il biglietto.'}
               btnLabel="Esplora gli eventi"
-              onPress={() => router.back()}
+              onPress={() => router.push('/(tabs)')}
             />
           ) : (
             <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -124,7 +124,7 @@ export default function FavoritesScreen() {
               title="Nessuna discoteca seguita"
               sub="Apri la pagina di una discoteca e tocca il cuore per seguirla"
               btnLabel="Esplora le discoteche"
-              onPress={() => router.back()}
+              onPress={() => router.push('/(tabs)')}
             />
           ) : (
             <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>

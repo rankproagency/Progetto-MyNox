@@ -12,6 +12,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,6 +29,9 @@ import TableMap from '../../components/TableMap';
 import { useFavorites } from '../../contexts/FavoritesContext';
 import { useWaitlist } from '../../contexts/WaitlistContext';
 import { useRecentlyViewed } from '../../contexts/RecentlyViewedContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useTickets } from '../../contexts/TicketsContext';
+import { scheduleFavoriteReminder, cancelFavoriteReminder } from '../../hooks/useNotifications';
 
 const { width } = Dimensions.get('window');
 
@@ -38,6 +42,8 @@ export default function EventScreen() {
   const { isFavorite, toggleFavorite } = useFavorites();
   const { isOnWaitlist, addToWaitlist, removeFromWaitlist } = useWaitlist();
   const { addRecentlyViewed } = useRecentlyViewed();
+  const { user } = useAuth();
+  const { tickets } = useTickets();
   const { events } = useEvents();
   const event = events.find((e) => e.id === id);
 
@@ -167,7 +173,14 @@ export default function EventScreen() {
             style={styles.heroIconBtn}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              const wasAlreadyFavorite = isFavorite(event.id);
               toggleFavorite(event.id);
+              if (wasAlreadyFavorite) {
+                cancelFavoriteReminder(event.id).catch(() => {});
+              } else {
+                const hasTicket = tickets.some((t) => t.eventId === event.id && t.status !== 'gifted');
+                scheduleFavoriteReminder(event.id, event.name, event.club?.name ?? '', event.date, event.startTime, hasTicket).catch(() => {});
+              }
             }}
           >
             <Ionicons
@@ -525,6 +538,17 @@ export default function EventScreen() {
               disabled={!selectedTicket && !selectedTable}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                if (!user) {
+                  Alert.alert(
+                    'Accedi per continuare',
+                    'Devi essere autenticato per acquistare un biglietto.',
+                    [
+                      { text: 'Annulla', style: 'cancel' },
+                      { text: 'Accedi', onPress: () => router.push('/login') },
+                    ]
+                  );
+                  return;
+                }
                 router.push({
                   pathname: '/checkout',
                   params: {
