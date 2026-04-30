@@ -14,6 +14,7 @@ export interface MockTicket {
   ticketLabel: string;
   tableName?: string;
   tableCapacity?: number;
+  tableSection?: string;
   pricePaid?: number;
   qrCode: string;
   drinkQrCode?: string;
@@ -56,6 +57,7 @@ function formatDate(dateStr: string): string {
 function dbRowToMockTicket(row: any): MockTicket {
   const ev = row.events as any;
   const tt = row.ticket_types as any;
+  const tbl = row.tables as any;
   const isTable = !tt;
   const pendingGift = (row.gift_codes as any[])?.find((g) => g.status === 'pending');
   return {
@@ -68,8 +70,10 @@ function dbRowToMockTicket(row: any): MockTicket {
     date: formatDate(ev?.date ?? ''),
     startTime: ev?.start_time ?? '',
     endTime: ev?.end_time ?? undefined,
-    ticketLabel: isTable ? (row.table_name ?? 'Tavolo') : (tt?.label ?? ''),
+    ticketLabel: isTable ? (tbl?.label ?? row.table_name ?? 'Tavolo') : (tt?.label ?? ''),
     tableName: row.table_name ?? undefined,
+    tableCapacity: tbl?.capacity ?? undefined,
+    tableSection: tbl?.section ?? undefined,
     pricePaid: row.price_paid ?? 0,
     qrCode: row.qr_code,
     drinkQrCode: row.drink_qr_code ?? undefined,
@@ -91,9 +95,10 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
     const { data } = await supabase
       .from('tickets')
       .select(`
-        id, qr_code, drink_qr_code, status, drink_used, price_paid, table_name,
+        id, qr_code, drink_qr_code, status, drink_used, price_paid, table_name, table_id,
         ticket_types(label, includes_drink),
         events(id, name, date, start_time, end_time, image_url, clubs(name, image_url)),
+        tables(label, capacity, section),
         gift_codes(code, status)
       `)
       .eq('user_id', userId)

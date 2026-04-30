@@ -18,9 +18,25 @@ export default function FavoritesScreen() {
   const { favoriteIds, favoriteClubs } = useFavorites();
   const { events } = useEvents();
 
-  const favoriteEvents = favoriteIds
+  const allFavoriteEvents = favoriteIds
     .map((id) => events.find((e) => e.id === id))
     .filter(Boolean) as typeof events;
+
+  function isEventPast(event: typeof events[number]): boolean {
+    const date = new Date(event.date);
+    if (event.endTime) {
+      const [hh, mm] = event.endTime.split(':').map(Number);
+      if (hh < 12) date.setDate(date.getDate() + 1);
+      date.setHours(hh, mm, 0, 0);
+    } else {
+      date.setDate(date.getDate() + 1);
+      date.setHours(12, 0, 0, 0);
+    }
+    return new Date() > date;
+  }
+
+  const favoriteEvents = allFavoriteEvents.filter((e) => !isEventPast(e));
+  const allPast = allFavoriteEvents.length > 0 && favoriteEvents.length === 0;
 
   return (
     <View style={styles.container}>
@@ -49,7 +65,7 @@ export default function FavoritesScreen() {
             <Text style={[styles.tabText, activeTab === 'serate' && styles.tabTextActive]}>
               Serate
             </Text>
-            {favoriteEvents.length > 0 && (
+            {allFavoriteEvents.length > 0 && (
               <View style={[styles.badge, activeTab === 'serate' && styles.badgeActive]}>
                 <Text style={styles.badgeText}>{favoriteEvents.length}</Text>
               </View>
@@ -75,9 +91,9 @@ export default function FavoritesScreen() {
         {activeTab === 'serate' ? (
           favoriteEvents.length === 0 ? (
             <EmptyState
-              icon="musical-notes-outline"
-              title="Nessuna serata salvata"
-              sub="Tocca il cuore su un evento per salvarlo qui"
+              icon="bookmark-outline"
+              title={allPast ? 'Le serate salvate sono passate' : 'Nessuna serata salvata'}
+              sub={allPast ? 'Esplora i prossimi eventi e salvane di nuovi.' : 'Salva le serate che ti interessano per ritrovarle qui prima di acquistare il biglietto.'}
               btnLabel="Esplora gli eventi"
               onPress={() => router.back()}
             />
@@ -86,9 +102,19 @@ export default function FavoritesScreen() {
               <Text style={styles.count}>
                 {favoriteEvents.length} {favoriteEvents.length === 1 ? 'serata salvata' : 'serate salvate'}
               </Text>
-              {favoriteEvents.map((event) => (
-                <EventListItem key={event.id} event={event} />
-              ))}
+              {favoriteEvents.map((event) => {
+                const isSoldOut = event.ticketTypes.length > 0 && event.ticketTypes.every((t) => t.available === 0);
+                return (
+                  <View key={event.id} style={{ position: 'relative' }}>
+                    <EventListItem event={event} />
+                    {isSoldOut && (
+                      <View style={styles.soldOutOverlay}>
+                        <Text style={styles.soldOutText}>Esaurito</Text>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
             </ScrollView>
           )
         ) : (
@@ -229,6 +255,14 @@ const styles = StyleSheet.create({
   clubEvents: { fontSize: 11, color: Colors.textMuted, fontFamily: Font.medium },
   clubEventsNone: { fontSize: 11, color: Colors.textMuted },
   clubArrow: {},
+
+  soldOutOverlay: {
+    position: 'absolute', top: 10, right: 20,
+    backgroundColor: 'rgba(239,68,68,0.12)',
+    borderRadius: 6, borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)',
+    paddingHorizontal: 8, paddingVertical: 3,
+  },
+  soldOutText: { fontSize: 10, fontWeight: '700', color: '#ef4444' },
 
   // Empty state
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },

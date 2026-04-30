@@ -54,6 +54,7 @@ function dbRowToMockTicket(row: any): MockTicket {
     drinkUsed: row.drink_used ?? false,
     status: row.status,
     imageUrl: ev?.clubs?.image_url ?? undefined,
+    eventImageUrl: ev?.image_url ?? undefined,
   };
 }
 

@@ -152,17 +152,17 @@ export default function HomeScreen() {
   const today = toDateKey(new Date());
   const hasActiveFilters = maxPrice !== null || onlyAvailable || selectedGenres.length > 0;
 
-  const tonightEvent = events.find((e) => e.date === today && e.ticketTypes.some((t) => t.available > 0)) ?? null;
+  const filteredEvents = applyFilters(events, maxPrice, onlyAvailable, selectedGenres);
+  const filteredEventsByDay = getEventsByDayFromList(filteredEvents);
+
+  const tonightEvent = filteredEvents.find((e) => e.date === today && e.ticketTypes.some((t) => t.available > 0)) ?? null;
 
   const recommended = musicGenres.length > 0
-    ? events.filter((e) =>
+    ? filteredEvents.filter((e) =>
         e.genres.some((g) => (musicGenres as string[]).includes(g)) &&
         e.ticketTypes.some((t) => t.available > 0)
       )
     : [];
-
-  const filteredEvents = applyFilters(events, maxPrice, onlyAvailable, selectedGenres);
-  const filteredEventsByDay = getEventsByDayFromList(filteredEvents);
 
   const eventsForSelectedDate = selectedDate
     ? applyFilters(
@@ -545,7 +545,7 @@ export default function HomeScreen() {
                 <>
                   <Text style={styles.sectionTitle}>In evidenza</Text>
                   <FlatList
-                    data={events.slice(0, 5)}
+                    data={filteredEvents.slice(0, 5)}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => <EventCard event={item} />}
                     horizontal

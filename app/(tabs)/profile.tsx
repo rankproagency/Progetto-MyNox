@@ -54,7 +54,21 @@ export default function ProfileScreen() {
   const eventsAttended = new Set(pastTickets.map((t) => t.eventId).filter(Boolean)).size;
   const uniqueClubs = new Set(pastTickets.map((t) => t.clubName).filter(Boolean)).size;
 
-  const favoriteEvents = events.filter((e) => favoriteIds.includes(e.id));
+  function isEventPast(event: typeof events[number]): boolean {
+    const date = new Date(event.date);
+    if (event.endTime) {
+      const [hh, mm] = event.endTime.split(':').map(Number);
+      if (hh < 12) date.setDate(date.getDate() + 1);
+      date.setHours(hh, mm, 0, 0);
+    } else {
+      date.setDate(date.getDate() + 1);
+      date.setHours(12, 0, 0, 0);
+    }
+    return new Date() > date;
+  }
+
+  const allFavoriteEvents = events.filter((e) => favoriteIds.includes(e.id));
+  const favoriteEvents = allFavoriteEvents.filter((e) => !isEventPast(e));
 
   function handleLogout() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -167,7 +181,7 @@ export default function ProfileScreen() {
           )}
 
           {/* Preferiti */}
-          {(favoriteEvents.length > 0 || favoriteClubs.length > 0) && (
+          {(favoriteClubs.length > 0 || favoriteIds.length > 0) && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Preferiti</Text>
 
@@ -204,32 +218,42 @@ export default function ProfileScreen() {
                 </>
               )}
 
-              {favoriteEvents.length > 0 && (
-                <>
-                  <Text style={[styles.subSectionTitle, favoriteClubs.length > 0 && { marginTop: 16 }]}>
-                    Eventi
-                  </Text>
-                  {favoriteEvents.map((event) => (
-                    <TouchableOpacity
-                      key={event.id}
-                      style={styles.favEventRow}
-                      activeOpacity={0.8}
-                      onPress={() => router.push(`/event/${event.id}`)}
-                    >
-                      <Image
-                        source={{ uri: event.imageUrl }}
-                        style={styles.favEventThumb}
-                        resizeMode="cover"
-                      />
-                      <View style={styles.favEventInfo}>
-                        <Text style={styles.favEventName} numberOfLines={1}>{event.name}</Text>
-                        <Text style={styles.favEventMeta}>{event.club?.name} · {event.date}</Text>
-                      </View>
-                      <Ionicons name="heart" size={14} color={Colors.accent} />
-                    </TouchableOpacity>
-                  ))}
-                </>
-              )}
+              <>
+                <Text style={[styles.subSectionTitle, favoriteClubs.length > 0 && { marginTop: 16 }]}>
+                  Eventi
+                </Text>
+                {favoriteIds.length === 0 ? (
+                  <Text style={styles.favEventHint}>Salva gli eventi che ti interessano per ritrovarli qui prima di acquistare.</Text>
+                ) : favoriteEvents.length === 0 ? (
+                  <Text style={styles.favEventHint}>Gli eventi salvati sono già passati. Esplora i prossimi.</Text>
+                ) : (
+                  favoriteEvents.map((event) => {
+                    const isSoldOut = event.ticketTypes.length > 0 && event.ticketTypes.every((t) => t.available === 0);
+                    return (
+                      <TouchableOpacity
+                        key={event.id}
+                        style={styles.favEventRow}
+                        activeOpacity={0.8}
+                        onPress={() => router.push(`/event/${event.id}`)}
+                      >
+                        <Image
+                          source={{ uri: event.imageUrl }}
+                          style={[styles.favEventThumb, isSoldOut && { opacity: 0.5 }]}
+                          resizeMode="cover"
+                        />
+                        <View style={styles.favEventInfo}>
+                          <Text style={styles.favEventName} numberOfLines={1}>{event.name}</Text>
+                          <Text style={styles.favEventMeta}>{event.club?.name} · {event.date}</Text>
+                        </View>
+                        {isSoldOut
+                          ? <View style={styles.soldOutBadge}><Text style={styles.soldOutText}>Esaurito</Text></View>
+                          : <Ionicons name="heart" size={14} color={Colors.accent} />
+                        }
+                      </TouchableOpacity>
+                    );
+                  })
+                )}
+              </>
             </View>
           )}
 
@@ -465,6 +489,13 @@ const styles = StyleSheet.create({
   favEventInfo: { flex: 1 },
   favEventName: { fontSize: 13, fontWeight: '600', color: Colors.textPrimary, marginBottom: 3 },
   favEventMeta: { fontSize: 11, color: Colors.textMuted },
+  favEventHint: { fontSize: 12, color: Colors.textMuted, lineHeight: 18 },
+  soldOutBadge: {
+    backgroundColor: 'rgba(239,68,68,0.12)',
+    borderRadius: 6, borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)',
+    paddingHorizontal: 8, paddingVertical: 3,
+  },
+  soldOutText: { fontSize: 11, fontWeight: '700', color: Colors.error },
 
   // History
   historyEmpty: {

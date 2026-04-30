@@ -66,10 +66,14 @@ export default function NewClubPage() {
         .from('club-images')
         .upload(path, imageFile, { upsert: true });
 
-      if (!uploadErr) {
-        const { data } = supabase.storage.from('club-images').getPublicUrl(path);
-        await updateClubImageUrl(result.id, data.publicUrl);
+      if (uploadErr) {
+        setError(`Discoteca creata, ma errore nel caricamento immagine: ${uploadErr.message}`);
+        setSaving(false);
+        return;
       }
+
+      const { data: urlData } = supabase.storage.from('club-images').getPublicUrl(path);
+      await updateClubImageUrl(result.id, urlData.publicUrl);
     }
 
     router.push('/admin/clubs');

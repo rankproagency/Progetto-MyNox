@@ -65,9 +65,7 @@ export default function TicketScreen() {
                   style={{ marginRight: 4 }}
                 />
                 <Text style={styles.ticketBadgeText}>
-                  {ticket.type === 'table'
-                    ? (ticket.tableName ? `${ticket.ticketLabel} · ${ticket.tableName}` : ticket.ticketLabel)
-                    : ticket.ticketLabel}
+                  {ticket.ticketLabel}
                 </Text>
               </View>
               <CountdownInline rawDate={ticket.rawDate} startTime={ticket.startTime} />
@@ -112,11 +110,19 @@ export default function TicketScreen() {
           {ticket.type === 'table' && (
             <View style={styles.tableCardHeader}>
               <View style={styles.tableCardHeaderLeft}>
-                <Ionicons name="grid-outline" size={16} color={Colors.accent} />
-                <View>
+                <View style={styles.tableIconBox}>
+                  <Ionicons name="grid-outline" size={18} color={Colors.accent} />
+                </View>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.tableCardTitle}>{ticket.ticketLabel}</Text>
+                  {ticket.tableSection ? (
+                    <View style={styles.tableSectionRow}>
+                      <Ionicons name="location-outline" size={11} color={Colors.textMuted} />
+                      <Text style={styles.tableSectionText}>{ticket.tableSection}</Text>
+                    </View>
+                  ) : null}
                   {ticket.tableName ? (
-                    <Text style={styles.tableCardSub}>"{ticket.tableName}"</Text>
+                    <Text style={styles.tableCardSub}>Prenotazione: "{ticket.tableName}"</Text>
                   ) : null}
                 </View>
               </View>
@@ -416,16 +422,32 @@ const styles = StyleSheet.create({
   },
   tableCardHeaderLeft: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 10,
+    flex: 1,
+    marginRight: 12,
+  },
+  tableIconBox: {
+    width: 36, height: 36, borderRadius: 10,
+    backgroundColor: 'rgba(168,85,247,0.12)',
+    borderWidth: 1, borderColor: 'rgba(168,85,247,0.25)',
+    justifyContent: 'center', alignItems: 'center',
+    flexShrink: 0,
   },
   tableCardTitle: {
     fontSize: 15,
     fontWeight: '700',
     color: Colors.textPrimary,
+    marginBottom: 2,
+  },
+  tableSectionRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 3,
+  },
+  tableSectionText: {
+    fontSize: 11, color: Colors.textMuted,
   },
   tableCardSub: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.accent,
     marginTop: 1,
   },
