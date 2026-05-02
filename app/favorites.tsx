@@ -41,7 +41,7 @@ export default function FavoritesScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['rgba(168,85,247,0.22)', 'transparent']}
+        colors={[Colors.accentBgMid, 'transparent']}
         style={styles.bgGradient}
         pointerEvents="none"
       />
@@ -147,7 +147,7 @@ export default function FavoritesScreen() {
                     <View style={styles.clubInfo}>
                       <Text style={styles.clubName} numberOfLines={1}>{club.name}</Text>
                       <View style={styles.clubMeta}>
-                        <Ionicons name="location-sharp" size={11} color={Colors.accent} />
+                        <Ionicons name="location-sharp" size={12} color={Colors.accent} />
                         <Text style={styles.clubCity}>{club.city}</Text>
                       </View>
                       {clubEvents.length > 0 ? (
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
   tabTextActive: { color: Colors.white },
   badge: {
     minWidth: 18, height: 18, borderRadius: 9,
-    backgroundColor: 'rgba(168,85,247,0.25)',
+    backgroundColor: Colors.accentBorder,
     alignItems: 'center', justifyContent: 'center',
     paddingHorizontal: 5,
   },
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     borderRadius: 6, borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)',
     paddingHorizontal: 8, paddingVertical: 3,
   },
-  soldOutText: { fontSize: 10, fontWeight: '700', color: '#ef4444' },
+  soldOutText: { fontSize: 10, fontFamily: Font.bold, color: '#ef4444' },
 
   // Empty state
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },

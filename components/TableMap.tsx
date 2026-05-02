@@ -41,7 +41,7 @@ export default function TableMap({ tables, selected, onSelect, floorPlanUrl }: P
   }, [floorPlanUrl]);
 
   // Tavoli con posizione esplicita → mostrati sulla mappa
-  const mappedTables = tables.filter((t) => t.posX !== undefined);
+  const mappedTables = tables.filter((t) => t.posX != null && t.posY != null);
   // Tavoli senza posizione → mostrati in lista sotto la mappa
   const unmappedTables = tables.filter((t) => t.posX === undefined);
 
@@ -276,10 +276,10 @@ const styles = StyleSheet.create({
     left: '20%',
     right: '20%',
     height: 44,
-    backgroundColor: 'rgba(168,85,247,0.12)',
+    backgroundColor: Colors.accentBg,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(168,85,247,0.4)',
+    borderColor: Colors.accentBorder,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -298,10 +298,10 @@ const styles = StyleSheet.create({
     left: '15%',
     right: '15%',
     height: '38%',
-    backgroundColor: 'rgba(168,85,247,0.04)',
+    backgroundColor: Colors.accentBg,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(168,85,247,0.12)',
+    borderColor: Colors.accentBg,
     borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   danceFloorLabel: {
     fontSize: 10,
     fontFamily: Font.bold,
-    color: 'rgba(168,85,247,0.3)',
+    color: Colors.accentBorder,
     letterSpacing: 2,
   },
 
@@ -319,10 +319,10 @@ const styles = StyleSheet.create({
     right: 14,
     width: 72,
     height: 30,
-    backgroundColor: 'rgba(168,85,247,0.08)',
+    backgroundColor: Colors.accentBg,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(168,85,247,0.25)',
+    borderColor: Colors.accentBorder,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
   tableXText: {
     fontSize: 18,
     color: 'rgba(239,68,68,0.8)',
-    fontWeight: '700',
+    fontFamily: Font.bold,
   },
 
   // ─── Legend ────────────────────────────────────────────────────────────────
@@ -458,10 +458,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: 12,
-    backgroundColor: 'rgba(168,85,247,0.08)',
+    backgroundColor: Colors.accentBg,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(168,85,247,0.3)',
+    borderColor: Colors.accentBorder,
     padding: 14,
   },
   selectedLeft: {
@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: 'rgba(168,85,247,0.12)',
+    backgroundColor: Colors.accentBg,
     justifyContent: 'center',
     alignItems: 'center',
   },

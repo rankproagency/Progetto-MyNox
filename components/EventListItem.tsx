@@ -38,15 +38,15 @@ export default function EventListItem({ event }: Props) {
           <Text style={styles.club} numberOfLines={1}>{event.club?.name}</Text>
         </TouchableOpacity>
         <View style={styles.metaRow}>
-          <Ionicons name="calendar-outline" size={11} color={Colors.textMuted} />
+          <Ionicons name="calendar-outline" size={12} color={Colors.textMuted} />
           <Text style={styles.time}> {formatDate(event.date)}</Text>
           <Text style={styles.timeSep}>·</Text>
-          <Ionicons name="time-outline" size={11} color={Colors.textMuted} />
+          <Ionicons name="time-outline" size={12} color={Colors.textMuted} />
           <Text style={styles.time}> {event.startTime}</Text>
           {event.genres.slice(0, 1).map((g) => {
             const cfg = GENRE_CONFIG[g as Genre];
-            const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : 'rgba(168,85,247,0.10)';
-            const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : 'rgba(168,85,247,0.35)';
+            const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : Colors.accentBg;
+            const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : Colors.accentBorder;
             const text = cfg ? cfg.color.replace(/[\d.]+\)$/, '1)') : Colors.accent;
             return (
               <View key={g} style={[styles.genreTag, { backgroundColor: bg, borderColor: border }]}>
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   },
   soldOverlayText: {
     fontSize: 9,
-    fontWeight: '900',
+    fontFamily: Font.black,
     color: Colors.error,
     letterSpacing: 1,
   },
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   },
   genreText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: Font.bold,
   },
   right: {
     alignItems: 'flex-end',

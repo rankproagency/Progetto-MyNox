@@ -295,7 +295,7 @@ export default function CheckoutScreen() {
         <View style={styles.successOverlay}>
           <Animated.View style={[styles.successCard, { opacity: successOpacity, transform: [{ scale: successScale }] }]}>
             <LinearGradient
-              colors={['rgba(168,85,247,0.18)', 'transparent']}
+              colors={[Colors.accentBgMid, 'transparent']}
               style={styles.successGradient}
               pointerEvents="none"
             />
@@ -331,7 +331,7 @@ export default function CheckoutScreen() {
 
     <View style={styles.outerContainer}>
       <LinearGradient
-        colors={['rgba(168,85,247,0.20)', 'transparent']}
+        colors={[Colors.accentBgMid, 'transparent']}
         style={styles.bgGradient}
         pointerEvents="none"
       />
@@ -522,11 +522,11 @@ function PayMethod({ icon, label, active, onPress }: {
 const rowStyles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
   label: { fontSize: 14, color: Colors.textSecondary },
-  value: { fontSize: 14, color: Colors.textPrimary, fontWeight: '500' },
-  bold: { fontSize: 16, fontWeight: '800' },
+  value: { fontSize: 14, color: Colors.textPrimary, fontFamily: Font.medium },
+  bold: { fontSize: 16, fontFamily: Font.extraBold },
   muted: { color: Colors.textMuted, fontSize: 12 },
   accent: { color: Colors.success },
-  success: { color: Colors.success, fontWeight: '700' },
+  success: { color: Colors.success, fontFamily: Font.bold },
 });
 
 const styles = StyleSheet.create({
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     borderRadius: 16, borderWidth: 1, borderColor: Colors.border,
     padding: 16,
   },
-  eventName: { fontSize: 16, fontWeight: '700', color: Colors.textPrimary, marginBottom: 4 },
+  eventName: { fontSize: 16, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 4 },
   clubName: { fontSize: 13, color: Colors.textSecondary, marginBottom: 14 },
   divider: { height: 1, backgroundColor: Colors.border, marginVertical: 12 },
 
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
     borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
     paddingHorizontal: 14, paddingVertical: 13,
     fontSize: 14, color: Colors.textPrimary,
-    fontWeight: '700', letterSpacing: 1,
+    fontFamily: Font.bold, letterSpacing: 1,
   },
   promoInputSuccess: { borderColor: Colors.success },
   promoApplyBtn: {
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
     minWidth: 80,
   },
-  promoApplyText: { fontSize: 14, fontWeight: '700', color: Colors.white },
+  promoApplyText: { fontSize: 14, fontFamily: Font.bold, color: Colors.white },
   promoRemoveBtn: {
     backgroundColor: Colors.surface,
     borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   promoSuccess: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
-  promoSuccessText: { fontSize: 13, color: Colors.success, fontWeight: '500' },
+  promoSuccessText: { fontSize: 13, color: Colors.success, fontFamily: Font.medium },
   promoErrorRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
   promoErrorText: { fontSize: 13, color: Colors.error },
 
@@ -600,10 +600,10 @@ const styles = StyleSheet.create({
   },
   payMethodActive: {
     borderColor: Colors.accent,
-    backgroundColor: 'rgba(168,85,247,0.07)',
+    backgroundColor: Colors.accentBg,
   },
-  payLabel: { flex: 1, fontSize: 14, fontWeight: '500', color: Colors.textPrimary },
-  payLabelActive: { color: Colors.accent, fontWeight: '700' },
+  payLabel: { flex: 1, fontSize: 14, fontFamily: Font.medium, color: Colors.textPrimary },
+  payLabelActive: { color: Colors.accent, fontFamily: Font.bold },
   ctaContainer: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     paddingHorizontal: 20, paddingVertical: 16, paddingBottom: 32,
@@ -625,12 +625,12 @@ const styles = StyleSheet.create({
   // Success overlay
   successOverlay: {
     flex: 1, justifyContent: 'center', alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: Colors.overlay,
     paddingHorizontal: 28,
   },
   successCard: {
     width: '100%', backgroundColor: '#111118',
-    borderRadius: 28, borderWidth: 1, borderColor: 'rgba(168,85,247,0.25)',
+    borderRadius: 28, borderWidth: 1, borderColor: Colors.accentBorder,
     padding: 32, alignItems: 'center', overflow: 'hidden',
   },
   successGradient: {

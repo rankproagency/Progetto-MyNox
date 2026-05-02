@@ -6,17 +6,15 @@ import QRCode from 'react-native-qrcode-svg';
 import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/colors';
+import { Font } from '../../constants/typography';
 import { useTickets } from '../../contexts/TicketsContext';
 import { useCountdown } from '../../hooks/useCountdown';
-import WalletModal from '../../components/WalletModal';
-
 export default function TicketScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { tickets, markDrinkUsed, markTicketUsed } = useTickets();
   const ticket = tickets.find((t) => t.id === id);
   const [activeQR, setActiveQR] = useState<'entry' | 'drink'>('entry');
-  const [walletVisible, setWalletVisible] = useState(false);
 
   const today = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
   const isEventToday = ticket?.rawDate === today;
@@ -60,7 +58,7 @@ export default function TicketScreen() {
               <View style={[styles.ticketBadge, ticket.type === 'table' && styles.tableBadge]}>
                 <Ionicons
                   name={ticket.type === 'table' ? 'grid-outline' : 'ticket-outline'}
-                  size={11}
+                  size={12}
                   color={Colors.white}
                   style={{ marginRight: 4 }}
                 />
@@ -117,7 +115,7 @@ export default function TicketScreen() {
                   <Text style={styles.tableCardTitle}>{ticket.ticketLabel}</Text>
                   {ticket.tableSection ? (
                     <View style={styles.tableSectionRow}>
-                      <Ionicons name="location-outline" size={11} color={Colors.textMuted} />
+                      <Ionicons name="location-outline" size={12} color={Colors.textMuted} />
                       <Text style={styles.tableSectionText}>{ticket.tableSection}</Text>
                     </View>
                   ) : null}
@@ -129,7 +127,7 @@ export default function TicketScreen() {
               <View style={styles.tableCardBadgesCol}>
                 {ticket.tableCapacity != null && (
                   <View style={styles.capacityBadge}>
-                    <Ionicons name="people-outline" size={11} color={Colors.textSecondary} style={{ marginRight: 3 }} />
+                    <Ionicons name="people-outline" size={12} color={Colors.textSecondary} style={{ marginRight: 3 }} />
                     <Text style={styles.capacityBadgeText}>{ticket.tableCapacity} posti</Text>
                   </View>
                 )}
@@ -284,16 +282,6 @@ export default function TicketScreen() {
 
         </View>
 
-        {/* Action buttons */}
-        <TouchableOpacity
-          style={styles.walletButton}
-          onPress={() => { Haptics.selectionAsync(); setWalletVisible(true); }}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="wallet-outline" size={18} color={Colors.accent} />
-          <Text style={styles.walletButtonText}>Aggiungi al Wallet</Text>
-        </TouchableOpacity>
-
         <View style={styles.disclaimer}>
           <Ionicons name="information-circle-outline" size={14} color={Colors.textMuted} />
           <Text style={styles.disclaimerText}>
@@ -303,11 +291,6 @@ export default function TicketScreen() {
 
       </ScrollView>
 
-      <WalletModal
-        visible={walletVisible}
-        onClose={() => setWalletVisible(false)}
-        ticket={ticket}
-      />
     </SafeAreaView>
   );
 }
@@ -326,10 +309,10 @@ function CountdownInline({ rawDate, startTime }: { rawDate: string; startTime: s
 const inlineStyles = StyleSheet.create({
   badge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(168,85,247,0.12)',
+    backgroundColor: Colors.accentBg,
     borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4,
   },
-  text: { fontSize: 12, fontWeight: '700', color: Colors.accent },
+  text: { fontSize: 12, fontFamily: Font.bold, color: Colors.accent },
 });
 
 const styles = StyleSheet.create({
@@ -341,7 +324,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingVertical: 14,
     borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
-  headerTitle: { fontSize: 16, fontWeight: '700', color: Colors.textPrimary },
+  headerTitle: { fontSize: 16, fontFamily: Font.bold, color: Colors.textPrimary },
   backButton: {
     width: 38, height: 38, borderRadius: 12,
     backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border,
@@ -366,7 +349,7 @@ const styles = StyleSheet.create({
   },
   eventTextGroup: { flexShrink: 1 },
   eventName: {
-    fontSize: 19, fontWeight: '800', color: Colors.textPrimary,
+    fontSize: 19, fontFamily: Font.extraBold, color: Colors.textPrimary,
     marginBottom: 3, lineHeight: 24,
   },
   eventMeta: { fontSize: 12, color: Colors.textSecondary, marginBottom: 8 },
@@ -378,10 +361,10 @@ const styles = StyleSheet.create({
     borderRadius: 8, paddingHorizontal: 12, paddingVertical: 4,
   },
   tableBadge: {
-    backgroundColor: 'rgba(168,85,247,0.25)',
+    backgroundColor: Colors.accentBorder,
     borderWidth: 1, borderColor: Colors.accent,
   },
-  ticketBadgeText: { fontSize: 12, fontWeight: '700', color: Colors.white },
+  ticketBadgeText: { fontSize: 12, fontFamily: Font.bold, color: Colors.white },
 
   ticketCard: {
     width: '100%',
@@ -407,7 +390,7 @@ const styles = StyleSheet.create({
     borderRadius: 10, alignItems: 'center', justifyContent: 'center',
   },
   toggleActive: { backgroundColor: Colors.accent },
-  toggleText: { fontSize: 14, fontWeight: '600', color: Colors.textMuted },
+  toggleText: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.textMuted },
   toggleTextActive: { color: Colors.white },
 
   tableCardHeader: {
@@ -429,14 +412,14 @@ const styles = StyleSheet.create({
   },
   tableIconBox: {
     width: 36, height: 36, borderRadius: 10,
-    backgroundColor: 'rgba(168,85,247,0.12)',
-    borderWidth: 1, borderColor: 'rgba(168,85,247,0.25)',
+    backgroundColor: Colors.accentBg,
+    borderWidth: 1, borderColor: Colors.accentBorder,
     justifyContent: 'center', alignItems: 'center',
     flexShrink: 0,
   },
   tableCardTitle: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: Font.bold,
     color: Colors.textPrimary,
     marginBottom: 2,
   },
@@ -467,20 +450,20 @@ const styles = StyleSheet.create({
   },
   capacityBadgeText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: Font.semiBold,
     color: Colors.textSecondary,
   },
   tableCardBadge: {
-    backgroundColor: 'rgba(168,85,247,0.12)',
+    backgroundColor: Colors.accentBg,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(168,85,247,0.3)',
+    borderColor: Colors.accentBorder,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   tableCardBadgeText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: Font.bold,
     color: Colors.accent,
   },
 
@@ -514,26 +497,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 20,
   },
-  usedText: { fontSize: 28, fontWeight: '900', color: Colors.error, letterSpacing: 4 },
+  usedText: { fontSize: 28, fontFamily: Font.black, color: Colors.error, letterSpacing: 4 },
   qrLabel: { fontSize: 13, color: Colors.textSecondary, marginBottom: 8, textAlign: 'center' },
   validBadge: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
-  validText: { fontSize: 13, color: Colors.success, fontWeight: '600' },
+  validText: { fontSize: 13, color: Colors.success, fontFamily: Font.semiBold },
   usedBadge: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
-  usedBadgeText: { fontSize: 13, color: Colors.error, fontWeight: '600' },
+  usedBadgeText: { fontSize: 13, color: Colors.error, fontFamily: Font.semiBold },
   baristaBtm: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: Colors.success,
     borderRadius: 12,
     paddingHorizontal: 20, paddingVertical: 13, marginBottom: 10,
   },
-  baristaText: { fontSize: 14, fontWeight: '700', color: Colors.white },
+  baristaText: { fontSize: 14, fontFamily: Font.bold, color: Colors.white },
   bouncerBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: Colors.success,
     borderRadius: 12,
     paddingHorizontal: 20, paddingVertical: 13, marginBottom: 10,
   },
-  bouncerBtnText: { fontSize: 14, fontWeight: '700', color: Colors.white },
+  bouncerBtnText: { fontSize: 14, fontFamily: Font.bold, color: Colors.white },
   actionDisclaimer: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 6,
     backgroundColor: 'rgba(245,158,11,0.08)',
@@ -545,13 +528,6 @@ const styles = StyleSheet.create({
     flex: 1, fontSize: 11, color: Colors.warning, lineHeight: 16,
   },
 
-  walletButton: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: Colors.surface,
-    borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
-    paddingVertical: 14, width: '100%', marginBottom: 12,
-  },
-  walletButtonText: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary },
 
   disclaimer: {
     flexDirection: 'row', gap: 8, width: '100%',

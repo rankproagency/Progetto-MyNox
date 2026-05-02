@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/colors';
+import { Font } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -193,7 +194,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingVertical: 14,
     borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
-  headerTitle: { fontSize: 16, fontWeight: '700', color: Colors.textPrimary },
+  headerTitle: { fontSize: 16, fontFamily: Font.bold, color: Colors.textPrimary },
   backButton: {
     width: 38, height: 38, borderRadius: 12,
     backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border,
@@ -203,7 +204,7 @@ const styles = StyleSheet.create({
 
   field: { marginBottom: 20 },
   fieldLabel: {
-    fontSize: 12, fontWeight: '600', color: Colors.textMuted,
+    fontSize: 12, fontFamily: Font.semiBold, color: Colors.textMuted,
     marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5,
   },
   inputRow: {
@@ -224,7 +225,7 @@ const styles = StyleSheet.create({
   strengthBar: {
     flex: 1, height: 3, borderRadius: 2,
   },
-  strengthLabel: { fontSize: 12, fontWeight: '600' },
+  strengthLabel: { fontSize: 12, fontFamily: Font.semiBold },
 
   ctaContainer: {
     paddingHorizontal: 20, paddingVertical: 16, paddingBottom: 32,
@@ -236,5 +237,5 @@ const styles = StyleSheet.create({
     borderRadius: 16, paddingVertical: 16,
     alignItems: 'center',
   },
-  ctaText: { fontSize: 16, fontWeight: '800', color: Colors.white },
+  ctaText: { fontSize: 16, fontFamily: Font.extraBold, color: Colors.white },
 });

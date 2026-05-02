@@ -63,8 +63,8 @@ export default function EventCard({ event }: Props) {
             <View style={styles.metaLeft}>
               {event.genres.slice(0, 1).map((g) => {
                 const cfg = GENRE_CONFIG[g as Genre];
-                const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : 'rgba(168,85,247,0.10)';
-                const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : 'rgba(168,85,247,0.35)';
+                const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : Colors.accentBg;
+                const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : Colors.accentBorder;
                 const text = cfg ? cfg.color.replace(/[\d.]+\)$/, '1)') : Colors.accent;
                 return (
                   <View key={g} style={[styles.genreTag, { backgroundColor: bg, borderColor: border }]}>
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
   },
   genreText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: Font.bold,
   },
   timeText: {
     fontSize: 12,

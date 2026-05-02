@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { StyleSheet } from 'react-native';
 import { Colors } from '../../constants/colors';
+import { Font } from '../../constants/typography';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -36,7 +37,7 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: Colors.textMuted,
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '600',
+          fontFamily: Font.semiBold,
         },
       }}
     >

@@ -4,6 +4,24 @@ import { getProfile } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { CalendarDays, Ticket, Plus, Settings, ChevronRight, Clock, BarChart2, CheckCircle2, Circle } from 'lucide-react';
+import RealtimeSalesChart, { type HourlyBucket } from '@/components/club/RealtimeSalesChart';
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
+function getLast12HourBuckets(): HourlyBucket[] {
+  const now = new Date();
+  const buckets: HourlyBucket[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now);
+    d.setHours(d.getHours() - i, 0, 0, 0);
+    const isoKey =
+      `${d.getFullYear()}-${pad(d.getMonth() + 1)}-` +
+      `${pad(d.getDate())}T${pad(d.getHours())}:00`;
+    const label = `${pad(d.getHours())}:00`;
+    buckets.push({ label, isoKey, count: 0, revenue: 0 });
+  }
+  return buckets;
+}
 
 async function getDashboardData(clubId: string) {
   const supabase = await createClient();
@@ -42,7 +60,9 @@ async function getDashboardData(clubId: string) {
 
   const upcomingEventIds = (upcomingEventsRaw ?? []).map((e) => e.id);
 
-  const [{ data: recentTickets }, { data: club }, { data: soldTicketRows }, { data: totalQtyRows }] = await Promise.all([
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  const [{ data: recentTickets }, { data: club }, { data: soldTicketRows }, { data: totalQtyRows }, { data: realtimeTicketRows }] = await Promise.all([
     eventIds.length > 0
       ? supabase
           .from('tickets')
@@ -70,6 +90,15 @@ async function getDashboardData(clubId: string) {
           .select('event_id, total_quantity')
           .in('event_id', upcomingEventIds)
       : Promise.resolve({ data: [] }),
+    eventIds.length > 0
+      ? supabase
+          .from('tickets')
+          .select('created_at, price_paid')
+          .in('event_id', eventIds)
+          .in('status', ['valid', 'used'])
+          .gte('created_at', twentyFourHoursAgo)
+          .order('created_at', { ascending: true })
+      : Promise.resolve({ data: [] }),
   ]);
 
   // Conta biglietti venduti reali per evento
@@ -95,11 +124,26 @@ async function getDashboardData(clubId: string) {
     hasPublishedEvent: !!publishedEvent,
   };
 
+  const initialBuckets = getLast12HourBuckets();
+  (realtimeTicketRows ?? []).forEach((t: any) => {
+    const d = new Date(t.created_at);
+    const isoKey =
+      `${d.getFullYear()}-${pad(d.getMonth() + 1)}-` +
+      `${pad(d.getDate())}T${pad(d.getHours())}:00`;
+    const bucket = initialBuckets.find((b) => b.isoKey === isoKey);
+    if (bucket) {
+      bucket.count++;
+      bucket.revenue += t.price_paid ?? 0;
+    }
+  });
+
   return {
     clubName: club?.name ?? '',
     upcomingEvents,
     recentTickets: recentTickets ?? [],
     checklist,
+    initialBuckets,
+    eventIds,
   };
 }
 
@@ -107,7 +151,7 @@ export default async function ClubDashboardPage() {
   const profile = await getProfile();
   if (!profile?.club_id) return <p className="text-slate-400">Club non configurato. Contatta l&apos;amministratore.</p>;
 
-  const { clubName, upcomingEvents, recentTickets, checklist } = await getDashboardData(profile.club_id);
+  const { clubName, upcomingEvents, recentTickets, checklist, initialBuckets, eventIds } = await getDashboardData(profile.club_id);
   const isProfileComplete = checklist.hasImage && checklist.hasPublishedEvent;
 
   const now = new Date();
@@ -164,6 +208,11 @@ export default async function ClubDashboardPage() {
           </div>
           <span className="text-sm font-medium text-slate-300">Profilo club</span>
         </Link>
+      </div>
+
+      {/* Grafico vendite in tempo reale */}
+      <div className="mb-6">
+        <RealtimeSalesChart eventIds={eventIds} initialBuckets={initialBuckets} />
       </div>
 
       <div className="grid grid-cols-2 gap-6">

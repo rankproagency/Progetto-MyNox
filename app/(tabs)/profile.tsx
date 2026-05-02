@@ -101,7 +101,7 @@ export default function ProfileScreen() {
   return (
     <View style={styles.outerContainer}>
       <LinearGradient
-        colors={['rgba(168,85,247,0.22)', 'transparent']}
+        colors={[Colors.accentBgMid, 'transparent']}
         style={styles.bgGradient}
         pointerEvents="none"
       />
@@ -167,8 +167,8 @@ export default function ProfileScreen() {
               <View style={styles.genresList}>
                 {musicGenres.map((genre) => {
                   const cfg = GENRE_CONFIG[genre as Genre];
-                  const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : 'rgba(168,85,247,0.10)';
-                  const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : 'rgba(168,85,247,0.35)';
+                  const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : Colors.accentBg;
+                  const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : Colors.accentBorder;
                   const text = cfg ? cfg.color.replace(/[\d.]+\)$/, '1)') : Colors.accent;
                   return (
                     <View key={genre} style={[styles.genreTag, { backgroundColor: bg, borderColor: border }]}>
@@ -381,8 +381,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarInitial: { fontSize: 40, fontWeight: '800', color: Colors.white },
-  name: { fontSize: 22, fontWeight: '800', color: Colors.textPrimary, marginBottom: 4 },
+  avatarInitial: { fontSize: 40, fontFamily: Font.extraBold, color: Colors.white },
+  name: { fontSize: 22, fontFamily: Font.extraBold, color: Colors.textPrimary, marginBottom: 4 },
   email: { fontSize: 13, color: Colors.textSecondary, marginBottom: 4 },
   since: { fontSize: 12, color: Colors.textMuted, marginBottom: 20 },
 
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 22,
-    fontWeight: '800',
+    fontFamily: Font.extraBold,
     color: Colors.accent,
     marginBottom: 3,
   },
@@ -421,8 +421,8 @@ const styles = StyleSheet.create({
 
   // Sections
   section: { paddingHorizontal: 20, marginBottom: 28 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: Colors.textPrimary, marginBottom: 14 },
-  subSectionTitle: { fontSize: 12, fontWeight: '600', color: Colors.textMuted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.6 },
+  sectionTitle: { fontSize: 16, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 14 },
+  subSectionTitle: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.textMuted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.6 },
 
   // Generi
   genresList: {
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
   },
   favClubName: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: Font.bold,
     color: Colors.white,
   },
   favClubCity: {
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
   },
   favEventInfo: { flex: 1 },
-  favEventName: { fontSize: 13, fontWeight: '600', color: Colors.textPrimary, marginBottom: 3 },
+  favEventName: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.textPrimary, marginBottom: 3 },
   favEventMeta: { fontSize: 11, color: Colors.textMuted },
   favEventHint: { fontSize: 12, color: Colors.textMuted, lineHeight: 18 },
   soldOutBadge: {
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
     borderRadius: 6, borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)',
     paddingHorizontal: 8, paddingVertical: 3,
   },
-  soldOutText: { fontSize: 11, fontWeight: '700', color: Colors.error },
+  soldOutText: { fontSize: 11, fontFamily: Font.bold, color: Colors.error },
 
   // History
   historyEmpty: {
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
   },
-  historyEmptyText: { fontSize: 14, fontWeight: '600', color: Colors.textMuted },
+  historyEmptyText: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.textMuted },
   historyEmptySubtext: { fontSize: 12, color: Colors.textMuted, textAlign: 'center', paddingHorizontal: 20 },
   historyDotUsed: { backgroundColor: Colors.textMuted },
   historyItem: {
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   historyInfo: { flex: 1 },
-  historyEvent: { fontSize: 13, fontWeight: '600', color: Colors.textPrimary, marginBottom: 3 },
+  historyEvent: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.textPrimary, marginBottom: 3 },
   historyMeta: { fontSize: 11, color: Colors.textMuted },
 
   // Account rows
@@ -528,6 +528,6 @@ const styles = StyleSheet.create({
     borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
     padding: 14, marginBottom: 8,
   },
-  accountLabel: { flex: 1, fontSize: 14, fontWeight: '500', color: Colors.textPrimary },
+  accountLabel: { flex: 1, fontSize: 14, fontFamily: Font.medium, color: Colors.textPrimary },
   accountLabelDanger: { color: Colors.error },
 });

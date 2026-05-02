@@ -19,7 +19,7 @@ function CountdownBadge({ rawDate, startTime }: { rawDate: string; startTime: st
   if (isExpired) return null;
   return (
     <View style={countdownStyles.badge}>
-      <Ionicons name="timer-outline" size={11} color={Colors.accent} />
+      <Ionicons name="timer-outline" size={12} color={Colors.accent} />
       <Text style={countdownStyles.text}>{label}</Text>
     </View>
   );
@@ -27,7 +27,7 @@ function CountdownBadge({ rawDate, startTime }: { rawDate: string; startTime: st
 
 const countdownStyles = StyleSheet.create({
   badge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  text: { fontSize: 11, fontWeight: '700', color: Colors.accent },
+  text: { fontSize: 11, fontFamily: Font.bold, color: Colors.accent },
 });
 
 function isDatePast(rawDate: string, endTime?: string): boolean {
@@ -193,7 +193,7 @@ export default function TicketsScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['rgba(168,85,247,0.22)', 'transparent']} style={styles.bgGradient} pointerEvents="none" />
+      <LinearGradient colors={[Colors.accentBgMid, 'transparent']} style={styles.bgGradient} pointerEvents="none" />
       <SafeAreaView style={{ flex: 1 }}>
         <AppHeader />
 
@@ -338,7 +338,7 @@ function TicketCard({
             </Text>
             <Text style={styles.ticketClub}>{ticket.clubName}</Text>
             <View style={styles.ticketMeta}>
-              <Ionicons name="calendar-outline" size={11} color={Colors.textMuted} />
+              <Ionicons name="calendar-outline" size={12} color={Colors.textMuted} />
               <Text style={styles.ticketMetaText}> {ticket.date} · {ticket.startTime}</Text>
             </View>
             {!isPast && !isPending && !isGifted && (
@@ -346,13 +346,13 @@ function TicketCard({
             )}
             {isPending && (
               <View style={styles.pendingRow}>
-                <Ionicons name="time-outline" size={11} color={Colors.warning} />
+                <Ionicons name="time-outline" size={12} color={Colors.warning} />
                 <Text style={styles.pendingText}>Pagamento in elaborazione</Text>
               </View>
             )}
             {isGifted && (
               <View style={styles.pendingRow}>
-                <Ionicons name="gift-outline" size={11} color={Colors.accent} />
+                <Ionicons name="gift-outline" size={12} color={Colors.accent} />
                 <Text style={styles.giftedText}>In attesa di riscatto</Text>
               </View>
             )}
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     marginBottom: 12, overflow: 'hidden',
   },
   ticketCardPast: { opacity: 0.65 },
-  ticketCardGifted: { borderColor: 'rgba(168,85,247,0.35)' },
+  ticketCardGifted: { borderColor: Colors.accentBorder },
   ticketMain: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     padding: 16,
@@ -505,10 +505,10 @@ const styles = StyleSheet.create({
   ticketRight: { alignItems: 'flex-end', gap: 6 },
   typeBadge: { backgroundColor: Colors.accent, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   typeBadgePending: { backgroundColor: Colors.warning },
-  typeBadgeGifted: { backgroundColor: 'rgba(168,85,247,0.2)', borderWidth: 1, borderColor: 'rgba(168,85,247,0.4)' },
+  typeBadgeGifted: { backgroundColor: Colors.accentBgMid, borderWidth: 1, borderColor: Colors.accentBorder },
   typeBadgeText: { fontSize: 11, fontFamily: Font.bold, color: Colors.white },
   drinkStatus: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  drinkText: { fontSize: 11, color: Colors.success, fontWeight: '500' },
+  drinkText: { fontSize: 11, color: Colors.success, fontFamily: Font.medium },
   drinkUsedText: { color: Colors.textMuted },
   giftButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -520,8 +520,8 @@ const styles = StyleSheet.create({
   giftCodeRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     paddingHorizontal: 16, paddingVertical: 12,
-    borderTopWidth: 1, borderTopColor: 'rgba(168,85,247,0.15)',
-    backgroundColor: 'rgba(168,85,247,0.05)',
+    borderTopWidth: 1, borderTopColor: Colors.accentBg,
+    backgroundColor: Colors.accentBg,
   },
   giftCodeBox: { flex: 1 },
   giftCodeLabel: { fontSize: 10, fontFamily: Font.semiBold, color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 },
@@ -529,8 +529,8 @@ const styles = StyleSheet.create({
   reshareBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 12, paddingVertical: 8,
-    backgroundColor: 'rgba(168,85,247,0.1)',
-    borderWidth: 1, borderColor: 'rgba(168,85,247,0.3)',
+    backgroundColor: Colors.accentBg,
+    borderWidth: 1, borderColor: Colors.accentBorder,
     borderRadius: 10,
   },
   reshareText: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.accent },
@@ -554,14 +554,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 10,
     paddingHorizontal: 16, paddingVertical: 12,
     borderRadius: 14,
-    borderWidth: 1, borderColor: 'rgba(168,85,247,0.25)',
-    backgroundColor: 'rgba(168,85,247,0.08)',
+    borderWidth: 1, borderColor: Colors.accentBorder,
+    backgroundColor: Colors.accentBg,
   },
   claimBannerText: { fontSize: 13, fontFamily: Font.regular, color: Colors.textMuted, flex: 1 },
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 24 },
-  modalCard: { backgroundColor: '#111118', borderWidth: 1, borderColor: 'rgba(168,85,247,0.2)', borderRadius: 20, padding: 28, width: '100%' },
+  modalCard: { backgroundColor: '#111118', borderWidth: 1, borderColor: Colors.accentBgMid, borderRadius: 20, padding: 28, width: '100%' },
   modalTitle: { fontSize: 20, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 6 },
   modalSub: { fontSize: 14, color: Colors.textMuted, marginBottom: 20 },
   codeInput: {
