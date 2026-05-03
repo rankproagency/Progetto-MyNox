@@ -16,8 +16,25 @@ export default function TicketScreen() {
   const ticket = tickets.find((t) => t.id === id);
   const [activeQR, setActiveQR] = useState<'entry' | 'drink'>('entry');
 
-  const today = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
+  const today = new Date().toISOString().split('T')[0];
   const isEventToday = ticket?.rawDate === today;
+
+  function isDatePast(rawDate: string, endTime?: string): boolean {
+    if (!rawDate) return false;
+    if (endTime) {
+      const [hh, mm] = endTime.split(':').map(Number);
+      const cutoff = new Date(rawDate);
+      if (hh < 12) cutoff.setDate(cutoff.getDate() + 1);
+      cutoff.setHours(hh, mm, 0, 0);
+      return new Date() > cutoff;
+    }
+    const cutoff = new Date(rawDate);
+    cutoff.setDate(cutoff.getDate() + 1);
+    cutoff.setHours(12, 0, 0, 0);
+    return new Date() > cutoff;
+  }
+
+  const isPast = ticket ? isDatePast(ticket.rawDate, ticket.endTime) : false;
 
   if (!ticket) {
     return (
@@ -74,8 +91,8 @@ export default function TicketScreen() {
         {/* Ticket card — solo QR */}
         <View style={styles.ticketCard}>
 
-          {/* Toggle drink — solo per prevendita */}
-          {ticket.type === 'ticket' && (
+          {/* Toggle drink — solo per prevendita con drink incluso */}
+          {ticket.type === 'ticket' && !!ticket.drinkQrCode && (
             <View style={styles.toggle}>
               <TouchableOpacity
                 style={[styles.toggleBtn, activeQR === 'entry' && styles.toggleActive]}
@@ -170,13 +187,18 @@ export default function TicketScreen() {
                     <Ionicons name="close-circle" size={14} color={Colors.error} />
                     <Text style={styles.usedBadgeText}> Ingresso effettuato</Text>
                   </View>
+                ) : isPast ? (
+                  <View style={[styles.usedBadge, { marginBottom: 8 }]}>
+                    <Ionicons name="time-outline" size={14} color={Colors.textMuted} />
+                    <Text style={[styles.usedBadgeText, { color: Colors.textMuted }]}> Evento concluso</Text>
+                  </View>
                 ) : (
                   <>
                     <View style={[styles.validBadge, { marginBottom: 8 }]}>
                       <Ionicons name="checkmark-circle" size={14} color={Colors.success} />
                       <Text style={styles.validText}> Valido</Text>
                     </View>
-                    {isEventToday && (
+                    {isEventToday && !isPast && (
                       <>
                         <TouchableOpacity
                           style={styles.bouncerBtn}
@@ -213,11 +235,11 @@ export default function TicketScreen() {
                   </>
                 )}
               </>
-            ) : ticket.type === 'ticket' ? (
+            ) : ticket.type === 'ticket' && ticket.drinkQrCode ? (
               <>
                 <View style={[styles.qrWrapper, ticket.drinkUsed && styles.qrUsed]}>
                   <QRCode
-                    value={ticket.drinkQrCode!}
+                    value={ticket.drinkQrCode}
                     size={210}
                     backgroundColor="white"
                     color={ticket.drinkUsed ? '#aaa' : 'black'}

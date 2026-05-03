@@ -14,6 +14,23 @@ interface Club {
   tiktok: string | null;
   email: string | null;
   phone: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+}
+
+async function geocodeAddress(address: string, city: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const query = encodeURIComponent(`${address}, ${city}, Italia`);
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`,
+      { headers: { 'User-Agent': 'MyNox/1.0 (mynox.app)' } },
+    );
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) return null;
+    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  } catch {
+    return null;
+  }
 }
 
 export default function ClubSettingsForm({ club }: { club: Club }) {
@@ -30,6 +47,7 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [geocoded, setGeocoded] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -72,9 +90,20 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
     setLoading(true);
     setError('');
     setSuccess(false);
+    setGeocoded(false);
+
+    // Geocoding automatico quando l'indirizzo è valorizzato
+    let coords: { lat: number; lng: number } | null = null;
+    const addressChanged =
+      form.address.trim() !== '' &&
+      form.address.trim() !== (club.address ?? '').trim();
+
+    if (form.address.trim()) {
+      coords = await geocodeAddress(form.address, form.city);
+    }
 
     const supabase = createClient();
-    const { error: updateError } = await supabase.from('clubs').update({
+    const updatePayload: Record<string, unknown> = {
       name: form.name,
       city: form.city,
       address: form.address || null,
@@ -83,12 +112,24 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
       tiktok: form.tiktok || null,
       email: form.email || null,
       phone: form.phone || null,
-    }).eq('id', club.id);
+    };
+
+    // Salva le coordinate solo se il geocoding ha avuto successo
+    if (coords) {
+      updatePayload.latitude = coords.lat;
+      updatePayload.longitude = coords.lng;
+      setGeocoded(true);
+    }
+
+    const { error: updateError } = await supabase
+      .from('clubs')
+      .update(updatePayload)
+      .eq('id', club.id);
 
     setLoading(false);
     if (updateError) { setError(updateError.message); return; }
     setSuccess(true);
-    setTimeout(() => setSuccess(false), 4000);
+    setTimeout(() => { setSuccess(false); setGeocoded(false); }, 5000);
   }
 
   return (
@@ -240,9 +281,23 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
         </div>
       )}
       {success && (
-        <div className="flex items-center gap-3 text-green-400 text-sm bg-green-400/5 border border-green-400/20 rounded-xl px-4 py-3">
-          <CheckCircle size={16} className="shrink-0" />
-          Modifiche salvate. Le informazioni saranno visibili nell&apos;app entro pochi minuti.
+        <div className="bg-green-400/5 border border-green-400/20 rounded-xl px-4 py-3 space-y-1">
+          <div className="flex items-center gap-3 text-green-400 text-sm">
+            <CheckCircle size={16} className="shrink-0" />
+            Modifiche salvate con successo.
+          </div>
+          {geocoded && (
+            <div className="flex items-center gap-2 text-xs text-green-400/70 pl-7">
+              <MapPin size={11} />
+              Posizione aggiornata — la discoteca apparirà nella mappa dell&apos;app.
+            </div>
+          )}
+          {!geocoded && form.address && (
+            <div className="flex items-center gap-2 text-xs text-amber-400/70 pl-7">
+              <MapPin size={11} />
+              Indirizzo non trovato sulla mappa. Verifica che sia nel formato &quot;Via Roma 1, Padova&quot;.
+            </div>
+          )}
         </div>
       )}
 

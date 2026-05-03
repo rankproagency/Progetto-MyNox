@@ -8,6 +8,8 @@ export interface Club {
   tiktok?: string;
   email?: string;
   phone?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export type Genre =

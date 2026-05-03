@@ -362,7 +362,7 @@ function TicketCard({
           <View style={[styles.typeBadge, isPending && styles.typeBadgePending, isGifted && styles.typeBadgeGifted]}>
             <Text style={styles.typeBadgeText}>{isGifted ? 'Regalo' : ticket.ticketLabel}</Text>
           </View>
-          {!isPending && !isGifted && (
+          {!isPending && !isGifted && ticket.type !== 'table' && (
             <View style={styles.drinkStatus}>
               <Ionicons
                 name={ticket.drinkUsed ? 'checkmark-circle' : 'wine-outline'}

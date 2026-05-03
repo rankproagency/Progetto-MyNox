@@ -5,9 +5,9 @@ export const ALL_GENRES: Genre[] = [
 ];
 
 export const MOCK_CLUBS: Club[] = [
-  { id: 'club1', name: 'Altromondo Studios', city: 'Padova', imageUrl: 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=800&q=80', address: 'Via Interporto, Padova', instagram: 'altromondostudios', tiktok: 'altromondostudios', email: 'info@altromondostudios.it', phone: '+39 049 123 4567' },
-  { id: 'club2', name: 'Byblos Club', city: 'Padova', imageUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80', address: 'Via Roma 12, Padova', instagram: 'byblosclub.pd', tiktok: 'byblosclub', email: 'info@byblosclub.it', phone: '+39 049 765 4321' },
-  { id: 'club3', name: 'New Age Club', city: 'Padova', imageUrl: 'https://images.unsplash.com/photo-1598387993441-a364f854cfdf?w=800&q=80', address: 'Via Venezia 5, Padova', instagram: 'newageclub.pd', tiktok: 'newageclub', email: 'info@newageclub.it', phone: '+39 049 987 6543' },
+  { id: 'club1', name: 'Altromondo Studios', city: 'Padova', imageUrl: 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=800&q=80', address: 'Via Interporto, Padova', instagram: 'altromondostudios', tiktok: 'altromondostudios', email: 'info@altromondostudios.it', phone: '+39 049 123 4567', latitude: 45.3952, longitude: 11.9105 },
+  { id: 'club2', name: 'Byblos Club', city: 'Padova', imageUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80', address: 'Via Roma 12, Padova', instagram: 'byblosclub.pd', tiktok: 'byblosclub', email: 'info@byblosclub.it', phone: '+39 049 765 4321', latitude: 45.4072, longitude: 11.8762 },
+  { id: 'club3', name: 'New Age Club', city: 'Padova', imageUrl: 'https://images.unsplash.com/photo-1598387993441-a364f854cfdf?w=800&q=80', address: 'Via Venezia 5, Padova', instagram: 'newageclub.pd', tiktok: 'newageclub', email: 'info@newageclub.it', phone: '+39 049 987 6543', latitude: 45.4148, longitude: 11.8834 },
 ];
 
 export const MOCK_EVENTS: Event[] = [

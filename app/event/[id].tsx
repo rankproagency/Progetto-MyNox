@@ -103,6 +103,18 @@ export default function EventScreen() {
     ? tableSubtotal
     : ticketSubtotal + tableSubtotal;
   const isSoldOut = event?.ticketTypes.every((t) => t.available === 0) ?? false;
+  const isEventPast = (() => {
+    const cutoff = new Date(event.date);
+    if (event.endTime) {
+      const [hh, mm] = event.endTime.split(':').map(Number);
+      if (hh < 12) cutoff.setDate(cutoff.getDate() + 1);
+      cutoff.setHours(hh, mm, 0, 0);
+    } else {
+      cutoff.setDate(cutoff.getDate() + 1);
+      cutoff.setHours(12, 0, 0, 0);
+    }
+    return new Date() > cutoff;
+  })();
   const onWaitlist = event ? isOnWaitlist(event.id) : false;
   const soldPercent = Math.round((event.ticketsSold / event.capacity) * 100);
   const remaining = event.capacity - event.ticketsSold;
@@ -335,7 +347,12 @@ export default function EventScreen() {
 
         {/* Prevendita / Tavolo */}
         <View style={styles.bookingSection}>
-          {isSoldOut ? (
+          {isEventPast ? (
+            <View style={styles.soldOutBox}>
+              <Ionicons name="time-outline" size={20} color={Colors.textMuted} />
+              <Text style={[styles.soldOutText, { color: Colors.textMuted }]}>Evento concluso</Text>
+            </View>
+          ) : isSoldOut ? (
             <View style={styles.soldOutBox}>
               <Ionicons name="close-circle" size={20} color={Colors.error} />
               <Text style={styles.soldOutText}>Evento esaurito</Text>
@@ -513,7 +530,12 @@ export default function EventScreen() {
 
       {/* CTA sticky */}
       <View style={styles.ctaContainer}>
-        {isSoldOut ? (
+        {isEventPast ? (
+          <View style={[styles.ctaButton, styles.ctaDisabled]}>
+            <Ionicons name="time-outline" size={16} color={Colors.textMuted} />
+            <Text style={[styles.ctaText, { color: Colors.textMuted }]}>Evento concluso</Text>
+          </View>
+        ) : isSoldOut ? (
           <TouchableOpacity
             style={[styles.ctaButton, onWaitlist && styles.ctaWaitlistActive]}
             activeOpacity={0.85}
@@ -585,6 +607,7 @@ export default function EventScreen() {
             </TouchableOpacity>
           </>
         )}
+
       </View>
       </KeyboardAvoidingView>
     </>

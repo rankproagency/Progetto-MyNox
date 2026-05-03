@@ -16,8 +16,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.mynox",
+      "config": {
+        "googleMapsApiKey": "AIzaSyDF5qA-619vlZvpQm4HxwMotRg9LB5k-sM"
+      },
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "MyNox usa la tua posizione per mostrarti i club e gli eventi più vicini a te."
       }
     },
     "android": {
@@ -26,7 +30,13 @@
         "backgroundColor": "#07080f"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["android.permission.ACCESS_FINE_LOCATION", "android.permission.ACCESS_COARSE_LOCATION"],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDF5qA-619vlZvpQm4HxwMotRg9LB5k-sM"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
