@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/colors';
+import { Font } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginScreen() {
@@ -45,7 +46,7 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['rgba(168,85,247,0.20)', 'transparent']}
+        colors={[Colors.accentBgMid, 'transparent']}
         style={styles.bgGradient}
         pointerEvents="none"
       />
@@ -195,11 +196,11 @@ const styles = StyleSheet.create({
 
   logoSection: { alignItems: 'center', paddingTop: 100, paddingBottom: 44 },
   logoImage: { width: 254, height: 72, marginBottom: 12 },
-  logoSub: { fontSize: 16, color: Colors.textSecondary, fontWeight: '500' },
+  logoSub: { fontSize: 16, color: Colors.textSecondary, fontFamily: Font.medium },
 
   form: { gap: 20, marginBottom: 28 },
   fieldGroup: { gap: 8 },
-  fieldLabel: { fontSize: 12, fontWeight: '600', color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 },
+  fieldLabel: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 },
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.surface,
@@ -219,7 +220,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', marginBottom: 24,
   },
   ctaDisabled: { opacity: 0.6 },
-  ctaText: { fontSize: 16, fontWeight: '800', color: Colors.white },
+  ctaText: { fontSize: 16, fontFamily: Font.extraBold, color: Colors.white },
 
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
   dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
@@ -231,9 +232,9 @@ const styles = StyleSheet.create({
     borderRadius: 16, borderWidth: 1, borderColor: Colors.border,
     paddingVertical: 15, marginBottom: 12,
   },
-  socialText: { fontSize: 15, fontWeight: '600', color: Colors.textPrimary },
+  socialText: { fontSize: 15, fontFamily: Font.semiBold, color: Colors.textPrimary },
 
   registerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 20 },
   registerText: { fontSize: 14, color: Colors.textSecondary },
-  registerLink: { fontSize: 14, fontWeight: '700', color: Colors.accent },
+  registerLink: { fontSize: 14, fontFamily: Font.bold, color: Colors.accent },
 });

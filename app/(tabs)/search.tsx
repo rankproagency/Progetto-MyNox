@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   },
   clubIcon: {
     width: 40, height: 40, borderRadius: 12,
-    backgroundColor: 'rgba(168,85,247,0.1)',
+    backgroundColor: Colors.accentBg,
     justifyContent: 'center', alignItems: 'center',
   },
   clubName: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.textPrimary, marginBottom: 2 },

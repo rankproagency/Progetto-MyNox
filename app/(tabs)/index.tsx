@@ -204,7 +204,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['rgba(168,85,247,0.22)', 'transparent']}
+        colors={[Colors.accentBgMid, 'transparent']}
         style={styles.bgGradient}
         pointerEvents="none"
       />
@@ -415,7 +415,7 @@ export default function HomeScreen() {
             <TouchableOpacity style={styles.citySelector} onPress={() => setCityModalOpen(true)} activeOpacity={0.8}>
               <Ionicons name="location-sharp" size={12} color={Colors.accent} />
               <Text style={styles.citySelectorText}>{selectedCity.name}</Text>
-              <Ionicons name="chevron-down" size={11} color={Colors.textMuted} />
+              <Ionicons name="chevron-down" size={12} color={Colors.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -524,7 +524,7 @@ export default function HomeScreen() {
                   <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitleInline}>Per te</Text>
                     <View style={styles.forYouBadge}>
-                      <Ionicons name="sparkles" size={11} color={Colors.accent} />
+                      <Ionicons name="sparkles" size={12} color={Colors.accent} />
                       <Text style={styles.forYouText}>
                         {musicGenres.slice(0, 2).join(' · ')}
                       </Text>
@@ -617,8 +617,8 @@ const styles = StyleSheet.create({
   dateChipRow: { flexDirection: 'row', paddingHorizontal: 20, marginBottom: 10 },
   dateChip: {
     flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start',
-    backgroundColor: 'rgba(168,85,247,0.1)', borderRadius: 20,
-    borderWidth: 1, borderColor: 'rgba(168,85,247,0.3)',
+    backgroundColor: Colors.accentBg, borderRadius: 20,
+    borderWidth: 1, borderColor: Colors.accentBorder,
     paddingHorizontal: 12, paddingVertical: 6,
   },
   dateChipText: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.accent },
@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 18, fontFamily: Font.extraBold, color: Colors.textPrimary, paddingHorizontal: 20, marginBottom: 14 },
   forYouBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(168,85,247,0.1)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4,
+    backgroundColor: Colors.accentBg, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4,
   },
   forYouText: { fontSize: 11, fontFamily: Font.semiBold, color: Colors.accent },
   sectionSpacing: { marginTop: 28 },
@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
   dayLine: { flex: 1, height: 1, backgroundColor: Colors.border },
 
   // City modal
-  modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.65)' },
+  modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: Colors.overlay },
   modalSheet: {
     backgroundColor: Colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     borderWidth: 1, borderColor: Colors.border, padding: 24, paddingBottom: 48,
@@ -670,10 +670,10 @@ const styles = StyleSheet.create({
   cityName: { fontSize: 15, fontFamily: Font.semiBold, color: Colors.textPrimary },
   cityNameMuted: { color: Colors.textMuted },
   comingSoonBadge: { backgroundColor: Colors.border, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
-  comingSoonText: { fontSize: 10, fontWeight: '600', color: Colors.textMuted },
+  comingSoonText: { fontSize: 10, fontFamily: Font.semiBold, color: Colors.textMuted },
 
   // Calendario bottom sheet
-  calOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.65)' },
+  calOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: Colors.overlay },
   calSheet: {
     backgroundColor: Colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     borderWidth: 1, borderColor: Colors.border,
@@ -738,7 +738,7 @@ const styles = StyleSheet.create({
   genreGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 },
   genreChip: {
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
-    borderWidth: 1, borderColor: 'rgba(168,85,247,0.3)', backgroundColor: 'rgba(168,85,247,0.06)',
+    borderWidth: 1, borderColor: Colors.accentBorder, backgroundColor: Colors.accentBg,
   },
   genreChipActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
   genreChipText: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.accent },

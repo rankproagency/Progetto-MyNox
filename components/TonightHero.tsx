@@ -68,8 +68,8 @@ export default function TonightHero({ event }: Props) {
         <View style={styles.genreRow}>
           {event.genres.slice(0, 2).map((g) => {
             const cfg = GENRE_CONFIG[g as Genre];
-            const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : 'rgba(168,85,247,0.10)';
-            const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : 'rgba(168,85,247,0.35)';
+            const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : Colors.accentBg;
+            const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : Colors.accentBorder;
             const text = cfg ? cfg.color.replace(/[\d.]+\)$/, '1)') : Colors.accent;
             return (
               <View key={g} style={[styles.genreTag, { backgroundColor: bg, borderColor: border }]}>
@@ -137,10 +137,10 @@ const styles = StyleSheet.create({
   tonightBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(168,85,247,0.22)',
+    backgroundColor: Colors.accentBgMid,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(168,85,247,0.5)',
+    borderColor: Colors.accentBorder,
     paddingHorizontal: 10,
     paddingVertical: 5,
     gap: 6,

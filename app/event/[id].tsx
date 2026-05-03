@@ -44,7 +44,7 @@ export default function EventScreen() {
   const { addRecentlyViewed } = useRecentlyViewed();
   const { user } = useAuth();
   const { tickets } = useTickets();
-  const { events } = useEvents();
+  const { events, isLoading, hasError, reload } = useEvents();
   const event = events.find((e) => e.id === id);
 
   useEffect(() => {
@@ -70,6 +70,25 @@ export default function EventScreen() {
     setTicketQty(1);
   }
 
+  if (isLoading) {
+    return (
+      <View style={styles.notFound}>
+        <Text style={styles.notFoundText}>Caricamento...</Text>
+      </View>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <View style={styles.notFound}>
+        <Text style={styles.notFoundText}>Errore di caricamento</Text>
+        <TouchableOpacity onPress={reload} style={styles.retryBtn}>
+          <Text style={styles.retryText}>Riprova</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   if (!event) {
     return (
       <View style={styles.notFound}>
@@ -84,6 +103,18 @@ export default function EventScreen() {
     ? tableSubtotal
     : ticketSubtotal + tableSubtotal;
   const isSoldOut = event?.ticketTypes.every((t) => t.available === 0) ?? false;
+  const isEventPast = (() => {
+    const cutoff = new Date(event.date);
+    if (event.endTime) {
+      const [hh, mm] = event.endTime.split(':').map(Number);
+      if (hh < 12) cutoff.setDate(cutoff.getDate() + 1);
+      cutoff.setHours(hh, mm, 0, 0);
+    } else {
+      cutoff.setDate(cutoff.getDate() + 1);
+      cutoff.setHours(12, 0, 0, 0);
+    }
+    return new Date() > cutoff;
+  })();
   const onWaitlist = event ? isOnWaitlist(event.id) : false;
   const soldPercent = Math.round((event.ticketsSold / event.capacity) * 100);
   const remaining = event.capacity - event.ticketsSold;
@@ -250,8 +281,8 @@ export default function EventScreen() {
               <View style={styles.heroGenres}>
                 {event.genres.map((g) => {
                   const cfg = GENRE_CONFIG[g as Genre];
-                  const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : 'rgba(168,85,247,0.10)';
-                  const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : 'rgba(168,85,247,0.35)';
+                  const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : Colors.accentBg;
+                  const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : Colors.accentBorder;
                   const text = cfg ? cfg.color.replace(/[\d.]+\)$/, '1)') : Colors.accent;
                   return (
                     <View key={g} style={[styles.heroGenreTag, { backgroundColor: bg, borderColor: border }]}>
@@ -316,7 +347,12 @@ export default function EventScreen() {
 
         {/* Prevendita / Tavolo */}
         <View style={styles.bookingSection}>
-          {isSoldOut ? (
+          {isEventPast ? (
+            <View style={styles.soldOutBox}>
+              <Ionicons name="time-outline" size={20} color={Colors.textMuted} />
+              <Text style={[styles.soldOutText, { color: Colors.textMuted }]}>Evento concluso</Text>
+            </View>
+          ) : isSoldOut ? (
             <View style={styles.soldOutBox}>
               <Ionicons name="close-circle" size={20} color={Colors.error} />
               <Text style={styles.soldOutText}>Evento esaurito</Text>
@@ -494,7 +530,12 @@ export default function EventScreen() {
 
       {/* CTA sticky */}
       <View style={styles.ctaContainer}>
-        {isSoldOut ? (
+        {isEventPast ? (
+          <View style={[styles.ctaButton, styles.ctaDisabled]}>
+            <Ionicons name="time-outline" size={16} color={Colors.textMuted} />
+            <Text style={[styles.ctaText, { color: Colors.textMuted }]}>Evento concluso</Text>
+          </View>
+        ) : isSoldOut ? (
           <TouchableOpacity
             style={[styles.ctaButton, onWaitlist && styles.ctaWaitlistActive]}
             activeOpacity={0.85}
@@ -566,6 +607,7 @@ export default function EventScreen() {
             </TouchableOpacity>
           </>
         )}
+
       </View>
       </KeyboardAvoidingView>
     </>
@@ -582,8 +624,10 @@ function formatDate(dateStr: string): string {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  notFound: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background },
-  notFoundText: { color: Colors.textMuted },
+  notFound: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background, gap: 14 },
+  notFoundText: { color: Colors.textMuted, fontSize: 15, fontFamily: Font.medium },
+  retryBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border },
+  retryText: { color: Colors.textPrimary, fontSize: 14, fontFamily: Font.semiBold },
   scroll: { paddingBottom: 120 },
 
   // Sticky header
@@ -630,13 +674,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 5,
   },
   heroAddressText: {
-    fontSize: 13, color: 'rgba(255,255,255,0.55)', fontWeight: '400',
+    fontSize: 13, color: 'rgba(255,255,255,0.55)', fontFamily: Font.regular,
   },
   heroMeta: {
     flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6,
     marginBottom: 14,
   },
-  heroMetaText: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '600' },
+  heroMetaText: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontFamily: Font.semiBold },
   heroMetaDot: { fontSize: 13, color: 'rgba(255,255,255,0.3)' },
   heroGenres: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 7,
@@ -647,7 +691,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 6,
   },
   heroGenreTagText: {
-    fontSize: 12, fontWeight: '700',
+    fontSize: 12, fontFamily: Font.bold,
   },
 
   // Contenuto principale
@@ -662,7 +706,7 @@ const styles = StyleSheet.create({
   },
   blockLabel: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: Font.bold,
     color: Colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -672,11 +716,11 @@ const styles = StyleSheet.create({
   // Tags row
   tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   genreTag: {
-    backgroundColor: 'rgba(168,85,247,0.12)',
-    borderRadius: 8, borderWidth: 1, borderColor: 'rgba(168,85,247,0.3)',
+    backgroundColor: Colors.accentBg,
+    borderRadius: 8, borderWidth: 1, borderColor: Colors.accentBorder,
     paddingHorizontal: 12, paddingVertical: 5,
   },
-  genreTagText: { fontSize: 12, fontWeight: '700', color: Colors.accent },
+  genreTagText: { fontSize: 12, fontFamily: Font.bold, color: Colors.accent },
 
   // Description
   descriptionText: {
@@ -696,7 +740,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   lineupTime: {
-    fontSize: 13, fontWeight: '700', color: Colors.textMuted,
+    fontSize: 13, fontFamily: Font.bold, color: Colors.textMuted,
     minWidth: 42,
   },
   lineupName: { fontSize: 14, fontFamily: Font.bold, color: Colors.textPrimary },
@@ -710,7 +754,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 9,
   },
   performerBadge: {
-    backgroundColor: 'rgba(168,85,247,0.15)',
+    backgroundColor: Colors.accentBg,
     borderRadius: 5, paddingHorizontal: 6, paddingVertical: 2,
   },
   performerBadgeVocalist: { backgroundColor: 'rgba(236,72,153,0.15)' },
@@ -725,9 +769,9 @@ const styles = StyleSheet.create({
   },
   soldLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   soldText: { fontSize: 13, color: Colors.textSecondary },
-  soldCount: { fontWeight: '700', color: Colors.textPrimary },
-  soldPercent: { fontSize: 12, fontWeight: '700', color: Colors.accent },
-  scarcityNeutralText: { fontSize: 13, color: Colors.success, fontWeight: '600' },
+  soldCount: { fontFamily: Font.bold, color: Colors.textPrimary },
+  soldPercent: { fontSize: 12, fontFamily: Font.bold, color: Colors.accent },
+  scarcityNeutralText: { fontSize: 13, color: Colors.success, fontFamily: Font.semiBold },
   progressBar: {
     height: 6, borderRadius: 3,
     backgroundColor: Colors.border,
@@ -749,18 +793,18 @@ const styles = StyleSheet.create({
   // Sezione prenotazione
   bookingSection: { paddingHorizontal: 20 },
   bookingLabel: {
-    fontSize: 11, fontWeight: '700', color: Colors.textMuted,
+    fontSize: 11, fontFamily: Font.bold, color: Colors.textMuted,
     textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12,
   },
   scarcityBox: { marginBottom: 16 },
   drinkBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 7,
-    backgroundColor: 'rgba(168,85,247,0.08)',
-    borderRadius: 10, borderWidth: 1, borderColor: 'rgba(168,85,247,0.25)',
+    backgroundColor: Colors.accentBg,
+    borderRadius: 10, borderWidth: 1, borderColor: Colors.accentBorder,
     paddingHorizontal: 12, paddingVertical: 9,
     marginBottom: 12,
   },
-  drinkBadgeText: { fontSize: 13, fontWeight: '600', color: Colors.accent },
+  drinkBadgeText: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.accent },
   sectionSubtitle: { fontSize: 12, color: Colors.textMuted, marginBottom: 12 },
 
   // Ticket options
@@ -782,9 +826,9 @@ const styles = StyleSheet.create({
   },
   radioActive: { borderColor: Colors.accent },
   radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.accent },
-  ticketLabel: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
+  ticketLabel: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.textPrimary },
   ticketAvailable: { fontSize: 11, color: Colors.textMuted, marginTop: 2 },
-  ticketPrice: { fontSize: 16, fontWeight: '700', color: Colors.accent },
+  ticketPrice: { fontSize: 16, fontFamily: Font.bold, color: Colors.accent },
   ticketDrink: { fontSize: 10, color: Colors.textMuted, marginTop: 1 },
   soldOut: { fontSize: 11, color: Colors.error, marginTop: 2 },
   disabledText: { color: Colors.textMuted },
@@ -796,7 +840,7 @@ const styles = StyleSheet.create({
     borderRadius: 14, borderWidth: 1, borderColor: Colors.accent,
     paddingHorizontal: 16, paddingVertical: 12, marginTop: 4,
   },
-  qtyLabel: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
+  qtyLabel: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.textPrimary },
   qtyStepper: { flexDirection: 'row', alignItems: 'center', gap: 0 },
   qtyBtn: {
     width: 36, height: 36, borderRadius: 10,
@@ -806,7 +850,7 @@ const styles = StyleSheet.create({
   },
   qtyBtnDisabled: { borderColor: Colors.border, opacity: 0.4 },
   qtyValue: {
-    fontSize: 18, fontWeight: '800', color: Colors.textPrimary,
+    fontSize: 18, fontFamily: Font.extraBold, color: Colors.textPrimary,
     minWidth: 36, textAlign: 'center',
   },
 
@@ -836,7 +880,7 @@ const styles = StyleSheet.create({
   },
   ctaInfo: {},
   ctaLabel: { fontSize: 11, color: Colors.textMuted },
-  ctaTotal: { fontSize: 20, fontWeight: '800', color: Colors.textPrimary },
+  ctaTotal: { fontSize: 20, fontFamily: Font.extraBold, color: Colors.textPrimary },
   ctaHint: { fontSize: 13, color: Colors.textMuted },
   ctaButton: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -957,12 +1001,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(168,85,247,0.1)',
+    backgroundColor: Colors.accentBg,
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderWidth: 1,
-    borderColor: 'rgba(168,85,247,0.3)',
+    borderColor: Colors.accentBorder,
     marginTop: 2,
   },
   expandMapBtnText: {
@@ -978,5 +1022,5 @@ const styles = StyleSheet.create({
     borderRadius: 12, borderWidth: 1, borderColor: Colors.error,
     padding: 14, marginBottom: 4,
   },
-  soldOutText: { fontSize: 15, fontWeight: '700', color: Colors.error },
+  soldOutText: { fontSize: 15, fontFamily: Font.bold, color: Colors.error },
 });

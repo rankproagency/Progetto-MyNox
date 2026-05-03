@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/colors';
+import { Font } from '../constants/typography';
 
 interface Props {
   visible: boolean;
@@ -131,7 +132,7 @@ const styles = StyleSheet.create({
     width: 36, height: 4, borderRadius: 2,
     backgroundColor: Colors.border, marginBottom: 8,
   },
-  title: { fontSize: 20, fontWeight: '800', color: Colors.textPrimary, textAlign: 'center' },
+  title: { fontSize: 20, fontFamily: Font.extraBold, color: Colors.textPrimary, textAlign: 'center' },
   subtitle: { fontSize: 13, color: Colors.textMuted, textAlign: 'center', marginBottom: 4 },
 
   card: {
@@ -140,14 +141,14 @@ const styles = StyleSheet.create({
     padding: 16, marginVertical: 4,
   },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  cardEvent: { fontSize: 15, fontWeight: '800', color: Colors.textPrimary, marginBottom: 2, maxWidth: 200 },
+  cardEvent: { fontSize: 15, fontFamily: Font.extraBold, color: Colors.textPrimary, marginBottom: 2, maxWidth: 200 },
   cardClub: { fontSize: 12, color: Colors.textSecondary, marginBottom: 2 },
   cardMeta: { fontSize: 11, color: Colors.textMuted },
   cardBadge: {
     backgroundColor: Colors.accent,
     borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4,
   },
-  cardBadgeText: { fontSize: 12, fontWeight: '700', color: Colors.white },
+  cardBadgeText: { fontSize: 12, fontFamily: Font.bold, color: Colors.white },
   cardDivider: { height: 1, backgroundColor: Colors.border, marginVertical: 12 },
   qrArea: { alignItems: 'center', padding: 4, backgroundColor: 'white', borderRadius: 12, alignSelf: 'center' },
 
@@ -156,12 +157,12 @@ const styles = StyleSheet.create({
     borderRadius: 16, paddingVertical: 15,
   },
   appleBtn: { backgroundColor: '#ffffff' },
-  appleBtnText: { fontSize: 15, fontWeight: '700', color: '#000' },
+  appleBtnText: { fontSize: 15, fontFamily: Font.bold, color: '#000' },
   googleBtn: {
     backgroundColor: Colors.surfaceElevated,
     borderWidth: 1, borderColor: Colors.border,
   },
-  googleBtnText: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary },
+  googleBtnText: { fontSize: 15, fontFamily: Font.bold, color: Colors.textPrimary },
 
   note: {
     fontSize: 11, color: Colors.textMuted, textAlign: 'center',

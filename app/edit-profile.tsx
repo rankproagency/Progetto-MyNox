@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/colors';
+import { Font } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 import { ALL_GENRES, GENRE_CONFIG } from '../constants/genres';
 import { Genre } from '../types';
@@ -119,7 +120,7 @@ export default function EditProfileScreen() {
                     ]}>
                       <Text style={[
                         styles.genreTagText,
-                        active && { color: cfg.color.replace(/[\d.]+\)$/, '1)'), fontWeight: '700' },
+                        active && { color: cfg.color.replace(/[\d.]+\)$/, '1)'), fontFamily: Font.bold },
                       ]}>{genre}</Text>
                     </View>
                   </TouchableOpacity>
@@ -168,7 +169,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingVertical: 14,
     borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
-  headerTitle: { fontSize: 16, fontWeight: '700', color: Colors.textPrimary },
+  headerTitle: { fontSize: 16, fontFamily: Font.bold, color: Colors.textPrimary },
   backButton: {
     width: 38, height: 38, borderRadius: 12,
     backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border,
@@ -182,10 +183,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
     justifyContent: 'center', alignItems: 'center',
   },
-  avatarInitial: { fontSize: 32, fontWeight: '800', color: Colors.white },
+  avatarInitial: { fontSize: 32, fontFamily: Font.extraBold, color: Colors.white },
 
   section: { marginBottom: 20 },
-  fieldLabel: { fontSize: 12, fontWeight: '600', color: Colors.textMuted, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  fieldLabel: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.textMuted, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
   input: {
     backgroundColor: Colors.surface,
     borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
@@ -219,7 +220,7 @@ const styles = StyleSheet.create({
     borderRadius: 16, paddingVertical: 16,
     alignItems: 'center',
   },
-  ctaText: { fontSize: 16, fontWeight: '800', color: Colors.white },
+  ctaText: { fontSize: 16, fontFamily: Font.extraBold, color: Colors.white },
 
   genresList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   genreTag: {
@@ -229,6 +230,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     backgroundColor: Colors.surface,
   },
-  genreTagText: { fontSize: 13, fontWeight: '600', color: Colors.textMuted },
-  genreTagTextActive: { fontSize: 13, fontWeight: '600', color: '#ffffff' },
+  genreTagText: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.textMuted },
+  genreTagTextActive: { fontSize: 13, fontFamily: Font.semiBold, color: '#ffffff' },
 });

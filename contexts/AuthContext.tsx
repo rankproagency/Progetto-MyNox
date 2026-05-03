@@ -1,8 +1,13 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { LogBox } from 'react-native';
 import { supabase } from '../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
+
+// Il Supabase client logga questo errore internamente prima di emettere SIGNED_OUT.
+// Il flusso è corretto (l'utente viene sloggato), ma l'overlay in dev è fuorviante.
+LogBox.ignoreLogs(['AuthApiError: Invalid Refresh Token']);
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -88,6 +93,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsOnboarded(false);
       }
     }
+
+    // Se il refresh token in cache è invalido, pulisci la sessione prima che Supabase
+    // tenti il refresh automatico e loggi l'errore internamente.
+    (async () => {
+      try {
+        const { error } = await supabase.auth.refreshSession();
+        if (error?.message?.toLowerCase().includes('refresh token')) {
+          await supabase.auth.signOut();
+        }
+      } catch (_) {}
+    })();
 
     // Fallback: se INITIAL_SESSION non scatta entro 3s (TLS issue), sblocca il routing
     const fallback = setTimeout(() => setIsLoading(false), 3000);

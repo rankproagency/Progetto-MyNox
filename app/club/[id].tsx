@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/colors';
+import { Font } from '../../constants/typography';
 import { supabase } from '../../lib/supabase';
 import EventListItem from '../../components/EventListItem';
 import { Club, Event, TicketType, Table } from '../../types';
@@ -262,12 +263,12 @@ const styles = StyleSheet.create({
   heroBottom: {
     position: 'absolute', bottom: 20, left: 20, right: 20,
   },
-  clubName: { fontSize: 28, fontWeight: '900', color: Colors.white, marginBottom: 6 },
+  clubName: { fontSize: 28, fontFamily: Font.black, color: Colors.white, marginBottom: 6 },
   locationRow: { flexDirection: 'row', alignItems: 'center' },
   locationText: { fontSize: 13, color: Colors.textSecondary },
 
   section: { paddingHorizontal: 20, paddingTop: 24 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: Colors.textPrimary, marginBottom: 14 },
+  sectionTitle: { fontSize: 18, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 14 },
   empty: { alignItems: 'center', paddingTop: 32, gap: 10 },
   emptyText: { fontSize: 14, color: Colors.textMuted },
 
@@ -281,7 +282,7 @@ const styles = StyleSheet.create({
     flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
     paddingVertical: 14, paddingHorizontal: 14,
   },
-  socialLabel: { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' },
+  socialLabel: { fontSize: 13, color: Colors.textSecondary, fontFamily: Font.medium },
   contactRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     paddingVertical: 12, paddingHorizontal: 14,

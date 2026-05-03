@@ -9,6 +9,7 @@ import { ProfileProvider } from '../contexts/ProfileContext';
 import { WaitlistProvider } from '../contexts/WaitlistContext';
 import { RecentlyViewedProvider } from '../contexts/RecentlyViewedContext';
 import { EventsProvider } from '../contexts/EventsContext';
+import { ClubsProvider } from '../contexts/ClubsContext';
 import * as Notifications from 'expo-notifications';
 import { requestNotificationPermission } from '../hooks/useNotifications';
 import {
@@ -47,15 +48,17 @@ export default function RootLayout() {
     <AuthProvider>
       <ProfileProvider>
         <EventsProvider>
-          <TicketsProvider>
-            <WaitlistProvider>
-              <FavoritesProvider>
-                <RecentlyViewedProvider>
-                  <RootNavigator />
-                </RecentlyViewedProvider>
-              </FavoritesProvider>
-            </WaitlistProvider>
-          </TicketsProvider>
+          <ClubsProvider>
+            <TicketsProvider>
+              <WaitlistProvider>
+                <FavoritesProvider>
+                  <RecentlyViewedProvider>
+                    <RootNavigator />
+                  </RecentlyViewedProvider>
+                </FavoritesProvider>
+              </WaitlistProvider>
+            </TicketsProvider>
+          </ClubsProvider>
         </EventsProvider>
       </ProfileProvider>
     </AuthProvider>

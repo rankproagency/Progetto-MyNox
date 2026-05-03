@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
+import { Font } from '../constants/typography';
 
 const SECTIONS = [
   {
@@ -68,7 +69,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingVertical: 14,
     borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
-  headerTitle: { fontSize: 16, fontWeight: '700', color: Colors.textPrimary },
+  headerTitle: { fontSize: 16, fontFamily: Font.bold, color: Colors.textPrimary },
   backButton: {
     width: 38, height: 38, borderRadius: 12,
     backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border,
@@ -81,7 +82,7 @@ const styles = StyleSheet.create({
     borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
     padding: 16, marginBottom: 12,
   },
-  cardTitle: { fontSize: 14, fontWeight: '700', color: Colors.textPrimary, marginBottom: 8 },
+  cardTitle: { fontSize: 14, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 8 },
   cardBody: { fontSize: 13, color: Colors.textSecondary, lineHeight: 20 },
   footer: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
