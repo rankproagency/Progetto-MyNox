@@ -1,6 +1,6 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { FavoritesProvider } from '../contexts/FavoritesContext';
@@ -68,6 +68,7 @@ function RootNavigator() {
   const router = useRouter();
   const segments = useSegments();
   const [ready, setReady] = useState(false);
+  const navigating = useRef(false);
 
   useEffect(() => {
     requestNotificationPermission();
@@ -83,20 +84,29 @@ function RootNavigator() {
     return () => sub.remove();
   }, []);
 
+  const userId = user?.id ?? null;
+  const segment0 = segments[0] as string | undefined;
+
   useEffect(() => {
     if (!ready || isLoading) return;
 
     const authScreens = ['onboarding', 'login', 'register'];
-    const inAuthScreen = authScreens.includes(segments[0] as string);
+    const inAuthScreen = authScreens.includes(segment0 ?? '');
 
+    let target: string | null = null;
     if (!isOnboarded && !inAuthScreen) {
-      router.replace('/onboarding');
-    } else if (isOnboarded && !user && !inAuthScreen) {
-      router.replace('/login');
-    } else if (user && inAuthScreen) {
-      router.replace('/(tabs)');
+      target = '/onboarding';
+    } else if (isOnboarded && !userId && !inAuthScreen) {
+      target = '/login';
+    } else if (userId && inAuthScreen) {
+      target = '/(tabs)';
     }
-  }, [ready, isLoading, user, isOnboarded, segments]);
+
+    if (!target || navigating.current) return;
+    navigating.current = true;
+    router.replace(target as Parameters<typeof router.replace>[0]);
+    setTimeout(() => { navigating.current = false; }, 500);
+  }, [ready, isLoading, userId, isOnboarded, segment0]);
 
   return (
     <>
