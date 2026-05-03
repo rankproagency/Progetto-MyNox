@@ -2,9 +2,9 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Share, Image, Mod
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
 import { useTickets, MockTicket } from '../../contexts/TicketsContext';
@@ -62,9 +62,16 @@ const TAB_CONFIG: { key: Tab; label: string }[] = [
 
 export default function TicketsScreen() {
   const router = useRouter();
+  const { tab: tabParam, t } = useLocalSearchParams<{ tab?: string; t?: string }>();
   const { tickets, removeTicket, markTicketGifted, markTicketReclaimed, refreshTickets } = useTickets();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('future');
+
+  useEffect(() => {
+    if (!t) return;
+    if (tabParam === 'past') setActiveTab('past');
+    else if (tabParam === 'future') setActiveTab('future');
+  }, [t]);
   const [claimModalOpen, setClaimModalOpen] = useState(false);
   const [claimCode, setClaimCode] = useState('');
   const [claimLoading, setClaimLoading] = useState(false);
