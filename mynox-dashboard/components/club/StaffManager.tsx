@@ -1,15 +1,16 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { UserPlus, Trash2, ShieldCheck, LayoutGrid, BarChart3, Users, Sliders } from 'lucide-react';
+import { UserPlus, Trash2, ShieldCheck, LayoutGrid, BarChart3, Users, Sliders, Eye } from 'lucide-react';
 import type { ClubStaff, StaffPermissions } from '@/types';
 
-type PermKey = keyof Pick<ClubStaff, 'can_manage_events' | 'can_manage_tables' | 'can_view_analytics'>;
+type PermKey = keyof Pick<ClubStaff, 'can_manage_events' | 'can_manage_tables' | 'can_view_analytics' | 'can_view_participants'>;
 
 const PERMISSION_LABELS: { key: PermKey; label: string }[] = [
   { key: 'can_manage_events', label: 'Gestione eventi' },
   { key: 'can_manage_tables', label: 'Tavoli & piantina' },
   { key: 'can_view_analytics', label: 'Analytics (incassi)' },
+  { key: 'can_view_participants', label: 'Lista partecipanti' },
 ];
 
 interface Preset {
@@ -26,35 +27,35 @@ const PRESETS: Preset[] = [
     label: 'Buttafuori',
     description: 'Solo accesso base',
     icon: ShieldCheck,
-    permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false },
+    permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false, can_view_participants: false },
   },
   {
     id: 'responsabile_sala',
     label: 'Responsabile sala',
     description: 'Gestione tavoli',
     icon: LayoutGrid,
-    permissions: { can_manage_events: false, can_manage_tables: true, can_view_analytics: false },
+    permissions: { can_manage_events: false, can_manage_tables: true, can_view_analytics: false, can_view_participants: true },
   },
   {
     id: 'gestore_eventi',
     label: 'Gestore eventi',
     description: 'Crea eventi + analytics',
     icon: BarChart3,
-    permissions: { can_manage_events: true, can_manage_tables: false, can_view_analytics: true },
+    permissions: { can_manage_events: true, can_manage_tables: false, can_view_analytics: true, can_view_participants: true },
   },
   {
     id: 'full',
     label: 'Accesso completo',
     description: 'Tutti i permessi',
     icon: Users,
-    permissions: { can_manage_events: true, can_manage_tables: true, can_view_analytics: true },
+    permissions: { can_manage_events: true, can_manage_tables: true, can_view_analytics: true, can_view_participants: true },
   },
   {
     id: 'custom',
     label: 'Custom',
     description: 'Configura manualmente',
     icon: Sliders,
-    permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false },
+    permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false, can_view_participants: false },
   },
 ];
 
@@ -70,6 +71,7 @@ export default function StaffManager({ initialStaff }: Props) {
     can_manage_events: false,
     can_manage_tables: false,
     can_view_analytics: false,
+    can_view_participants: false,
   });
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState('');
