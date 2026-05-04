@@ -265,7 +265,7 @@ export default function EventScreen() {
               )}
             </View>
 
-            {/* Data · orario · dress code */}
+            {/* Data · orario · dress code · età */}
             <View style={styles.heroMeta}>
               <Text style={styles.heroMetaText}>{formatDate(event.date)}</Text>
               <Text style={styles.heroMetaDot}>·</Text>
@@ -274,6 +274,10 @@ export default function EventScreen() {
               </Text>
               <Text style={styles.heroMetaDot}>·</Text>
               <Text style={styles.heroMetaText}>{event.dressCode}</Text>
+              <Text style={styles.heroMetaDot}>·</Text>
+              <Text style={[styles.heroMetaText, event.minAge < 18 && { color: Colors.warning }]}>
+                {event.minAge}+
+              </Text>
             </View>
 
             {/* Generi — dentro l'hero, zero gap */}
@@ -682,6 +686,24 @@ const styles = StyleSheet.create({
   },
   heroMetaText: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontFamily: Font.semiBold },
   heroMetaDot: { fontSize: 13, color: 'rgba(255,255,255,0.3)' },
+  minAgeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.accentBg,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.accentBorder,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginTop: 8,
+  },
+  minAgeText: {
+    fontSize: 12,
+    fontFamily: Font.semiBold,
+    color: Colors.accent,
+  },
   heroGenres: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 7,
   },

@@ -586,11 +586,16 @@ function ClubCard({
                   {formatEventDate(nextEvent.date)} · {nextEvent.name}
                 </Text>
               </View>
-              {minPrice !== null && (
-                <View style={styles.priceBadge}>
-                  <Text style={styles.priceText}>da €{minPrice}</Text>
-                </View>
-              )}
+              <View style={styles.eventMetaRow}>
+                <Text style={[styles.ageText, nextEvent.minAge > 18 && { color: Colors.warning }]}>
+                  {nextEvent.minAge}+
+                </Text>
+                {minPrice !== null && (
+                  <View style={styles.priceBadge}>
+                    <Text style={styles.priceText}>da €{minPrice}</Text>
+                  </View>
+                )}
+              </View>
             </View>
           ) : (
             <Text style={styles.noEventsText}>Nessun evento in programma</Text>
@@ -893,6 +898,8 @@ const styles = StyleSheet.create({
   cardDistance: { fontSize: 11, fontFamily: Font.semiBold, color: Colors.accent, flexShrink: 0 },
 
   eventRow: { gap: 5 },
+  eventMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  ageText: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.textMuted },
   eventBadge: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   eventDot: {
     width: 6,

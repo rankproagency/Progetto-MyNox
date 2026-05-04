@@ -257,29 +257,64 @@ export default function ProfileScreen() {
             </View>
           )}
 
-          {/* Storico serate */}
-          {(() => {
-            const past = pastTickets;
+          {/* Serate passate — memory card */}
+          {pastTickets.length > 0 && (() => {
+            const sorted = [...pastTickets].sort((a, b) => b.rawDate.localeCompare(a.rawDate));
+            const thumbs = sorted.filter((t) => t.eventImageUrl).slice(0, 3);
+            const bgImage = sorted.find((t) => t.eventImageUrl)?.eventImageUrl;
+
             return (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Storico serate</Text>
-                {past.length === 0 ? (
-                  <View style={styles.historyEmpty}>
-                    <Ionicons name="calendar-outline" size={32} color={Colors.textMuted} />
-                    <Text style={styles.historyEmptyText}>Nessuna serata ancora</Text>
-                    <Text style={styles.historyEmptySubtext}>Le serate passate appariranno qui</Text>
-                  </View>
-                ) : (
-                  past.map((ticket) => (
-                    <View key={ticket.id} style={styles.historyItem}>
-                      <View style={[styles.historyDot, ticket.status === 'used' && styles.historyDotUsed]} />
-                      <View style={styles.historyInfo}>
-                        <Text style={styles.historyEvent} numberOfLines={1}>{ticket.eventName}</Text>
-                        <Text style={styles.historyMeta}>{ticket.clubName} · {ticket.date}</Text>
+                <TouchableOpacity
+                  style={styles.memoryCard}
+                  activeOpacity={0.88}
+                  onPress={() => router.push({ pathname: '/(tabs)/tickets', params: { tab: 'past', t: String(Date.now()) } })}
+                >
+                  {/* Sfondo — ultimo evento */}
+                  {bgImage && (
+                    <Image source={{ uri: bgImage }} style={styles.memoryBg} resizeMode="cover" />
+                  )}
+                  <LinearGradient
+                    colors={['rgba(7,8,15,0.3)', 'rgba(7,8,15,0.92)']}
+                    style={StyleSheet.absoluteFillObject}
+                  />
+
+                  {/* Contenuto */}
+                  <View style={styles.memoryContent}>
+                    <View style={styles.memoryTop}>
+                      <View style={styles.memoryBadge}>
+                        <Ionicons name="time-outline" size={11} color={Colors.accent} />
+                        <Text style={styles.memoryBadgeText}>Storico</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.5)" />
+                    </View>
+
+                    <View style={styles.memoryBottom}>
+                      {/* Thumbnail sovrapposti */}
+                      {thumbs.length > 0 && (
+                        <View style={styles.thumbStack}>
+                          {thumbs.map((t, i) => (
+                            <Image
+                              key={t.id}
+                              source={{ uri: t.eventImageUrl }}
+                              style={[styles.thumbStackItem, { marginLeft: i === 0 ? 0 : -10, zIndex: thumbs.length - i }]}
+                              resizeMode="cover"
+                            />
+                          ))}
+                        </View>
+                      )}
+
+                      <View style={styles.memoryStats}>
+                        <Text style={styles.memoryCount}>
+                          {eventsAttended} {eventsAttended === 1 ? 'serata' : 'serate'}
+                        </Text>
+                        <Text style={styles.memorySubCount}>
+                          in {uniqueClubs} {uniqueClubs === 1 ? 'club' : 'club diversi'}
+                        </Text>
                       </View>
                     </View>
-                  ))
-                )}
+                  </View>
+                </TouchableOpacity>
               </View>
             );
           })()}
@@ -497,29 +532,72 @@ const styles = StyleSheet.create({
   },
   soldOutText: { fontSize: 11, fontFamily: Font.bold, color: Colors.error },
 
-  // History
-  historyEmpty: {
-    alignItems: 'center', paddingVertical: 28, gap: 8,
+  // Memory card — serate passate
+  memoryCard: {
+    height: 140,
+    borderRadius: 18,
+    overflow: 'hidden',
     backgroundColor: Colors.surface,
-    borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
-  historyEmptyText: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.textMuted },
-  historyEmptySubtext: { fontSize: 12, color: Colors.textMuted, textAlign: 'center', paddingHorizontal: 20 },
-  historyDotUsed: { backgroundColor: Colors.textMuted },
-  historyItem: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
+  memoryBg: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  memoryContent: {
+    flex: 1,
+    padding: 14,
+    justifyContent: 'space-between',
+  },
+  memoryTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  memoryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: Colors.accentBg,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.accentBorder,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  memoryBadgeText: {
+    fontSize: 11,
+    fontFamily: Font.semiBold,
+    color: Colors.accent,
+  },
+  memoryBottom: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+  },
+  thumbStack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  thumbStackItem: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: Colors.background,
     backgroundColor: Colors.surface,
-    borderRadius: 12, borderWidth: 1, borderColor: Colors.border,
-    padding: 12, marginBottom: 8,
   },
-  historyDot: {
-    width: 8, height: 8, borderRadius: 4,
-    backgroundColor: Colors.accent,
-    flexShrink: 0,
+  memoryStats: { alignItems: 'flex-end' },
+  memoryCount: {
+    fontSize: 20,
+    fontFamily: Font.extraBold,
+    color: Colors.white,
   },
-  historyInfo: { flex: 1 },
-  historyEvent: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.textPrimary, marginBottom: 3 },
-  historyMeta: { fontSize: 11, color: Colors.textMuted },
+  memorySubCount: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.55)',
+    fontFamily: Font.regular,
+  },
 
   // Account rows
   accountRow: {

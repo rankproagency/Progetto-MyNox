@@ -92,6 +92,9 @@ export default function TonightHero({ event }: Props) {
               </>
             )}
             <Text style={styles.timeText}>· {event.startTime}</Text>
+            <Text style={[styles.timeText, event.minAge > 18 && { color: Colors.warning }]}>
+              · {event.minAge}+
+            </Text>
           </View>
           {isSoldOut ? (
             <View style={styles.soldOutBtn}>
