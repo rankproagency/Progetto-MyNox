@@ -3,31 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MyNox — Presentazione</title>
+<title>MyNox — Per le Discoteche</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800;9..40,900&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
     --bg: #07080f;
     --surface: #0f111a;
-    --surface2: #161923;
     --accent: #a855f7;
     --accent-dark: #9333ea;
-    --accent-dim: rgba(168,85,247,0.12);
-    --accent-border: rgba(168,85,247,0.25);
+    --accent-dim: rgba(168,85,247,0.10);
+    --accent-border: rgba(168,85,247,0.22);
     --text: #f8fafc;
     --muted: #64748b;
     --muted2: #94a3b8;
     --green: #22c55e;
-    --blue: #818cf8;
-    --orange: #f97316;
-    --pink: #ec4899;
+    --green-dim: rgba(34,197,94,0.10);
+    --green-border: rgba(34,197,94,0.20);
   }
 
   html { scroll-behavior: smooth; }
-
   body {
     background: var(--bg);
     color: var(--text);
@@ -36,372 +33,228 @@
     overflow-x: hidden;
   }
 
-  /* ── NAV ── */
+  /* NAV */
   nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 48px;
-    background: rgba(7,8,15,0.85);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(168,85,247,0.15);
+    padding: 18px 56px;
+    background: rgba(7,8,15,0.90);
+    backdrop-filter: blur(24px);
+    border-bottom: 1px solid rgba(168,85,247,0.12);
   }
   .nav-logo {
-    font-size: 22px; font-weight: 900; letter-spacing: -0.5px;
-    color: var(--text);
-    text-shadow: 0 0 30px rgba(168,85,247,0.8);
+    font-size: 20px; font-weight: 900; letter-spacing: -0.5px;
+    color: var(--text); text-shadow: 0 0 28px rgba(168,85,247,0.7);
   }
   .nav-logo span { color: var(--accent); }
-  .nav-links { display: flex; gap: 32px; }
-  .nav-links a {
-    color: var(--muted2); text-decoration: none; font-size: 14px;
-    font-weight: 500; transition: color 0.2s;
+  .nav-tag {
+    font-size: 12px; font-weight: 600; color: var(--muted2);
+    letter-spacing: 0.5px;
   }
-  .nav-links a:hover { color: var(--accent); }
 
-  /* ── SECTIONS ── */
-  section { padding: 100px 48px; max-width: 1200px; margin: 0 auto; }
-  .full-width { max-width: none; padding: 100px 0; }
+  /* LAYOUT */
+  .section { padding: 100px 56px; max-width: 1140px; margin: 0 auto; }
+  .divider {
+    height: 1px; margin: 0 56px;
+    background: linear-gradient(90deg, transparent, rgba(168,85,247,0.15), transparent);
+  }
 
-  /* ── HERO ── */
+  /* HERO */
   .hero {
     min-height: 100vh;
     display: flex; flex-direction: column;
     justify-content: center; align-items: center;
-    text-align: center;
-    padding-top: 120px;
-    position: relative;
-    overflow: hidden;
+    text-align: center; padding: 120px 56px 80px;
+    position: relative; overflow: hidden;
   }
   .hero-bg {
     position: absolute; inset: 0; z-index: 0;
     background:
-      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(168,85,247,0.18) 0%, transparent 70%),
-      radial-gradient(ellipse 40% 40% at 80% 80%, rgba(147,51,234,0.08) 0%, transparent 60%);
+      radial-gradient(ellipse 80% 55% at 50% -5%, rgba(168,85,247,0.16) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 20% 90%, rgba(147,51,234,0.06) 0%, transparent 60%);
   }
   .hero-grid {
     position: absolute; inset: 0; z-index: 0;
     background-image:
-      linear-gradient(rgba(168,85,247,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(168,85,247,0.04) 1px, transparent 1px);
-    background-size: 60px 60px;
-    mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 0%, transparent 100%);
+      linear-gradient(rgba(168,85,247,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(168,85,247,0.035) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 65% 65% at 50% 50%, black 0%, transparent 100%);
   }
-  .hero-content { position: relative; z-index: 1; }
-  .hero-badge {
+  .hero-content { position: relative; z-index: 1; max-width: 860px; }
+
+  .eyebrow {
     display: inline-flex; align-items: center; gap: 8px;
-    background: var(--accent-dim);
-    border: 1px solid var(--accent-border);
-    border-radius: 100px; padding: 6px 16px;
-    font-size: 13px; font-weight: 600; color: var(--accent);
-    margin-bottom: 28px; letter-spacing: 0.5px;
+    background: var(--accent-dim); border: 1px solid var(--accent-border);
+    border-radius: 100px; padding: 6px 18px;
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 32px;
   }
-  .hero-badge::before { content: '✦'; }
+
   h1 {
-    font-size: clamp(48px, 7vw, 88px);
-    font-weight: 900; line-height: 1.05;
-    letter-spacing: -2px;
+    font-size: clamp(44px, 6.5vw, 82px);
+    font-weight: 900; line-height: 1.05; letter-spacing: -2px;
     margin-bottom: 24px;
   }
-  h1 .glow { color: var(--accent); text-shadow: 0 0 60px rgba(168,85,247,0.5); }
+  h1 .accent { color: var(--accent); text-shadow: 0 0 50px rgba(168,85,247,0.4); }
+
   .hero-sub {
-    font-size: clamp(16px, 2vw, 20px);
-    color: var(--muted2); max-width: 640px;
-    margin: 0 auto 48px; line-height: 1.7; font-weight: 400;
+    font-size: clamp(16px, 1.8vw, 19px); color: var(--muted2);
+    max-width: 580px; margin: 0 auto 48px; line-height: 1.75; font-weight: 400;
   }
-  .hero-cta {
-    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
-  }
-  .btn {
-    padding: 14px 28px; border-radius: 12px;
-    font-size: 15px; font-weight: 700;
-    cursor: pointer; text-decoration: none;
-    transition: all 0.2s;
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-    color: white;
-    box-shadow: 0 0 30px rgba(168,85,247,0.3);
-  }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 50px rgba(168,85,247,0.5); }
-  .btn-ghost {
-    background: transparent; color: var(--muted2);
-    border: 1px solid rgba(255,255,255,0.1);
-  }
-  .btn-ghost:hover { border-color: var(--accent-border); color: var(--accent); }
 
-  .hero-stats {
-    display: flex; gap: 48px; justify-content: center;
-    margin-top: 72px; flex-wrap: wrap;
+  .hero-numbers {
+    display: flex; gap: 56px; justify-content: center;
+    flex-wrap: wrap; margin-top: 56px;
+    padding-top: 48px;
+    border-top: 1px solid rgba(255,255,255,0.06);
   }
-  .hero-stat { text-align: center; }
-  .hero-stat-num {
-    font-size: 36px; font-weight: 900; color: var(--accent);
-    text-shadow: 0 0 30px rgba(168,85,247,0.4);
+  .hero-num { text-align: center; }
+  .hero-num-val {
+    font-size: 40px; font-weight: 900;
+    color: var(--accent); text-shadow: 0 0 30px rgba(168,85,247,0.35);
+    line-height: 1;
   }
-  .hero-stat-label { font-size: 13px; color: var(--muted); font-weight: 500; margin-top: 4px; }
+  .hero-num-label { font-size: 13px; color: var(--muted); margin-top: 6px; font-weight: 500; }
 
-  /* ── SECTION HEADERS ── */
-  .section-label {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 12px; font-weight: 700; letter-spacing: 2px;
+  /* SECTION TITLES */
+  .label {
+    font-size: 11px; font-weight: 700; letter-spacing: 2.5px;
     text-transform: uppercase; color: var(--accent);
-    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px;
   }
-  .section-label::before { content: ''; display: block; width: 20px; height: 2px; background: var(--accent); border-radius: 2px; }
+  .label::before { content: ''; display: block; width: 18px; height: 2px; background: var(--accent); border-radius: 2px; }
+
   h2 {
-    font-size: clamp(32px, 4vw, 52px);
-    font-weight: 900; letter-spacing: -1px;
-    line-height: 1.1; margin-bottom: 16px;
+    font-size: clamp(30px, 3.5vw, 48px);
+    font-weight: 900; letter-spacing: -1px; line-height: 1.1;
+    margin-bottom: 14px;
   }
-  h2 .accent { color: var(--accent); }
+  h2 .a { color: var(--accent); }
+
   .section-desc {
-    font-size: 17px; color: var(--muted2);
-    max-width: 600px; line-height: 1.7; margin-bottom: 60px;
+    font-size: 17px; color: var(--muted2); line-height: 1.7;
+    max-width: 560px; margin-bottom: 56px; font-weight: 400;
   }
 
-  /* ── PROBLEM STRIP ── */
-  .problem-strip {
-    background: linear-gradient(135deg, rgba(239,68,68,0.06) 0%, rgba(239,68,68,0.02) 100%);
-    border-top: 1px solid rgba(239,68,68,0.15);
-    border-bottom: 1px solid rgba(239,68,68,0.15);
-    padding: 60px 48px;
-  }
-  .problem-grid { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
-  .problem-card {
-    background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.12);
-    border-radius: 16px; padding: 28px;
-  }
-  .problem-icon { font-size: 28px; margin-bottom: 12px; }
-  .problem-title { font-size: 16px; font-weight: 700; color: #fca5a5; margin-bottom: 8px; }
-  .problem-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
-
-  /* ── CARDS GRID ── */
-  .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-  .cards-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+  /* CARDS */
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
 
   .card {
     background: var(--surface);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 20px; padding: 28px;
-    transition: all 0.3s;
-    position: relative; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.055);
+    border-radius: 20px; padding: 30px;
+    transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
   }
-  .card::before {
-    content: ''; position: absolute; inset: 0; border-radius: 20px;
-    background: linear-gradient(135deg, rgba(168,85,247,0.04) 0%, transparent 60%);
-    opacity: 0; transition: opacity 0.3s;
+  .card:hover {
+    border-color: var(--accent-border);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.25);
   }
-  .card:hover { border-color: var(--accent-border); transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(168,85,247,0.1); }
-  .card:hover::before { opacity: 1; }
-
   .card-icon {
-    width: 48px; height: 48px; border-radius: 14px;
+    width: 46px; height: 46px; border-radius: 13px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 22px; margin-bottom: 18px;
+    font-size: 20px; margin-bottom: 18px;
     background: var(--accent-dim); border: 1px solid var(--accent-border);
   }
-  .card-icon.green { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.2); }
-  .card-icon.blue { background: rgba(129,140,248,0.1); border-color: rgba(129,140,248,0.2); }
-  .card-icon.orange { background: rgba(249,115,22,0.1); border-color: rgba(249,115,22,0.2); }
-  .card-icon.pink { background: rgba(236,72,153,0.1); border-color: rgba(236,72,153,0.2); }
+  .card-icon.g { background: var(--green-dim); border-color: var(--green-border); }
+  .card-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .card-desc { font-size: 14px; color: var(--muted2); line-height: 1.65; }
 
-  .card-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
-  .card-desc { font-size: 14px; color: var(--muted); line-height: 1.65; }
+  /* BIG STAT CARDS */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; margin-bottom: 56px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid rgba(255,255,255,0.055);
+    border-radius: 18px; padding: 28px 24px; text-align: center;
+  }
+  .stat-val { font-size: 42px; font-weight: 900; color: var(--accent); line-height: 1; }
+  .stat-val.green { color: var(--green); }
+  .stat-label { font-size: 13px; color: var(--muted); margin-top: 8px; font-weight: 500; }
 
-  /* ── FEATURE ROW ── */
-  .feature-row {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 80px; align-items: center; margin-bottom: 100px;
+  /* DASHBOARD MOCK */
+  .db-wrap {
+    background: var(--surface); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 24px; padding: 36px; overflow: hidden; position: relative;
   }
-  .feature-row.reverse { direction: rtl; }
-  .feature-row.reverse > * { direction: ltr; }
-  .feature-visual {
-    background: var(--surface);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 24px; padding: 40px;
-    position: relative; overflow: hidden;
+  .db-wrap::before {
+    content: ''; position: absolute; top: -80px; right: -80px;
+    width: 260px; height: 260px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 70%);
+    pointer-events: none;
   }
-  .feature-visual::before {
-    content: ''; position: absolute; top: -60px; right: -60px;
-    width: 200px; height: 200px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(168,85,247,0.15) 0%, transparent 70%);
-  }
-  .feature-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
-  .feature-list li {
-    display: flex; align-items: flex-start; gap: 12px;
-    font-size: 15px; color: var(--muted2); line-height: 1.5;
-  }
-  .feature-list li::before {
-    content: '✓'; color: var(--green); font-weight: 800;
-    font-size: 13px; margin-top: 2px; flex-shrink: 0;
-    background: rgba(34,197,94,0.1); border-radius: 50%;
-    width: 20px; height: 20px; display: flex;
-    align-items: center; justify-content: center;
-  }
+  .db-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+  .db-title { font-size: 17px; font-weight: 700; }
+  .db-live { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--green); }
+  .db-live::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: block; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-  /* ── AUDIENCE TABS ── */
-  .audience-section { max-width: 1200px; margin: 0 auto; padding: 100px 48px; }
-  .tabs { display: flex; gap: 8px; margin-bottom: 48px; flex-wrap: wrap; }
-  .tab {
-    padding: 10px 20px; border-radius: 100px;
-    font-size: 14px; font-weight: 600; cursor: pointer;
-    border: 1px solid rgba(255,255,255,0.08);
-    background: transparent; color: var(--muted2);
-    transition: all 0.2s;
-  }
-  .tab.active, .tab:hover {
-    background: var(--accent-dim); border-color: var(--accent-border);
-    color: var(--accent);
-  }
+  .db-kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 28px; }
+  .db-kpi { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 18px; }
+  .db-kpi-val { font-size: 26px; font-weight: 900; color: var(--accent); }
+  .db-kpi-lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
-  /* ── MOCK SCREEN ── */
-  .phone-mockup {
-    width: 220px; margin: 0 auto;
-    background: #0a0b12;
-    border-radius: 40px;
-    border: 2px solid rgba(255,255,255,0.1);
-    padding: 16px;
-    box-shadow: 0 40px 80px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05);
-    position: relative;
-  }
-  .phone-mockup::before {
-    content: ''; position: absolute; top: 12px;
-    left: 50%; transform: translateX(-50%);
-    width: 60px; height: 5px;
-    background: rgba(255,255,255,0.15); border-radius: 3px;
-  }
-  .phone-screen { background: #07080f; border-radius: 26px; overflow: hidden; }
-  .phone-row { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); }
-  .phone-row:last-child { border: none; }
-  .phone-label { font-size: 9px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-  .phone-value { font-size: 13px; color: var(--text); font-weight: 600; margin-top: 2px; }
-  .phone-badge {
-    display: inline-block; background: var(--accent-dim);
-    border: 1px solid var(--accent-border); border-radius: 6px;
-    padding: 2px 8px; font-size: 10px; font-weight: 700; color: var(--accent);
-  }
-  .phone-green { color: var(--green); }
-  .phone-header { padding: 16px 14px 8px; background: linear-gradient(180deg, rgba(168,85,247,0.15) 0%, transparent 100%); }
-  .phone-event-name { font-size: 14px; font-weight: 800; color: var(--text); }
-  .phone-event-meta { font-size: 10px; color: var(--muted); margin-top: 3px; }
-  .phone-qr { width: 80px; height: 80px; background: white; margin: 12px auto; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
-  .phone-qr-label { font-size: 9px; text-align: center; color: var(--muted); }
+  .db-bar-row { margin-bottom: 12px; }
+  .db-bar-header { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted2); margin-bottom: 6px; }
+  .db-bar { height: 7px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
+  .db-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent-dark)); }
+  .db-bar-fill.g { background: linear-gradient(90deg, var(--green), #16a34a); }
+  .db-bar-fill.b { background: linear-gradient(90deg, #818cf8, #6366f1); }
 
-  /* ── DASHBOARD PREVIEW ── */
-  .dashboard-preview {
-    background: var(--surface);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 24px; padding: 32px;
-    position: relative; overflow: hidden;
-  }
-  .db-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
-  .db-title { font-size: 18px; font-weight: 700; }
-  .db-badge { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.2); color: var(--green); border-radius: 8px; padding: 4px 12px; font-size: 12px; font-weight: 700; }
-  .db-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
-  .db-stat { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 18px; }
-  .db-stat-num { font-size: 28px; font-weight: 900; color: var(--accent); }
-  .db-stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
-  .db-bar { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; margin-bottom: 8px; overflow: hidden; }
-  .db-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--accent-dark)); }
-  .db-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
-  .db-row:last-child { border: none; }
-  .db-row-name { color: var(--muted2); }
-  .db-row-val { font-weight: 700; }
+  .db-list-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; color: var(--muted2); }
+  .db-list-row:last-child { border: none; }
+  .db-tag { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); border-radius: 6px; padding: 2px 9px; font-size: 11px; font-weight: 700; }
 
-  /* ── FLOW ── */
-  .flow {
-    display: flex; gap: 0; align-items: flex-start; flex-wrap: wrap;
-    justify-content: center;
-  }
-  .flow-step {
-    display: flex; flex-direction: column; align-items: center;
-    text-align: center; max-width: 180px; flex: 1;
-    position: relative;
-  }
-  .flow-step + .flow-step::before {
-    content: '→'; position: absolute; left: -24px; top: 22px;
-    color: var(--accent-border); font-size: 20px;
-  }
-  .flow-num {
-    width: 48px; height: 48px; border-radius: 50%;
-    background: var(--accent-dim); border: 2px solid var(--accent-border);
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 18px; color: var(--accent);
-    margin-bottom: 14px;
-  }
-  .flow-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  /* FLOW */
+  .flow { display: flex; align-items: flex-start; justify-content: center; flex-wrap: wrap; gap: 0; }
+  .flow-step { display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 170px; flex: 1; min-width: 130px; position: relative; }
+  .flow-step + .flow-step::before { content: '›'; position: absolute; left: -18px; top: 18px; color: var(--accent-border); font-size: 22px; }
+  .flow-num { width: 44px; height: 44px; border-radius: 50%; background: var(--accent-dim); border: 2px solid var(--accent-border); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 17px; color: var(--accent); margin-bottom: 14px; }
+  .flow-title { font-size: 13px; font-weight: 700; margin-bottom: 5px; }
   .flow-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
 
-  /* ── COMPARISON ── */
-  .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-  .comp-col { border-radius: 20px; padding: 32px; }
-  .comp-old { background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.15); }
-  .comp-new { background: rgba(168,85,247,0.08); border: 1px solid var(--accent-border); }
-  .comp-header { font-size: 16px; font-weight: 800; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
-  .comp-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; font-size: 14px; color: var(--muted2); line-height: 1.5; }
-  .comp-item.bad::before { content: '✕'; color: #f87171; font-weight: 800; flex-shrink: 0; }
-  .comp-item.good::before { content: '✓'; color: var(--accent); font-weight: 800; flex-shrink: 0; }
+  /* CHECK LIST */
+  .checklist { list-style: none; display: flex; flex-direction: column; gap: 13px; }
+  .checklist li { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; color: var(--muted2); line-height: 1.5; }
+  .checklist li::before { content: '✓'; color: var(--green); font-weight: 800; font-size: 12px; margin-top: 3px; flex-shrink: 0; background: var(--green-dim); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
 
-  /* ── TECH ── */
-  .tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
-  .tech-chip {
-    background: var(--surface); border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 12px; padding: 16px;
-    text-align: center; transition: all 0.2s;
-  }
-  .tech-chip:hover { border-color: var(--accent-border); }
-  .tech-chip-icon { font-size: 24px; margin-bottom: 8px; }
-  .tech-chip-name { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
-  .tech-chip-role { font-size: 11px; color: var(--muted); }
+  /* TWO COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
+  .two-col.flip { direction: rtl; }
+  .two-col.flip > * { direction: ltr; }
 
-  /* ── CITY STRIP ── */
-  .city-strip { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
-  .city-chip {
-    padding: 8px 18px; border-radius: 100px;
-    font-size: 14px; font-weight: 600;
-    display: flex; align-items: center; gap: 8px;
+  /* HIGHLIGHT BOX */
+  .highlight {
+    background: var(--accent-dim); border: 1px solid var(--accent-border);
+    border-radius: 18px; padding: 28px 32px;
+    display: flex; align-items: flex-start; gap: 18px;
   }
-  .city-active { background: var(--accent-dim); border: 1px solid var(--accent-border); color: var(--accent); }
-  .city-soon { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: var(--muted); }
-  .city-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; }
-  .city-badge.active { background: var(--accent); color: white; }
-  .city-badge.soon { background: rgba(255,255,255,0.08); color: var(--muted2); }
+  .highlight-icon { font-size: 28px; flex-shrink: 0; }
+  .highlight-title { font-size: 15px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+  .highlight-text { font-size: 14px; color: var(--muted2); line-height: 1.65; }
 
-  /* ── DIVIDER ── */
-  .divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(168,85,247,0.2), transparent);
-    margin: 0 48px;
-  }
-
-  /* ── FOOTER ── */
-  footer {
-    text-align: center; padding: 60px 48px;
-    border-top: 1px solid rgba(255,255,255,0.05);
-  }
-  .footer-logo { font-size: 28px; font-weight: 900; color: var(--text); text-shadow: 0 0 30px rgba(168,85,247,0.6); margin-bottom: 12px; }
+  /* FOOTER */
+  footer { text-align: center; padding: 56px; border-top: 1px solid rgba(255,255,255,0.05); }
+  .footer-logo { font-size: 26px; font-weight: 900; color: var(--text); text-shadow: 0 0 28px rgba(168,85,247,0.55); margin-bottom: 10px; }
   .footer-logo span { color: var(--accent); }
-  .footer-sub { font-size: 14px; color: var(--muted); }
+  .footer-sub { font-size: 13px; color: var(--muted); }
 
-  /* ── RESPONSIVE ── */
+  /* ANIMATIONS */
+  .fi { opacity: 0; transform: translateY(22px); transition: opacity 0.55s ease, transform 0.55s ease; }
+  .fi.v { opacity: 1; transform: none; }
+
   @media (max-width: 768px) {
     nav { padding: 16px 24px; }
-    .nav-links { display: none; }
-    section { padding: 60px 24px; }
-    .feature-row { grid-template-columns: 1fr; gap: 40px; }
-    .feature-row.reverse { direction: ltr; }
-    .comparison { grid-template-columns: 1fr; }
-    .db-stats { grid-template-columns: 1fr 1fr; }
+    .section { padding: 60px 24px; }
+    .two-col { grid-template-columns: 1fr; gap: 40px; }
+    .two-col.flip { direction: ltr; }
+    .db-kpis { grid-template-columns: 1fr 1fr; }
+    .hero-numbers { gap: 28px; }
+    .divider { margin: 0 24px; }
     .flow-step + .flow-step::before { display: none; }
-    .hero-stats { gap: 28px; }
   }
-
-  /* ── SCROLL ANIMATIONS ── */
-  .fade-in {
-    opacity: 0; transform: translateY(24px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-  }
-  .fade-in.visible { opacity: 1; transform: none; }
 </style>
 </head>
 <body>
@@ -409,441 +262,291 @@
 <!-- NAV -->
 <nav>
   <div class="nav-logo">MY<span>NOX</span></div>
-  <div class="nav-links">
-    <a href="#utenti">Utenti</a>
-    <a href="#discoteche">Discoteche</a>
-    <a href="#staff">Staff</a>
-    <a href="#dashboard">Dashboard</a>
-    <a href="#tech">Tecnologia</a>
-  </div>
+  <div class="nav-tag">Piattaforma per le Discoteche · Padova 2026</div>
 </nav>
 
 <!-- HERO -->
 <div class="hero">
   <div class="hero-bg"></div>
   <div class="hero-grid"></div>
-  <div class="hero-content fade-in">
-    <div class="hero-badge">Piattaforma Nightlife · Padova 2026</div>
-    <h1>Il futuro del<br><span class="glow">nightlife</span><br>è digitale.</h1>
-    <p class="hero-sub">MyNox elimina i PR come intermediari, connette direttamente clienti e discoteche e digitalizza ogni fase della serata — dalla scoperta all'ingresso, fino al free drink.</p>
-    <div class="hero-cta">
-      <a href="#utenti" class="btn btn-primary">Scopri la piattaforma</a>
-      <a href="#dashboard" class="btn btn-ghost">Vedi la dashboard →</a>
-    </div>
-    <div class="hero-stats">
-      <div class="hero-stat">
-        <div class="hero-stat-num">0%</div>
-        <div class="hero-stat-label">Markup PR</div>
+  <div class="hero-content fi">
+    <div class="eyebrow">✦ Per le Discoteche</div>
+    <h1>Più vendite.<br>Più <span class="accent">controllo.</span><br>Zero caos.</h1>
+    <p class="hero-sub">MyNox porta la tua discoteca nel digitale — biglietteria online, analisi in tempo reale, gestione tavoli e staff. Tutto in un'unica piattaforma.</p>
+
+    <div class="hero-numbers">
+      <div class="hero-num">
+        <div class="hero-num-val">100%</div>
+        <div class="hero-num-label">Incasso sotto il tuo controllo</div>
       </div>
-      <div class="hero-stat">
-        <div class="hero-stat-num">3</div>
-        <div class="hero-stat-label">Tap per comprare</div>
+      <div class="hero-num">
+        <div class="hero-num-val">8%</div>
+        <div class="hero-num-label">Commissione fissa — nient'altro</div>
       </div>
-      <div class="hero-stat">
-        <div class="hero-stat-num">8%</div>
-        <div class="hero-stat-label">Commissione fissa</div>
+      <div class="hero-num">
+        <div class="hero-num-val">0</div>
+        <div class="hero-num-label">Carta o penna alla porta</div>
       </div>
-      <div class="hero-stat">
-        <div class="hero-stat-num">∞</div>
-        <div class="hero-stat-label">QR sempre validi</div>
+      <div class="hero-num">
+        <div class="hero-num-val">∞</div>
+        <div class="hero-num-label">Dati in tempo reale</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- PROBLEMA -->
-<div class="problem-strip">
-  <div class="problem-grid">
-    <div class="problem-card fade-in">
-      <div class="problem-icon">🎭</div>
-      <div class="problem-title">Il PR prende il 30–40%</div>
-      <div class="problem-desc">Su ogni biglietto venduto, una fetta enorme va al PR. Il cliente paga di più, la discoteca incassa di meno.</div>
-    </div>
-    <div class="problem-card fade-in">
-      <div class="problem-icon">📞</div>
-      <div class="problem-title">Zero trasparenza sui prezzi</div>
-      <div class="problem-desc">Il prezzo cambia in base a chi conosci. Non esiste un listino ufficiale — è tutto gestito via WhatsApp.</div>
-    </div>
-    <div class="problem-card fade-in">
-      <div class="problem-icon">📄</div>
-      <div class="problem-title">Nessun dato in tempo reale</div>
-      <div class="problem-desc">Le discoteche non sanno quante persone stanno entrando, quanto vendono, chi sono i loro clienti.</div>
-    </div>
-    <div class="problem-card fade-in">
-      <div class="problem-icon">🍹</div>
-      <div class="problem-title">Free drink: caos totale</div>
-      <div class="problem-desc">Tagliandi cartacei, segnature a penna, errori e riusi abusivi. Un sistema analogico nel 2026.</div>
-    </div>
-  </div>
-</div>
+<!-- PERCHÉ MYNOX -->
+<section class="section">
+  <div class="label">Perché MyNox</div>
+  <h2>Hai già tutto.<br>MyNox ti dà i <span class="a">dati e gli strumenti</span></h2>
+  <p class="section-desc">Smetti di gestire la serata a occhio. Con MyNox sai esattamente quanti biglietti hai venduto, quanto hai incassato e come sta andando — in tempo reale, da qualsiasi dispositivo.</p>
 
-<!-- CONFRONTO -->
-<section id="utenti">
-  <div class="section-label">La svolta</div>
-  <h2>Prima <span class="accent">vs</span> Dopo MyNox</h2>
-  <p class="section-desc">Un confronto diretto tra l'esperienza tradizionale con il PR e quella digitale con MyNox.</p>
-  <div class="comparison fade-in">
-    <div class="comp-col comp-old">
-      <div class="comp-header">😤 Con il PR</div>
-      <div class="comp-item bad">Chiami il PR su WhatsApp</div>
-      <div class="comp-item bad">Prezzo arbitrario, nessuna trasparenza</div>
-      <div class="comp-item bad">Nessuna conferma ufficiale</div>
-      <div class="comp-item bad">Lista cartacea all'ingresso — rischio errori</div>
-      <div class="comp-item bad">Free drink su foglietto — riusabile, perdibile</div>
-      <div class="comp-item bad">Zero rimborso se escluso dal buttafuori</div>
-      <div class="comp-item bad">Nessuna storia acquisti, nessun archivio</div>
+  <div class="grid-2 fi">
+    <div class="card">
+      <div class="card-icon g">📊</div>
+      <div class="card-title">Dati in tempo reale</div>
+      <div class="card-desc">Vendite, ingressi e occupazione aggiornati live. Niente più stime a fine serata — sai tutto mentre accade.</div>
     </div>
-    <div class="comp-col comp-new">
-      <div class="comp-header">✨ Con MyNox</div>
-      <div class="comp-item good">Scopri, scegli e acquisti in 3 tap</div>
-      <div class="comp-item good">Prezzo fisso, trasparente, commission inclusa</div>
-      <div class="comp-item good">QR immediato dopo il pagamento</div>
-      <div class="comp-item good">Scanner digitale — nessun errore possibile</div>
-      <div class="comp-item good">QR drink separato, monouso, protetto</div>
-      <div class="comp-item good">Disclaimer chiaro — nessun malinteso</div>
-      <div class="comp-item good">Storico completo, biglietti sempre accessibili</div>
+    <div class="card">
+      <div class="card-icon g">💰</div>
+      <div class="card-title">Incasso diretto e tracciato</div>
+      <div class="card-desc">Ogni pagamento arriva sul tuo conto tramite Stripe. Storico completo, rendicontazione automatica, zero contabilità manuale.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon g">🎫</div>
+      <div class="card-title">Biglietteria digitale</div>
+      <div class="card-desc">Crea i tuoi biglietti, imposta i prezzi e le quantità. I clienti comprano da app e ricevono un QR immediatamente.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon g">🪑</div>
+      <div class="card-title">Gestione tavoli</div>
+      <div class="card-desc">Planimetria interattiva del locale, prenotazioni con caparra digitale, disponibilità aggiornata in tempo reale.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon g">👥</div>
+      <div class="card-title">Gestione staff</div>
+      <div class="card-desc">Invita manager via email con un clic. Ogni ruolo vede solo ciò che gli serve — buttafuori, barista, manager.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon g">📣</div>
+      <div class="card-title">Visibilità sui clienti</div>
+      <div class="card-desc">I tuoi eventi appaiono nell'app ai clienti della tua città. Più visibilità, più vendite, più clienti abituali.</div>
     </div>
   </div>
 </section>
 
 <div class="divider"></div>
 
-<!-- UTENTI / CLIENTI -->
-<section>
-  <div class="section-label">Per i Clienti</div>
-  <h2>L'esperienza <span class="accent">nightlife</span><br>reinventata</h2>
-  <p class="section-desc">Dalla scoperta all'ingresso, tutto in un'app. Nessun intermediario, nessuna sorpresa sul prezzo.</p>
+<!-- DASHBOARD -->
+<section class="section">
+  <div class="label">Dashboard B2B</div>
+  <h2>La tua serata,<br><span class="a">sotto controllo</span> in ogni momento</h2>
+  <p class="section-desc">Una dashboard web dedicata, accessibile da computer o tablet. Vedi tutto — vendite, ingressi, incassi — senza alzarti dalla sedia.</p>
 
-  <!-- FLOW ACQUISTO -->
-  <div class="flow fade-in" style="margin-bottom: 60px;">
+  <div class="db-wrap fi">
+    <div class="db-top">
+      <div class="db-title">Sabato 10 Maggio — Panoramica Evento</div>
+      <div class="db-live">Live</div>
+    </div>
+    <div class="db-kpis">
+      <div class="db-kpi">
+        <div class="db-kpi-val">847</div>
+        <div class="db-kpi-lbl">Biglietti venduti</div>
+      </div>
+      <div class="db-kpi">
+        <div class="db-kpi-val">€ 12.340</div>
+        <div class="db-kpi-lbl">Incasso totale</div>
+      </div>
+      <div class="db-kpi">
+        <div class="db-kpi-val">94%</div>
+        <div class="db-kpi-lbl">Occupazione</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 28px;">
+      <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">Vendite per tipologia</div>
+      <div class="db-bar-row">
+        <div class="db-bar-header"><span>Ingresso Standard</span><span style="color:var(--accent);font-weight:700">412</span></div>
+        <div class="db-bar"><div class="db-bar-fill" style="width:65%"></div></div>
+      </div>
+      <div class="db-bar-row">
+        <div class="db-bar-header"><span>Donna + Drink</span><span style="color:var(--green);font-weight:700">286</span></div>
+        <div class="db-bar"><div class="db-bar-fill g" style="width:45%"></div></div>
+      </div>
+      <div class="db-bar-row">
+        <div class="db-bar-header"><span>Tavoli VIP (caparra)</span><span style="color:#818cf8;font-weight:700">149</span></div>
+        <div class="db-bar"><div class="db-bar-fill b" style="width:28%"></div></div>
+      </div>
+    </div>
+
+    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Ultimi ingressi validati</div>
+    <div class="db-list-row"><span>23:14 — Marco R.</span><span class="db-tag">✓ Ingresso Standard</span></div>
+    <div class="db-list-row"><span>23:12 — Giulia M.</span><span class="db-tag">✓ Donna + Drink</span></div>
+    <div class="db-list-row"><span>23:09 — Alessandro B.</span><span class="db-tag">✓ Tavolo VIP 7</span></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- COME FUNZIONA -->
+<section class="section">
+  <div class="label">Come funziona</div>
+  <h2>Dalla creazione evento<br>all'<span class="a">ingresso del cliente</span></h2>
+  <p class="section-desc">Un flusso completamente digitale e automatico. Meno lavoro per il tuo staff, meno errori, più esperienza per il cliente.</p>
+
+  <div class="flow fi" style="gap: 16px; margin-bottom: 56px;">
     <div class="flow-step">
       <div class="flow-num">1</div>
-      <div class="flow-title">Scopri</div>
-      <div class="flow-desc">Esplora eventi nella tua città filtrati per genere, prezzo, data</div>
+      <div class="flow-title">Crei l'evento</div>
+      <div class="flow-desc">Nome, data, lineup, tipologie biglietti, tavoli e prezzi</div>
     </div>
     <div class="flow-step">
       <div class="flow-num">2</div>
-      <div class="flow-title">Scegli</div>
-      <div class="flow-desc">Seleziona biglietto o tavolo con caparra — tutto trasparente</div>
+      <div class="flow-title">Pubblichi</div>
+      <div class="flow-desc">L'evento appare subito nell'app ai clienti della tua città</div>
     </div>
     <div class="flow-step">
       <div class="flow-num">3</div>
-      <div class="flow-title">Paga</div>
-      <div class="flow-desc">Apple Pay, Google Pay o carta — in un solo tap</div>
+      <div class="flow-title">I clienti comprano</div>
+      <div class="flow-desc">Pagamento sicuro con Apple Pay, Google Pay o carta</div>
     </div>
     <div class="flow-step">
       <div class="flow-num">4</div>
-      <div class="flow-title">Entra</div>
-      <div class="flow-desc">QR generato istantaneamente — funziona anche offline</div>
+      <div class="flow-title">QR generato</div>
+      <div class="flow-desc">Il cliente riceve il QR istantaneamente dopo il pagamento</div>
     </div>
     <div class="flow-step">
       <div class="flow-num">5</div>
-      <div class="flow-title">Drink</div>
-      <div class="flow-desc">Secondo QR per il free drink — monouso e digitale</div>
+      <div class="flow-title">Ingresso e drink</div>
+      <div class="flow-desc">Il buttafuori scansiona il QR — il barista valida il drink digitale</div>
     </div>
   </div>
 
-  <div class="cards-grid fade-in">
-    <div class="card">
-      <div class="card-icon">🗺️</div>
-      <div class="card-title">Mappa Interattiva</div>
-      <div class="card-desc">Trova i club nella tua zona con la mappa in-app. Vedi eventi, distanza e disponibilità in tempo reale.</div>
-    </div>
-    <div class="card">
-      <div class="card-icon">🎁</div>
-      <div class="card-title">Regala un Biglietto</div>
-      <div class="card-desc">Genera un codice regalo e mandalo a un amico via messaggio. Il biglietto viene trasferito in automatico.</div>
-    </div>
-    <div class="card">
-      <div class="card-icon">❤️</div>
-      <div class="card-title">Preferiti e Storico</div>
-      <div class="card-desc">Salva club ed eventi preferiti. Consulta lo storico di tutti gli eventi a cui hai partecipato.</div>
-    </div>
-    <div class="card">
-      <div class="card-icon">⏱️</div>
-      <div class="card-title">Countdown Evento</div>
-      <div class="card-desc">Ogni biglietto mostra il conto alla rovescia live. Promemoria notifica il giorno prima dell'evento.</div>
-    </div>
-    <div class="card">
-      <div class="card-icon">🪑</div>
-      <div class="card-title">Prenotazione Tavoli</div>
-      <div class="card-desc">Scegli il tavolo su una planimetria interattiva, paga solo la caparra in app. Il resto in loco.</div>
-    </div>
-    <div class="card">
-      <div class="card-icon">🔔</div>
-      <div class="card-title">Waitlist con Notifiche</div>
-      <div class="card-desc">Evento esaurito? Entra in lista d'attesa e ricevi una notifica push appena si libera un posto.</div>
+  <div class="highlight fi">
+    <div class="highlight-icon">💡</div>
+    <div>
+      <div class="highlight-title">Tutto automatico, niente da gestire la sera</div>
+      <div class="highlight-text">Non devi stare davanti a un computer durante la serata. I QR vengono validati in autonomia dal buttafuori con uno smartphone. I drink vengono segnati dal barista direttamente sullo schermo del cliente. Tu guardi i numeri in tempo reale dalla dashboard.</div>
     </div>
   </div>
 </section>
 
 <div class="divider"></div>
 
-<!-- DISCOTECHE -->
-<section id="discoteche">
-  <div class="section-label">Per le Discoteche</div>
-  <h2>Controllo totale<br>sul tuo <span class="accent">business</span></h2>
-  <p class="section-desc">Una dashboard B2B completa per gestire eventi, biglietti, tavoli e analisi — senza dipendere da nessun PR.</p>
+<!-- CLIENTI / APP -->
+<section class="section">
+  <div class="label">L'esperienza del cliente</div>
+  <h2>Un'app che i tuoi clienti<br>vorranno <span class="a">usare davvero</span></h2>
+  <p class="section-desc">Più l'app è piacevole per il cliente, più biglietti vendi. MyNox è progettata per essere veloce, bella e senza attrito.</p>
 
-  <div class="cards-grid fade-in">
-    <div class="card">
-      <div class="card-icon green">💰</div>
-      <div class="card-title">Incasso Diretto</div>
-      <div class="card-desc">I pagamenti arrivano direttamente tramite Stripe. Nessun intermediario, nessuna percentuale al PR — solo l'8% fisso MyNox.</div>
+  <div class="two-col fi">
+    <div>
+      <ul class="checklist">
+        <li>Scopre il tuo evento tra tutti quelli in città, filtrati per genere musicale e prezzo</li>
+        <li>Vede lineup, orari, dress code e disponibilità biglietti in una pagina chiara</li>
+        <li>Acquista in 3 tap con Apple Pay o Google Pay — senza registrazioni lunghe</li>
+        <li>Riceve il QR di ingresso immediatamente sul telefono</li>
+        <li>Ha un QR separato per il free drink — monouso e digitale</li>
+        <li>Può regalare il biglietto a un amico con un codice, direttamente dall'app</li>
+        <li>Riceve un promemoria prima dell'evento via notifica push</li>
+        <li>Salva i tuoi eventi e il tuo club tra i preferiti per non perdere le prossime serate</li>
+      </ul>
     </div>
-    <div class="card">
-      <div class="card-icon green">📊</div>
-      <div class="card-title">Analytics in Tempo Reale</div>
-      <div class="card-desc">Grafici vendite live, biglietti per tipologia, andamento orario degli ingressi, percentuale di occupazione.</div>
-    </div>
-    <div class="card">
-      <div class="card-icon green">🎪</div>
-      <div class="card-title">Gestione Multi-Evento</div>
-      <div class="card-desc">Crea e pubblica eventi con tipologie di biglietti personalizzate, prezzi, quantità disponibili e lineup artisti.</div>
-    </div>
-    <div class="card">
-      <div class="card-icon green">🗺️</div>
-      <div class="card-title">Planimetria Tavoli</div>
-      <div class="card-desc">Carica la mappa del locale, posiziona i tavoli e gestisci prenotazioni con caparra digitale.</div>
-    </div>
-    <div class="card">
-      <div class="card-icon green">👥</div>
-      <div class="card-title">Gestione Staff</div>
-      <div class="card-desc">Invita manager con email dedicata. Ogni club admin ha accesso solo ai propri dati — nessuna condivisione di credenziali.</div>
-    </div>
-    <div class="card">
-      <div class="card-icon green">🔐</div>
-      <div class="card-title">Sicurezza Dati</div>
-      <div class="card-desc">Row Level Security su ogni tabella. I dati del tuo club sono visibili solo al tuo staff. Zero accesso non autorizzato.</div>
-    </div>
-  </div>
-</section>
-
-<!-- DASHBOARD PREVIEW -->
-<section id="dashboard">
-  <div class="section-label">Dashboard B2B</div>
-  <h2>I tuoi numeri,<br><span class="accent">sempre a portata di mano</span></h2>
-  <p class="section-desc">Una dashboard web dedicata per gestire tutto dal computer — eventi, biglietti venduti, incassi e staff.</p>
-
-  <div class="dashboard-preview fade-in">
-    <div class="db-header">
-      <div class="db-title">📊 Panoramica Evento — Sabato 10 Maggio</div>
-      <div class="db-badge">● Live</div>
-    </div>
-    <div class="db-stats">
-      <div class="db-stat">
-        <div class="db-stat-num">847</div>
-        <div class="db-stat-label">Biglietti venduti</div>
-      </div>
-      <div class="db-stat">
-        <div class="db-stat-num">€ 12.340</div>
-        <div class="db-stat-label">Incasso totale</div>
-      </div>
-      <div class="db-stat">
-        <div class="db-stat-num">94%</div>
-        <div class="db-stat-label">Occupazione</div>
+    <div style="background: var(--surface); border: 1px solid rgba(255,255,255,0.06); border-radius: 24px; padding: 40px; position: relative; overflow: hidden;">
+      <div style="position:absolute;top:-60px;right:-60px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,0.12) 0%,transparent 70%);"></div>
+      <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:20px;">App — Schermata biglietto</div>
+      <div style="background:#07080f;border-radius:16px;padding:20px;">
+        <div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Il tuo evento</div>
+        <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:2px;">MEGA SABATO</div>
+        <div style="font-size:12px;color:var(--muted2);margin-bottom:16px;">Club Centrale · Sab 10 Mag · 23:00</div>
+        <div style="width:90px;height:90px;background:white;border-radius:10px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:44px;">▦</div>
+        <div style="font-size:10px;text-align:center;color:var(--muted);margin-bottom:16px;">QR Ingresso — tocca per ingrandire</div>
+        <div style="background:rgba(34,197,94,0.08);border:1px solid var(--green-border);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:10px;color:var(--muted);font-weight:600;">Free Drink</div>
+            <div style="font-size:13px;font-weight:700;color:var(--green);">Disponibile</div>
+          </div>
+          <div style="font-size:22px;">▦</div>
+        </div>
       </div>
     </div>
-
-    <div style="margin-bottom: 24px;">
-      <div style="font-size: 13px; color: var(--muted); margin-bottom: 12px; font-weight: 600;">Vendite per tipologia</div>
-      <div class="db-row">
-        <div class="db-row-name">🎫 Ingresso Standard</div>
-        <div class="db-row-val" style="color: var(--accent)">412 biglietti</div>
-      </div>
-      <div style="margin: 6px 0;">
-        <div class="db-bar"><div class="db-bar-fill" style="width:65%"></div></div>
-      </div>
-      <div class="db-row">
-        <div class="db-row-name">💃 Donna + Drink</div>
-        <div class="db-row-val" style="color: var(--pink)">286 biglietti</div>
-      </div>
-      <div style="margin: 6px 0;">
-        <div class="db-bar"><div class="db-bar-fill" style="width:45%; background: linear-gradient(90deg, #ec4899, #be185d)"></div></div>
-      </div>
-      <div class="db-row">
-        <div class="db-row-name">🛋️ Tavoli VIP</div>
-        <div class="db-row-val" style="color: var(--orange)">149 prenotazioni</div>
-      </div>
-      <div style="margin: 6px 0;">
-        <div class="db-bar"><div class="db-bar-fill" style="width:28%; background: linear-gradient(90deg, #f97316, #ea580c)"></div></div>
-      </div>
-    </div>
-
-    <div style="font-size: 13px; color: var(--muted); margin-bottom: 12px; font-weight: 600;">Ultimi ingressi</div>
-    <div class="db-row"><span class="db-row-name">23:14 — Marco R.</span><span class="db-badge phone-badge active" style="font-size:10px; padding: 2px 8px;">✓ Ingresso Standard</span></div>
-    <div class="db-row"><span class="db-row-name">23:12 — Giulia M.</span><span class="db-badge phone-badge active" style="font-size:10px; padding: 2px 8px;">✓ Donna + Drink</span></div>
-    <div class="db-row"><span class="db-row-name">23:09 — Alessandro B.</span><span class="db-badge phone-badge active" style="font-size:10px; padding: 2px 8px;">✓ Tavolo VIP 7</span></div>
   </div>
 </section>
 
 <div class="divider"></div>
 
 <!-- STAFF -->
-<section id="staff">
-  <div class="section-label">Per lo Staff</div>
-  <h2>Strumenti semplici<br>per chi <span class="accent">lavora</span></h2>
-  <p class="section-desc">Ogni ruolo ha gli strumenti giusti. Nessuna formazione lunga, nessuna app complicata.</p>
+<section class="section">
+  <div class="label">Per il tuo Staff</div>
+  <h2>Strumenti semplici<br>per chi <span class="a">lavora la notte</span></h2>
+  <p class="section-desc">Nessuna formazione lunga. Il buttafuori scansiona, il barista tocca un bottone, il manager guarda i numeri. Fine.</p>
 
-  <div class="cards-grid-3 fade-in">
+  <div class="grid-3 fi">
     <div class="card">
-      <div class="card-icon blue">🚪</div>
-      <div class="card-title">Buttafuori — Scanner QR</div>
-      <div class="card-desc">Scansiona il QR del biglietto con lo smartphone. Verde = valido, rosso = negato. Nessun errore umano possibile. Potere assoluto di negare l'ingresso.</div>
+      <div class="card-icon">🚪</div>
+      <div class="card-title">Buttafuori</div>
+      <div class="card-desc">Scansiona il QR del cliente con lo smartphone. Verde = accesso garantito. Rosso = QR non valido. Ha sempre l'ultima parola sull'ingresso.</div>
     </div>
     <div class="card">
-      <div class="card-icon blue">🍹</div>
-      <div class="card-title">Barista — Free Drink</div>
-      <div class="card-desc">Il cliente mostra il QR drink sullo schermo. Il barista tocca "Segna come usato" — il QR si invalida istantaneamente. Nessuna app aggiuntiva.</div>
+      <div class="card-icon">🍹</div>
+      <div class="card-title">Barista</div>
+      <div class="card-desc">Il cliente mostra il QR drink sul telefono. Il barista tocca "Segna come usato" — il QR si invalida. Nessuna app aggiuntiva da scaricare.</div>
     </div>
     <div class="card">
-      <div class="card-icon blue">👔</div>
-      <div class="card-title">Club Manager — Dashboard</div>
-      <div class="card-desc">Accesso web dedicato con email invitation. Vede solo i propri eventi, può creare offerte, monitorare incassi e gestire lo staff.</div>
-    </div>
-  </div>
-
-  <div style="margin-top: 32px; padding: 28px; background: var(--accent-dim); border: 1px solid var(--accent-border); border-radius: 20px;" class="fade-in">
-    <div style="font-size: 15px; font-weight: 700; margin-bottom: 8px; color: var(--accent)">⚠️ Politica Buttafuori — Disclaimer Legale</div>
-    <div style="font-size: 14px; color: var(--muted2); line-height: 1.7;">Il buttafuori ha potere assoluto e insindacabile di negare l'ingresso. L'acquisto del biglietto non garantisce l'accesso. Nessun rimborso automatico in caso di diniego — il cliente accetta questo disclaimer esplicitamente durante il checkout.</div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- FUNZIONALITÀ AVANZATE -->
-<section>
-  <div class="section-label">Funzionalità Avanzate</div>
-  <h2>Sotto il cofano:<br><span class="accent">tecnologia premium</span></h2>
-  <p class="section-desc">Ogni dettaglio è stato pensato per scalare, essere sicuro e offrire un'esperienza fluida su ogni dispositivo.</p>
-
-  <div class="cards-grid fade-in">
-    <div class="card">
-      <div class="card-icon orange">💳</div>
-      <div class="card-title">Stripe Integration Nativa</div>
-      <div class="card-desc">Payment Intent lato server, Apple Pay e Google Pay come prima opzione. Il QR si genera SOLO dopo conferma Stripe — zero frodi.</div>
-    </div>
-    <div class="card">
-      <div class="card-icon orange">📱</div>
-      <div class="card-title">QR Code Offline-Ready</div>
-      <div class="card-desc">Il QR viene scaricato e cachato localmente. Se il cliente è senza connessione all'ingresso, il biglietto funziona comunque.</div>
-    </div>
-    <div class="card">
-      <div class="card-icon orange">🔐</div>
-      <div class="card-title">Row Level Security</div>
-      <div class="card-desc">Supabase RLS su ogni tabella. I clienti vedono solo i propri biglietti. I club admin solo i propri dati. Nessuna fuga di informazioni.</div>
-    </div>
-    <div class="card">
-      <div class="card-icon orange">🎁</div>
-      <div class="card-title">Gift Ticket System</div>
-      <div class="card-desc">Codice 8 caratteri monouso, charset sicuro (no I/O/0/1 per evitare confusione). Transfer ownership completo via endpoint protetto.</div>
-    </div>
-    <div class="card">
-      <div class="card-icon orange">📡</div>
-      <div class="card-title">Vendite Realtime</div>
-      <div class="card-desc">La dashboard si aggiorna in tempo reale via Supabase Realtime. Il club vede ogni nuova vendita senza ricaricare la pagina.</div>
-    </div>
-    <div class="card">
-      <div class="card-icon orange">🏷️</div>
-      <div class="card-title">Codici Promo</div>
-      <div class="card-desc">Sistema promo code integrato nel checkout — percentuale o valore fisso. Attivabili per campagne marketing mirate.</div>
+      <div class="card-icon">👔</div>
+      <div class="card-title">Club Manager</div>
+      <div class="card-desc">Accesso dashboard web dedicato. Crea eventi, monitora vendite, gestisce il team. Può essere invitato con una semplice email.</div>
     </div>
   </div>
 </section>
 
 <div class="divider"></div>
 
-<!-- TECNOLOGIA -->
-<section id="tech">
-  <div class="section-label">Stack Tecnologico</div>
-  <h2>Costruito per<br><span class="accent">durare e scalare</span></h2>
-  <p class="section-desc">Tecnologie enterprise-grade, tutto open source. Nessuna dipendenza da vendor lock-in.</p>
+<!-- COSTI -->
+<section class="section">
+  <div class="label">Commissioni</div>
+  <h2>Un modello semplice<br>e <span class="a">completamente trasparente</span></h2>
+  <p class="section-desc">Nessun canone mensile, nessun costo fisso. Paghi solo quando vendi.</p>
 
-  <div class="tech-grid fade-in">
-    <div class="tech-chip">
-      <div class="tech-chip-icon">📱</div>
-      <div class="tech-chip-name">React Native</div>
-      <div class="tech-chip-role">iOS + Android</div>
+  <div class="stat-grid fi">
+    <div class="stat-card">
+      <div class="stat-val green">8%</div>
+      <div class="stat-label">Commissione su ogni biglietto venduto</div>
     </div>
-    <div class="tech-chip">
-      <div class="tech-chip-icon">🚀</div>
-      <div class="tech-chip-name">Expo SDK 54</div>
-      <div class="tech-chip-role">Build & Deploy</div>
+    <div class="stat-card">
+      <div class="stat-val">€ 0</div>
+      <div class="stat-label">Canone mensile fisso</div>
     </div>
-    <div class="tech-chip">
-      <div class="tech-chip-icon">🗄️</div>
-      <div class="tech-chip-name">Supabase</div>
-      <div class="tech-chip-role">DB + Auth + Storage</div>
+    <div class="stat-card">
+      <div class="stat-val">€ 0</div>
+      <div class="stat-label">Costo di attivazione</div>
     </div>
-    <div class="tech-chip">
-      <div class="tech-chip-icon">💳</div>
-      <div class="tech-chip-name">Stripe</div>
-      <div class="tech-chip-role">Pagamenti</div>
-    </div>
-    <div class="tech-chip">
-      <div class="tech-chip-icon">⚡</div>
-      <div class="tech-chip-name">Next.js 14</div>
-      <div class="tech-chip-role">Dashboard B2B</div>
-    </div>
-    <div class="tech-chip">
-      <div class="tech-chip-icon">🔷</div>
-      <div class="tech-chip-name">TypeScript</div>
-      <div class="tech-chip-role">Type Safety</div>
-    </div>
-    <div class="tech-chip">
-      <div class="tech-chip-icon">🌐</div>
-      <div class="tech-chip-name">Render.com</div>
-      <div class="tech-chip-role">Proxy Server</div>
-    </div>
-    <div class="tech-chip">
-      <div class="tech-chip-icon">🗺️</div>
-      <div class="tech-chip-name">Maps SDK</div>
-      <div class="tech-chip-role">Mappa Locale</div>
+    <div class="stat-card">
+      <div class="stat-val green">100%</div>
+      <div class="stat-label">Incasso diretto su conto Stripe</div>
     </div>
   </div>
-</section>
 
-<div class="divider"></div>
-
-<!-- ESPANSIONE -->
-<section>
-  <div class="section-label">Roadmap Geografica</div>
-  <h2>Da Padova,<br>al <span class="accent">resto d'Italia</span></h2>
-  <p class="section-desc">Lancio MVP a Padova. Struttura già pronta per espandersi città per città senza riscrivere una riga.</p>
-  <div class="city-strip fade-in">
-    <div class="city-chip city-active">📍 Padova <span class="city-badge active">LIVE</span></div>
-    <div class="city-chip city-soon">Venezia <span class="city-badge soon">Presto</span></div>
-    <div class="city-chip city-soon">Verona <span class="city-badge soon">Presto</span></div>
-    <div class="city-chip city-soon">Milano <span class="city-badge soon">Presto</span></div>
-    <div class="city-chip city-soon">Roma <span class="city-badge soon">Presto</span></div>
+  <div class="highlight fi">
+    <div class="highlight-icon">🔒</div>
+    <div>
+      <div class="highlight-title">Pagamenti sicuri, tracciati, sempre rendicontati</div>
+      <div class="highlight-text">Ogni transazione passa per Stripe — il sistema di pagamento usato da Amazon, Airbnb e Spotify. I fondi arrivano direttamente sul tuo conto bancario. Hai un report completo di ogni vendita, ogni rimborso e ogni incasso.</div>
+    </div>
   </div>
 </section>
 
 <!-- FOOTER -->
 <footer>
   <div class="footer-logo">MY<span>NOX</span></div>
-  <div class="footer-sub">Il nightlife senza intermediari · Padova 2026</div>
+  <div class="footer-sub">Il nightlife digitale · Padova 2026 — rankproagency@gmail.com</div>
 </footer>
 
 <script>
-// Scroll animations
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      e.target.classList.add('visible');
-    }
-  });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-
-// Tab switching (placeholder for future interactivity)
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', function() {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    this.classList.add('active');
-  });
-});
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('v'); });
+}, { threshold: 0.08 });
+document.querySelectorAll('.fi').forEach(el => obs.observe(el));
 </script>
 </body>
 </html>

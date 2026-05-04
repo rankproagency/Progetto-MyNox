@@ -1,4 +1,24 @@
-export type Role = 'admin' | 'club_admin' | 'customer';
+export type Role = 'admin' | 'club_admin' | 'club_staff' | 'customer';
+
+export interface StaffPermissions {
+  can_manage_events: boolean;
+  can_manage_tables: boolean;
+  can_view_analytics: boolean;
+  can_view_participants: boolean;
+}
+
+export interface ClubStaff {
+  id: string;
+  user_id: string;
+  club_id: string;
+  invited_by: string | null;
+  can_manage_events: boolean;
+  can_manage_tables: boolean;
+  can_view_analytics: boolean;
+  can_view_participants: boolean;
+  created_at: string;
+  profiles?: { name: string; email: string };
+}
 
 export interface Profile {
   id: string;

@@ -11,25 +11,41 @@ import {
   Map,
   LogOut,
   Settings,
+  Users,
 } from 'lucide-react';
+import type { StaffPermissions } from '@/types';
 
-const NAV_ITEMS = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+  ownerOnly?: boolean;
+  permission?: keyof StaffPermissions;
+}
+
+const NAV_ITEMS: NavItem[] = [
   { href: '/club/dashboard', label: 'Home', icon: Home },
-  { href: '/club/events', label: 'I miei eventi', icon: CalendarDays },
-  { href: '/club/venue', label: 'Piantina & Tavoli', icon: Map },
-  { href: '/club/analytics', label: 'Analytics', icon: BarChart3 },
-  { href: '/club/settings', label: 'Profilo club', icon: Settings },
+  { href: '/club/events', label: 'I miei eventi', icon: CalendarDays, permission: 'can_manage_events' },
+  { href: '/club/venue', label: 'Piantina & Tavoli', icon: Map, permission: 'can_manage_tables' },
+  { href: '/club/analytics', label: 'Analytics', icon: BarChart3, permission: 'can_view_analytics' },
+  { href: '/club/staff', label: 'Staff', icon: Users, ownerOnly: true },
+  { href: '/club/settings', label: 'Profilo club', icon: Settings, ownerOnly: true },
 ];
-
-// URL prefix that the (club) layout applies to
-// Routes: /club/dashboard, /club/events, /club/analytics
 
 interface ClubSidebarProps {
   clubName: string;
+  isOwner: boolean;
+  permissions: StaffPermissions;
 }
 
-export default function ClubSidebar({ clubName }: ClubSidebarProps) {
+export default function ClubSidebar({ clubName, isOwner, permissions }: ClubSidebarProps) {
   const pathname = usePathname();
+
+  const visibleItems = NAV_ITEMS.filter((item) => {
+    if (item.ownerOnly && !isOwner) return false;
+    if (item.permission && !isOwner && !permissions[item.permission]) return false;
+    return true;
+  });
 
   async function handleLogout() {
     const supabase = createClient();
@@ -47,7 +63,7 @@ export default function ClubSidebar({ clubName }: ClubSidebarProps) {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        {visibleItems.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (
             <Link
