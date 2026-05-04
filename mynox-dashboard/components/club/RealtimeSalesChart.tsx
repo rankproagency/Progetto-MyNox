@@ -292,9 +292,9 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets, showReven
               />
               <Tooltip
                 contentStyle={tooltipStyle}
-                formatter={(value: number) =>
+                formatter={(value) =>
                   metric === 'revenue'
-                    ? [`€${value.toFixed(2)}`, 'Ricavi']
+                    ? [`€${Number(value).toFixed(2)}`, 'Ricavi']
                     : [value, 'Biglietti']
                 }
                 labelFormatter={(label) =>
