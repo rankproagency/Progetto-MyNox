@@ -136,7 +136,17 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    const channel = supabase
+      .channel('tickets_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, () => {
+        if (currentUserIdRef.current) loadTickets(currentUserIdRef.current);
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Ricarica i biglietti ogni volta che l'app torna in foreground

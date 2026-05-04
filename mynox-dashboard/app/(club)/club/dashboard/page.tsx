@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getProfile } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -24,7 +24,7 @@ function getLast12HourBuckets(): HourlyBucket[] {
 }
 
 async function getDashboardData(clubId: string) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const today = new Date().toISOString().slice(0, 10);
   const in7Days = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
@@ -93,7 +93,7 @@ async function getDashboardData(clubId: string) {
     eventIds.length > 0
       ? supabase
           .from('tickets')
-          .select('created_at, price_paid')
+          .select('created_at, price_paid, ticket_types(price)')
           .in('event_id', eventIds)
           .in('status', ['valid', 'used'])
           .gte('created_at', twentyFourHoursAgo)
@@ -133,7 +133,7 @@ async function getDashboardData(clubId: string) {
     const bucket = initialBuckets.find((b) => b.isoKey === isoKey);
     if (bucket) {
       bucket.count++;
-      bucket.revenue += t.price_paid ?? 0;
+      bucket.revenue += t.ticket_types?.price ?? (t.price_paid ?? 0) / 1.08;
     }
   });
 
@@ -150,6 +150,17 @@ async function getDashboardData(clubId: string) {
 export default async function ClubDashboardPage() {
   const profile = await getProfile();
   if (!profile?.club_id) return <p className="text-slate-400">Club non configurato. Contatta l&apos;amministratore.</p>;
+
+  const isOwner = profile.role === 'club_admin';
+  let permissions = { can_manage_events: true, can_manage_tables: true, can_view_analytics: true, can_view_participants: true };
+  if (!isOwner) {
+    const { getStaffPermissions } = await import('@/lib/auth');
+    const p = await getStaffPermissions(profile.id, profile.club_id);
+    if (p) permissions = p;
+    else permissions = { can_manage_events: false, can_manage_tables: false, can_view_analytics: false, can_view_participants: false };
+  }
+
+  const canViewRevenue = isOwner || permissions.can_view_analytics;
 
   const { clubName, upcomingEvents, recentTickets, checklist, initialBuckets, eventIds } = await getDashboardData(profile.club_id);
   const isProfileComplete = checklist.hasImage && checklist.hasPublishedEvent;
@@ -180,39 +191,47 @@ export default async function ClubDashboardPage() {
 
       {/* Azioni rapide */}
       <div className="grid grid-cols-4 gap-3 mb-10">
-        <Link href="/club/events/new"
-          className="flex items-center gap-3 bg-purple-600 hover:bg-purple-500 rounded-xl px-4 py-3.5 transition-colors group">
-          <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
-            <Plus size={16} className="text-white" />
-          </div>
-          <span className="text-sm font-semibold text-white">Nuovo evento</span>
-        </Link>
-        <Link href="/club/events"
-          className="flex items-center gap-3 bg-[#111118] hover:bg-white/5 border border-white/8 rounded-xl px-4 py-3.5 transition-colors">
-          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-            <CalendarDays size={16} className="text-slate-400" />
-          </div>
-          <span className="text-sm font-medium text-slate-300">I miei eventi</span>
-        </Link>
-        <Link href="/club/analytics"
-          className="flex items-center gap-3 bg-[#111118] hover:bg-white/5 border border-white/8 rounded-xl px-4 py-3.5 transition-colors">
-          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-            <BarChart2 size={16} className="text-slate-400" />
-          </div>
-          <span className="text-sm font-medium text-slate-300">Analytics</span>
-        </Link>
-        <Link href="/club/settings"
-          className="flex items-center gap-3 bg-[#111118] hover:bg-white/5 border border-white/8 rounded-xl px-4 py-3.5 transition-colors">
-          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-            <Settings size={16} className="text-slate-400" />
-          </div>
-          <span className="text-sm font-medium text-slate-300">Profilo club</span>
-        </Link>
+        {permissions.can_manage_events && (
+          <Link href="/club/events/new"
+            className="flex items-center gap-3 bg-purple-600 hover:bg-purple-500 rounded-xl px-4 py-3.5 transition-colors group">
+            <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+              <Plus size={16} className="text-white" />
+            </div>
+            <span className="text-sm font-semibold text-white">Nuovo evento</span>
+          </Link>
+        )}
+        {permissions.can_manage_events && (
+          <Link href="/club/events"
+            className="flex items-center gap-3 bg-[#111118] hover:bg-white/5 border border-white/8 rounded-xl px-4 py-3.5 transition-colors">
+            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+              <CalendarDays size={16} className="text-slate-400" />
+            </div>
+            <span className="text-sm font-medium text-slate-300">I miei eventi</span>
+          </Link>
+        )}
+        {permissions.can_view_analytics && (
+          <Link href="/club/analytics"
+            className="flex items-center gap-3 bg-[#111118] hover:bg-white/5 border border-white/8 rounded-xl px-4 py-3.5 transition-colors">
+            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+              <BarChart2 size={16} className="text-slate-400" />
+            </div>
+            <span className="text-sm font-medium text-slate-300">Analytics</span>
+          </Link>
+        )}
+        {isOwner && (
+          <Link href="/club/settings"
+            className="flex items-center gap-3 bg-[#111118] hover:bg-white/5 border border-white/8 rounded-xl px-4 py-3.5 transition-colors">
+            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+              <Settings size={16} className="text-slate-400" />
+            </div>
+            <span className="text-sm font-medium text-slate-300">Profilo club</span>
+          </Link>
+        )}
       </div>
 
       {/* Grafico vendite in tempo reale */}
       <div className="mb-6">
-        <RealtimeSalesChart eventIds={eventIds} initialBuckets={initialBuckets} />
+        <RealtimeSalesChart eventIds={eventIds} initialBuckets={initialBuckets} showRevenue={canViewRevenue} />
       </div>
 
       <div className="grid grid-cols-2 gap-6">
@@ -306,9 +325,11 @@ export default async function ClubDashboardPage() {
                     <p className="text-xs text-slate-500 mt-0.5">{ticket.ticket_types?.label ?? (ticket.table_name ? `Tavolo – ${ticket.table_name}` : '—')}</p>
                   </div>
                   <div className="text-right shrink-0 ml-4">
-                    <p className="text-sm font-semibold text-purple-400">
-                      €{Number(ticket.ticket_types?.price ?? ticket.price_paid ?? 0).toFixed(2)}
-                    </p>
+                    {canViewRevenue && (
+                      <p className="text-sm font-semibold text-purple-400">
+                        €{Number(ticket.ticket_types?.price ?? (ticket.price_paid ?? 0) / 1.08).toFixed(2)}
+                      </p>
+                    )}
                     <p className="text-xs text-slate-500">
                       {new Date(ticket.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}
                     </p>

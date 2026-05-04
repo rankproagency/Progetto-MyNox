@@ -1,5 +1,6 @@
-import { getProfile } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { getProfile, getStaffPermissions } from '@/lib/auth';
+import { createAdminClient } from '@/lib/supabase/admin';
 import ClubVenueForm from '@/components/club/ClubVenueForm';
 
 export default async function VenuePage() {
@@ -8,7 +9,12 @@ export default async function VenuePage() {
     return <p className="text-slate-400">Club non configurato. Contatta l&apos;amministratore.</p>;
   }
 
-  const supabase = await createClient();
+  if (profile.role === 'club_staff') {
+    const perms = await getStaffPermissions(profile.id, profile.club_id);
+    if (!perms?.can_manage_tables) redirect('/club/dashboard');
+  }
+
+  const supabase = createAdminClient();
   const [{ data: club }, { data: clubTables }] = await Promise.all([
     supabase.from('clubs').select('id, floor_plan_url').eq('id', profile.club_id).single(),
     supabase.from('club_tables').select('*').eq('club_id', profile.club_id).order('created_at'),

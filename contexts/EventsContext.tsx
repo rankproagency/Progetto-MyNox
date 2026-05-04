@@ -117,7 +117,18 @@ export function EventsProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    reload();
+
+    const channel = supabase
+      .channel('events_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, reload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_types' }, reload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, reload)
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [reload]);
 
   return (
     <EventsContext.Provider value={{ events, isLoading, hasError, reload }}>

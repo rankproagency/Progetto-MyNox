@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
   }
 
-  const { email } = await req.json();
+  const { email, permissions } = await req.json();
   if (!email) return NextResponse.json({ error: 'Email obbligatoria' }, { status: 400 });
 
   const admin = createAdminClient();
@@ -45,20 +45,20 @@ export async function POST(req: NextRequest) {
     targetUserId = data.user.id;
   }
 
-  await admin.from('profiles').upsert({
-    id: targetUserId,
-    role: 'club_staff',
-    club_id: profile.club_id,
-  }, { onConflict: 'id' });
+  // Aggiorna solo se ha ruolo 'customer' o 'club_staff' (non toccare club_admin)
+  await admin.from('profiles')
+    .update({ role: 'club_staff', club_id: profile.club_id })
+    .eq('id', targetUserId)
+    .in('role', ['customer', 'club_staff']);
 
   await admin.from('club_staff').upsert({
     user_id: targetUserId,
     club_id: profile.club_id,
     invited_by: user.id,
-    can_manage_events: false,
-    can_manage_tables: false,
-    can_view_analytics: false,
-    can_view_participants: false,
+    can_manage_events: permissions?.can_manage_events ?? false,
+    can_manage_tables: permissions?.can_manage_tables ?? false,
+    can_view_analytics: permissions?.can_view_analytics ?? false,
+    can_view_participants: permissions?.can_view_participants ?? false,
   }, { onConflict: 'user_id,club_id' });
 
   return NextResponse.json({ success: true });

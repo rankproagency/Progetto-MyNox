@@ -1,12 +1,12 @@
-import { getProfile } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { getProfile, getStaffPermissions } from '@/lib/auth';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 import AnalyticsCharts from '@/components/club/AnalyticsCharts';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Lock } from 'lucide-react';
 
 async function getAnalyticsData(clubId: string) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: events } = await supabase
     .from('events')
@@ -36,7 +36,6 @@ async function getAnalyticsData(clubId: string) {
     availableTables = tablesData ?? [];
   }
 
-  // Ricavi per mese (ultimi 6 mesi)
   const now = new Date();
   const revenueByMonth: Record<string, number> = {};
   const ticketsByMonth: Record<string, number> = {};
@@ -50,13 +49,12 @@ async function getAnalyticsData(clubId: string) {
     const d = new Date(t.created_at);
     const key = d.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
     if (key in revenueByMonth) {
-      revenueByMonth[key] += t.ticket_types?.price ?? t.price_paid ?? 0;
+      revenueByMonth[key] += t.ticket_types?.price ?? (t.price_paid ?? 0) / 1.08;
       if (t.ticket_types !== null) ticketsByMonth[key] = (ticketsByMonth[key] ?? 0) + 1;
     }
   });
   const revenueData = Object.entries(revenueByMonth).map(([mese, ricavi]) => ({ mese, ricavi }));
 
-  // KPI mese corrente vs mese precedente
   const currentMonthKey = now.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
   const prevMonthKey = new Date(now.getFullYear(), now.getMonth() - 1, 1)
     .toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
@@ -71,7 +69,7 @@ async function getAnalyticsData(clubId: string) {
     return Math.round(((curr - prev) / prev) * 100);
   }
 
-  const totalRevenue = tickets.reduce((sum: number, t: any) => sum + (t.ticket_types?.price ?? t.price_paid ?? 0), 0);
+  const totalRevenue = tickets.reduce((sum: number, t: any) => sum + (t.ticket_types?.price ?? (t.price_paid ?? 0) / 1.08), 0);
   const ticketsOnly = tickets.filter((t: any) => t.ticket_types !== null);
   const totalTickets = ticketsOnly.length;
   const avgTicketPrice = ticketsOnly.length > 0
@@ -89,13 +87,11 @@ async function getAnalyticsData(clubId: string) {
   const fillRate = totalCapacity > 0 ? Math.round((totalSold / totalCapacity) * 100) : 0;
 
   const tablesOnly = tickets.filter((t: any) => t.ticket_types === null);
-  const totalTableRevenue = tablesOnly.reduce((sum: number, t: any) => sum + (t.price_paid ?? 0), 0);
-
+  const totalTableRevenue = tablesOnly.reduce((sum: number, t: any) => sum + (t.price_paid ?? 0) / 1.08, 0);
   const eventsWithTables = new Set(tablesOnly.map((t: any) => t.event_id).filter(Boolean)).size;
   const avgTablesPerEvent = eventsWithTables > 0 ? tablesOnly.length / eventsWithTables : 0;
   const avgTableRevenuePerEvent = eventsWithTables > 0 ? totalTableRevenue / eventsWithTables : 0;
 
-  // Conteggio tavoli disponibili e prenotati per evento
   const availableByEvent: Record<string, number> = {};
   availableTables.forEach((t: any) => {
     if (t.event_id) availableByEvent[t.event_id] = (availableByEvent[t.event_id] ?? 0) + 1;
@@ -120,20 +116,11 @@ async function getAnalyticsData(clubId: string) {
     }));
 
   return {
-    salesByEvent,
-    revenueData,
-    totalRevenue,
-    totalTickets,
-    avgTicketPrice,
-    fillRate,
-    currentRevenue,
-    currentTickets,
+    salesByEvent, revenueData, totalRevenue, totalTickets, avgTicketPrice,
+    fillRate, currentRevenue, currentTickets,
     revenuePct: pct(currentRevenue, prevRevenue),
     ticketsPct: pct(currentTickets, prevTickets),
-    totalTableRevenue,
-    avgTablesPerEvent,
-    avgTableRevenuePerEvent,
-    tablesByEvent,
+    totalTableRevenue, avgTablesPerEvent, avgTableRevenuePerEvent, tablesByEvent,
   };
 }
 
@@ -141,73 +128,113 @@ export default async function ClubAnalyticsPage() {
   const profile = await getProfile();
   if (!profile?.club_id) return <p className="text-slate-400">Club non configurato. Contatta l&apos;amministratore.</p>;
 
-  const data = await getAnalyticsData(profile.club_id);
+  const isOwner = profile.role === 'club_admin';
+  let canViewRevenue = isOwner;
+  if (!isOwner) {
+    const perms = await getStaffPermissions(profile.id, profile.club_id);
+    canViewRevenue = perms?.can_view_analytics ?? false;
+  }
 
-  const kpis = [
-    {
-      label: 'Ricavi totali',
-      value: `€${data.totalRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      sub: `Biglietti e tavoli · €${data.currentRevenue.toFixed(2)} questo mese`,
-      trend: data.revenuePct,
-    },
-    {
-      label: 'Biglietti venduti',
-      value: data.totalTickets.toLocaleString('it-IT'),
-      sub: `${data.currentTickets} questo mese`,
-      trend: data.ticketsPct,
-    },
-    {
-      label: 'Prezzo medio biglietto',
-      value: `€${data.avgTicketPrice.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      sub: 'Su tutti gli eventi',
-      trend: null,
-    },
-    {
-      label: 'Tasso di riempimento',
-      value: `${data.fillRate}%`,
-      sub: 'Media su tutti gli eventi',
-      trend: null,
-    },
-  ];
+  const data = await getAnalyticsData(profile.club_id);
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Analytics</h1>
-        <p className="text-slate-400 mt-1">Performance storica dei tuoi eventi.</p>
-      </div>
-
-      <div className="grid grid-cols-4 gap-5 mb-8">
-        {kpis.map(({ label, value, sub, trend }) => (
-          <div key={label} className="bg-[#111118] border border-white/8 rounded-xl p-5">
-            <p className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wide">{label}</p>
-            <p className="text-2xl font-bold text-white mb-2">{value}</p>
-            <div className="flex items-center gap-2">
-              {trend !== null && <TrendBadge pct={trend} />}
-              <p className="text-xs text-slate-500">{sub}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* KPI Tavoli — nascosto se nessun tavolo configurato */}
-      {data.tablesByEvent.length > 0 && <div className="mb-8">
-        <p className="text-xs text-slate-500 uppercase tracking-widest font-medium mb-4">Tavoli</p>
-        <div className="grid grid-cols-3 gap-5">
-          {[
-            { label: 'Media tavoli per serata', value: Math.round(data.avgTablesPerEvent).toLocaleString('it-IT') },
-            { label: 'Ricavi totali tavoli', value: `€${data.totalTableRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
-            { label: 'Media ricavi tavoli per serata', value: `€${data.avgTableRevenuePerEvent.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
-          ].map(({ label, value }) => (
-            <div key={label} className="bg-[#111118] border border-white/8 rounded-xl p-5">
-              <p className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wide">{label}</p>
-              <p className="text-2xl font-bold text-white">{value}</p>
-            </div>
-          ))}
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Analytics</h1>
+          <p className="text-slate-400 mt-1">Performance storica dei tuoi eventi.</p>
         </div>
-      </div>}
+        {!canViewRevenue && (
+          <div className="flex items-center gap-2 bg-amber-500/5 border border-amber-500/20 rounded-lg px-3 py-2">
+            <Lock size={13} className="text-amber-400 shrink-0" />
+            <p className="text-xs text-amber-400">Dati economici nascosti — contatta il proprietario</p>
+          </div>
+        )}
+      </div>
 
-      <AnalyticsCharts salesByEvent={data.salesByEvent} revenueData={data.revenueData} tablesByEvent={data.tablesByEvent} />
+      {/* KPI base — visibili a tutti */}
+      <div className={`grid gap-5 mb-8 ${canViewRevenue ? 'grid-cols-4' : 'grid-cols-2'}`}>
+        <KpiCard
+          label="Biglietti venduti"
+          value={data.totalTickets.toLocaleString('it-IT')}
+          sub={`${data.currentTickets} questo mese`}
+          trend={data.ticketsPct}
+        />
+        <KpiCard
+          label="Tasso di riempimento"
+          value={`${data.fillRate}%`}
+          sub="Media su tutti gli eventi"
+          trend={null}
+        />
+        {canViewRevenue && (
+          <>
+            <KpiCard
+              label="Ricavi totali"
+              value={`€${data.totalRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              sub={`Biglietti e tavoli · €${data.currentRevenue.toFixed(2)} questo mese`}
+              trend={data.revenuePct}
+            />
+            <KpiCard
+              label="Prezzo medio biglietto"
+              value={`€${data.avgTicketPrice.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              sub="Su tutti gli eventi"
+              trend={null}
+            />
+          </>
+        )}
+      </div>
+
+      {/* KPI Tavoli */}
+      {data.tablesByEvent.length > 0 && (
+        <div className="mb-8">
+          <p className="text-xs text-slate-500 uppercase tracking-widest font-medium mb-4">Tavoli</p>
+          <div className={`grid gap-5 ${canViewRevenue ? 'grid-cols-3' : 'grid-cols-1 max-w-xs'}`}>
+            <KpiCard
+              label="Media tavoli per serata"
+              value={Math.round(data.avgTablesPerEvent).toLocaleString('it-IT')}
+              sub={null}
+              trend={null}
+            />
+            {canViewRevenue && (
+              <>
+                <KpiCard
+                  label="Ricavi totali tavoli"
+                  value={`€${data.totalTableRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  sub={null}
+                  trend={null}
+                />
+                <KpiCard
+                  label="Media ricavi tavoli per serata"
+                  value={`€${data.avgTableRevenuePerEvent.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  sub={null}
+                  trend={null}
+                />
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      <AnalyticsCharts
+        salesByEvent={data.salesByEvent}
+        revenueData={canViewRevenue ? data.revenueData : null}
+        tablesByEvent={data.tablesByEvent}
+      />
+    </div>
+  );
+}
+
+function KpiCard({ label, value, sub, trend }: { label: string; value: string; sub: string | null; trend: number | null }) {
+  return (
+    <div className="bg-[#111118] border border-white/8 rounded-xl p-5">
+      <p className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wide">{label}</p>
+      <p className="text-2xl font-bold text-white mb-2">{value}</p>
+      {(trend !== null || sub) && (
+        <div className="flex items-center gap-2">
+          {trend !== null && <TrendBadge pct={trend} />}
+          {sub && <p className="text-xs text-slate-500">{sub}</p>}
+        </div>
+      )}
     </div>
   );
 }
@@ -221,9 +248,7 @@ function TrendBadge({ pct }: { pct: number }) {
   const up = pct > 0;
   return (
     <span className={`inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-full border shrink-0 ${
-      up
-        ? 'text-green-400 bg-green-400/10 border-green-400/20'
-        : 'text-red-400 bg-red-400/10 border-red-400/20'
+      up ? 'text-green-400 bg-green-400/10 border-green-400/20' : 'text-red-400 bg-red-400/10 border-red-400/20'
     }`}>
       {up ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
       {up ? '+' : ''}{pct}%

@@ -1,6 +1,7 @@
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { getProfile } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { getProfile, getStaffPermissions } from '@/lib/auth';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { Plus, Pencil, Lock } from 'lucide-react';
 import DuplicateEventButton from '@/components/club/DuplicateEventButton';
 import PublishToggle from '@/components/club/PublishToggle';
@@ -9,7 +10,12 @@ export default async function ClubEventsPage() {
   const profile = await getProfile();
   if (!profile?.club_id) return <p className="text-slate-400">Club non configurato. Contatta l&apos;amministratore.</p>;
 
-  const supabase = await createClient();
+  if (profile.role === 'club_staff') {
+    const perms = await getStaffPermissions(profile.id, profile.club_id);
+    if (!perms?.can_manage_events) redirect('/club/dashboard');
+  }
+
+  const supabase = createAdminClient();
   const { data: events } = await supabase
     .from('events')
     .select('*')
@@ -28,7 +34,7 @@ export default async function ClubEventsPage() {
 
     for (const t of ticketRevenue ?? []) {
       const id = (t as any).event_id;
-      const price = (t as any).ticket_types?.price ?? (t as any).price_paid ?? 0;
+      const price = (t as any).ticket_types?.price ?? ((t as any).price_paid ?? 0) / 1.08;
       revenueByEvent[id] = (revenueByEvent[id] ?? 0) + price;
     }
   }

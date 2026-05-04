@@ -19,6 +19,7 @@ type MetricKey = 'count' | 'revenue';
 interface Props {
   eventIds: string[];
   initialBuckets: HourlyBucket[];
+  showRevenue?: boolean;
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -75,13 +76,17 @@ const TIME_LABELS: Record<TimeFilter, string> = {
   '7d': '7 giorni',
 };
 
-export default function RealtimeSalesChart({ eventIds, initialBuckets }: Props) {
+export default function RealtimeSalesChart({ eventIds, initialBuckets, showRevenue = true }: Props) {
   const [buckets, setBuckets] = useState<HourlyBucket[]>(initialBuckets);
   const [loading, setLoading] = useState(false);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('12h');
   const [metric, setMetric] = useState<MetricKey>('count');
   const timeFilterRef = useRef<TimeFilter>('12h');
   const isFirstMount = useRef(true);
+
+  useEffect(() => {
+    if (!showRevenue && metric === 'revenue') setMetric('count');
+  }, [showRevenue, metric]);
 
   const fetchBuckets = useCallback(async (filter: TimeFilter) => {
     if (eventIds.length === 0) {
@@ -93,7 +98,7 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets }: Props) 
       const supabase = createClient();
       const { data } = await supabase
         .from('tickets')
-        .select('created_at, price_paid')
+        .select('created_at, price_paid, ticket_types(price)')
         .in('event_id', eventIds)
         .in('status', ['valid', 'used'])
         .gte('created_at', sinceDate(filter))
@@ -105,7 +110,7 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets }: Props) 
         const bucket = empty.find((b) => b.isoKey === key);
         if (bucket) {
           bucket.count++;
-          bucket.revenue += t.price_paid ?? 0;
+          bucket.revenue += t.ticket_types?.price ?? (t.price_paid ?? 0) / 1.08;
         }
       });
       setBuckets(empty);
@@ -157,7 +162,7 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets }: Props) 
             next[idx] = {
               ...next[idx],
               count: next[idx].count + 1,
-              revenue: next[idx].revenue + (ticket.price_paid ?? 0),
+              revenue: next[idx].revenue + (ticket.price_paid ?? 0) / 1.08,
             };
             return next;
           });
@@ -189,10 +194,12 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets }: Props) 
               <p className="text-xs text-slate-500">Biglietti</p>
               <p className="text-sm font-bold text-white">{totalCount}</p>
             </div>
-            <div className="text-right">
-              <p className="text-xs text-slate-500">Ricavi</p>
-              <p className="text-sm font-bold text-purple-400">€{totalRevenue.toFixed(2)}</p>
-            </div>
+            {showRevenue && (
+              <div className="text-right">
+                <p className="text-xs text-slate-500">Ricavi</p>
+                <p className="text-sm font-bold text-purple-400">€{totalRevenue.toFixed(2)}</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -216,28 +223,30 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets }: Props) 
           </div>
 
           {/* Metric toggle */}
-          <div className="flex items-center gap-0.5 bg-white/5 rounded-lg p-1">
-            <button
-              onClick={() => setMetric('count')}
-              className={`text-xs px-3 py-1 rounded-md transition-colors ${
-                metric === 'count'
-                  ? 'bg-purple-600 text-white font-medium'
-                  : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              Biglietti
-            </button>
-            <button
-              onClick={() => setMetric('revenue')}
-              className={`text-xs px-3 py-1 rounded-md transition-colors ${
-                metric === 'revenue'
-                  ? 'bg-purple-600 text-white font-medium'
-                  : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              Ricavi
-            </button>
-          </div>
+          {showRevenue && (
+            <div className="flex items-center gap-0.5 bg-white/5 rounded-lg p-1">
+              <button
+                onClick={() => setMetric('count')}
+                className={`text-xs px-3 py-1 rounded-md transition-colors ${
+                  metric === 'count'
+                    ? 'bg-purple-600 text-white font-medium'
+                    : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                Biglietti
+              </button>
+              <button
+                onClick={() => setMetric('revenue')}
+                className={`text-xs px-3 py-1 rounded-md transition-colors ${
+                  metric === 'revenue'
+                    ? 'bg-purple-600 text-white font-medium'
+                    : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                Ricavi
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

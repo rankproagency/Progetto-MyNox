@@ -55,7 +55,7 @@ export async function proxy(request: NextRequest) {
     // Redirect da / e /login al pannello corretto
     if (pathname === '/' || pathname === '/login') {
       if (role === 'admin') return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-      if (role === 'club_admin') return NextResponse.redirect(new URL('/club/dashboard', request.url));
+      if (role === 'club_admin' || role === 'club_staff') return NextResponse.redirect(new URL('/club/dashboard', request.url));
       return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
     }
 
@@ -64,8 +64,8 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
     }
 
-    // Protegge /club/* — solo club_admin
-    if (pathname.startsWith('/club') && role !== 'club_admin') {
+    // Protegge /club/* — club_admin e club_staff
+    if (pathname.startsWith('/club') && role !== 'club_admin' && role !== 'club_staff') {
       return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
     }
   }

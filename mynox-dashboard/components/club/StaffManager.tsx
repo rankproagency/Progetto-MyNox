@@ -1,14 +1,61 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { UserPlus, Trash2 } from 'lucide-react';
-import type { ClubStaff } from '@/types';
+import { UserPlus, Trash2, ShieldCheck, LayoutGrid, BarChart3, Users, Sliders } from 'lucide-react';
+import type { ClubStaff, StaffPermissions } from '@/types';
 
-const PERMISSION_LABELS: { key: keyof Pick<ClubStaff, 'can_manage_events' | 'can_manage_tables' | 'can_view_analytics' | 'can_view_participants'>; label: string }[] = [
+type PermKey = keyof Pick<ClubStaff, 'can_manage_events' | 'can_manage_tables' | 'can_view_analytics'>;
+
+const PERMISSION_LABELS: { key: PermKey; label: string }[] = [
   { key: 'can_manage_events', label: 'Gestione eventi' },
   { key: 'can_manage_tables', label: 'Tavoli & piantina' },
-  { key: 'can_view_analytics', label: 'Analytics' },
-  { key: 'can_view_participants', label: 'Lista partecipanti' },
+  { key: 'can_view_analytics', label: 'Analytics (incassi)' },
+];
+
+interface Preset {
+  id: string;
+  label: string;
+  description: string;
+  icon: React.ElementType;
+  permissions: Pick<StaffPermissions, PermKey>;
+}
+
+const PRESETS: Preset[] = [
+  {
+    id: 'buttafuori',
+    label: 'Buttafuori',
+    description: 'Solo accesso base',
+    icon: ShieldCheck,
+    permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false },
+  },
+  {
+    id: 'responsabile_sala',
+    label: 'Responsabile sala',
+    description: 'Gestione tavoli',
+    icon: LayoutGrid,
+    permissions: { can_manage_events: false, can_manage_tables: true, can_view_analytics: false },
+  },
+  {
+    id: 'gestore_eventi',
+    label: 'Gestore eventi',
+    description: 'Crea eventi + analytics',
+    icon: BarChart3,
+    permissions: { can_manage_events: true, can_manage_tables: false, can_view_analytics: true },
+  },
+  {
+    id: 'full',
+    label: 'Accesso completo',
+    description: 'Tutti i permessi',
+    icon: Users,
+    permissions: { can_manage_events: true, can_manage_tables: true, can_view_analytics: true },
+  },
+  {
+    id: 'custom',
+    label: 'Custom',
+    description: 'Configura manualmente',
+    icon: Sliders,
+    permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false },
+  },
 ];
 
 interface Props {
@@ -18,10 +65,22 @@ interface Props {
 export default function StaffManager({ initialStaff }: Props) {
   const [staff, setStaff] = useState<ClubStaff[]>(initialStaff);
   const [email, setEmail] = useState('');
+  const [selectedPreset, setSelectedPreset] = useState<Preset>(PRESETS[0]);
+  const [customPermissions, setCustomPermissions] = useState<Pick<StaffPermissions, PermKey>>({
+    can_manage_events: false,
+    can_manage_tables: false,
+    can_view_analytics: false,
+  });
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState('');
   const [inviteSuccess, setInviteSuccess] = useState('');
   const [isPending, startTransition] = useTransition();
+
+  const activePermissions = selectedPreset.id === 'custom' ? customPermissions : selectedPreset.permissions;
+
+  function handlePresetSelect(preset: Preset) {
+    setSelectedPreset(preset);
+  }
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
@@ -32,14 +91,15 @@ export default function StaffManager({ initialStaff }: Props) {
       const res = await fetch('/api/club/invite-staff', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, permissions: activePermissions }),
       });
       const json = await res.json();
       if (!res.ok) {
-        setInviteError(json.error ?? 'Errore durante l\'invito');
+        setInviteError(json.error ?? "Errore durante l'invito");
       } else {
         setInviteSuccess(`Invito inviato a ${email}`);
         setEmail('');
+        setSelectedPreset(PRESETS[0]);
       }
     } catch {
       setInviteError('Errore di rete');
@@ -48,20 +108,25 @@ export default function StaffManager({ initialStaff }: Props) {
     }
   }
 
-  async function togglePermission(
-    memberId: string,
-    key: keyof Pick<ClubStaff, 'can_manage_events' | 'can_manage_tables' | 'can_view_analytics' | 'can_view_participants'>,
-    value: boolean,
-  ) {
-    setStaff((prev) =>
-      prev.map((m) => (m.id === memberId ? { ...m, [key]: value } : m)),
-    );
-
+  async function togglePermission(memberId: string, key: PermKey, value: boolean) {
+    setStaff((prev) => prev.map((m) => (m.id === memberId ? { ...m, [key]: value } : m)));
     startTransition(async () => {
       await fetch('/api/club/update-staff-permissions', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ staffId: memberId, key, value }),
+      });
+    });
+  }
+
+  async function applyPresetToMember(memberId: string, preset: Preset) {
+    const perms = preset.permissions;
+    setStaff((prev) => prev.map((m) => (m.id === memberId ? { ...m, ...perms } : m)));
+    startTransition(async () => {
+      await fetch('/api/club/update-staff-permissions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ staffId: memberId, bulk: perms }),
       });
     });
   }
@@ -81,6 +146,68 @@ export default function StaffManager({ initialStaff }: Props) {
       {/* Invite form */}
       <div className="bg-[#111118] border border-white/8 rounded-xl p-5">
         <h2 className="text-sm font-semibold text-white mb-4">Invita nuovo membro</h2>
+
+        {/* Preset selector */}
+        <div className="grid grid-cols-5 gap-2 mb-4">
+          {PRESETS.map((preset) => {
+            const Icon = preset.icon;
+            const active = selectedPreset.id === preset.id;
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => handlePresetSelect(preset)}
+                className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-lg border text-center transition-all ${
+                  active
+                    ? 'bg-purple-500/10 border-purple-500/40 text-purple-300'
+                    : 'bg-white/3 border-white/8 text-slate-400 hover:border-white/20 hover:text-slate-200'
+                }`}
+              >
+                <Icon size={16} />
+                <span className="text-xs font-medium leading-tight">{preset.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Permessi custom o preview permessi preset */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {PERMISSION_LABELS.map((p) => {
+            const enabled = selectedPreset.id === 'custom'
+              ? customPermissions[p.key]
+              : selectedPreset.permissions[p.key];
+            if (selectedPreset.id === 'custom') {
+              return (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={() => setCustomPermissions((prev) => ({ ...prev, [p.key]: !prev[p.key] }))}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                    enabled
+                      ? 'bg-purple-500/15 border-purple-500/40 text-purple-300'
+                      : 'bg-white/3 border-white/8 text-slate-500'
+                  }`}
+                >
+                  {enabled ? '✓ ' : ''}{p.label}
+                </button>
+              );
+            }
+            return (
+              <span
+                key={p.key}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border ${
+                  enabled
+                    ? 'bg-purple-500/15 border-purple-500/40 text-purple-300'
+                    : 'bg-white/3 border-white/8 text-slate-600'
+                }`}
+              >
+                {enabled ? '✓ ' : ''}{p.label}
+              </span>
+            );
+          })}
+        </div>
+
+        {/* Email + bottone */}
         <form onSubmit={handleInvite} className="flex gap-3">
           <input
             type="email"
@@ -115,6 +242,7 @@ export default function StaffManager({ initialStaff }: Props) {
             <thead>
               <tr className="border-b border-white/8">
                 <th className="text-left px-5 py-3 text-slate-400 font-medium">Membro</th>
+                <th className="text-left px-5 py-3 text-slate-400 font-medium text-xs">Ruolo rapido</th>
                 {PERMISSION_LABELS.map((p) => (
                   <th key={p.key} className="text-center px-3 py-3 text-slate-400 font-medium text-xs">
                     {p.label}
@@ -129,6 +257,21 @@ export default function StaffManager({ initialStaff }: Props) {
                   <td className="px-5 py-4">
                     <p className="text-white font-medium">{member.profiles?.name ?? '—'}</p>
                     <p className="text-slate-500 text-xs">{member.profiles?.email ?? ''}</p>
+                  </td>
+                  <td className="px-5 py-4">
+                    <select
+                      onChange={(e) => {
+                        const preset = PRESETS.find((p) => p.id === e.target.value);
+                        if (preset && preset.id !== 'custom') applyPresetToMember(member.id, preset);
+                      }}
+                      defaultValue="custom"
+                      className="bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-purple-500/40 cursor-pointer"
+                    >
+                      <option value="custom">— Scegli —</option>
+                      {PRESETS.filter((p) => p.id !== 'custom').map((p) => (
+                        <option key={p.id} value={p.id}>{p.label}</option>
+                      ))}
+                    </select>
                   </td>
                   {PERMISSION_LABELS.map((p) => (
                     <td key={p.key} className="px-3 py-4 text-center">

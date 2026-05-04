@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { Profile, Role, StaffPermissions } from '@/types';
 
 export async function getProfile(): Promise<Profile | null> {
@@ -16,8 +17,8 @@ export async function getProfile(): Promise<Profile | null> {
 }
 
 export async function getStaffPermissions(userId: string, clubId: string): Promise<StaffPermissions | null> {
-  const supabase = await createClient();
-  const { data } = await supabase
+  const admin = createAdminClient();
+  const { data } = await admin
     .from('club_staff')
     .select('can_manage_events, can_manage_tables, can_view_analytics, can_view_participants')
     .eq('user_id', userId)

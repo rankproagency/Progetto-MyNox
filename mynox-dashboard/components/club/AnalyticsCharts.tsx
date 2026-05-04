@@ -7,7 +7,7 @@ import {
 
 interface Props {
   salesByEvent: { name: string; venduti: number; capacita: number }[];
-  revenueData: { mese: string; ricavi: number }[];
+  revenueData: { mese: string; ricavi: number }[] | null;
   tablesByEvent: { name: string; prenotati: number; disponibili: number }[];
 }
 
@@ -22,38 +22,25 @@ const tooltipStyle = {
 export default function AnalyticsCharts({ salesByEvent, revenueData, tablesByEvent }: Props) {
   return (
     <div className="space-y-6">
-      {/* Ricavi per mese */}
-      <div className="bg-[#111118] border border-white/8 rounded-xl p-6">
-        <h2 className="text-sm font-semibold text-white mb-6">Ricavi mensili (ultimi 6 mesi)</h2>
-        {revenueData.every((d) => d.ricavi === 0) ? (
-          <EmptyChart />
-        ) : (
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={revenueData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="mese" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis
-                tick={{ fill: '#94a3b8', fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `€${v}`}
-              />
-              <Tooltip
-                contentStyle={tooltipStyle}
-                formatter={(value) => [`€${Number(value).toFixed(2)}`, 'Ricavi']}
-              />
-              <Line
-                type="monotone"
-                dataKey="ricavi"
-                stroke="#a855f7"
-                strokeWidth={2}
-                dot={{ fill: '#a855f7', r: 4 }}
-                activeDot={{ r: 5 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-      </div>
+      {/* Ricavi per mese — solo con permesso */}
+      {revenueData !== null && (
+        <div className="bg-[#111118] border border-white/8 rounded-xl p-6">
+          <h2 className="text-sm font-semibold text-white mb-6">Ricavi mensili (ultimi 6 mesi)</h2>
+          {revenueData.every((d) => d.ricavi === 0) ? (
+            <EmptyChart />
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={revenueData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="mese" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `€${v}`} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(value) => [`€${Number(value).toFixed(2)}`, 'Ricavi']} />
+                <Line type="monotone" dataKey="ricavi" stroke="#a855f7" strokeWidth={2} dot={{ fill: '#a855f7', r: 4 }} activeDot={{ r: 5 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      )}
 
       {/* Biglietti per evento */}
       <div className="bg-[#111118] border border-white/8 rounded-xl p-6">
