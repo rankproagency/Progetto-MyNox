@@ -344,6 +344,9 @@ function TicketCard({
               {ticket.eventName}
             </Text>
             <Text style={styles.ticketClub}>{ticket.clubName}</Text>
+            {ticket.type === 'table' && ticket.tableName && (
+              <Text style={styles.tableLabel} numberOfLines={1}>{ticket.tableName}</Text>
+            )}
             <View style={styles.ticketMeta}>
               <Ionicons name="calendar-outline" size={12} color={Colors.textMuted} />
               <Text style={styles.ticketMetaText}> {ticket.date} · {ticket.startTime}</Text>
@@ -366,8 +369,12 @@ function TicketCard({
           </View>
         </View>
         <View style={styles.ticketRight}>
-          <View style={[styles.typeBadge, isPending && styles.typeBadgePending, isGifted && styles.typeBadgeGifted]}>
-            <Text style={styles.typeBadgeText}>{isGifted ? 'Regalo' : ticket.ticketLabel}</Text>
+          <View style={[styles.typeBadge, isPending && styles.typeBadgePending, isGifted && styles.typeBadgeGifted, ticket.type === 'table' && styles.typeBadgeTable]}>
+            {ticket.type === 'table' && !isGifted ? (
+              <Text style={[styles.typeBadgeText, { color: Colors.accent }]}>Tavolo</Text>
+            ) : (
+              <Text style={styles.typeBadgeText}>{isGifted ? 'Regalo' : ticket.ticketLabel}</Text>
+            )}
           </View>
           {!isPending && !isGifted && ticket.type !== 'table' && (
             <View style={styles.drinkStatus}>
@@ -504,6 +511,7 @@ const styles = StyleSheet.create({
   ticketEvent: { fontSize: 14, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 3 },
   ticketEventMuted: { color: Colors.textSecondary },
   ticketClub: { fontSize: 12, color: Colors.textSecondary, marginBottom: 4 },
+  tableLabel: { fontSize: 13, fontFamily: Font.bold, color: Colors.accent, marginBottom: 4 },
   ticketMeta: { flexDirection: 'row', alignItems: 'center' },
   ticketMetaText: { fontSize: 11, color: Colors.textMuted },
   pendingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
@@ -513,6 +521,7 @@ const styles = StyleSheet.create({
   typeBadge: { backgroundColor: Colors.accent, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   typeBadgePending: { backgroundColor: Colors.warning },
   typeBadgeGifted: { backgroundColor: Colors.accentBgMid, borderWidth: 1, borderColor: Colors.accentBorder },
+  typeBadgeTable: { backgroundColor: Colors.accentBg, borderWidth: 1, borderColor: Colors.accentBorder },
   typeBadgeText: { fontSize: 11, fontFamily: Font.bold, color: Colors.white },
   drinkStatus: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   drinkText: { fontSize: 11, color: Colors.success, fontFamily: Font.medium },

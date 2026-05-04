@@ -188,11 +188,6 @@ export default function RegisterScreen() {
               </View>
             </View>
 
-            <View style={styles.ageNote}>
-              <Ionicons name="information-circle-outline" size={14} color={Colors.textMuted} />
-              <Text style={styles.ageNoteText}>Devi avere almeno 18 anni per accedere ai contenuti di MyNox.</Text>
-            </View>
-
             <TouchableOpacity
               style={[styles.ctaButton, isLoading && styles.ctaDisabled]}
               activeOpacity={0.85}
@@ -346,14 +341,6 @@ const styles = StyleSheet.create({
   dateRow: { paddingVertical: 14 },
   dateText: { flex: 1, fontSize: 15, color: Colors.textPrimary },
   datePlaceholder: { color: Colors.textMuted },
-
-  ageNote: {
-    flexDirection: 'row', gap: 8, alignItems: 'flex-start',
-    backgroundColor: Colors.surface,
-    borderRadius: 12, borderWidth: 1, borderColor: Colors.border,
-    padding: 12, marginBottom: 24,
-  },
-  ageNoteText: { flex: 1, fontSize: 12, color: Colors.textMuted, lineHeight: 18 },
 
   ctaButton: {
     backgroundColor: Colors.accent,

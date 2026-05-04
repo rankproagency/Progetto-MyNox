@@ -76,11 +76,11 @@ export default function TicketScreen() {
                 <Ionicons
                   name={ticket.type === 'table' ? 'grid-outline' : 'ticket-outline'}
                   size={12}
-                  color={Colors.white}
+                  color={ticket.type === 'table' ? Colors.accent : Colors.white}
                   style={{ marginRight: 4 }}
                 />
-                <Text style={styles.ticketBadgeText}>
-                  {ticket.ticketLabel}
+                <Text style={[styles.ticketBadgeText, ticket.type === 'table' && { color: Colors.accent }]}>
+                  {ticket.type === 'table' ? `Tavolo ${ticket.ticketLabel}` : ticket.ticketLabel}
                 </Text>
               </View>
               <CountdownInline rawDate={ticket.rawDate} startTime={ticket.startTime} />
@@ -129,16 +129,10 @@ export default function TicketScreen() {
                   <Ionicons name="grid-outline" size={18} color={Colors.accent} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.tableCardTitle}>{ticket.ticketLabel}</Text>
-                  {ticket.tableSection ? (
-                    <View style={styles.tableSectionRow}>
-                      <Ionicons name="location-outline" size={12} color={Colors.textMuted} />
-                      <Text style={styles.tableSectionText}>{ticket.tableSection}</Text>
-                    </View>
-                  ) : null}
-                  {ticket.tableName ? (
-                    <Text style={styles.tableCardSub}>Prenotazione: "{ticket.tableName}"</Text>
-                  ) : null}
+                  <Text style={styles.tableCardTitle}>
+                    {ticket.tableName ?? ticket.ticketLabel}
+                  </Text>
+                  <Text style={styles.tableCardSub}>Tavolo {ticket.ticketLabel}</Text>
                 </View>
               </View>
               <View style={styles.tableCardBadgesCol}>
@@ -149,7 +143,7 @@ export default function TicketScreen() {
                   </View>
                 )}
                 <View style={styles.tableCardBadge}>
-                  <Text style={styles.tableCardBadgeText}>Solo ingresso</Text>
+                  <Text style={styles.tableCardBadgeText}>Bottle service</Text>
                 </View>
               </View>
             </View>
@@ -180,7 +174,11 @@ export default function TicketScreen() {
                   )}
                 </View>
                 <Text style={styles.qrLabel}>
-                  {ticket.status === 'used' ? 'Biglietto già scansionato' : 'Mostra questo QR al buttafuori'}
+                  {ticket.status === 'used'
+                    ? 'Biglietto già scansionato'
+                    : ticket.type === 'table'
+                    ? 'Mostra questo QR al buttafuori e al responsabile sala'
+                    : 'Mostra questo QR al buttafuori'}
                 </Text>
                 {ticket.status === 'used' ? (
                   <View style={[styles.usedBadge, { marginBottom: 8 }]}>
@@ -422,8 +420,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   tableCardHeaderLeft: {
     flexDirection: 'row',
@@ -444,12 +440,6 @@ const styles = StyleSheet.create({
     fontFamily: Font.bold,
     color: Colors.textPrimary,
     marginBottom: 2,
-  },
-  tableSectionRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 3,
-  },
-  tableSectionText: {
-    fontSize: 11, color: Colors.textMuted,
   },
   tableCardSub: {
     fontSize: 11,

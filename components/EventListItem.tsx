@@ -2,11 +2,10 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { Event, Genre } from '../types';
+import { Event } from '../types';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useFavorites } from '../contexts/FavoritesContext';
-import { GENRE_CONFIG } from '../constants/genres';
 
 interface Props {
   event: Event;
@@ -43,17 +42,10 @@ export default function EventListItem({ event }: Props) {
           <Text style={styles.timeSep}>·</Text>
           <Ionicons name="time-outline" size={12} color={Colors.textMuted} />
           <Text style={styles.time}> {event.startTime}</Text>
-          {event.genres.slice(0, 1).map((g) => {
-            const cfg = GENRE_CONFIG[g as Genre];
-            const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : Colors.accentBg;
-            const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : Colors.accentBorder;
-            const text = cfg ? cfg.color.replace(/[\d.]+\)$/, '1)') : Colors.accent;
-            return (
-              <View key={g} style={[styles.genreTag, { backgroundColor: bg, borderColor: border }]}>
-                <Text style={[styles.genreText, { color: text }]}>{g}</Text>
-              </View>
-            );
-          })}
+          <Text style={styles.timeSep}>·</Text>
+          <Text style={[styles.time, event.minAge > 18 && { color: Colors.warning }]}>
+            {event.minAge}+
+          </Text>
         </View>
       </View>
       <View style={styles.right}>
@@ -153,16 +145,6 @@ const styles = StyleSheet.create({
   timeSep: {
     fontSize: 11,
     color: Colors.textMuted,
-  },
-  genreTag: {
-    borderRadius: 4,
-    borderWidth: 1,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  genreText: {
-    fontSize: 10,
-    fontFamily: Font.bold,
   },
   right: {
     alignItems: 'flex-end',

@@ -73,6 +73,7 @@ function rowToEvent(row: any): Event {
     startTime: row.start_time,
     endTime: row.end_time ?? undefined,
     imageUrl: row.image_url ?? '',
+    minAge: row.min_age ?? 18,
     dressCode: row.dress_code ?? 'No dress code',
     capacity: row.capacity ?? 500,
     ticketsSold: row.tickets_sold ?? 0,
