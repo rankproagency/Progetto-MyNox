@@ -7,6 +7,7 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'MyNox Dashboard',
   description: 'Pannello gestione MyNox',
+  icons: { icon: '/logo.png' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
