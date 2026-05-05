@@ -6,7 +6,7 @@
 
 ## Obiettivo
 
-Permettere ai buttafuori di scannerizzare i QR dei biglietti direttamente dal browser del loro telefono, accedendo alla dashboard come `club_staff` con permesso `can_scan_tickets` assegnato esplicitamente dal proprietario della discoteca.
+Permettere ai buttafuori di scannerizzare i QR dei biglietti direttamente dal browser del loro telefono, accedendo alla dashboard come `club_staff` con permesso `can_scan_tickets` assegnato esplicitamente dal proprietario della discoteca. Ogni biglietto ha anche un codice breve leggibile (es. `A7XK2M`) come fallback quando il QR non è scannerizzabile.
 
 ---
 
@@ -20,7 +20,7 @@ Permettere ai buttafuori di scannerizzare i QR dei biglietti direttamente dal br
 6. Tab **Scansiona**: fotocamera attiva con mirino viola — inquadra il QR del cliente
 7. Feedback immediato: flash verde (valido) o rosso (già usato / non valido) a tutto schermo, poi card con nome e tipo biglietto
 8. Auto-reset dopo 3 secondi → pronto per la prossima scansione
-9. Tab **Cerca**: campo di ricerca per nome o codice biglietto — fallback quando il QR non funziona (schermo rotto, buio)
+9. Tab **Cerca**: il buttafuori digita il codice breve del biglietto (6 caratteri, mostrato nell'app sotto il QR) — fallback quando la fotocamera non funziona o il cliente ha lo schermo rotto
 
 ---
 
@@ -55,20 +55,27 @@ Permettere ai buttafuori di scannerizzare i QR dei biglietti direttamente dal br
 - Al successo/errore: flash a tutto schermo (verde/rosso) per 500ms, poi card risultato
 - Auto-reset a `idle` dopo 3 secondi
 - Selettore evento in cima: mostra l'evento di oggi, dropdown se ce ne sono più nella stessa giornata
-- Tab Scansiona / Cerca — la ricerca filtra per nome utente o codice biglietto (prefisso `MNX-`)
+- Tab Scansiona / Cerca — la ricerca accetta il codice breve a 6 caratteri del biglietto
 
-### API: `POST /app/api/club/validate-ticket/route.ts`
-**Request:** `{ qrCode: string, eventId: string }`
+### API: `POST /api/club/validate-ticket/route.ts`
+**Request:** `{ code: string, eventId: string }` — `code` è il QR content (`MYNOX-TICKET-{uuid}`) oppure il codice breve a 6 caratteri
 
 **Logica:**
 1. Verifica autenticazione e che il caller abbia `can_scan_tickets` per quel club
-2. Cerca biglietto per `qr_code = qrCode`
+2. Determina il tipo di codice: se contiene `MYNOX-TICKET-` → cerca per `qr_code`; altrimenti cerca per `entry_code`
 3. Verifica che `event_id = eventId` e che l'evento appartenga al club del caller
 4. Se `status = "valid"` → aggiorna a `"used"`, restituisce `{ ok: true, name, ticketType }`
 5. Se `status = "used"` → restituisce `{ ok: false, reason: "already_used", usedAt }`
-6. Altrimenti → `{ ok: false, reason: "invalid" }` (no info sensibili per codici non trovati)
+6. Altrimenti → `{ ok: false, reason: "invalid" }` (no info sensibili)
 
 Usa `createAdminClient()` per le operazioni DB (bypassare RLS).
+
+### Codice breve (`entry_code`)
+- Colonna `entry_code VARCHAR(6)` aggiunta alla tabella `tickets` con constraint `UNIQUE`
+- Generato alla creazione del biglietto nella Edge Function `confirm-payment`
+- Formato: 6 caratteri alfanumerici uppercase, senza caratteri ambigui (`0`, `O`, `1`, `I`, `L`)
+- Charset sicuro: `ABCDEFGHJKMNPQRSTUVWXYZ23456789` (32 caratteri → 32^6 = ~1 miliardo di combinazioni)
+- Mostrato nell'app mobile sotto il QR con font grande, etichetta "Codice manuale"
 
 ---
 
@@ -76,7 +83,7 @@ Usa `createAdminClient()` per le operazioni DB (bypassare RLS).
 
 | File | Tipo | Descrizione |
 |------|------|-------------|
-| `supabase/migrations/add_can_scan_tickets.sql` | Nuovo | ALTER TABLE club_staff ADD COLUMN can_scan_tickets boolean DEFAULT false |
+| `supabase/migrations/add_can_scan_tickets.sql` | Nuovo | ADD COLUMN can_scan_tickets a club_staff + ADD COLUMN entry_code a tickets |
 | `app/(club)/club/scan/page.tsx` | Nuovo | Server component: auth, permesso, eventi oggi |
 | `components/club/TicketScanner.tsx` | Nuovo | Client component: camera, tabs, feedback |
 | `app/api/club/validate-ticket/route.ts` | Nuovo | POST endpoint validazione QR |
@@ -106,5 +113,6 @@ Usa `createAdminClient()` per le operazioni DB (bypassare RLS).
 ## Fuori scope (per ora)
 
 - Validazione QR free drink (secondo step futuro)
+- Generazione `entry_code` per i biglietti esistenti (solo per i nuovi acquisti)
 - Modalità offline / cache locale biglietti
 - Storico scansioni della serata (da aggiungere dopo)
