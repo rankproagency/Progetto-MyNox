@@ -105,6 +105,7 @@ export interface Ticket {
   ticket_label: string | null;
   qr_code: string;
   drink_qr_code: string;
+  entry_code: string | null;
   status: 'valid' | 'used' | 'denied' | 'pending';
   drink_used: boolean;
   created_at: string;

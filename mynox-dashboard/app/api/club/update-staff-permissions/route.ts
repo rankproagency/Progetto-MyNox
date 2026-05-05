@@ -2,16 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-const ALLOWED_KEYS = [
-  'can_manage_events',
-  'can_manage_tables',
-  'can_view_analytics',
-  'can_view_participants',
-  'can_scan_tickets',
-] as const;
+const ALLOWED_KEYS = ['can_manage_events', 'can_manage_tables', 'can_view_analytics', 'can_view_participants', 'can_scan_tickets'] as const;
 type AllowedKey = typeof ALLOWED_KEYS[number];
 
-async function getCallerClubId(): Promise<string | null> {
+async function getClubId(): Promise<string | null> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
@@ -25,7 +19,7 @@ async function getCallerClubId(): Promise<string | null> {
 }
 
 export async function PATCH(req: NextRequest) {
-  const clubId = await getCallerClubId();
+  const clubId = await getClubId();
   if (!clubId) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await req.json();
@@ -34,19 +28,21 @@ export async function PATCH(req: NextRequest) {
 
   const admin = createAdminClient();
 
-  // Bulk update (preset)
+  // Bulk update (preset applicato su membro esistente)
   if (body.bulk) {
     const bulk = body.bulk as Record<string, boolean>;
     const update: Record<string, boolean> = {};
     for (const key of ALLOWED_KEYS) {
       if (typeof bulk[key] === 'boolean') update[key] = bulk[key];
     }
-    const { error } = await admin
+    const { error, count } = await admin
       .from('club_staff')
       .update(update)
-      .eq('user_id', staffId)
-      .eq('club_id', clubId);
+      .eq('id', staffId)
+      .eq('club_id', clubId)
+      .select();
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (count === 0) return NextResponse.json({ error: 'Membro non trovato' }, { status: 404 });
     return NextResponse.json({ success: true });
   }
 
@@ -55,18 +51,20 @@ export async function PATCH(req: NextRequest) {
   if (!ALLOWED_KEYS.includes(key as AllowedKey) || typeof value !== 'boolean') {
     return NextResponse.json({ error: 'Parametri non validi' }, { status: 400 });
   }
-  const { error } = await admin
+  const { error, data } = await admin
     .from('club_staff')
     .update({ [key]: value })
-    .eq('user_id', staffId)
-    .eq('club_id', clubId);
+    .eq('id', staffId)
+    .eq('club_id', clubId)
+    .select();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (!data || data.length === 0) return NextResponse.json({ error: 'Membro non trovato' }, { status: 404 });
   return NextResponse.json({ success: true });
 }
 
 export async function DELETE(req: NextRequest) {
-  const clubId = await getCallerClubId();
+  const clubId = await getClubId();
   if (!clubId) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const { staffId } = await req.json();
@@ -76,7 +74,7 @@ export async function DELETE(req: NextRequest) {
   const { error } = await admin
     .from('club_staff')
     .delete()
-    .eq('user_id', staffId)
+    .eq('id', staffId)
     .eq('club_id', clubId);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });

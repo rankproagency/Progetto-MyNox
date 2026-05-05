@@ -1,7 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { Users } from 'lucide-react';
-import UserRoleEditor from '@/components/admin/UserRoleEditor';
+import UsersTable from '@/components/admin/UsersTable';
 
 const ROLE_LABELS: Record<string, string> = {
   admin:      'Admin',
@@ -73,68 +73,7 @@ export default async function AdminUsersPage() {
           <p className="mt-2 text-red-500/70 text-xs">La trovi su: Supabase → Project Settings → API → service_role (secret)</p>
         </div>
       ) : (
-        <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/8">
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Nome</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Email</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Ruolo</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Registrato il</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Ultimo accesso</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.length > 0 ? (
-                users.map((user) => (
-                  <tr key={user.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
-                    <td className="px-5 py-4 text-white font-medium">{user.name}</td>
-                    <td className="px-5 py-4 text-slate-300">{user.email}</td>
-                    <td className="px-5 py-4">
-                      <UserRoleEditor
-                        userId={user.id}
-                        currentRole={user.role}
-                        currentClubId={user.clubId}
-                        clubs={clubs ?? []}
-                      />
-                    </td>
-                    <td className="px-5 py-4 text-slate-400">
-                      {new Date(user.createdAt).toLocaleDateString('it-IT', {
-                        day: '2-digit', month: 'short', year: 'numeric',
-                      })}
-                    </td>
-                    <td className="px-5 py-4 text-slate-400">
-                      {user.lastSignIn
-                        ? new Date(user.lastSignIn).toLocaleDateString('it-IT', {
-                            day: '2-digit', month: 'short', year: 'numeric',
-                          })
-                        : '—'}
-                    </td>
-                    <td className="px-5 py-4">
-                      {user.confirmed ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-green-500/10 text-green-400 border-green-500/20">
-                          Confermato
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-amber-500/10 text-amber-400 border-amber-500/20">
-                          In attesa
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="px-5 py-16 text-center">
-                    <Users size={32} className="text-slate-600 mx-auto mb-3" />
-                    <p className="text-slate-400 font-medium">Nessun utente trovato</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <UsersTable users={users} clubs={clubs ?? []} />
       )}
     </div>
   );
