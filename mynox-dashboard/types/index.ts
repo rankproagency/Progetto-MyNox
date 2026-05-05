@@ -5,6 +5,7 @@ export interface StaffPermissions {
   can_manage_tables: boolean;
   can_view_analytics: boolean;
   can_view_participants: boolean;
+  can_scan_tickets: boolean;
 }
 
 export interface ClubStaff {
@@ -16,6 +17,7 @@ export interface ClubStaff {
   can_manage_tables: boolean;
   can_view_analytics: boolean;
   can_view_participants: boolean;
+  can_scan_tickets: boolean;
   created_at: string;
   profiles?: { name: string; email: string };
 }
@@ -103,6 +105,7 @@ export interface Ticket {
   ticket_label: string | null;
   qr_code: string;
   drink_qr_code: string;
+  entry_code: string | null;
   status: 'valid' | 'used' | 'denied' | 'pending';
   drink_used: boolean;
   created_at: string;
