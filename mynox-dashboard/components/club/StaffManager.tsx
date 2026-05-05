@@ -150,7 +150,7 @@ export default function StaffManager({ initialStaff }: Props) {
         <h2 className="text-sm font-semibold text-white mb-4">Invita nuovo membro</h2>
 
         {/* Preset selector */}
-        <div className="grid grid-cols-5 gap-2 mb-4">
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mb-4">
           {PRESETS.map((preset) => {
             const Icon = preset.icon;
             const active = selectedPreset.id === preset.id;

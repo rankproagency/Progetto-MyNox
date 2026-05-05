@@ -153,7 +153,7 @@ export default async function ClubAnalyticsPage() {
       </div>
 
       {/* KPI base — visibili a tutti */}
-      <div className={`grid gap-5 mb-8 ${canViewRevenue ? 'grid-cols-4' : 'grid-cols-2'}`}>
+      <div className={`grid gap-5 mb-8 ${canViewRevenue ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2'}`}>
         <KpiCard
           label="Biglietti venduti"
           value={data.totalTickets.toLocaleString('it-IT')}
@@ -188,7 +188,7 @@ export default async function ClubAnalyticsPage() {
       {data.tablesByEvent.length > 0 && (
         <div className="mb-8">
           <p className="text-xs text-slate-500 uppercase tracking-widest font-medium mb-4">Tavoli</p>
-          <div className={`grid gap-5 ${canViewRevenue ? 'grid-cols-3' : 'grid-cols-1 max-w-xs'}`}>
+          <div className={`grid gap-5 ${canViewRevenue ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-1 max-w-xs'}`}>
             <KpiCard
               label="Media tavoli per serata"
               value={Math.round(data.avgTablesPerEvent).toLocaleString('it-IT')}

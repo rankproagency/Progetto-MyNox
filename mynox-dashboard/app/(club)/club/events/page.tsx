@@ -47,7 +47,7 @@ export default async function ClubEventsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white">I miei eventi</h1>
           <p className="text-slate-400 mt-1">Gestisci gli eventi della tua discoteca.</p>
@@ -67,9 +67,9 @@ export default async function ClubEventsPage() {
             <tr className="border-b border-white/8">
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Nome</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Data</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Orario</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Biglietti</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Ricavi</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Orario</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Biglietti</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Ricavi</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
               <th className="px-5 py-3" />
             </tr>
@@ -87,11 +87,11 @@ export default async function ClubEventsPage() {
                   <td className="px-5 py-4 text-slate-300">
                     {new Date(event.date).toLocaleDateString('it-IT')}
                   </td>
-                  <td className="px-5 py-4 text-slate-300">{event.start_time}</td>
-                  <td className="px-5 py-4 text-slate-300">
+                  <td className="px-5 py-4 text-slate-300 hidden md:table-cell">{event.start_time}</td>
+                  <td className="px-5 py-4 text-slate-300 hidden md:table-cell">
                     {event.tickets_sold}{event.capacity ? ` / ${event.capacity}` : ''}
                   </td>
-                  <td className="px-5 py-4 font-semibold text-purple-400">
+                  <td className="px-5 py-4 font-semibold text-purple-400 hidden md:table-cell">
                     €{(revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-5 py-4">
@@ -151,11 +151,11 @@ export default async function ClubEventsPage() {
                     <td className="px-5 py-4 text-slate-400">
                       {new Date(event.date).toLocaleDateString('it-IT')}
                     </td>
-                    <td className="px-5 py-4 text-slate-400">{event.start_time}</td>
-                    <td className="px-5 py-4 text-slate-400">
+                    <td className="px-5 py-4 text-slate-400 hidden md:table-cell">{event.start_time}</td>
+                    <td className="px-5 py-4 text-slate-400 hidden md:table-cell">
                       {event.tickets_sold}{event.capacity ? ` / ${event.capacity}` : ''}
                     </td>
-                    <td className="px-5 py-4 font-semibold text-purple-400/70">
+                    <td className="px-5 py-4 font-semibold text-purple-400/70 hidden md:table-cell">
                       €{(revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="px-5 py-4">
