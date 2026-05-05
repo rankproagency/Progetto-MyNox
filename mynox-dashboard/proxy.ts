@@ -39,34 +39,31 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user) {
-    // Leggi il ruolo una volta sola
-    let role: string | null = null;
-    try {
+    // Redirect da / e /login al pannello corretto
+    if (pathname === '/' || pathname === '/login') {
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
         .single();
-      role = profile?.role ?? null;
-    } catch {
-      role = null;
-    }
 
-    // Redirect da / e /login al pannello corretto
-    if (pathname === '/' || pathname === '/login') {
+      const role = profile?.role;
       if (role === 'admin') return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-      if (role === 'club_admin' || role === 'club_staff') return NextResponse.redirect(new URL('/club/dashboard', request.url));
+      if (role === 'club_admin') return NextResponse.redirect(new URL('/club/dashboard', request.url));
       return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
     }
 
-    // Protegge /admin/* — solo admin
-    if (pathname.startsWith('/admin') && role !== 'admin') {
-      return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
-    }
+    // club_admin non può accedere ad /admin/*
+    if (pathname.startsWith('/admin')) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
 
-    // Protegge /club/* — club_admin e club_staff
-    if (pathname.startsWith('/club') && role !== 'club_admin' && role !== 'club_staff') {
-      return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
+      if (profile?.role !== 'admin') {
+        return NextResponse.redirect(new URL('/club/dashboard', request.url));
+      }
     }
   }
 

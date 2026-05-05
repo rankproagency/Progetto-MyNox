@@ -1,207 +1,153 @@
-import { createAdminClient } from '@/lib/supabase/admin';
-import Link from 'next/link';
-import { Building2, Users, CalendarDays, ChevronRight, Ticket, Clock } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+import { Users, Building2, Ticket, TrendingUp } from 'lucide-react';
 
-async function getDashboardData() {
-  const supabase = createAdminClient();
-  const since7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const today = new Date().toISOString().slice(0, 10);
+async function getStats() {
+  const supabase = await createClient();
 
   const [
-    { data: recentUsers },
-    { data: recentTickets },
-    { data: upcomingEvents },
-    { count: totalUsers },
     { count: totalClubs },
+    { count: totalUsers },
     { count: totalTickets },
+    { data: ticketRevenue },
+    { data: recentEvents },
   ] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('id, name, email, created_at, role')
-      .eq('role', 'customer')
-      .gte('created_at', since7Days)
-      .order('created_at', { ascending: false })
-      .limit(5),
-    supabase
-      .from('tickets')
-      .select('id, created_at, table_name, price_paid, ticket_types(label, price), events(name, clubs(name))')
-      .in('status', ['valid', 'used'])
-      .order('created_at', { ascending: false })
-      .limit(6),
+    supabase.from('clubs').select('*', { count: 'exact', head: true }),
+    supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'customer'),
+    supabase.from('tickets').select('*', { count: 'exact', head: true }).in('status', ['valid', 'used']),
+    supabase.from('tickets').select('event_id, ticket_types(price)').in('status', ['valid', 'used']),
     supabase
       .from('events')
-      .select('id, name, date, start_time, tickets_sold, capacity, clubs(name), is_published')
-      .gte('date', today)
+      .select('id, name, date, tickets_sold, capacity, clubs(name)')
       .eq('is_published', true)
-      .order('date', { ascending: true })
+      .order('date', { ascending: false })
       .limit(5),
-    supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'customer'),
-    supabase.from('clubs').select('*', { count: 'exact', head: true }),
-    supabase.from('tickets').select('*', { count: 'exact', head: true }).in('status', ['valid', 'used']).not('ticket_type_id', 'is', null),
   ]);
 
+  const revenue = (ticketRevenue ?? []).reduce((sum: number, t: any) => {
+    return sum + (t.ticket_types?.price ?? 0);
+  }, 0);
+
+  const revenueByEvent: Record<string, number> = {};
+  for (const t of ticketRevenue ?? []) {
+    const id = (t as any).event_id;
+    if (id) revenueByEvent[id] = (revenueByEvent[id] ?? 0) + ((t as any).ticket_types?.price ?? 0);
+  }
+
   return {
-    recentUsers: recentUsers ?? [],
-    recentTickets: recentTickets ?? [],
-    upcomingEvents: upcomingEvents ?? [],
-    totalUsers: totalUsers ?? 0,
     totalClubs: totalClubs ?? 0,
+    totalUsers: totalUsers ?? 0,
     totalTickets: totalTickets ?? 0,
+    revenue,
+    recentEvents: recentEvents ?? [],
+    revenueByEvent,
   };
 }
 
 export default async function AdminDashboardPage() {
-  const data = await getDashboardData();
+  const stats = await getStats();
 
-  const now = new Date();
-  const greeting =
-    now.getHours() < 12 ? 'Buongiorno' :
-    now.getHours() < 18 ? 'Buon pomeriggio' : 'Buonasera';
+  const kpis = [
+    {
+      label: 'Ricavi totali',
+      value: `€${stats.revenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      icon: TrendingUp,
+      color: 'text-purple-400',
+      bg: 'bg-purple-500/10',
+      border: 'border-purple-500/20',
+    },
+    {
+      label: 'Biglietti venduti',
+      value: stats.totalTickets.toLocaleString('it-IT'),
+      icon: Ticket,
+      color: 'text-blue-400',
+      bg: 'bg-blue-500/10',
+      border: 'border-blue-500/20',
+    },
+    {
+      label: 'Discoteche attive',
+      value: stats.totalClubs.toLocaleString('it-IT'),
+      icon: Building2,
+      color: 'text-green-400',
+      bg: 'bg-green-500/10',
+      border: 'border-green-500/20',
+    },
+    {
+      label: 'Utenti registrati',
+      value: stats.totalUsers.toLocaleString('it-IT'),
+      icon: Users,
+      color: 'text-orange-400',
+      bg: 'bg-orange-500/10',
+      border: 'border-orange-500/20',
+    },
+  ];
 
   return (
     <div>
       <div className="mb-8">
-        <p className="text-slate-400 text-sm mb-1">{greeting}</p>
-        <h1 className="text-2xl font-bold text-white">Panoramica MyNox</h1>
+        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+        <p className="text-slate-400 mt-1">Panoramica generale della piattaforma MyNox.</p>
       </div>
 
-      {/* KPI rapidi */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <Link href="/admin/users" className="bg-[#111118] border border-white/8 hover:border-purple-500/30 rounded-xl px-5 py-4 transition-colors group">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-slate-400 uppercase tracking-wider">Utenti registrati</p>
-            <Users size={14} className="text-slate-600 group-hover:text-purple-400 transition-colors" />
-          </div>
-          <p className="text-2xl font-bold text-white">{data.totalUsers.toLocaleString('it-IT')}</p>
-          <p className="text-xs text-slate-500 mt-1">{data.recentUsers.length} nuovi questa settimana</p>
-        </Link>
-        <Link href="/admin/clubs" className="bg-[#111118] border border-white/8 hover:border-purple-500/30 rounded-xl px-5 py-4 transition-colors group">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-slate-400 uppercase tracking-wider">Discoteche</p>
-            <Building2 size={14} className="text-slate-600 group-hover:text-purple-400 transition-colors" />
-          </div>
-          <p className="text-2xl font-bold text-white">{data.totalClubs.toLocaleString('it-IT')}</p>
-          <p className="text-xs text-slate-500 mt-1">Sulla piattaforma</p>
-        </Link>
-        <Link href="/admin/analytics" className="bg-[#111118] border border-white/8 hover:border-purple-500/30 rounded-xl px-5 py-4 transition-colors group">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-slate-400 uppercase tracking-wider">Biglietti venduti</p>
-            <Ticket size={14} className="text-slate-600 group-hover:text-purple-400 transition-colors" />
-          </div>
-          <p className="text-2xl font-bold text-white">{data.totalTickets.toLocaleString('it-IT')}</p>
-          <p className="text-xs text-slate-500 mt-1">Vedi analytics →</p>
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-2 gap-6 mb-6">
-        {/* Nuovi utenti questa settimana */}
-        <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">Nuovi utenti — 7 giorni</h2>
-            <Link href="/admin/users" className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors">
-              Tutti <ChevronRight size={12} />
-            </Link>
-          </div>
-          {data.recentUsers.length === 0 ? (
-            <div className="px-5 py-10 text-center text-slate-500 text-sm">Nessun nuovo utente.</div>
-          ) : (
-            <div className="divide-y divide-white/5">
-              {data.recentUsers.map((u: any) => (
-                <div key={u.id} className="flex items-center justify-between px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-purple-400">
-                        {(u.name || u.email || '?').charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm text-white font-medium">{u.name || '—'}</p>
-                      <p className="text-xs text-slate-500">{u.email}</p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-500 shrink-0">
-                    {new Date(u.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}
-                  </p>
-                </div>
-              ))}
+      {/* KPI Cards */}
+      <div className="grid grid-cols-4 gap-5 mb-10">
+        {kpis.map(({ label, value, icon: Icon, color, bg, border }) => (
+          <div
+            key={label}
+            className={`bg-[#111118] border border-white/8 rounded-xl p-5 flex items-start gap-4`}
+          >
+            <div className={`w-10 h-10 rounded-lg ${bg} border ${border} flex items-center justify-center flex-shrink-0`}>
+              <Icon size={18} className={color} />
             </div>
-          )}
-        </div>
-
-        {/* Ultimi biglietti venduti */}
-        <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">Ultimi biglietti venduti</h2>
-            <Link href="/admin/analytics" className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors">
-              Analytics <ChevronRight size={12} />
-            </Link>
-          </div>
-          {data.recentTickets.length === 0 ? (
-            <div className="px-5 py-10 text-center text-slate-500 text-sm">Nessun biglietto ancora.</div>
-          ) : (
-            <div className="divide-y divide-white/5">
-              {data.recentTickets.map((t: any) => (
-                <div key={t.id} className="flex items-center justify-between px-5 py-3.5">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-white font-medium truncate">{(t.events as any)?.name ?? '—'}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      {(t.events as any)?.clubs?.name ?? '—'} · {t.ticket_types?.label ?? (t.table_name ? `Tavolo – ${t.table_name}` : '—')}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0 ml-4">
-                    <p className="text-sm font-semibold text-purple-400">€{Number(t.ticket_types?.price ?? t.price_paid ?? 0).toFixed(2)}</p>
-                    <p className="text-xs text-slate-500">
-                      {new Date(t.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}
-                    </p>
-                  </div>
-                </div>
-              ))}
+            <div>
+              <p className="text-xs text-slate-400 font-medium mb-1">{label}</p>
+              <p className="text-2xl font-bold text-white">{value}</p>
             </div>
-          )}
-        </div>
+          </div>
+        ))}
       </div>
 
-      {/* Prossimi eventi in piattaforma */}
+      {/* Recent events */}
       <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-white">Prossimi eventi in piattaforma</h2>
-          <Link href="/admin/events" className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors">
-            Vedi tutti <ChevronRight size={12} />
-          </Link>
+        <div className="px-5 py-4 border-b border-white/8">
+          <h2 className="text-sm font-semibold text-white">Eventi recenti</h2>
         </div>
-        {data.upcomingEvents.length === 0 ? (
-          <div className="px-5 py-10 text-center text-slate-500 text-sm">Nessun evento in programma.</div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/8">
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Evento</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Discoteca</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Data</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Orario</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Biglietti</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.upcomingEvents.map((ev: any) => (
-                <tr key={ev.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
-                  <td className="px-5 py-4 text-white font-medium">{ev.name}</td>
-                  <td className="px-5 py-4 text-slate-300">{ev.clubs?.name ?? '—'}</td>
-                  <td className="px-5 py-4 text-slate-300">{new Date(ev.date).toLocaleDateString('it-IT')}</td>
-                  <td className="px-5 py-4 text-slate-400">
-                    <span className="flex items-center gap-1.5">
-                      <Clock size={11} />
-                      {ev.start_time}
-                    </span>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-white/8">
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Nome</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Discoteca</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Data</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Biglietti</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">Ricavi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stats.recentEvents.length > 0 ? (
+              stats.recentEvents.map((event: any) => (
+                <tr key={event.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+                  <td className="px-5 py-4 text-white font-medium">{event.name}</td>
+                  <td className="px-5 py-4 text-slate-300">{event.clubs?.name ?? '—'}</td>
+                  <td className="px-5 py-4 text-slate-300">
+                    {new Date(event.date).toLocaleDateString('it-IT')}
                   </td>
                   <td className="px-5 py-4 text-slate-300">
-                    {ev.tickets_sold ?? 0}{ev.capacity ? ` / ${ev.capacity}` : ''}
+                    {event.tickets_sold}
+                    {event.capacity ? ` / ${event.capacity}` : ''}
+                  </td>
+                  <td className="px-5 py-4 font-semibold text-purple-400">
+                    €{(stats.revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} className="px-5 py-10 text-center text-slate-500">
+                  Nessun evento pubblicato.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

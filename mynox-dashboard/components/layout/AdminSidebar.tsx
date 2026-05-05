@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import {
-  Home,
+  LayoutDashboard,
   Building2,
   CalendarDays,
   Users,
@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { href: '/admin/dashboard', label: 'Home', icon: Home },
+  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart2 },
   { href: '/admin/clubs', label: 'Discoteche', icon: Building2 },
   { href: '/admin/events', label: 'Eventi', icon: CalendarDays },

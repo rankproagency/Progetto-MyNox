@@ -43,7 +43,6 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
   const initialEventTables = mappedClubTables.map((ct: any) => {
     const existing = (eventTables ?? []).find((et: any) => et.club_table_id === ct.id);
     return {
-      id: existing?.id as string | undefined,
       clubTableId: ct.id,
       label: ct.label,
       capacity: ct.capacity,

@@ -5,13 +5,14 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import {
-  Home,
+  LayoutDashboard,
   CalendarDays,
   BarChart3,
   Map,
   LogOut,
-  Settings,
   Users,
+  ScanLine,
+  Settings,
 } from 'lucide-react';
 import type { StaffPermissions } from '@/types';
 
@@ -20,14 +21,16 @@ interface NavItem {
   label: string;
   icon: React.ElementType;
   ownerOnly?: boolean;
+  staffOnly?: boolean;
   permission?: keyof StaffPermissions;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/club/dashboard', label: 'Home', icon: Home },
+  { href: '/club/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/club/events', label: 'I miei eventi', icon: CalendarDays, permission: 'can_manage_events' },
   { href: '/club/venue', label: 'Piantina & Tavoli', icon: Map, permission: 'can_manage_tables' },
   { href: '/club/analytics', label: 'Analytics', icon: BarChart3, permission: 'can_view_analytics' },
+  { href: '/club/scan', label: 'Scanner', icon: ScanLine, permission: 'can_scan_tickets', staffOnly: true },
   { href: '/club/staff', label: 'Staff', icon: Users, ownerOnly: true },
   { href: '/club/settings', label: 'Profilo club', icon: Settings, ownerOnly: true },
 ];
@@ -43,6 +46,7 @@ export default function ClubSidebar({ clubName, isOwner, permissions }: ClubSide
 
   const visibleItems = NAV_ITEMS.filter((item) => {
     if (item.ownerOnly && !isOwner) return false;
+    if (item.staffOnly && isOwner) return false;
     if (item.permission && !isOwner && !permissions[item.permission]) return false;
     return true;
   });
