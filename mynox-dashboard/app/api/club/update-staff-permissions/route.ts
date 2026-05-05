@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-const ALLOWED_KEYS = ['can_manage_events', 'can_manage_tables', 'can_view_analytics', 'can_view_participants'] as const;
+const ALLOWED_KEYS = ['can_manage_events', 'can_manage_tables', 'can_view_analytics', 'can_view_participants', 'can_scan_tickets'] as const;
 type AllowedKey = typeof ALLOWED_KEYS[number];
 
 async function getClubId(): Promise<string | null> {

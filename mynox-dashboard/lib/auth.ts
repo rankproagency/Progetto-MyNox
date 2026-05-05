@@ -33,6 +33,7 @@ export const FULL_PERMISSIONS: StaffPermissions = {
   can_manage_tables: true,
   can_view_analytics: true,
   can_view_participants: true,
+  can_scan_tickets: true,
 };
 
 export function getRoleRedirect(role: Role): string {

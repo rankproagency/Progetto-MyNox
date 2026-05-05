@@ -36,6 +36,7 @@ export default async function ClubLayout({ children }: { children: React.ReactNo
         can_manage_tables: false,
         can_view_analytics: false,
         can_view_participants: false,
+        can_scan_tickets: false,
       };
 
   return (
