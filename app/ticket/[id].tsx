@@ -173,6 +173,13 @@ export default function TicketScreen() {
                     </View>
                   )}
                 </View>
+                {ticket.entryCode && ticket.status !== 'used' && (
+                  <View style={styles.entryCodeBox}>
+                    <Text style={styles.entryCodeLabel}>Codice manuale</Text>
+                    <Text style={styles.entryCodeText}>{ticket.entryCode}</Text>
+                    <Text style={styles.entryCodeHint}>Mostralo al buttafuori se il QR non funziona</Text>
+                  </View>
+                )}
                 <Text style={styles.qrLabel}>
                   {ticket.status === 'used'
                     ? 'Biglietto già scansionato'
@@ -546,4 +553,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4, paddingTop: 4,
   },
   disclaimerText: { flex: 1, fontSize: 12, color: Colors.textMuted, lineHeight: 18 },
+
+  entryCodeBox: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: 'rgba(168,85,247,0.08)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(168,85,247,0.2)',
+    marginBottom: 12,
+    width: '100%',
+  },
+  entryCodeLabel: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  entryCodeText: {
+    fontSize: 28,
+    fontFamily: Font.black,
+    color: Colors.textPrimary,
+    letterSpacing: 6,
+  },
+  entryCodeHint: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    marginTop: 4,
+    textAlign: 'center',
+  },
 });

@@ -22,6 +22,7 @@ export interface MockTicket {
   drinkUsed?: boolean;
   status: 'valid' | 'used' | 'denied' | 'pending' | 'gifted';
   giftCode?: string;
+  entryCode?: string;
   imageUrl?: string;
   eventImageUrl?: string;
 }
@@ -85,6 +86,7 @@ function dbRowToMockTicket(row: any): MockTicket {
     drinkUsed: row.drink_used ?? false,
     status: effectiveStatus,
     giftCode: pendingGift?.code ?? undefined,
+    entryCode: row.entry_code ?? undefined,
     imageUrl: ev?.clubs?.image_url ?? undefined,
     eventImageUrl: ev?.image_url ?? undefined,
   };
@@ -100,7 +102,7 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
     const { data } = await supabase
       .from('tickets')
       .select(`
-        id, qr_code, drink_qr_code, status, drink_used, price_paid, table_name, table_id,
+        id, qr_code, drink_qr_code, entry_code, status, drink_used, price_paid, table_name, table_id,
         ticket_types(label, includes_drink),
         events(id, name, date, start_time, end_time, image_url, clubs(name, image_url)),
         tables(label, capacity, section),
