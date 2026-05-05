@@ -66,7 +66,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* KPI rapidi */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
         <Link href="/admin/users" className="bg-[#111118] border border-white/8 hover:border-purple-500/30 rounded-xl px-5 py-4 transition-colors group">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs text-slate-400 uppercase tracking-wider">Utenti registrati</p>
@@ -93,7 +93,7 @@ export default async function AdminDashboardPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Nuovi utenti questa settimana */}
         <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
@@ -176,25 +176,25 @@ export default async function AdminDashboardPage() {
             <thead>
               <tr className="border-b border-white/8">
                 <th className="text-left px-5 py-3 text-slate-400 font-medium">Evento</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Discoteca</th>
+                <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Discoteca</th>
                 <th className="text-left px-5 py-3 text-slate-400 font-medium">Data</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Orario</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Biglietti</th>
+                <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Orario</th>
+                <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Biglietti</th>
               </tr>
             </thead>
             <tbody>
               {data.upcomingEvents.map((ev: any) => (
                 <tr key={ev.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
                   <td className="px-5 py-4 text-white font-medium">{ev.name}</td>
-                  <td className="px-5 py-4 text-slate-300">{ev.clubs?.name ?? '—'}</td>
+                  <td className="px-5 py-4 text-slate-300 hidden md:table-cell">{ev.clubs?.name ?? '—'}</td>
                   <td className="px-5 py-4 text-slate-300">{new Date(ev.date).toLocaleDateString('it-IT')}</td>
-                  <td className="px-5 py-4 text-slate-400">
+                  <td className="px-5 py-4 text-slate-400 hidden md:table-cell">
                     <span className="flex items-center gap-1.5">
                       <Clock size={11} />
                       {ev.start_time}
                     </span>
                   </td>
-                  <td className="px-5 py-4 text-slate-300">
+                  <td className="px-5 py-4 text-slate-300 hidden md:table-cell">
                     {ev.tickets_sold ?? 0}{ev.capacity ? ` / ${ev.capacity}` : ''}
                   </td>
                 </tr>
