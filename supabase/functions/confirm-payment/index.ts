@@ -5,6 +5,13 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
   apiVersion: '2024-12-18.acacia',
 });
 
+function generateEntryCode(): string {
+  const charset = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const bytes = new Uint8Array(6);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => charset[b % charset.length]).join('');
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -72,6 +79,7 @@ Deno.serve(async (req) => {
         status: 'valid',
         price_paid: priceEach,
         stripe_payment_intent_id: payment_intent_id,
+        entry_code: generateEntryCode(),
       };
     });
 
