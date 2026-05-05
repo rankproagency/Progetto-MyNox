@@ -56,7 +56,7 @@ export default async function AdminEventsPage() {
       </div>
 
       {/* KPI operativi */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-3 md:grid-cols-3 gap-3 md:gap-4 mb-8">
         <StatCard
           icon={<CalendarDays size={16} className="text-green-400" />}
           label="Pubblicati"
