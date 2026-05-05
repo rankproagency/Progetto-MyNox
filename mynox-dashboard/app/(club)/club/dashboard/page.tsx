@@ -190,7 +190,7 @@ export default async function ClubDashboardPage() {
       )}
 
       {/* Azioni rapide */}
-      <div className="grid grid-cols-4 gap-3 mb-10">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
         {permissions.can_manage_events && (
           <Link href="/club/events/new"
             className="flex items-center gap-3 bg-purple-600 hover:bg-purple-500 rounded-xl px-4 py-3.5 transition-colors group">
@@ -234,7 +234,7 @@ export default async function ClubDashboardPage() {
         <RealtimeSalesChart eventIds={eventIds} initialBuckets={initialBuckets} showRevenue={canViewRevenue} />
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Prossimi 7 giorni */}
         <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
