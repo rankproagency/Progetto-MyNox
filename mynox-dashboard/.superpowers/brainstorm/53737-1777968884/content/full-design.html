@@ -1,0 +1,77 @@
+<h2>Design completo — Scanner Buttafuori</h2>
+<p class="subtitle">Architettura, flusso e componenti della feature. Clicca su ogni sezione per confermarla.</p>
+
+<div class="options" data-multiselect>
+
+  <div class="option" data-choice="flow" onclick="toggleSelect(this)">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>Flusso utente</h3>
+      <p>
+        Il buttafuori apre <strong>/club/scan</strong> → la pagina mostra automaticamente la serata di oggi.
+        Se ci sono più serate oggi, compare un dropdown per scegliere.
+        Tab <em>Scansiona</em> apre la fotocamera — il mirino viola inquadra il QR — feedback immediato (verde / rosso) con nome e tipo biglietto.
+        Tab <em>Cerca</em> permette ricerca per nome o codice quando il QR non funziona.
+        Il buttafuori può sempre cambiare serata dal menu in alto.
+      </p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="permissions" onclick="toggleSelect(this)">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>Permessi e ruoli</h3>
+      <p>
+        Nuovo permesso <strong>can_scan_tickets</strong> aggiunto alla tabella <code>club_staff</code> (migration SQL).
+        Aggiornato in: tipi TypeScript, pannello Staff Manager (nuovo toggle), sidebar (link Scanner visibile solo se autorizzato), FULL_PERMISSIONS.
+        Il preset <strong>Buttafuori</strong> viene aggiornato automaticamente con <code>can_scan_tickets: true</code> — ha senso che sia il suo unico permesso.
+      </p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="api" onclick="toggleSelect(this)">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>API di validazione</h3>
+      <p>
+        <strong>POST /api/club/validate-ticket</strong> — riceve <code>{ qrCode, eventId }</code>.
+        Cerca il biglietto per <code>qr_code = "MYNOX-TICKET-{uuid}"</code>, verifica che appartenga all'evento giusto e al club del caller.
+        Se <code>status = "valid"</code> → aggiorna a <code>"used"</code>, restituisce nome utente e tipo biglietto.
+        Se <code>status = "used"</code> → restituisce errore con orario prima scansione.
+        Se non trovato / altro club → errore generico (no info sensibili).
+        Usa <code>createAdminClient()</code> per bypassare RLS.
+      </p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="frontend" onclick="toggleSelect(this)">
+    <div class="letter">4</div>
+    <div class="content">
+      <h3>Componente scanner</h3>
+      <p>
+        <strong>Libreria:</strong> <code>html5-qrcode</code> — funziona su Safari iOS e Chrome Android, nessun permesso nativo richiesto.
+        <strong>Pagina server:</strong> <code>/club/scan/page.tsx</code> — verifica auth + <code>can_scan_tickets</code>, carica eventi di oggi, passa tutto al client.
+        <strong>Componente client:</strong> <code>TicketScanner.tsx</code> — gestisce fotocamera, tab, stato risultato (idle / success / error), auto-reset dopo 3 secondi per la prossima scansione.
+        <strong>Feedback visivo:</strong> flash verde o rosso su tutto lo schermo per mezzo secondo — visibile anche in condizioni di buio.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:32px;" class="mockup">
+  <div class="mockup-header">Mappa file da creare / modificare</div>
+  <div class="mockup-body" style="font-family:monospace;font-size:12px;line-height:2;">
+    <div style="color:#22c55e;">+ supabase/migrations/add_can_scan_tickets.sql</div>
+    <div style="color:#22c55e;">+ app/(club)/club/scan/page.tsx</div>
+    <div style="color:#22c55e;">+ components/club/TicketScanner.tsx</div>
+    <div style="color:#22c55e;">+ app/api/club/validate-ticket/route.ts</div>
+    <div style="color:#a855f7;">~ types/index.ts &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ aggiungi can_scan_tickets</div>
+    <div style="color:#a855f7;">~ lib/auth.ts &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ FULL_PERMISSIONS</div>
+    <div style="color:#a855f7;">~ components/club/StaffManager.tsx &nbsp;→ nuovo toggle</div>
+    <div style="color:#a855f7;">~ components/layout/ClubSidebar.tsx → link scanner</div>
+    <div style="color:#a855f7;">~ app/api/club/update-staff-permissions/route.ts → ALLOWED_KEYS</div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:24px;">Clicca su ogni blocco per confermare — poi dimmi se vuoi modifiche prima che scriva la spec.</p>

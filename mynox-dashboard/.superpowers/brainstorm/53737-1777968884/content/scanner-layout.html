@@ -1,0 +1,123 @@
+<h2>Layout interfaccia scanner buttafuori</h2>
+<p class="subtitle">Scegli come organizzare la schermata di scansione sul telefono del buttafuori</p>
+
+<div class="cards">
+
+  <!-- OPZIONE A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d0d14;border-radius:10px;padding:16px;font-family:sans-serif;">
+      <div style="background:#1a1a2e;border-radius:8px;aspect-ratio:9/16;max-height:320px;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,0.1);">
+        <!-- Header -->
+        <div style="padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:8px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;"></div>
+          <span style="color:#f8fafc;font-size:11px;font-weight:600;">Scanner attivo</span>
+        </div>
+        <!-- Camera viewfinder full width -->
+        <div style="flex:1;background:#000;position:relative;display:flex;align-items:center;justify-content:center;">
+          <div style="width:140px;height:140px;border:2px solid #a855f7;border-radius:12px;position:relative;">
+            <div style="position:absolute;top:-2px;left:-2px;width:24px;height:24px;border-top:3px solid #a855f7;border-left:3px solid #a855f7;border-radius:4px 0 0 0;"></div>
+            <div style="position:absolute;top:-2px;right:-2px;width:24px;height:24px;border-top:3px solid #a855f7;border-right:3px solid #a855f7;border-radius:0 4px 0 0;"></div>
+            <div style="position:absolute;bottom:-2px;left:-2px;width:24px;height:24px;border-bottom:3px solid #a855f7;border-left:3px solid #a855f7;border-radius:0 0 0 4px;"></div>
+            <div style="position:absolute;bottom:-2px;right:-2px;width:24px;height:24px;border-bottom:3px solid #a855f7;border-right:3px solid #a855f7;border-radius:0 0 4px 0;"></div>
+            <div style="position:absolute;top:50%;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#a855f7,transparent);transform:translateY(-50%);"></div>
+          </div>
+          <p style="position:absolute;bottom:12px;color:rgba(255,255,255,0.4);font-size:10px;">Inquadra il QR del biglietto</p>
+        </div>
+        <!-- Result area bottom -->
+        <div style="padding:12px 14px;background:#111118;">
+          <div style="background:#22c55e15;border:1px solid #22c55e40;border-radius:8px;padding:10px;text-align:center;">
+            <p style="color:#22c55e;font-size:11px;font-weight:700;margin:0;">✓ INGRESSO VALIDO</p>
+            <p style="color:rgba(255,255,255,0.5);font-size:9px;margin:4px 0 0;">Mario Rossi · Serata Techno</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Camera full-screen</h3>
+      <p>Fotocamera occupa tutta la schermata. Il risultato appare in basso come overlay. Massima visibilità per scannerizzare.</p>
+    </div>
+  </div>
+
+  <!-- OPZIONE B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d0d14;border-radius:10px;padding:16px;font-family:sans-serif;">
+      <div style="background:#1a1a2e;border-radius:8px;aspect-ratio:9/16;max-height:320px;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,0.1);">
+        <!-- Header -->
+        <div style="padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.08);">
+          <span style="color:#f8fafc;font-size:11px;font-weight:600;">Scanner Ingresso</span>
+        </div>
+        <!-- Camera metà schermo -->
+        <div style="height:45%;background:#000;display:flex;align-items:center;justify-content:center;">
+          <div style="width:100px;height:100px;border:2px solid #a855f7;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+            <div style="width:2px;height:60%;background:linear-gradient(transparent,#a855f7,transparent);"></div>
+          </div>
+        </div>
+        <!-- Stats + ultimi biglietti sotto -->
+        <div style="flex:1;padding:10px;overflow:hidden;">
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <div style="flex:1;background:#a855f715;border:1px solid #a855f730;border-radius:6px;padding:6px;text-align:center;">
+              <p style="color:#a855f7;font-size:14px;font-weight:700;margin:0;">47</p>
+              <p style="color:rgba(255,255,255,0.4);font-size:8px;margin:0;">Entrati</p>
+            </div>
+            <div style="flex:1;background:#22c55e15;border:1px solid #22c55e30;border-radius:6px;padding:6px;text-align:center;">
+              <p style="color:#22c55e;font-size:14px;font-weight:700;margin:0;">153</p>
+              <p style="color:rgba(255,255,255,0.4);font-size:8px;margin:0;">Rimasti</p>
+            </div>
+          </div>
+          <p style="color:rgba(255,255,255,0.3);font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Ultimi scansionati</p>
+          <div style="background:rgba(255,255,255,0.03);border-radius:6px;padding:6px 8px;margin-bottom:3px;">
+            <span style="color:#f8fafc;font-size:9px;">Mario R. · VIP</span>
+            <span style="float:right;color:#22c55e;font-size:9px;">✓</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.03);border-radius:6px;padding:6px 8px;">
+            <span style="color:#f8fafc;font-size:9px;">Giulia M. · Standard</span>
+            <span style="float:right;color:#22c55e;font-size:9px;">✓</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Camera + dashboard mini</h3>
+      <p>Fotocamera in alto, sotto contatori in tempo reale (entrati/rimasti) e storico ultime scansioni. Più info operative.</p>
+    </div>
+  </div>
+
+  <!-- OPZIONE C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d0d14;border-radius:10px;padding:16px;font-family:sans-serif;">
+      <div style="background:#1a1a2e;border-radius:8px;aspect-ratio:9/16;max-height:320px;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,0.1);">
+        <div style="padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.08);">
+          <span style="color:#f8fafc;font-size:11px;font-weight:600;">Scanner Ingresso</span>
+        </div>
+        <!-- Tabs: Scansione / Cerca -->
+        <div style="display:flex;border-bottom:1px solid rgba(255,255,255,0.08);">
+          <div style="flex:1;padding:8px;text-align:center;border-bottom:2px solid #a855f7;">
+            <span style="color:#a855f7;font-size:10px;font-weight:600;">📷 Scansiona</span>
+          </div>
+          <div style="flex:1;padding:8px;text-align:center;">
+            <span style="color:rgba(255,255,255,0.3);font-size:10px;">🔍 Cerca manuale</span>
+          </div>
+        </div>
+        <!-- Camera -->
+        <div style="flex:1;background:#000;display:flex;align-items:center;justify-content:center;position:relative;">
+          <div style="width:120px;height:120px;border:2px solid #a855f7;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+            <div style="width:2px;height:70%;background:linear-gradient(transparent,#a855f7,transparent);"></div>
+          </div>
+        </div>
+        <!-- Input manuale (tab 2) -->
+        <div style="padding:10px;background:#111118;">
+          <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 10px;display:flex;align-items:center;gap:6px;">
+            <span style="color:rgba(255,255,255,0.3);font-size:10px;">Codice biglietto...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Scansione + ricerca manuale</h3>
+      <p>Tab per passare tra fotocamera e ricerca per nome/codice. Utile quando il QR non funziona (schermo rotto, buio).</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:24px;">💡 Puoi selezionare anche più di una opzione se vuoi combinare elementi</p>
