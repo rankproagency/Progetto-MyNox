@@ -50,7 +50,7 @@ export default async function AdminClubsPage() {
       </div>
 
       {/* KPI */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
         <KpiCard label="Discoteche totali" value={String(clubs?.length ?? 0)} />
         <KpiCard label="Attive" value={String(activeClubs)} accent />
         <KpiCard label="Ricavi totali" value={`€${totalRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
@@ -62,11 +62,11 @@ export default async function AdminClubsPage() {
           <thead>
             <tr className="border-b border-white/8">
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Nome</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Città</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Città</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Eventi</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Eventi</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Ricavi</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Registrata</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Registrata</th>
               <th className="text-right px-5 py-3 text-slate-400 font-medium">Azioni</th>
             </tr>
           </thead>
@@ -98,13 +98,13 @@ export default async function AdminClubsPage() {
                         <span className={`font-medium ${textColor}`}>{club.name}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-slate-300">{club.city}</td>
+                    <td className="px-5 py-4 text-slate-300 hidden md:table-cell">{club.city}</td>
                     <td className="px-5 py-4">{statusBadge}</td>
-                    <td className="px-5 py-4 text-slate-300">{eventCountByClub[club.id] ?? 0}</td>
+                    <td className="px-5 py-4 text-slate-300 hidden md:table-cell">{eventCountByClub[club.id] ?? 0}</td>
                     <td className="px-5 py-4 font-semibold text-purple-400">
                       €{(revenueByClub[club.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td className="px-5 py-4 text-slate-400">
+                    <td className="px-5 py-4 text-slate-400 hidden md:table-cell">
                       {new Date(club.created_at).toLocaleDateString('it-IT')}
                     </td>
                     <td className="px-5 py-4">

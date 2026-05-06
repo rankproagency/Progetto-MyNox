@@ -50,7 +50,7 @@ export default async function ClubLayout({ children }: { children: React.ReactNo
         clubId={profile.club_id!}
         tables={['events', 'club_staff', 'tickets', 'tables']}
       />
-      <main className="ml-56 flex-1 p-8 relative">
+      <main className="md:ml-56 flex-1 p-4 pt-16 md:p-8 relative">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(ellipse_80%_40%_at_50%_0%,rgba(168,85,247,0.10),transparent)] z-0" />
         <div className="relative z-10">
           {children}

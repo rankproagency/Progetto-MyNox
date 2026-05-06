@@ -44,7 +44,7 @@ export default function EventsTable({
   return (
     <div>
       {/* Barra filtri */}
-      <div className="flex gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="relative flex-1">
           <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
           <input
@@ -76,10 +76,10 @@ export default function EventsTable({
           <thead>
             <tr className="border-b border-white/8">
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Nome</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Discoteca</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Discoteca</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Data</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Biglietti</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Ricavi</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Biglietti</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Ricavi</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
             </tr>
           </thead>
@@ -96,14 +96,14 @@ export default function EventsTable({
             {filteredFuture.map((event) => (
               <tr key={event.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
                 <td className="px-5 py-4 text-white font-medium">{event.name}</td>
-                <td className="px-5 py-4 text-slate-300">{event.clubName}</td>
+                <td className="px-5 py-4 text-slate-300 hidden md:table-cell">{event.clubName}</td>
                 <td className="px-5 py-4 text-slate-300 whitespace-nowrap">
                   {new Date(event.date).toLocaleDateString('it-IT')} · {event.start_time}
                 </td>
-                <td className="px-5 py-4 text-slate-300">
+                <td className="px-5 py-4 text-slate-300 hidden md:table-cell">
                   {event.tickets_sold}{event.capacity ? ` / ${event.capacity}` : ''}
                 </td>
-                <td className="px-5 py-4 font-semibold text-purple-400">
+                <td className="px-5 py-4 font-semibold text-purple-400 hidden md:table-cell">
                   €{event.revenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </td>
                 <td className="px-5 py-4">
@@ -131,14 +131,14 @@ export default function EventsTable({
                 {filteredPast.map((event, i) => (
                   <tr key={event.id} className={`border-b border-white/5 opacity-55 ${i === filteredPast.length - 1 ? 'border-b-0' : ''}`}>
                     <td className="px-5 py-4 text-slate-300 font-medium">{event.name}</td>
-                    <td className="px-5 py-4 text-slate-400">{event.clubName}</td>
+                    <td className="px-5 py-4 text-slate-400 hidden md:table-cell">{event.clubName}</td>
                     <td className="px-5 py-4 text-slate-400 whitespace-nowrap">
                       {new Date(event.date).toLocaleDateString('it-IT')} · {event.start_time}
                     </td>
-                    <td className="px-5 py-4 text-slate-400">
+                    <td className="px-5 py-4 text-slate-400 hidden md:table-cell">
                       {event.tickets_sold}{event.capacity ? ` / ${event.capacity}` : ''}
                     </td>
-                    <td className="px-5 py-4 font-semibold text-purple-400/70">
+                    <td className="px-5 py-4 font-semibold text-purple-400/70 hidden md:table-cell">
                       €{event.revenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="px-5 py-4">

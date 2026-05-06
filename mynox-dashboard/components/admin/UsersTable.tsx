@@ -41,7 +41,7 @@ export default function UsersTable({ users, clubs }: { users: User[]; clubs: Clu
   return (
     <div>
       {/* Filtri */}
-      <div className="flex gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="relative flex-1">
           <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
           <input
@@ -79,10 +79,10 @@ export default function UsersTable({ users, clubs }: { users: User[]; clubs: Clu
           <thead>
             <tr className="border-b border-white/8">
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Nome</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Email</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Email</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Ruolo</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Registrato il</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Ultimo accesso</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Registrato il</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Ultimo accesso</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
             </tr>
           </thead>
@@ -97,7 +97,7 @@ export default function UsersTable({ users, clubs }: { users: User[]; clubs: Clu
               filtered.map((user) => (
                 <tr key={user.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
                   <td className="px-5 py-4 text-white font-medium">{user.name}</td>
-                  <td className="px-5 py-4 text-slate-300">{user.email}</td>
+                  <td className="px-5 py-4 text-slate-300 hidden md:table-cell">{user.email}</td>
                   <td className="px-5 py-4">
                     <UserRoleEditor
                       userId={user.id}
@@ -106,12 +106,12 @@ export default function UsersTable({ users, clubs }: { users: User[]; clubs: Clu
                       clubs={clubs}
                     />
                   </td>
-                  <td className="px-5 py-4 text-slate-400">
+                  <td className="px-5 py-4 text-slate-400 hidden md:table-cell">
                     {new Date(user.createdAt).toLocaleDateString('it-IT', {
                       day: '2-digit', month: 'short', year: 'numeric',
                     })}
                   </td>
-                  <td className="px-5 py-4 text-slate-400">
+                  <td className="px-5 py-4 text-slate-400 hidden md:table-cell">
                     {user.lastSignIn
                       ? new Date(user.lastSignIn).toLocaleDateString('it-IT', {
                           day: '2-digit', month: 'short', year: 'numeric',
