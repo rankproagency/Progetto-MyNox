@@ -38,9 +38,5 @@ export default async function ScanPage() {
     );
   }
 
-  return (
-    <div className="-m-8 h-screen">
-      <TicketScanner events={events} defaultEventId={events[0].id} />
-    </div>
-  );
+  return <TicketScanner events={events} defaultEventId={events[0].id} />;
 }
