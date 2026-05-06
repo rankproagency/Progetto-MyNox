@@ -269,7 +269,6 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
             const { error: insErr } = await supabase.from('tables').insert({
               ...tableData,
               event_id: eventId,
-              club_table_id: t.clubTableId,
             });
             if (insErr) { setError('Errore inserimento tavolo: ' + insErr.message); setLoading(false); return; }
           }
@@ -281,7 +280,6 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
             const clubTable = clubTables?.find((ct) => ct.id === t.clubTableId);
             return {
               event_id: eventId,
-              club_table_id: t.clubTableId,
               label: t.label,
               capacity: t.capacity,
               deposit: t.deposit ? parseFloat(t.deposit) : 0,
