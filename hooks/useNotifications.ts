@@ -53,7 +53,7 @@ export async function notifyTicketConfirmed(
     identifier: notifIds(eventId).confirmed,
     content: {
       title: 'Biglietto confermato!',
-      body: `${eventName} @ ${clubName} — il tuo QR è pronto. Mostralo al buttafuori.`,
+      body: `${eventName} @ ${clubName} — il tuo QR è pronto. Mostralo alla sicurezza.`,
       data: { route: '/(tabs)/tickets' },
       sound: 'default',
     },
@@ -120,7 +120,7 @@ export async function scheduleEventReminders(
       identifier: ids.oneHour,
       content: {
         title: `Tra 1 ora: ${eventName}`,
-        body: `Sei pronto? Mostra il QR al buttafuori di ${clubName}.`,
+        body: `Sei pronto? Mostra il QR alla sicurezza di ${clubName}.`,
         data: { route: '/(tabs)/tickets' },
         sound: 'default',
       },

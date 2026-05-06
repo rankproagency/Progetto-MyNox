@@ -25,7 +25,7 @@ interface Preset {
 const PRESETS: Preset[] = [
   {
     id: 'buttafuori',
-    label: 'Buttafuori',
+    label: 'Sicurezza',
     description: 'Solo scanner',
     icon: ScanLine,
     permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false, can_view_participants: false, can_scan_tickets: true },

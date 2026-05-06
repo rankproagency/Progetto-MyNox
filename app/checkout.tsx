@@ -454,7 +454,7 @@ export default function CheckoutScreen() {
           <View style={styles.disclaimer}>
             <Ionicons name="warning-outline" size={16} color={Colors.textMuted} />
             <Text style={styles.disclaimerText}>
-              Il buttafuori ha il diritto di negare l'accesso (dress code, stato del cliente).
+              La sicurezza ha il diritto di negare l'accesso (dress code, stato del cliente).
               In caso di diniego non è previsto alcun rimborso. Acquistando accetti questa policy.
             </Text>
           </View>

@@ -177,15 +177,15 @@ export default function TicketScreen() {
                   <View style={styles.entryCodeBox}>
                     <Text style={styles.entryCodeLabel}>Codice manuale</Text>
                     <Text style={styles.entryCodeText}>{ticket.entryCode}</Text>
-                    <Text style={styles.entryCodeHint}>Mostralo al buttafuori se il QR non funziona</Text>
+                    <Text style={styles.entryCodeHint}>Mostralo alla sicurezza se il QR non funziona</Text>
                   </View>
                 )}
                 <Text style={styles.qrLabel}>
                   {ticket.status === 'used'
                     ? 'Biglietto già scansionato'
                     : ticket.type === 'table'
-                    ? 'Mostra questo QR al buttafuori e al responsabile sala'
-                    : 'Mostra questo QR al buttafuori'}
+                    ? 'Mostra questo QR alla sicurezza e al responsabile sala'
+                    : 'Mostra questo QR alla sicurezza'}
                 </Text>
                 {ticket.status === 'used' ? (
                   <View style={[styles.usedBadge, { marginBottom: 8 }]}>
@@ -227,7 +227,7 @@ export default function TicketScreen() {
                           }}
                         >
                           <Ionicons name="shield-checkmark-outline" size={16} color={Colors.white} />
-                          <Text style={styles.bouncerBtnText}>Segna come usato (buttafuori)</Text>
+                          <Text style={styles.bouncerBtnText}>Segna come usato (sicurezza)</Text>
                         </TouchableOpacity>
                         <View style={styles.actionDisclaimer}>
                           <Ionicons name="warning-outline" size={12} color={Colors.warning} />
@@ -312,7 +312,7 @@ export default function TicketScreen() {
         <View style={styles.disclaimer}>
           <Ionicons name="information-circle-outline" size={14} color={Colors.textMuted} />
           <Text style={styles.disclaimerText}>
-            Il buttafuori può negare l'accesso per dress code o stato del cliente. Nessun rimborso previsto.
+            La sicurezza può negare l'accesso per dress code o stato del cliente. Nessun rimborso previsto.
           </Text>
         </View>
 
