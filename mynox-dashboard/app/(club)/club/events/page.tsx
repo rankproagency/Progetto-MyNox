@@ -54,7 +54,7 @@ export default async function ClubEventsPage() {
         </div>
         <Link
           href="/club/events/new"
-          className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
+          className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors w-full md:w-auto"
         >
           <Plus size={16} />
           Nuovo evento
@@ -65,13 +65,13 @@ export default async function ClubEventsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/8">
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Nome</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Data</th>
+              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Nome</th>
+              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Data</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Orario</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Biglietti</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Ricavi</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
-              <th className="px-5 py-3" />
+              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Stato</th>
+              <th className="px-3 md:px-5 py-3" />
             </tr>
           </thead>
           <tbody>
@@ -79,12 +79,12 @@ export default async function ClubEventsPage() {
             {futureEvents.length > 0 ? (
               futureEvents.map((event) => (
                 <tr key={event.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
-                  <td className="px-5 py-4 font-medium">
+                  <td className="px-3 md:px-5 py-4 font-medium">
                     <Link href={`/club/events/${event.id}`} className="text-white hover:text-purple-400 transition-colors">
                       {event.name}
                     </Link>
                   </td>
-                  <td className="px-5 py-4 text-slate-300">
+                  <td className="px-3 md:px-5 py-4 text-slate-300 whitespace-nowrap">
                     {new Date(event.date).toLocaleDateString('it-IT')}
                   </td>
                   <td className="px-5 py-4 text-slate-300 hidden md:table-cell">{event.start_time}</td>
@@ -94,18 +94,20 @@ export default async function ClubEventsPage() {
                   <td className="px-5 py-4 font-semibold text-purple-400 hidden md:table-cell">
                     €{(revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
-                  <td className="px-5 py-4">
+                  <td className="px-3 md:px-5 py-4">
                     <PublishToggle eventId={event.id} isPublished={event.is_published} />
                   </td>
-                  <td className="px-5 py-4 text-right">
+                  <td className="px-3 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <DuplicateEventButton eventId={event.id} />
+                      <span className="hidden md:block">
+                        <DuplicateEventButton eventId={event.id} />
+                      </span>
                       <Link
                         href={`/club/events/${event.id}/edit`}
-                        className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-2 md:px-3 py-1.5 rounded-lg transition-colors"
                       >
                         <Pencil size={12} />
-                        Modifica
+                        <span className="hidden md:inline">Modifica</span>
                       </Link>
                     </div>
                   </td>
