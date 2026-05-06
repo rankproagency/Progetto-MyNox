@@ -100,7 +100,7 @@ export default async function ClubEventDetailPage({
         <span className="text-slate-400 text-sm">{event.name}</span>
       </div>
 
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex items-start justify-between flex-wrap gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white">{event.name}</h1>
           <p className="text-slate-400 mt-1">
@@ -110,7 +110,7 @@ export default async function ClubEventDetailPage({
         </div>
         <Link
           href={`/club/events/${id}/edit`}
-          className="flex items-center gap-2 text-sm text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-lg transition-colors"
+          className="flex items-center justify-center gap-2 text-sm text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-lg transition-colors w-full md:w-auto"
         >
           <Pencil size={14} />
           Modifica evento
@@ -118,7 +118,7 @@ export default async function ClubEventDetailPage({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-[#111118] border border-white/8 rounded-xl p-4">
           <p className="text-slate-400 text-xs mb-1">Biglietti venduti</p>
           <p className="text-2xl font-bold text-white">{event.tickets_sold ?? 0}</p>
@@ -146,12 +146,12 @@ export default async function ClubEventDetailPage({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/8">
-                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Tipo</th>
-                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Prezzo</th>
-                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Venduti</th>
-                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Disponibili</th>
-                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Ricavi</th>
-                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Avanzamento</th>
+                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Tipo</th>
+                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Prezzo</th>
+                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Venduti</th>
+                  <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Disponibili</th>
+                  <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Ricavi</th>
+                  <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Avanzamento</th>
                 </tr>
               </thead>
               <tbody>
@@ -164,14 +164,14 @@ export default async function ClubEventDetailPage({
                   const isLast = i === (ticketTypes ?? []).length - 1;
                   return (
                     <tr key={tt.id} className={`${!isLast ? 'border-b border-white/5' : ''} hover:bg-white/3 transition-colors`}>
-                      <td className="px-5 py-4 text-white font-semibold">{tt.label}</td>
-                      <td className="px-5 py-4 text-slate-300">€{Number(tt.price).toFixed(2)}</td>
-                      <td className="px-5 py-4 text-white font-semibold">{sold}</td>
-                      <td className="px-5 py-4 text-slate-300">{available}</td>
-                      <td className="px-5 py-4 text-purple-400 font-semibold">
+                      <td className="px-3 md:px-5 py-4 text-white font-semibold">{tt.label}</td>
+                      <td className="px-3 md:px-5 py-4 text-slate-300">€{Number(tt.price).toFixed(2)}</td>
+                      <td className="px-3 md:px-5 py-4 text-white font-semibold">{sold}</td>
+                      <td className="px-5 py-4 text-slate-300 hidden md:table-cell">{available}</td>
+                      <td className="px-5 py-4 text-purple-400 font-semibold hidden md:table-cell">
                         €{revenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
-                      <td className="px-5 py-4 w-40">
+                      <td className="px-5 py-4 w-40 hidden md:table-cell">
                         <div className="flex items-center gap-2">
                           <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
                             <div
@@ -188,11 +188,11 @@ export default async function ClubEventDetailPage({
               </tbody>
               <tfoot>
                 <tr className="border-t border-white/8 bg-white/3">
-                  <td className="px-5 py-3 text-slate-400 font-medium" colSpan={4}>Totale ricavi biglietti</td>
-                  <td className="px-5 py-3 text-purple-400 font-bold">
+                  <td className="px-3 md:px-5 py-3 text-slate-400 font-medium" colSpan={2}>Totale ricavi biglietti</td>
+                  <td className="px-3 md:px-5 py-3 text-purple-400 font-bold" colSpan={2}>
                     €{totalRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
-                  <td />
+                  <td className="hidden md:table-cell" colSpan={3} />
                 </tr>
               </tfoot>
             </table>
@@ -295,27 +295,27 @@ export default async function ClubEventDetailPage({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/8">
-                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Tavolo</th>
-                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Posti</th>
-                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Caparra</th>
-                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Nome tavolo</th>
-                  <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
+                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Tavolo</th>
+                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Posti</th>
+                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Caparra</th>
+                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Nome tavolo</th>
+                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Stato</th>
                 </tr>
               </thead>
               <tbody>
                 {tables!.map((table) => (
                   <tr key={table.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
-                    <td className="px-5 py-4 text-white font-semibold">{table.label}</td>
-                    <td className="px-5 py-4 text-slate-300">{table.capacity}</td>
-                    <td className="px-5 py-4 text-slate-300">€{Number(table.deposit).toFixed(2)}</td>
-                    <td className="px-5 py-4">
+                    <td className="px-3 md:px-5 py-4 text-white font-semibold">{table.label}</td>
+                    <td className="px-3 md:px-5 py-4 text-slate-300 hidden md:table-cell">{table.capacity}</td>
+                    <td className="px-3 md:px-5 py-4 text-slate-300 hidden md:table-cell">€{Number(table.deposit).toFixed(2)}</td>
+                    <td className="px-3 md:px-5 py-4">
                       {table.reserved_by ? (
                         <span className="text-white font-medium">{table.reserved_by}</span>
                       ) : (
                         <span className="text-slate-600 italic">—</span>
                       )}
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-3 md:px-5 py-4">
                       {table.is_available ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border bg-green-500/10 text-green-400 border-green-500/20">
                           <Circle size={8} fill="currentColor" />
