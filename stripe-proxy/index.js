@@ -1,5 +1,6 @@
 const http = require('http');
 const https = require('https');
+const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3001;
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
