@@ -39,11 +39,11 @@ export default function DuplicateEventButton({ eventId }: Props) {
         start_time: event.start_time,
         end_time: event.end_time,
         dress_code: event.dress_code,
+        min_age: event.min_age,
         capacity: event.capacity,
         image_url: event.image_url,
-        floor_plan_url: event.floor_plan_url,
         genres: event.genres,
-        lineup: event.lineup,
+        performers: event.performers,
         is_published: false,
       })
       .select('id')
