@@ -20,7 +20,7 @@ export async function getStaffPermissions(userId: string, clubId: string): Promi
   const admin = createAdminClient();
   const { data } = await admin
     .from('club_staff')
-    .select('can_manage_events, can_manage_tables, can_view_analytics, can_view_participants')
+    .select('can_manage_events, can_manage_tables, can_view_analytics, can_view_participants, can_scan_tickets')
     .eq('user_id', userId)
     .eq('club_id', clubId)
     .single();
