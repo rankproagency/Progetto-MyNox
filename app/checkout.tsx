@@ -27,6 +27,19 @@ import { useTickets, MockTicket } from '../contexts/TicketsContext';
 
 const PROXY_URL = 'https://mynox-stripe-proxy.onrender.com';
 
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 12000): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (err: any) {
+    if (err.name === 'AbortError') throw new Error('Il server non risponde. Riprova tra qualche secondo.');
+    throw err;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
   const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
@@ -201,7 +214,7 @@ export default function CheckoutScreen() {
 
       if (total === 0) {
         // Biglietto gratuito — bypass Stripe
-        const freeRes = await fetch(`${PROXY_URL}/create-free-ticket`, {
+        const freeRes = await fetchWithTimeout(`${PROXY_URL}/create-free-ticket`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ metadata }),
@@ -214,7 +227,7 @@ export default function CheckoutScreen() {
         createdTickets = freeJson.tickets;
       } else {
         // Flusso Stripe normale
-        const fnRes = await fetch(`${PROXY_URL}/create-payment-intent`, {
+        const fnRes = await fetchWithTimeout(`${PROXY_URL}/create-payment-intent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ amount: Math.round(total * 100), metadata }),
@@ -250,7 +263,7 @@ export default function CheckoutScreen() {
           return;
         }
 
-        const confirmRes = await fetch(`${PROXY_URL}/confirm-payment`, {
+        const confirmRes = await fetchWithTimeout(`${PROXY_URL}/confirm-payment`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ payment_intent_id: fnJson.paymentIntentId }),
