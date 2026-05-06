@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.mynox",
+      "bundleIdentifier": "com.mynox.app",
       "config": {
         "googleMapsApiKey": "AIzaSyDF5qA-619vlZvpQm4HxwMotRg9LB5k-sM"
       },
@@ -29,6 +29,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#07080f"
       },
+      "package": "com.mynox.app",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": ["android.permission.ACCESS_FINE_LOCATION", "android.permission.ACCESS_COARSE_LOCATION"],
