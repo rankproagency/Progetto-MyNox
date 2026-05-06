@@ -133,19 +133,18 @@ export default function TicketScreen() {
                     {ticket.tableName ?? ticket.ticketLabel}
                   </Text>
                   <Text style={styles.tableCardSub}>Tavolo {ticket.ticketLabel}</Text>
-                </View>
-              </View>
-              <View style={styles.tableCardBadgesCol}>
-                {ticket.tableCapacity != null && (
-                  <View style={styles.capacityBadge}>
-                    <Ionicons name="people-outline" size={12} color={Colors.textSecondary} style={{ marginRight: 3 }} />
-                    <Text style={styles.capacityBadgeText}>{ticket.tableCapacity} posti</Text>
+                  <View style={styles.bottleServiceRow}>
+                    <Ionicons name="wine-outline" size={11} color={Colors.textMuted} />
+                    <Text style={styles.bottleServiceText}>Bottle service</Text>
                   </View>
-                )}
-                <View style={styles.tableCardBadge}>
-                  <Text style={styles.tableCardBadgeText}>Bottle service</Text>
                 </View>
               </View>
+              {ticket.tableCapacity != null && (
+                <View style={styles.capacityBlock}>
+                  <Text style={styles.capacityNumber}>{ticket.tableCapacity}</Text>
+                  <Text style={styles.capacityLabel}>posti</Text>
+                </View>
+              )}
             </View>
           )}
 
@@ -453,37 +452,34 @@ const styles = StyleSheet.create({
     color: Colors.accent,
     marginTop: 1,
   },
-  tableCardBadgesCol: {
-    alignItems: 'flex-end',
-    gap: 5,
-  },
-  capacityBadge: {
-    flexDirection: 'row',
+  capacityBlock: {
     alignItems: 'center',
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    justifyContent: 'center',
+    minWidth: 48,
   },
-  capacityBadgeText: {
+  capacityNumber: {
+    fontSize: 36,
+    fontFamily: Font.extraBold,
+    color: Colors.textPrimary,
+    lineHeight: 40,
+  },
+  capacityLabel: {
     fontSize: 11,
     fontFamily: Font.semiBold,
-    color: Colors.textSecondary,
+    color: Colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  tableCardBadge: {
-    backgroundColor: Colors.accentBg,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.accentBorder,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+  bottleServiceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 5,
   },
-  tableCardBadgeText: {
+  bottleServiceText: {
     fontSize: 11,
-    fontFamily: Font.bold,
-    color: Colors.accent,
+    color: Colors.textMuted,
+    fontFamily: Font.semiBold,
   },
 
   perforationRow: {
