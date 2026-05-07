@@ -164,6 +164,10 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
   }
 
   async function handleSubmit(publish: boolean) {
+    if (!form.name.trim()) { setError('Il nome evento è obbligatorio.'); return; }
+    if (!form.date) { setError('La data è obbligatoria.'); return; }
+    if (!form.start_time) { setError("L'orario di inizio è obbligatorio."); return; }
+
     setLoading(true);
     setError('');
 
