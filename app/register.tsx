@@ -24,7 +24,7 @@ import { Font } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 
 const MAX_DATE = new Date();
-MAX_DATE.setFullYear(MAX_DATE.getFullYear() - 18); // non si può selezionare meno di 18 anni fa
+MAX_DATE.setFullYear(MAX_DATE.getFullYear() - 14); // età minima 14 anni (D.Lgs. 196/2003)
 
 function formatDOB(date: Date): string {
   const d = String(date.getDate()).padStart(2, '0');
@@ -54,7 +54,7 @@ export default function RegisterScreen() {
       return;
     }
     if (!privacyAccepted) {
-      Alert.alert('Errore', 'Devi confermare di avere almeno 18 anni e accettare la Privacy Policy.');
+      Alert.alert('Errore', 'Devi confermare di avere almeno 14 anni e accettare la Privacy Policy.');
       return;
     }
     if (!email.includes('@')) {
@@ -71,7 +71,7 @@ export default function RegisterScreen() {
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      await register(name.trim(), email.trim(), password);
+      await register(name.trim(), email.trim(), password, dateOfBirth);
       router.replace('/(tabs)');
     } catch (e: any) {
       Alert.alert('Registrazione fallita', e.message ?? 'Riprova più tardi.');
@@ -202,7 +202,7 @@ export default function RegisterScreen() {
                 {privacyAccepted && <Ionicons name="checkmark" size={12} color={Colors.white} />}
               </View>
               <Text style={styles.checkboxLabel}>
-                Confermo di avere almeno 18 anni e di aver letto e accettato la{' '}
+                Confermo di avere almeno 14 anni e di aver letto e accettato la{' '}
                 <Text style={styles.checkboxLink} onPress={() => router.push('/privacy')}>
                   Privacy Policy
                 </Text>

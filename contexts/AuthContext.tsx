@@ -15,6 +15,7 @@ export interface AuthUser {
   id: string;
   name: string;
   email: string;
+  dateOfBirth?: string; // YYYY-MM-DD
 }
 
 interface AuthCtx {
@@ -22,7 +23,7 @@ interface AuthCtx {
   isOnboarded: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, dateOfBirth: Date) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => void;
   completeOnboarding: () => void;
@@ -58,6 +59,7 @@ function sessionToUser(session: Session): AuthUser {
     id: session.user.id,
     name: session.user.user_metadata?.name ?? session.user.email?.split('@')[0] ?? '',
     email: session.user.email ?? '',
+    dateOfBirth: session.user.user_metadata?.birthdate ?? undefined,
   };
 }
 
@@ -150,19 +152,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(async (name: string, email: string, password: string) => {
+  const register = useCallback(async (name: string, email: string, password: string, dateOfBirth: Date) => {
     setIsLoading(true);
     try {
+      const birthdate = dateOfBirth.toISOString().split('T')[0]; // YYYY-MM-DD
       const res = await fetch('https://mynox-stripe-proxy.onrender.com/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ email, password, name, birthdate }),
       });
       const json = await res.json();
       if (json.error || json.error_description) throw new Error(json.error_description ?? json.error ?? 'Errore registrazione');
       if (json.access_token) {
         setIsOnboarded(false); // nuovo utente — forza onboarding senza aspettare il listener
         await supabase.auth.setSession({ access_token: json.access_token, refresh_token: json.refresh_token });
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          await supabase.from('profiles').update({ date_of_birth: birthdate }).eq('id', session.user.id);
+        }
       }
     } finally {
       setIsLoading(false);
