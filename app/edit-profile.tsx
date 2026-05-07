@@ -8,11 +8,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
@@ -20,12 +22,28 @@ import { useAuth } from '../contexts/AuthContext';
 import { ALL_GENRES, GENRE_CONFIG } from '../constants/genres';
 import { Genre } from '../types';
 
+function formatDOB(date: Date): string {
+  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const y = date.getFullYear();
+  return `${d}/${m}/${y}`;
+}
+
+const MIN_DOB = new Date();
+MIN_DOB.setFullYear(MIN_DOB.getFullYear() - 14);
+
 export default function EditProfileScreen() {
   const router = useRouter();
-  const { user, updateUser, musicGenres, setMusicGenres } = useAuth();
+  const { user, updateUser, updateDateOfBirth, deleteAccount, musicGenres, setMusicGenres } = useAuth();
   const [name, setName] = useState(user?.name ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
   const [selectedGenres, setSelectedGenres] = useState<string[]>(musicGenres);
+
+  const initialDOB = user?.dateOfBirth ? new Date(user.dateOfBirth) : null;
+  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(initialDOB);
+  const [showPicker, setShowPicker] = useState(false);
+  const [tempDate, setTempDate] = useState<Date>(initialDOB ?? MIN_DOB);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   function toggleGenre(genre: string) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -45,8 +63,45 @@ export default function EditProfileScreen() {
     }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     updateUser({ name: name.trim(), email: email.trim() });
+    if (dateOfBirth && dateOfBirth.toISOString().split('T')[0] !== user?.dateOfBirth) {
+      updateDateOfBirth(dateOfBirth);
+    }
     setMusicGenres(selectedGenres);
     router.back();
+  }
+
+  function handlePickerChange(_: any, selected?: Date) {
+    if (selected) setTempDate(selected);
+  }
+
+  function confirmDate() {
+    setDateOfBirth(tempDate);
+    setShowPicker(false);
+    Haptics.selectionAsync();
+  }
+
+  function handleDeleteAccount() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    Alert.alert(
+      'Elimina account',
+      'Questa azione è irreversibile. Tutti i tuoi dati, biglietti e preferiti verranno eliminati definitivamente.',
+      [
+        { text: 'Annulla', style: 'cancel' },
+        {
+          text: 'Elimina definitivamente',
+          style: 'destructive',
+          onPress: async () => {
+            setDeletingAccount(true);
+            try {
+              await deleteAccount();
+            } catch (e: any) {
+              setDeletingAccount(false);
+              Alert.alert('Errore', e.message ?? 'Impossibile eliminare l\'account. Riprova.');
+            }
+          },
+        },
+      ]
+    );
   }
 
   return (
@@ -129,6 +184,22 @@ export default function EditProfileScreen() {
             </View>
           </View>
 
+          {/* Data di nascita */}
+          <View style={styles.section}>
+            <Text style={styles.fieldLabel}>Data di nascita</Text>
+            <TouchableOpacity
+              style={styles.changePasswordBtn}
+              activeOpacity={0.8}
+              onPress={() => { Haptics.selectionAsync(); setShowPicker(true); }}
+            >
+              <Ionicons name="calendar-outline" size={16} color={Colors.textSecondary} />
+              <Text style={[styles.changePasswordText, !dateOfBirth && { color: Colors.textMuted }]}>
+                {dateOfBirth ? formatDOB(dateOfBirth) : 'Non impostata'}
+              </Text>
+              <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.section}>
             <Text style={styles.fieldLabel}>Password</Text>
             <TouchableOpacity
@@ -142,11 +213,20 @@ export default function EditProfileScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.note}>
-            <Ionicons name="information-circle-outline" size={14} color={Colors.textMuted} />
-            <Text style={styles.noteText}>
-              Le modifiche sono salvate in locale. Sincronizzazione con il tuo account in arrivo.
-            </Text>
+          {/* Elimina account */}
+          <View style={[styles.section, styles.dangerZone]}>
+            <Text style={styles.dangerLabel}>Zona pericolosa</Text>
+            <TouchableOpacity
+              style={styles.deleteBtn}
+              activeOpacity={0.8}
+              onPress={handleDeleteAccount}
+              disabled={deletingAccount}
+            >
+              <Ionicons name="trash-outline" size={16} color={Colors.error} />
+              <Text style={styles.deleteBtnText}>
+                {deletingAccount ? 'Eliminazione in corso...' : 'Elimina account'}
+              </Text>
+            </TouchableOpacity>
           </View>
 
         </ScrollView>
@@ -158,6 +238,34 @@ export default function EditProfileScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+      {showPicker && (
+        <Modal transparent animationType="slide" onRequestClose={() => setShowPicker(false)}>
+          <TouchableOpacity style={styles.pickerOverlay} activeOpacity={1} onPress={() => setShowPicker(false)} />
+          <View style={styles.pickerSheet}>
+            <View style={styles.pickerHandle} />
+            <View style={styles.pickerHeader}>
+              <TouchableOpacity onPress={() => setShowPicker(false)}>
+                <Text style={styles.pickerCancel}>Annulla</Text>
+              </TouchableOpacity>
+              <Text style={styles.pickerTitle}>Data di nascita</Text>
+              <TouchableOpacity onPress={confirmDate}>
+                <Text style={styles.pickerConfirm}>Conferma</Text>
+              </TouchableOpacity>
+            </View>
+            <DateTimePicker
+              value={tempDate}
+              mode="date"
+              display="spinner"
+              maximumDate={MIN_DOB}
+              minimumDate={new Date(1920, 0, 1)}
+              onChange={handlePickerChange}
+              textColor={Colors.textPrimary}
+              locale="it-IT"
+              style={styles.picker}
+            />
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
@@ -232,4 +340,36 @@ const styles = StyleSheet.create({
   },
   genreTagText: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.textMuted },
   genreTagTextActive: { fontSize: 13, fontFamily: Font.semiBold, color: '#ffffff' },
+
+  dangerZone: { marginTop: 12, borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: 24 },
+  dangerLabel: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.textMuted, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
+  deleteBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: 'rgba(239,68,68,0.06)',
+    borderRadius: 14, borderWidth: 1, borderColor: 'rgba(239,68,68,0.25)',
+    paddingHorizontal: 16, paddingVertical: 14,
+  },
+  deleteBtnText: { fontSize: 15, fontFamily: Font.medium, color: Colors.error },
+
+  pickerOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)' },
+  pickerSheet: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    borderWidth: 1, borderBottomWidth: 0, borderColor: Colors.border,
+    paddingBottom: 40,
+  },
+  pickerHandle: {
+    alignSelf: 'center', marginTop: 12, marginBottom: 4,
+    width: 36, height: 4, borderRadius: 2, backgroundColor: Colors.border,
+  },
+  pickerHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: 20, paddingVertical: 14,
+    borderBottomWidth: 1, borderBottomColor: Colors.border,
+  },
+  pickerTitle: { fontSize: 15, fontFamily: Font.bold, color: Colors.textPrimary },
+  pickerCancel: { fontSize: 15, color: Colors.textMuted },
+  pickerConfirm: { fontSize: 15, fontFamily: Font.bold, color: Colors.accent },
+  picker: { width: '100%' },
 });

@@ -28,6 +28,8 @@ interface AuthCtx {
   logout: () => void;
   completeOnboarding: () => void;
   updateUser: (updates: Partial<Pick<AuthUser, 'name' | 'email'>>) => void;
+  updateDateOfBirth: (dob: Date) => Promise<void>;
+  deleteAccount: () => Promise<void>;
   musicGenres: string[];
   setMusicGenres: (genres: string[]) => void;
 }
@@ -42,6 +44,8 @@ const AuthContext = createContext<AuthCtx>({
   logout: () => {},
   completeOnboarding: () => {},
   updateUser: () => {},
+  updateDateOfBirth: async () => {},
+  deleteAccount: async () => {},
   musicGenres: [],
   setMusicGenres: () => {},
 });
@@ -223,6 +227,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser((prev) => prev ? { ...prev, ...updates } : prev);
   }, []);
 
+  const updateDateOfBirth = useCallback(async (dob: Date) => {
+    const birthdate = dob.toISOString().split('T')[0];
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    await supabase.auth.updateUser({ data: { birthdate } });
+    await supabase.from('profiles').update({ date_of_birth: birthdate }).eq('id', session.user.id);
+    setUser((prev) => prev ? { ...prev, dateOfBirth: birthdate } : prev);
+  }, []);
+
+  const deleteAccount = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    const res = await fetch('https://mynox-stripe-proxy.onrender.com/delete-account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ access_token: session.access_token }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error ?? 'Errore eliminazione account');
+    await supabase.auth.signOut();
+    setUser(null);
+  }, []);
+
   const setMusicGenres = useCallback(async (genres: string[]) => {
     setMusicGenresState(genres);
     await AsyncStorage.setItem(KEYS.genres, JSON.stringify(genres));
@@ -236,7 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{
       user, isOnboarded, isLoading,
       login, register, loginWithGoogle, logout, completeOnboarding,
-      updateUser, musicGenres, setMusicGenres,
+      updateUser, updateDateOfBirth, deleteAccount, musicGenres, setMusicGenres,
     }}>
       {children}
     </AuthContext.Provider>

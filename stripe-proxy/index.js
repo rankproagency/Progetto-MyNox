@@ -361,6 +361,74 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // POST /delete-account
+  if (req.url === '/delete-account') {
+    try {
+      const { access_token } = body;
+      if (!access_token) {
+        res.writeHead(400, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'access_token mancante' }));
+        return;
+      }
+      // Verifica il token e ricava l'user_id
+      const userData = await new Promise((resolve, reject) => {
+        const url = new URL(SUPABASE_URL + '/auth/v1/user');
+        const options = {
+          hostname: url.hostname,
+          path: url.pathname,
+          method: 'GET',
+          headers: {
+            'apikey': SUPABASE_SERVICE_ROLE_KEY,
+            'Authorization': `Bearer ${access_token}`,
+          },
+        };
+        const req2 = https.request(options, (res2) => {
+          let data = '';
+          res2.on('data', (chunk) => data += chunk);
+          res2.on('end', () => { try { resolve(JSON.parse(data)); } catch { resolve({}); } });
+        });
+        req2.on('error', reject);
+        req2.end();
+      });
+      if (!userData.id) {
+        res.writeHead(401, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Token non valido' }));
+        return;
+      }
+      // Elimina l'utente tramite admin API
+      const deleteResult = await new Promise((resolve, reject) => {
+        const url = new URL(SUPABASE_URL + `/auth/v1/admin/users/${userData.id}`);
+        const options = {
+          hostname: url.hostname,
+          path: url.pathname,
+          method: 'DELETE',
+          headers: {
+            'apikey': SUPABASE_SERVICE_ROLE_KEY,
+            'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+        };
+        const req2 = https.request(options, (res2) => {
+          let data = '';
+          res2.on('data', (chunk) => data += chunk);
+          res2.on('end', () => { try { resolve({ status: res2.statusCode, body: JSON.parse(data) }); } catch { resolve({ status: res2.statusCode, body: {} }); } });
+        });
+        req2.on('error', reject);
+        req2.end();
+      });
+      if (deleteResult.status >= 400) {
+        res.writeHead(400, CORS_HEADERS);
+        res.end(JSON.stringify({ error: deleteResult.body?.message ?? 'Errore eliminazione account' }));
+        return;
+      }
+      res.writeHead(200, CORS_HEADERS);
+      res.end(JSON.stringify({ success: true }));
+    } catch (err) {
+      res.writeHead(500, CORS_HEADERS);
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
   res.writeHead(404, CORS_HEADERS);
   res.end(JSON.stringify({ error: 'Route non trovata' }));
 });
