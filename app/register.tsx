@@ -46,10 +46,15 @@ export default function RegisterScreen() {
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const [showPicker, setShowPicker] = useState(false);
   const [tempDate, setTempDate] = useState<Date>(MAX_DATE);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
   async function handleRegister() {
     if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim() || !dateOfBirth) {
       Alert.alert('Errore', 'Compila tutti i campi.');
+      return;
+    }
+    if (!privacyAccepted) {
+      Alert.alert('Errore', 'Devi confermare di avere almeno 18 anni e accettare la Privacy Policy.');
       return;
     }
     if (!email.includes('@')) {
@@ -189,10 +194,26 @@ export default function RegisterScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.ctaButton, isLoading && styles.ctaDisabled]}
+              style={styles.checkboxRow}
+              activeOpacity={0.7}
+              onPress={() => { Haptics.selectionAsync(); setPrivacyAccepted((v) => !v); }}
+            >
+              <View style={[styles.checkbox, privacyAccepted && styles.checkboxChecked]}>
+                {privacyAccepted && <Ionicons name="checkmark" size={12} color={Colors.white} />}
+              </View>
+              <Text style={styles.checkboxLabel}>
+                Confermo di avere almeno 18 anni e di aver letto e accettato la{' '}
+                <Text style={styles.checkboxLink} onPress={() => router.push('/privacy')}>
+                  Privacy Policy
+                </Text>
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.ctaButton, (!privacyAccepted || isLoading) && styles.ctaDisabled]}
               activeOpacity={0.85}
               onPress={handleRegister}
-              disabled={isLoading}
+              disabled={!privacyAccepted || isLoading}
             >
               {isLoading ? (
                 <ActivityIndicator color={Colors.white} />
@@ -341,6 +362,27 @@ const styles = StyleSheet.create({
   dateRow: { paddingVertical: 14 },
   dateText: { flex: 1, fontSize: 15, color: Colors.textPrimary },
   datePlaceholder: { color: Colors.textMuted },
+
+  checkboxRow: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
+    marginBottom: 20,
+  },
+  checkbox: {
+    width: 20, height: 20, borderRadius: 6,
+    borderWidth: 1.5, borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center', alignItems: 'center',
+    marginTop: 1, flexShrink: 0,
+  },
+  checkboxChecked: {
+    backgroundColor: Colors.accent, borderColor: Colors.accent,
+  },
+  checkboxLabel: {
+    flex: 1, fontSize: 12, color: Colors.textSecondary, lineHeight: 18,
+  },
+  checkboxLink: {
+    color: Colors.accent, fontFamily: Font.semiBold,
+  },
 
   ctaButton: {
     backgroundColor: Colors.accent,
