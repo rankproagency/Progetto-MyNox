@@ -115,9 +115,10 @@ export default function CheckoutScreen() {
   const [selectedMethod, setSelectedMethod] = useState<'apple' | 'card' | 'google'>('apple');
   const [showSuccess, setShowSuccess] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
 
   const userAge = getUserAge(user?.dateOfBirth);
-  const isUnderage = event != null && event.minAge > 0 && (userAge === null || userAge < event.minAge);
+  const needsAgeConfirm = userAge === null || userAge < 18;
 
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
@@ -473,21 +474,22 @@ export default function CheckoutScreen() {
           </View>
         </View>
 
-        {/* Età minima — verifica automatica dal profilo */}
-        {event.minAge > 0 && (
+        {/* Conferma maggiore età — solo per utenti under 18 o senza data di nascita */}
+        {needsAgeConfirm && (
           <View style={styles.section}>
-            <View style={[styles.ageCheckRow, isUnderage && styles.ageCheckRowError]}>
-              <Ionicons
-                name={isUnderage ? 'close-circle-outline' : 'checkmark-circle-outline'}
-                size={18}
-                color={isUnderage ? Colors.error : Colors.success}
-              />
+            <TouchableOpacity
+              style={[styles.ageCheckRow, !ageConfirmed && styles.ageCheckRowError]}
+              activeOpacity={0.7}
+              onPress={() => { Haptics.selectionAsync(); setAgeConfirmed((v) => !v); }}
+            >
+              <View style={[styles.ageCheckbox, ageConfirmed && styles.ageCheckboxChecked]}>
+                {ageConfirmed && <Ionicons name="checkmark" size={12} color={Colors.white} />}
+              </View>
               <Text style={styles.ageCheckLabel}>
-                {isUnderage
-                  ? `Devi avere almeno ${event.minAge} anni per partecipare a questo evento`
-                  : `Età verificata — hai i ${event.minAge}+ anni richiesti per questo evento`}
+                Confermo che chi acquista questo biglietto ha almeno{' '}
+                <Text style={styles.ageCheckBold}>18 anni</Text>
               </Text>
-            </View>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -503,10 +505,10 @@ export default function CheckoutScreen() {
 
       <View style={styles.ctaContainer}>
         <TouchableOpacity
-          style={[styles.ctaButton, (paying || isUnderage) && { opacity: 0.5 }]}
+          style={[styles.ctaButton, (paying || (needsAgeConfirm && !ageConfirmed)) && { opacity: 0.5 }]}
           activeOpacity={0.85}
           onPress={handlePay}
-          disabled={paying || isUnderage}
+          disabled={paying || (needsAgeConfirm && !ageConfirmed)}
         >
           {paying ? (
             <ActivityIndicator size="small" color={Colors.white} />
@@ -643,7 +645,7 @@ const styles = StyleSheet.create({
   disclaimerText: { flex: 1, fontSize: 12, color: Colors.textMuted, lineHeight: 18 },
 
   ageCheckRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
+    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
     backgroundColor: Colors.surface,
     borderRadius: 12, borderWidth: 1, borderColor: Colors.border,
     padding: 14,
@@ -652,8 +654,21 @@ const styles = StyleSheet.create({
     borderColor: Colors.error,
     backgroundColor: 'rgba(239,68,68,0.06)',
   },
+  ageCheckbox: {
+    width: 20, height: 20, borderRadius: 6,
+    borderWidth: 1.5, borderColor: Colors.border,
+    backgroundColor: Colors.background,
+    justifyContent: 'center', alignItems: 'center',
+    marginTop: 1, flexShrink: 0,
+  },
+  ageCheckboxChecked: {
+    backgroundColor: Colors.accent, borderColor: Colors.accent,
+  },
   ageCheckLabel: {
     flex: 1, fontSize: 12, color: Colors.textMuted, lineHeight: 18,
+  },
+  ageCheckBold: {
+    color: Colors.textPrimary, fontFamily: Font.bold,
   },
   payMethod: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
