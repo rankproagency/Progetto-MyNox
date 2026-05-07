@@ -210,10 +210,10 @@ export default function RegisterScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.ctaButton, (!privacyAccepted || isLoading) && styles.ctaDisabled]}
+              style={[styles.ctaButton, (!privacyAccepted || !dateOfBirth || isLoading) && styles.ctaDisabled]}
               activeOpacity={0.85}
               onPress={handleRegister}
-              disabled={!privacyAccepted || isLoading}
+              disabled={!privacyAccepted || !dateOfBirth || isLoading}
             >
               {isLoading ? (
                 <ActivityIndicator color={Colors.white} />
