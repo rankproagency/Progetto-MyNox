@@ -509,20 +509,6 @@ export default function EventScreen() {
                     onSelect={(t) => { setSelectedTable(t); if (!t) setTableName(''); }}
                     floorPlanUrl={event.floorPlanUrl}
                   />
-                  {selectedTable && (
-                    <View ref={tableNameRef} style={styles.tableNameBox}>
-                      <Ionicons name="bookmark-outline" size={16} color={Colors.accent} />
-                      <TextInput
-                        style={styles.tableNameInput}
-                        value={tableName}
-                        onChangeText={setTableName}
-                        placeholder="Nome tavolo (es. Compleanno Marco)"
-                        placeholderTextColor={Colors.textMuted}
-                        autoCorrect={false}
-                        returnKeyType="done"
-                      />
-                    </View>
-                  )}
                 </>
               )}
             </>
@@ -563,6 +549,21 @@ export default function EventScreen() {
           </TouchableOpacity>
         ) : (
           <>
+            {selectedTable && (
+              <View style={styles.tableNameBox}>
+                <Ionicons name="bookmark-outline" size={16} color={Colors.accent} />
+                <TextInput
+                  style={styles.tableNameInput}
+                  value={tableName}
+                  onChangeText={setTableName}
+                  placeholder="Nome tavolo (es. Compleanno Marco)"
+                  placeholderTextColor={Colors.textMuted}
+                  autoCorrect={false}
+                  returnKeyType="done"
+                />
+              </View>
+            )}
+            <View style={styles.ctaRow}>
             <View style={styles.ctaInfo}>
               {selectedTicket || selectedTable ? (
                 <>
@@ -575,9 +576,7 @@ export default function EventScreen() {
                 <Text style={styles.ctaHint}>
                   {bookingMode === 'ticket'
                     ? 'Seleziona un biglietto'
-                    : selectedTable && !tableName.trim()
-                      ? 'Inserisci un nome per il tavolo'
-                      : 'Seleziona un tavolo'}
+                    : 'Seleziona un tavolo'}
                 </Text>
               )}
             </View>
@@ -613,6 +612,7 @@ export default function EventScreen() {
               <Text style={styles.ctaText}>Compra ora</Text>
               <Ionicons name="arrow-forward" size={16} color={Colors.white} />
             </TouchableOpacity>
+            </View>
           </>
         )}
 
@@ -898,11 +898,14 @@ const styles = StyleSheet.create({
   // CTA
   ctaContainer: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 16,
-    paddingBottom: 32,
+    flexDirection: 'column',
+    paddingHorizontal: 20, paddingTop: 12, paddingBottom: 32,
     backgroundColor: Colors.surface,
     borderTopWidth: 1, borderTopColor: Colors.border,
+    gap: 10,
+  },
+  ctaRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   ctaInfo: {},
   ctaLabel: { fontSize: 11, color: Colors.textMuted },
@@ -1001,8 +1004,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginTop: 10,
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.background,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: Colors.accent,
