@@ -8,7 +8,7 @@ import { Font } from '../constants/typography';
 const SECTIONS = [
   {
     title: '1. Titolare del trattamento',
-    body: `Il Titolare del trattamento dei dati personali è MyNox S.r.l., con sede legale in Italia (di seguito "MyNox", "noi" o "il Titolare").\n\nPer qualsiasi richiesta relativa al trattamento dei tuoi dati personali puoi contattarci all'indirizzo: privacy@mynox.it`,
+    body: `Il Titolare del trattamento dei dati personali è MyNox S.r.l., con sede legale in Italia (di seguito "MyNox", "noi" o "il Titolare").\n\nPer qualsiasi richiesta relativa al trattamento dei tuoi dati personali puoi contattarci all'indirizzo: mynoxsupport@gmail.com`,
   },
   {
     title: '2. Dati personali raccolti',
@@ -24,7 +24,7 @@ const SECTIONS = [
   },
   {
     title: '5. Responsabili del trattamento',
-    body: `MyNox si avvale di fornitori di servizi terzi che trattano i dati personali per nostro conto in qualità di Responsabili del Trattamento ai sensi dell'art. 28 GDPR:\n\n• Supabase Inc. (USA) — infrastruttura database e autenticazione. I dati sono ospitati su server in area UE (Francoforte). Trasferimento extra-UE regolato da Clausole Contrattuali Standard (SCC) approvate dalla Commissione Europea.\n\n• Stripe Inc. (USA) — elaborazione dei pagamenti. Stripe è certificato PCI-DSS Level 1. MyNox non conserva mai i dati della carta di credito. Trasferimento extra-UE regolato da SCC e dal framework EU-US Data Privacy Framework.\n\n• Expo / Meta Platforms — distribuzione dell'app e analytics di base.\n\nL'elenco aggiornato dei Responsabili del Trattamento è disponibile su richiesta all'indirizzo privacy@mynox.it.`,
+    body: `MyNox si avvale di fornitori di servizi terzi che trattano i dati personali per nostro conto in qualità di Responsabili del Trattamento ai sensi dell'art. 28 GDPR:\n\n• Supabase Inc. (USA) — infrastruttura database e autenticazione. I dati sono ospitati su server in area UE (Francoforte). Trasferimento extra-UE regolato da Clausole Contrattuali Standard (SCC) approvate dalla Commissione Europea.\n\n• Stripe Inc. (USA) — elaborazione dei pagamenti. Stripe è certificato PCI-DSS Level 1. MyNox non conserva mai i dati della carta di credito. Trasferimento extra-UE regolato da SCC e dal framework EU-US Data Privacy Framework.\n\n• Expo / Meta Platforms — distribuzione dell'app e analytics di base.\n\nL'elenco aggiornato dei Responsabili del Trattamento è disponibile su richiesta all'indirizzo mynoxsupport@gmail.com.`,
   },
   {
     title: '6. Trasferimento dei dati extra-UE',
@@ -32,7 +32,7 @@ const SECTIONS = [
   },
   {
     title: '7. I tuoi diritti (artt. 15–22 GDPR)',
-    body: `In qualità di interessato, hai i seguenti diritti:\n\n• Diritto di accesso (art. 15): ottenere conferma che siano in corso trattamenti di dati che ti riguardano e ricevere una copia degli stessi.\n\n• Diritto di rettifica (art. 16): correggere dati inesatti o incompleti.\n\n• Diritto alla cancellazione (art. 17): ottenere la cancellazione dei tuoi dati ("diritto all'oblio"), ove non sussistano obblighi di conservazione.\n\n• Diritto di limitazione (art. 18): limitare il trattamento dei tuoi dati in determinati casi.\n\n• Diritto alla portabilità (art. 20): ricevere i tuoi dati in formato strutturato e leggibile da dispositivo automatico.\n\n• Diritto di opposizione (art. 21): opporti al trattamento basato su legittimo interesse o per finalità di marketing diretto.\n\n• Diritto di non essere sottoposto a decisioni automatizzate (art. 22).\n\nPer esercitare i tuoi diritti, scrivi a privacy@mynox.it. Risponderemo entro 30 giorni. Hai inoltre il diritto di proporre reclamo all'Autorità Garante per la Protezione dei Dati Personali (www.garanteprivacy.it).`,
+    body: `In qualità di interessato, hai i seguenti diritti:\n\n• Diritto di accesso (art. 15): ottenere conferma che siano in corso trattamenti di dati che ti riguardano e ricevere una copia degli stessi.\n\n• Diritto di rettifica (art. 16): correggere dati inesatti o incompleti.\n\n• Diritto alla cancellazione (art. 17): ottenere la cancellazione dei tuoi dati ("diritto all'oblio"), ove non sussistano obblighi di conservazione.\n\n• Diritto di limitazione (art. 18): limitare il trattamento dei tuoi dati in determinati casi.\n\n• Diritto alla portabilità (art. 20): ricevere i tuoi dati in formato strutturato e leggibile da dispositivo automatico.\n\n• Diritto di opposizione (art. 21): opporti al trattamento basato su legittimo interesse o per finalità di marketing diretto.\n\n• Diritto di non essere sottoposto a decisioni automatizzate (art. 22).\n\nPer esercitare i tuoi diritti, scrivi a mynoxsupport@gmail.com. Risponderemo entro 30 giorni. Hai inoltre il diritto di proporre reclamo all'Autorità Garante per la Protezione dei Dati Personali (www.garanteprivacy.it).`,
   },
   {
     title: '8. Sicurezza dei dati',
@@ -40,7 +40,7 @@ const SECTIONS = [
   },
   {
     title: '9. Minori',
-    body: `MyNox è un servizio destinato esclusivamente a persone maggiorenni (18 anni o più). Non raccogliamo consapevolmente dati personali di minori di 18 anni. Se veniamo a conoscenza di aver raccolto dati di un minore senza il consenso verificabile del titolare della responsabilità genitoriale, procederemo alla cancellazione immediata di tali dati. Se sei un genitore o tutore e ritieni che tuo figlio abbia fornito dati personali a MyNox, contattaci a privacy@mynox.it.`,
+    body: `MyNox è accessibile a partire dai 14 anni di età, in conformità con l'art. 2-quinquies del D.Lgs. 196/2003 (età minima per il consenso digitale in Italia). L'acquisto di biglietti ed eventi richiede la maggiore età (18 anni) o la conferma da parte di un adulto responsabile. Non raccogliamo consapevolmente dati personali di minori di 14 anni. Se veniamo a conoscenza di aver raccolto dati di un minore senza il consenso verificabile del titolare della responsabilità genitoriale, procederemo alla cancellazione immediata di tali dati. Se sei un genitore o tutore e ritieni che tuo figlio abbia fornito dati personali a MyNox, contattaci a mynoxsupport@gmail.com.`,
   },
   {
     title: '10. Modifiche alla presente informativa',
@@ -81,7 +81,7 @@ export default function PrivacyScreen() {
           <Text style={styles.contactTitle}>Contatti</Text>
           <Text style={styles.contactBody}>
             Per qualsiasi domanda relativa a questa informativa o all'esercizio dei tuoi diritti:{'\n'}
-            <Text style={styles.contactEmail}>privacy@mynox.it</Text>
+            <Text style={styles.contactEmail}>mynoxsupport@gmail.com</Text>
           </Text>
           <Text style={[styles.contactBody, { marginTop: 8 }]}>
             Autorità Garante per la Protezione dei Dati Personali:{'\n'}
