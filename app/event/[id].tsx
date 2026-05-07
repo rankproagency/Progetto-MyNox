@@ -573,14 +573,18 @@ export default function EventScreen() {
                 </>
               ) : (
                 <Text style={styles.ctaHint}>
-                  {bookingMode === 'ticket' ? 'Seleziona un biglietto' : 'Seleziona un tavolo'}
+                  {bookingMode === 'ticket'
+                    ? 'Seleziona un biglietto'
+                    : selectedTable && !tableName.trim()
+                      ? 'Inserisci un nome per il tavolo'
+                      : 'Seleziona un tavolo'}
                 </Text>
               )}
             </View>
             <TouchableOpacity
-              style={[styles.ctaButton, (!selectedTicket && !selectedTable) && styles.ctaDisabled]}
+              style={[styles.ctaButton, (!selectedTicket && !selectedTable || (!!selectedTable && !tableName.trim())) && styles.ctaDisabled]}
               activeOpacity={0.85}
-              disabled={!selectedTicket && !selectedTable}
+              disabled={!selectedTicket && !selectedTable || (!!selectedTable && !tableName.trim())}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 if (!user) {
