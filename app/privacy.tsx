@@ -83,7 +83,7 @@ export default function PrivacyScreen() {
             Per qualsiasi domanda relativa a questa informativa o all'esercizio dei tuoi diritti:{'\n'}
             <Text style={styles.contactEmail}>privacy@mynox.it</Text>
           </Text>
-          <Text style={styles.contactBody} style={{ marginTop: 8 }}>
+          <Text style={[styles.contactBody, { marginTop: 8 }]}>
             Autorità Garante per la Protezione dei Dati Personali:{'\n'}
             <Text style={styles.contactEmail}>www.garanteprivacy.it</Text>
           </Text>

@@ -105,6 +105,7 @@ export default function CheckoutScreen() {
   const [selectedMethod, setSelectedMethod] = useState<'apple' | 'card' | 'google'>('apple');
   const [showSuccess, setShowSuccess] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [ageAccepted, setAgeAccepted] = useState(false);
 
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
@@ -460,6 +461,24 @@ export default function CheckoutScreen() {
           </View>
         </View>
 
+        {/* Checkbox età minima */}
+        {event.minAge > 0 && (
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.ageCheckRow}
+              activeOpacity={0.7}
+              onPress={() => { Haptics.selectionAsync(); setAgeAccepted((v) => !v); }}
+            >
+              <View style={[styles.ageCheckbox, ageAccepted && styles.ageCheckboxChecked]}>
+                {ageAccepted && <Ionicons name="checkmark" size={12} color={Colors.white} />}
+              </View>
+              <Text style={styles.ageCheckLabel}>
+                Confermo di avere almeno <Text style={styles.ageCheckBold}>{event.minAge} anni</Text> e di soddisfare i requisiti di accesso all'evento
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Metodi di pagamento */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Paga con</Text>
@@ -471,7 +490,12 @@ export default function CheckoutScreen() {
       </ScrollView>
 
       <View style={styles.ctaContainer}>
-        <TouchableOpacity style={[styles.ctaButton, paying && { opacity: 0.7 }]} activeOpacity={0.85} onPress={handlePay} disabled={paying}>
+        <TouchableOpacity
+          style={[styles.ctaButton, (paying || (event.minAge > 0 && !ageAccepted)) && { opacity: 0.5 }]}
+          activeOpacity={0.85}
+          onPress={handlePay}
+          disabled={paying || (event.minAge > 0 && !ageAccepted)}
+        >
           {paying ? (
             <ActivityIndicator size="small" color={Colors.white} />
           ) : (
@@ -605,6 +629,29 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   disclaimerText: { flex: 1, fontSize: 12, color: Colors.textMuted, lineHeight: 18 },
+
+  ageCheckRow: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
+    backgroundColor: Colors.surface,
+    borderRadius: 12, borderWidth: 1, borderColor: Colors.border,
+    padding: 14,
+  },
+  ageCheckbox: {
+    width: 20, height: 20, borderRadius: 6,
+    borderWidth: 1.5, borderColor: Colors.border,
+    backgroundColor: Colors.background,
+    justifyContent: 'center', alignItems: 'center',
+    marginTop: 1, flexShrink: 0,
+  },
+  ageCheckboxChecked: {
+    backgroundColor: Colors.accent, borderColor: Colors.accent,
+  },
+  ageCheckLabel: {
+    flex: 1, fontSize: 12, color: Colors.textMuted, lineHeight: 18,
+  },
+  ageCheckBold: {
+    color: Colors.textPrimary, fontFamily: Font.bold,
+  },
   payMethod: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: Colors.surface,
