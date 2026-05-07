@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Keyboard,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -50,6 +51,20 @@ export default function EventScreen() {
   useEffect(() => {
     if (id) addRecentlyViewed(id);
   }, [id]);
+
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  useEffect(() => {
+    const show = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => setKeyboardHeight(e.endCoordinates.height)
+    );
+    const hide = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setKeyboardHeight(0)
+    );
+    return () => { show.remove(); hide.remove(); };
+  }, []);
+
   const scrollRef = useRef<ScrollView>(null);
   const tableNameRef = useRef<View>(null);
   const [bookingMode, setBookingMode] = useState<'ticket' | 'table'>('ticket');
@@ -519,7 +534,7 @@ export default function EventScreen() {
       </ScrollView>
 
       {/* CTA sticky */}
-      <View style={styles.ctaContainer}>
+      <View style={[styles.ctaContainer, { bottom: keyboardHeight }]}>
         {isEventPast ? (
           <View style={[styles.ctaButton, styles.ctaDisabled]}>
             <Ionicons name="time-outline" size={16} color={Colors.textMuted} />
