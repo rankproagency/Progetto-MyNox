@@ -54,7 +54,13 @@ export default function RegisterScreen() {
       return;
     }
     if (!privacyAccepted) {
-      Alert.alert('Errore', 'Devi confermare di avere almeno 14 anni e accettare la Privacy Policy.');
+      Alert.alert('Errore', 'Devi accettare la Privacy Policy per continuare.');
+      return;
+    }
+    const minDate = new Date();
+    minDate.setFullYear(minDate.getFullYear() - 14);
+    if (dateOfBirth > minDate) {
+      Alert.alert('Errore', 'Devi avere almeno 14 anni per registrarti a MyNox.');
       return;
     }
     if (!email.includes('@')) {
@@ -202,7 +208,7 @@ export default function RegisterScreen() {
                 {privacyAccepted && <Ionicons name="checkmark" size={12} color={Colors.white} />}
               </View>
               <Text style={styles.checkboxLabel}>
-                Confermo di avere almeno 14 anni e di aver letto e accettato la{' '}
+                Ho letto e accetto la{' '}
                 <Text style={styles.checkboxLink} onPress={() => router.push('/privacy')}>
                   Privacy Policy
                 </Text>

@@ -77,11 +77,14 @@ function getCalendarGrid(year: number, month: number) {
 
 // eventDateSet viene calcolato dinamicamente dentro il componente
 
+type AgeFilter = 'all' | 'adult' | 'minor';
+
 function applyFilters(
   events: Event[],
   maxPrice: number | null,
   onlyAvailable: boolean,
-  selectedGenres: Genre[]
+  selectedGenres: Genre[],
+  ageFilter: AgeFilter
 ): Event[] {
   return events.filter((e) => {
     if (onlyAvailable && e.ticketTypes.every((t) => t.available === 0)) return false;
@@ -90,6 +93,8 @@ function applyFilters(
       if (minPrice > maxPrice) return false;
     }
     if (selectedGenres.length > 0 && !selectedGenres.some((g) => e.genres.includes(g))) return false;
+    if (ageFilter === 'adult' && e.minAge < 18) return false;
+    if (ageFilter === 'minor' && e.minAge >= 18) return false;
     return true;
   });
 }
@@ -133,6 +138,7 @@ export default function HomeScreen() {
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
+  const [ageFilter, setAgeFilter] = useState<AgeFilter>('all');
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -150,9 +156,9 @@ export default function HomeScreen() {
   }
 
   const today = toDateKey(new Date());
-  const hasActiveFilters = maxPrice !== null || onlyAvailable || selectedGenres.length > 0;
+  const hasActiveFilters = maxPrice !== null || onlyAvailable || selectedGenres.length > 0 || ageFilter !== 'all';
 
-  const filteredEvents = applyFilters(events, maxPrice, onlyAvailable, selectedGenres);
+  const filteredEvents = applyFilters(events, maxPrice, onlyAvailable, selectedGenres, ageFilter);
   const filteredEventsByDay = getEventsByDayFromList(filteredEvents);
 
   const tonightEvent = filteredEvents.find((e) => e.date === today && e.ticketTypes.some((t) => t.available > 0)) ?? null;
@@ -167,7 +173,7 @@ export default function HomeScreen() {
   const eventsForSelectedDate = selectedDate
     ? applyFilters(
         events.filter((e) => e.date === selectedDate),
-        maxPrice, onlyAvailable, selectedGenres
+        maxPrice, onlyAvailable, selectedGenres, ageFilter
       )
     : null;
 
@@ -338,6 +344,7 @@ export default function HomeScreen() {
                       setMaxPrice(null);
                       setOnlyAvailable(false);
                       setSelectedGenres([]);
+                      setAgeFilter('all');
                     }}>
                       <Text style={styles.filterReset}>Azzera</Text>
                     </TouchableOpacity>
@@ -375,8 +382,29 @@ export default function HomeScreen() {
                   />
                 </View>
 
+                {/* Età */}
+                <Text style={[styles.filterLabel, { marginTop: 16 }]}>Età</Text>
+                <View style={styles.priceRow}>
+                  {([
+                    { label: 'Tutti', value: 'all' },
+                    { label: '18+', value: 'adult' },
+                    { label: 'Under 18', value: 'minor' },
+                  ] as { label: string; value: AgeFilter }[]).map((opt) => (
+                    <TouchableOpacity
+                      key={opt.value}
+                      style={[styles.priceChip, ageFilter === opt.value && styles.priceChipActive]}
+                      onPress={() => { Haptics.selectionAsync(); setAgeFilter(opt.value); }}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={[styles.priceChipText, ageFilter === opt.value && styles.priceChipTextActive]}>
+                        {opt.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
                 {/* Generi */}
-                <Text style={[styles.filterLabel, { marginTop: 8 }]}>Generi</Text>
+                <Text style={[styles.filterLabel, { marginTop: 16 }]}>Generi</Text>
                 <View style={styles.genreGrid}>
                   {ALL_GENRES.map((genre) => (
                     <TouchableOpacity
