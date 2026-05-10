@@ -792,7 +792,7 @@ const sc = StyleSheet.create({
 // ─────────────────────────────────────────────────────────────────────────────
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { completeOnboarding, setMusicGenres } = useAuth();
+  const { completeOnboarding, setMusicGenres, user } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
   const scrollRef = useRef<ScrollView>(null);
@@ -823,7 +823,8 @@ export default function OnboardingScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (selectedGenres.length > 0) setMusicGenres(selectedGenres);
     completeOnboarding();
-    router.replace('/login');
+    // if user already has a session (came from registration), go to tabs directly
+    router.replace(user ? '/(tabs)' : '/login');
   }
 
   function handleScroll(e: { nativeEvent: { contentOffset: { x: number } } }) {

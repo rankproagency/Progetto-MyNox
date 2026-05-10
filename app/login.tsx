@@ -22,7 +22,7 @@ import { Font } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginScreen() {
-  const router = useRouter();
+  const router = useRouter(); // used for push('/register') and push('forgot-password')
   const { login, loginWithGoogle, isLoading } = useAuth();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -37,7 +37,7 @@ export default function LoginScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
       await login(email.trim(), password);
-      router.replace('/(tabs)');
+      // navigation handled by _layout.tsx once auth state updates
     } catch (e: any) {
       Alert.alert('Accesso fallito', e.message ?? 'Credenziali non valide.');
     }
@@ -146,7 +146,7 @@ export default function LoginScreen() {
                 setGoogleLoading(true);
                 try {
                   await loginWithGoogle();
-                  router.replace('/(tabs)');
+                  // navigation handled by _layout.tsx once auth state updates
                 } catch (e: any) {
                   Alert.alert('Errore', e.message ?? 'Accesso con Google fallito.');
                 } finally {

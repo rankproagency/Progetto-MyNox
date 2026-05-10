@@ -78,7 +78,7 @@ export default function RegisterScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
       await register(name.trim(), email.trim(), password, dateOfBirth);
-      router.replace('/(tabs)');
+      // navigation handled by _layout.tsx: new users (isOnboarded=false) are redirected to onboarding
     } catch (e: any) {
       Alert.alert('Registrazione fallita', e.message ?? 'Riprova più tardi.');
     }

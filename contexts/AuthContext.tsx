@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import { LogBox } from 'react-native';
+import { LogBox, AppState } from 'react-native';
 import { supabase } from '../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import * as WebBrowser from 'expo-web-browser';
@@ -74,13 +74,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [musicGenres, setMusicGenresState] = useState<string[]>([]);
 
   useEffect(() => {
-    async function loadGenres() {
+    // Carica i generi dal profilo Supabase dell'utente loggato.
+    // Non usa AsyncStorage per evitare contaminazione tra utenti diversi sullo stesso dispositivo.
+    async function loadUserGenres(userId: string) {
       try {
-        const raw = await AsyncStorage.getItem(KEYS.genres);
-        if (raw) setMusicGenresState(JSON.parse(raw));
+        const { data } = await supabase
+          .from('profiles')
+          .select('music_genres')
+          .eq('id', userId)
+          .maybeSingle();
+        if (data?.music_genres) {
+          setMusicGenresState(data.music_genres);
+        } else {
+          setMusicGenresState([]);
+        }
       } catch (_) {}
     }
-    loadGenres();
 
     // Risolve isOnboarded dal user_metadata Supabase, con fallback su AsyncStorage per utenti esistenti
     async function resolveOnboarded(session: Session) {
@@ -100,16 +109,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Se il refresh token in cache è invalido, pulisci la sessione prima che Supabase
-    // tenti il refresh automatico e loggi l'errore internamente.
-    (async () => {
+    // Valida la sessione contro il server: rileva utenti eliminati da Supabase.
+    // getUser() fa sempre una chiamata di rete (a differenza di refreshSession che
+    // può restituire la cache locale se il JWT non è ancora scaduto).
+    // signOut({ scope: 'local' }) pulisce lo stato locale senza chiamare il server —
+    // necessario perché se l'utente è eliminato, la chiamata server fallirebbe.
+    async function forceSignOut() {
+      await supabase.auth.signOut({ scope: 'local' });
+      setUser(null); // forza pulizia stato anche se SIGNED_OUT non propaga
+    }
+
+    async function validateSession() {
       try {
-        const { error } = await supabase.auth.refreshSession();
-        if (error?.message?.toLowerCase().includes('refresh token')) {
-          await supabase.auth.signOut();
-        }
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        // Check 1: refreshSession() fa SEMPRE una chiamata di rete e il refresh token
+        // viene invalidato da Supabase quando l'utente è eliminato da auth.users.
+        // È il metodo più affidabile — a differenza di getUser() che può validare
+        // il JWT per sola firma crittografica senza verificare il DB.
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) { await forceSignOut(); return; }
+
+        // Check 2: getUser() contatta GoTrue per verificare che l'utente esista
+        const { error: userError } = await supabase.auth.getUser();
+        if (userError) { await forceSignOut(); return; }
+
+        // Check 3: verifica che il profilo esista (CASCADE delete da auth.users)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', session.user.id)
+          .maybeSingle();
+        if (!profile) await forceSignOut();
       } catch (_) {}
-    })();
+    }
+    validateSession();
+
+    // Ogni volta che l'app torna in foreground, rivalidia la sessione.
+    // Questo rileva immediatamente utenti eliminati da Supabase mentre l'app era aperta.
+    const appStateSub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') validateSession();
+    });
+
+    // Check periodico ogni 2 minuti mentre l'app è in uso.
+    const sessionPoll = setInterval(validateSession, 2 * 60 * 1000);
 
     // Fallback: se INITIAL_SESSION non scatta entro 3s (TLS issue), sblocca il routing
     const fallback = setTimeout(() => setIsLoading(false), 3000);
@@ -119,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearTimeout(fallback);
         if (!session) {
           setUser(null);
+          setMusicGenresState([]);
           const raw = await AsyncStorage.getItem(KEYS.onboarded);
           setIsOnboarded(raw === 'true');
           setIsLoading(false);
@@ -126,18 +171,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         setUser(sessionToUser(session as any));
         await resolveOnboarded(session as any);
+        await loadUserGenres(session.user.id);
         setIsLoading(false);
       } else if (event === 'SIGNED_IN') {
         setUser(session ? sessionToUser(session) : null);
-        if (session) await resolveOnboarded(session);
+        if (session) {
+          await resolveOnboarded(session);
+          await loadUserGenres(session.user.id);
+        }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
+        setMusicGenresState([]);
+        await AsyncStorage.removeItem(KEYS.genres);
         const raw = await AsyncStorage.getItem(KEYS.onboarded);
         setIsOnboarded(raw === 'true');
       }
     });
 
-    return () => { subscription.unsubscribe(); clearTimeout(fallback); };
+    return () => { subscription.unsubscribe(); appStateSub.remove(); clearInterval(sessionPoll); clearTimeout(fallback); };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {

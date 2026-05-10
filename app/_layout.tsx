@@ -101,7 +101,10 @@ function RootNavigator() {
       target = '/onboarding';
     } else if (isOnboarded && !userId && !inAuthScreen) {
       target = '/login';
-    } else if (userId && inAuthScreen) {
+    } else if (userId && !isOnboarded && inAuthScreen) {
+      // nuovo utente appena registrato: va direttamente all'onboarding senza passare per tabs
+      target = '/onboarding';
+    } else if (userId && isOnboarded && inAuthScreen) {
       target = '/(tabs)';
     }
 
