@@ -123,6 +123,14 @@ export default function StaffManager({ initialStaff }: Props) {
     });
   }
 
+  function detectPreset(member: ClubStaff): string {
+    const keys: PermKey[] = ['can_manage_events', 'can_manage_tables', 'can_view_analytics', 'can_view_participants', 'can_scan_tickets'];
+    const match = PRESETS.find(
+      (p) => p.id !== 'custom' && keys.every((k) => p.permissions[k] === member[k])
+    );
+    return match?.id ?? 'custom';
+  }
+
   async function applyPresetToMember(memberId: string, preset: Preset) {
     const perms = preset.permissions;
     setStaff((prev) => prev.map((m) => (m.id === memberId ? { ...m, ...perms } : m)));
@@ -264,14 +272,14 @@ export default function StaffManager({ initialStaff }: Props) {
                   </td>
                   <td className="px-5 py-4">
                     <select
+                      value={detectPreset(member)}
                       onChange={(e) => {
                         const preset = PRESETS.find((p) => p.id === e.target.value);
                         if (preset && preset.id !== 'custom') applyPresetToMember(member.id, preset);
                       }}
-                      defaultValue="custom"
                       className="bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-purple-500/40 cursor-pointer"
                     >
-                      <option value="custom">— Scegli —</option>
+                      <option value="custom" disabled>Personalizzato</option>
                       {PRESETS.filter((p) => p.id !== 'custom').map((p) => (
                         <option key={p.id} value={p.id}>{p.label}</option>
                       ))}
