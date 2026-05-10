@@ -1,5 +1,5 @@
-import { notFound } from 'next/navigation';
-import { getProfile } from '@/lib/auth';
+import { notFound, redirect } from 'next/navigation';
+import { getProfile, getStaffPermissions } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import EventForm from '@/components/club/EventForm';
 
@@ -8,6 +8,11 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
   const profile = await getProfile();
   if (!profile?.club_id) {
     return <p className="text-slate-400">Club non configurato. Contatta l&apos;amministratore.</p>;
+  }
+
+  if (profile.role === 'club_staff') {
+    const perms = await getStaffPermissions(profile.id, profile.club_id);
+    if (!perms?.can_manage_events) redirect('/club/dashboard');
   }
 
   const supabase = await createClient();

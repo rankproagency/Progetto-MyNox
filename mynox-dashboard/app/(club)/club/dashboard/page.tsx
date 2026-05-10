@@ -178,8 +178,8 @@ export default async function ClubDashboardPage() {
         <h1 className="text-2xl font-bold text-white">{clubName}</h1>
       </div>
 
-      {/* Checklist setup — visibile solo se incompleto */}
-      {!isProfileComplete && (
+      {/* Checklist setup — visibile solo se incompleto e solo a chi può gestire eventi */}
+      {!isProfileComplete && permissions.can_manage_events && (
         <div className="mb-8 bg-amber-500/5 border border-amber-500/20 rounded-xl px-5 py-4">
           <p className="text-sm font-semibold text-amber-400 mb-3">Completa il tuo profilo per essere visibile sull&apos;app</p>
           <div className="space-y-2">
@@ -248,9 +248,11 @@ export default async function ClubDashboardPage() {
             <div className="px-5 py-10 text-center">
               <CalendarDays size={32} className="text-slate-600 mx-auto mb-3" />
               <p className="text-slate-500 text-sm">Nessun evento nei prossimi 7 giorni</p>
-              <Link href="/club/events/new" className="inline-flex items-center gap-1.5 mt-3 text-xs text-purple-400 hover:text-purple-300 transition-colors">
-                <Plus size={12} /> Crea un evento
-              </Link>
+              {permissions.can_manage_events && (
+                <Link href="/club/events/new" className="inline-flex items-center gap-1.5 mt-3 text-xs text-purple-400 hover:text-purple-300 transition-colors">
+                  <Plus size={12} /> Crea un evento
+                </Link>
+              )}
             </div>
           ) : (
             <div className="divide-y divide-white/5">

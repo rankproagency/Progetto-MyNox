@@ -1,4 +1,4 @@
-import { getProfile } from '@/lib/auth';
+import { getProfile, getStaffPermissions, FULL_PERMISSIONS } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Pencil, ArrowLeft, Users, CircleCheck, Circle } from 'lucide-react';
@@ -11,6 +11,11 @@ export default async function ClubEventDetailPage({
   const { id } = await params;
   const profile = await getProfile();
   if (!profile?.club_id) return <p className="text-slate-400">Club non configurato.</p>;
+
+  const permissions = profile.role === 'club_admin'
+    ? FULL_PERMISSIONS
+    : await getStaffPermissions(profile.id, profile.club_id);
+  const canEdit = permissions?.can_manage_events ?? false;
 
   const supabase = await createClient();
 
@@ -108,13 +113,15 @@ export default async function ClubEventDetailPage({
             {' · '}{event.start_time}
           </p>
         </div>
-        <Link
-          href={`/club/events/${id}/edit`}
-          className="flex items-center justify-center gap-2 text-sm text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-lg transition-colors w-full md:w-auto"
-        >
-          <Pencil size={14} />
-          Modifica evento
-        </Link>
+        {canEdit && (
+          <Link
+            href={`/club/events/${id}/edit`}
+            className="flex items-center justify-center gap-2 text-sm text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-lg transition-colors w-full md:w-auto"
+          >
+            <Pencil size={14} />
+            Modifica evento
+          </Link>
+        )}
       </div>
 
       {/* Stats */}
