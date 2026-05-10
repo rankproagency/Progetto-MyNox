@@ -30,6 +30,7 @@ interface AuthCtx {
   updateUser: (updates: Partial<Pick<AuthUser, 'name' | 'email'>>) => void;
   updateDateOfBirth: (dob: Date) => Promise<void>;
   deleteAccount: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   musicGenres: string[];
   setMusicGenres: (genres: string[]) => void;
 }
@@ -46,6 +47,7 @@ const AuthContext = createContext<AuthCtx>({
   updateUser: () => {},
   updateDateOfBirth: async () => {},
   deleteAccount: async () => {},
+  resetPassword: async () => {},
   musicGenres: [],
   setMusicGenres: () => {},
 });
@@ -194,14 +196,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const res = await fetch('https://mynox-stripe-proxy.onrender.com/auth/signin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const json = await res.json();
-      if (json.error || json.error_description) throw new Error(json.error_description ?? json.error ?? 'Errore login');
-      await supabase.auth.setSession({ access_token: json.access_token, refresh_token: json.refresh_token });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw new Error(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -210,21 +206,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(async (name: string, email: string, password: string, dateOfBirth: Date) => {
     setIsLoading(true);
     try {
-      const birthdate = dateOfBirth.toISOString().split('T')[0]; // YYYY-MM-DD
-      const res = await fetch('https://mynox-stripe-proxy.onrender.com/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name, birthdate }),
+      const birthdate = dateOfBirth.toISOString().split('T')[0];
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name, birthdate } },
       });
-      const json = await res.json();
-      if (json.error || json.error_description) throw new Error(json.error_description ?? json.error ?? 'Errore registrazione');
-      if (json.access_token) {
-        setIsOnboarded(false); // nuovo utente — forza onboarding senza aspettare il listener
-        await supabase.auth.setSession({ access_token: json.access_token, refresh_token: json.refresh_token });
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          await supabase.from('profiles').update({ date_of_birth: birthdate }).eq('id', session.user.id);
-        }
+      if (error) throw new Error(error.message);
+      setIsOnboarded(false);
+      if (data.session) {
+        await supabase.from('profiles').update({ date_of_birth: birthdate }).eq('id', data.session.user.id);
       }
     } finally {
       setIsLoading(false);
@@ -301,6 +292,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const resetPassword = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: 'mynox://reset-password',
+    });
+    if (error) throw new Error(error.message);
+  }, []);
+
   const setMusicGenres = useCallback(async (genres: string[]) => {
     setMusicGenresState(genres);
     await AsyncStorage.setItem(KEYS.genres, JSON.stringify(genres));
@@ -314,7 +312,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{
       user, isOnboarded, isLoading,
       login, register, loginWithGoogle, logout, completeOnboarding,
-      updateUser, updateDateOfBirth, deleteAccount, musicGenres, setMusicGenres,
+      updateUser, updateDateOfBirth, deleteAccount, resetPassword, musicGenres, setMusicGenres,
     }}>
       {children}
     </AuthContext.Provider>

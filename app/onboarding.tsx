@@ -21,585 +21,424 @@ import { ALL_GENRES } from '../constants/genres';
 import { Genre } from '../types';
 
 const { width } = Dimensions.get('window');
-const TOTAL_SLIDES = 5;
-const TOTAL_STEPS = TOTAL_SLIDES + 1; // +1 for genre step
+const TOTAL_SLIDES = 4;
+const TOTAL_STEPS = TOTAL_SLIDES + 1;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SLIDE 0 — Welcome: pulsing rings + floating stars
+// SLIDE 0 — Welcome
 // ─────────────────────────────────────────────────────────────────────────────
 function SlideWelcome() {
-  const ring1 = useRef(new Animated.Value(1)).current;
-  const ring2 = useRef(new Animated.Value(0.6)).current;
-  const ring3 = useRef(new Animated.Value(0.3)).current;
+  const breathe = useRef(new Animated.Value(1)).current;
   const star1Y = useRef(new Animated.Value(0)).current;
   const star2Y = useRef(new Animated.Value(0)).current;
   const star3Y = useRef(new Animated.Value(0)).current;
-  const glowScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    const pulse = (val: Animated.Value, delay: number, dur: number) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(val, { toValue: 0.2, duration: dur, useNativeDriver: true }),
-          Animated.timing(val, { toValue: 1, duration: dur, useNativeDriver: true }),
-        ])
-      );
-    const float = (val: Animated.Value, delay: number) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(val, { toValue: -10, duration: 2000, useNativeDriver: true }),
-          Animated.timing(val, { toValue: 4, duration: 2000, useNativeDriver: true }),
-        ])
-      );
-    const scaleGlow = Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowScale, { toValue: 1.15, duration: 1600, useNativeDriver: true }),
-        Animated.timing(glowScale, { toValue: 1, duration: 1600, useNativeDriver: true }),
-      ])
-    );
+    Animated.loop(Animated.sequence([
+      Animated.timing(breathe, { toValue: 1.14, duration: 4200, useNativeDriver: true }),
+      Animated.timing(breathe, { toValue: 0.88, duration: 4200, useNativeDriver: true }),
+    ])).start();
 
-    const a1 = pulse(ring1, 0, 2200);
-    const a2 = pulse(ring2, 700, 2200);
-    const a3 = pulse(ring3, 1400, 2200);
-    const f1 = float(star1Y, 0);
-    const f2 = float(star2Y, 500);
-    const f3 = float(star3Y, 1000);
+    const float = (val: Animated.Value, delay: number, range: number, dur: number) =>
+      Animated.loop(Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(val, { toValue: -range, duration: dur, useNativeDriver: true }),
+        Animated.timing(val, { toValue: 0, duration: dur, useNativeDriver: true }),
+      ]));
 
-    a1.start(); a2.start(); a3.start();
-    f1.start(); f2.start(); f3.start();
-    scaleGlow.start();
-
-    return () => {
-      a1.stop(); a2.stop(); a3.stop();
-      f1.stop(); f2.stop(); f3.stop();
-      scaleGlow.stop();
-    };
+    float(star1Y, 0, 14, 2800).start();
+    float(star2Y, 1100, 10, 3500).start();
+    float(star3Y, 450, 8, 2300).start();
   }, []);
 
   return (
-    <View style={sv.container}>
-      {/* Floating stars */}
-      <Animated.View style={[sv.star, { top: 40, left: width * 0.12, transform: [{ translateY: star1Y }] }]}>
-        <Text style={sv.starText}>✦</Text>
-      </Animated.View>
-      <Animated.View style={[sv.star, { top: 90, right: width * 0.1, transform: [{ translateY: star2Y }] }]}>
-        <Text style={[sv.starText, { fontSize: 10, opacity: 0.5 }]}>✦</Text>
-      </Animated.View>
-      <Animated.View style={[sv.star, { top: 30, right: width * 0.32, transform: [{ translateY: star3Y }] }]}>
-        <Text style={[sv.starText, { fontSize: 8, opacity: 0.4 }]}>★</Text>
-      </Animated.View>
-
-      {/* Rings */}
-      <View style={sv.ringArea}>
-        <Animated.View style={[sv.ring, sv.ring3, { opacity: ring3 }]} />
-        <Animated.View style={[sv.ring, sv.ring2, { opacity: ring2 }]} />
-        <Animated.View style={[sv.ring, sv.ring1, { opacity: ring1 }]} />
-        <Animated.View style={sv.centerCircle}>
-          <Animated.View style={{ transform: [{ scale: glowScale }] }}>
-            <Text style={sv.centerEmoji}>🌙</Text>
-          </Animated.View>
-        </Animated.View>
+    <View style={sw.container}>
+      <View style={sw.orbArea}>
+        <View style={sw.halo4} />
+        <View style={sw.halo3} />
+        <View style={sw.halo2} />
+        <Animated.View style={[sw.halo1, { transform: [{ scale: breathe }] }]} />
+        <View style={sw.core}>
+          <LinearGradient
+            colors={['rgba(230,180,255,1)', Colors.accent]}
+            style={sw.coreGrad}
+          />
+        </View>
       </View>
 
-      {/* Tags */}
-      <View style={sv.tags}>
-        {['🎵 Musica', '🥂 Free drink', '📲 QR ingresso'].map((t) => (
-          <View key={t} style={sv.tag}>
-            <Text style={sv.tagText}>{t}</Text>
-          </View>
-        ))}
-      </View>
+      <Animated.Text style={[sw.star, { top: 52, left: width * 0.13, transform: [{ translateY: star1Y }] }]}>✦</Animated.Text>
+      <Animated.Text style={[sw.star, { top: 98, right: width * 0.09, fontSize: 8, opacity: 0.45, transform: [{ translateY: star2Y }] }]}>✦</Animated.Text>
+      <Animated.Text style={[sw.star, { top: 230, left: width * 0.71, fontSize: 10, opacity: 0.4, transform: [{ translateY: star3Y }] }]}>✦</Animated.Text>
 
-      <View style={sv.textWrap}>
-        <Text style={sv.eyebrow}>BENVENUTO NEL FUTURO</Text>
-        <Text style={sv.title}>La nightlife{'\n'}che merita.</Text>
-        <Text style={sv.subtitle}>
-          Biglietti, free drink e QR ingresso — tutto in un tap. Niente PR, niente code, niente sorprese.
-        </Text>
+      <View style={sw.textWrap}>
+        <Text style={sw.title}>La nightlife{'\n'}che merita.</Text>
+        <Text style={sw.subtitle}>Scopri serate, prenota tavoli,{'\n'}entra senza code.</Text>
       </View>
     </View>
   );
 }
 
-const sv = StyleSheet.create({
-  container: { width, flex: 1, alignItems: 'center' },
-  ringArea: { marginTop: 48, width: 240, height: 240, alignItems: 'center', justifyContent: 'center' },
-  ring: {
-    position: 'absolute',
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: Colors.accent,
-  },
-  ring1: { width: 140, height: 140 },
-  ring2: { width: 190, height: 190 },
-  ring3: { width: 240, height: 240 },
-  centerCircle: {
-    width: 96, height: 96, borderRadius: 48,
-    backgroundColor: 'rgba(168,85,247,0.18)',
+const sw = StyleSheet.create({
+  container: { width, flex: 1, alignItems: 'center', paddingBottom: 170 },
+  orbArea: {
+    marginTop: 44,
+    width: 280, height: 280,
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1.5, borderColor: 'rgba(168,85,247,0.4)',
   },
-  centerEmoji: { fontSize: 44 },
-  star: { position: 'absolute' },
-  starText: { fontSize: 14, color: Colors.accent, opacity: 0.6 },
-  tags: { flexDirection: 'row', gap: 8, marginTop: 28, flexWrap: 'wrap', justifyContent: 'center', paddingHorizontal: 20 },
-  tag: {
-    backgroundColor: 'rgba(168,85,247,0.12)',
-    borderRadius: 50, borderWidth: 1, borderColor: 'rgba(168,85,247,0.3)',
-    paddingHorizontal: 14, paddingVertical: 6,
+  halo4: {
+    position: 'absolute', width: 280, height: 280, borderRadius: 140,
+    backgroundColor: 'rgba(168,85,247,0.14)',
   },
-  tagText: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.accent },
-  textWrap: { paddingHorizontal: 36, marginTop: 32, alignItems: 'center' },
-  eyebrow: { fontSize: 11, fontFamily: Font.bold, color: Colors.accent, letterSpacing: 3, marginBottom: 10 },
-  title: { fontSize: 34, fontFamily: Font.black, color: Colors.textPrimary, textAlign: 'center', lineHeight: 40, marginBottom: 14 },
-  subtitle: { fontSize: 15, fontFamily: Font.regular, color: Colors.textSecondary, textAlign: 'center', lineHeight: 26 },
+  halo3: {
+    position: 'absolute', width: 214, height: 214, borderRadius: 107,
+    backgroundColor: 'rgba(168,85,247,0.26)',
+  },
+  halo2: {
+    position: 'absolute', width: 152, height: 152, borderRadius: 76,
+    backgroundColor: 'rgba(168,85,247,0.42)',
+  },
+  halo1: {
+    position: 'absolute', width: 104, height: 104, borderRadius: 52,
+    backgroundColor: 'rgba(168,85,247,0.65)',
+  },
+  core: {
+    width: 62, height: 62, borderRadius: 31, overflow: 'hidden',
+    borderWidth: 2, borderColor: 'rgba(240,200,255,0.7)',
+  },
+  coreGrad: { flex: 1 },
+  star: { position: 'absolute', fontSize: 14, color: Colors.accent, opacity: 0.65 },
+  textWrap: { paddingHorizontal: 40, marginTop: 40, alignItems: 'center' },
+  title: {
+    fontSize: 42, fontFamily: Font.black, color: Colors.textPrimary,
+    textAlign: 'center', lineHeight: 50, marginBottom: 18,
+  },
+  subtitle: {
+    fontSize: 16, fontFamily: Font.regular, color: Colors.textSecondary,
+    textAlign: 'center', lineHeight: 26,
+  },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SLIDE 1 — No PR: comparison table
+// SLIDE 1 — Discover
 // ─────────────────────────────────────────────────────────────────────────────
-const OLD_ITEMS = ['Prezzi gonfiati e opachi', 'Devi "conoscere qualcuno"', 'Posti non garantiti', 'Zero trasparenza'];
-const NEW_ITEMS = ['Prezzi fissi e visibili', 'Apri l\'app, compra, entri', 'Posto confermato subito', 'Ricevuta digitale'];
-
-function SlideNoPR() {
-  const slideLeft = useRef(new Animated.Value(-30)).current;
-  const slideRight = useRef(new Animated.Value(30)).current;
-  const fadeIn = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(slideLeft, { toValue: 0, duration: 600, useNativeDriver: true }),
-      Animated.timing(slideRight, { toValue: 0, duration: 600, useNativeDriver: true }),
-      Animated.timing(fadeIn, { toValue: 1, duration: 600, useNativeDriver: true }),
-    ]).start();
-  }, []);
-
-  return (
-    <View style={np.container}>
-      <Animated.View style={{ opacity: fadeIn }}>
-        <Text style={np.eyebrow}>IL CAMBIAMENTO</Text>
-        <Text style={np.title}>Addio PR.{'\n'}Per sempre.</Text>
-      </Animated.View>
-
-      <View style={np.columns}>
-        {/* Old way */}
-        <Animated.View style={[np.col, np.colOld, { transform: [{ translateX: slideLeft }], opacity: fadeIn }]}>
-          <View style={np.colHeader}>
-            <Text style={np.colHeaderEmoji}>😤</Text>
-            <Text style={np.colHeaderTextOld}>Prima</Text>
-          </View>
-          {OLD_ITEMS.map((item) => (
-            <View key={item} style={np.row}>
-              <Text style={np.iconOld}>✗</Text>
-              <Text style={np.rowTextOld}>{item}</Text>
-            </View>
-          ))}
-        </Animated.View>
-
-        {/* MyNox */}
-        <Animated.View style={[np.col, np.colNew, { transform: [{ translateX: slideRight }], opacity: fadeIn }]}>
-          <View style={np.colHeader}>
-            <Text style={np.colHeaderEmoji}>🚀</Text>
-            <Text style={np.colHeaderTextNew}>MyNox</Text>
-          </View>
-          {NEW_ITEMS.map((item) => (
-            <View key={item} style={np.row}>
-              <Text style={np.iconNew}>✓</Text>
-              <Text style={np.rowTextNew}>{item}</Text>
-            </View>
-          ))}
-        </Animated.View>
-      </View>
-
-      <Animated.View style={[np.badge, { opacity: fadeIn }]}>
-        <Text style={np.badgeText}>🎯 Nessun intermediario tra te e la serata</Text>
-      </Animated.View>
-    </View>
-  );
-}
-
-const np = StyleSheet.create({
-  container: { width, flex: 1, paddingHorizontal: 24, paddingTop: 36, alignItems: 'center' },
-  eyebrow: { fontSize: 11, fontFamily: Font.bold, color: Colors.accent, letterSpacing: 3, marginBottom: 10, textAlign: 'center' },
-  title: { fontSize: 32, fontFamily: Font.black, color: Colors.textPrimary, textAlign: 'center', lineHeight: 38, marginBottom: 24 },
-  columns: { flexDirection: 'row', gap: 12, width: '100%' },
-  col: { flex: 1, borderRadius: 16, padding: 14, gap: 10 },
-  colOld: { backgroundColor: 'rgba(239,68,68,0.08)', borderWidth: 1, borderColor: 'rgba(239,68,68,0.25)' },
-  colNew: { backgroundColor: 'rgba(168,85,247,0.1)', borderWidth: 1, borderColor: 'rgba(168,85,247,0.35)' },
-  colHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
-  colHeaderEmoji: { fontSize: 18 },
-  colHeaderTextOld: { fontSize: 14, fontFamily: Font.bold, color: '#ef4444' },
-  colHeaderTextNew: { fontSize: 14, fontFamily: Font.bold, color: Colors.accent },
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
-  iconOld: { fontSize: 12, color: '#ef4444', marginTop: 2 },
-  iconNew: { fontSize: 12, color: '#22c55e', marginTop: 2 },
-  rowTextOld: { fontSize: 12, fontFamily: Font.medium, color: 'rgba(239,68,68,0.8)', flex: 1, lineHeight: 18 },
-  rowTextNew: { fontSize: 12, fontFamily: Font.medium, color: Colors.textSecondary, flex: 1, lineHeight: 18 },
-  badge: {
-    marginTop: 20, backgroundColor: 'rgba(168,85,247,0.1)', borderRadius: 50,
-    borderWidth: 1, borderColor: 'rgba(168,85,247,0.3)',
-    paddingHorizontal: 18, paddingVertical: 10,
-  },
-  badgeText: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.accent, textAlign: 'center' },
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SLIDE 2 — Discover: mock event cards
-// ─────────────────────────────────────────────────────────────────────────────
-const MOCK_EVENTS = [
-  { name: 'SATURNO', venue: 'Discoteca Anima', date: 'Sab 26 Apr', price: '12€', genre: 'Techno' },
-  { name: 'ROSE GOLD', venue: 'Club 31', date: 'Ven 25 Apr', price: '10€', genre: 'Hip-Hop' },
-];
-
 function SlideDiscover() {
-  const card1Y = useRef(new Animated.Value(0)).current;
-  const card2Y = useRef(new Animated.Value(0)).current;
+  const cardY = useRef(new Animated.Value(0)).current;
   const fadeIn = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(fadeIn, { toValue: 1, duration: 500, useNativeDriver: true }).start();
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(card1Y, { toValue: -6, duration: 2400, useNativeDriver: true }),
-        Animated.timing(card1Y, { toValue: 0, duration: 2400, useNativeDriver: true }),
-      ])
-    ).start();
-    Animated.loop(
-      Animated.sequence([
-        Animated.delay(800),
-        Animated.timing(card2Y, { toValue: -8, duration: 2200, useNativeDriver: true }),
-        Animated.timing(card2Y, { toValue: 2, duration: 2200, useNativeDriver: true }),
-      ])
-    ).start();
+    Animated.timing(fadeIn, { toValue: 1, duration: 600, useNativeDriver: true }).start();
+    Animated.loop(Animated.sequence([
+      Animated.timing(cardY, { toValue: -10, duration: 3200, useNativeDriver: true }),
+      Animated.timing(cardY, { toValue: 0, duration: 3200, useNativeDriver: true }),
+    ])).start();
   }, []);
 
   return (
-    <View style={sd.container}>
-      <Animated.View style={{ opacity: fadeIn, alignItems: 'center' }}>
-        <Text style={sd.eyebrow}>SCOPERTA</Text>
-        <Text style={sd.title}>Tutto a Padova,{'\n'}in un posto solo.</Text>
+    <View style={sdi.container}>
+      <Animated.View style={[sdi.header, { opacity: fadeIn }]}>
+        <Text style={sdi.eyebrow}>SERATE</Text>
+        <Text style={sdi.title}>Le migliori serate,{'\n'}tutte in un posto.</Text>
       </Animated.View>
 
-      {/* Mock cards */}
-      <View style={sd.cardsArea}>
-        <Animated.View style={[sd.card, sd.cardBack, { transform: [{ translateY: card2Y }, { rotate: '3deg' }] }]}>
-          <View style={sd.cardGradient}>
-            <View style={sd.cardContent}>
-              <Text style={sd.cardGenre}>{MOCK_EVENTS[1].genre}</Text>
-              <Text style={sd.cardName}>{MOCK_EVENTS[1].name}</Text>
-              <Text style={sd.cardVenue}>{MOCK_EVENTS[1].venue}</Text>
-              <View style={sd.cardFooter}>
-                <Text style={sd.cardDate}>{MOCK_EVENTS[1].date}</Text>
-                <View style={sd.cardPrice}><Text style={sd.cardPriceText}>da {MOCK_EVENTS[1].price}</Text></View>
-              </View>
+      <Animated.View style={[sdi.cardShadowWrap, { transform: [{ translateY: cardY }] }]}>
+        <LinearGradient
+          colors={['rgba(148,65,237,0.75)', 'rgba(55,12,105,0.98)']}
+          start={{ x: 0.15, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={sdi.card}
+        >
+          <Text style={sdi.cardTag}>TECHNO · HOUSE</Text>
+          <Text style={sdi.cardName}>SATURNO</Text>
+          <Text style={sdi.cardVenue}>Discoteca Anima</Text>
+          <View style={sdi.cardFooter}>
+            <View style={sdi.dateBadge}>
+              <Text style={sdi.dateBadgeText}>Sab 26 Apr</Text>
+            </View>
+            <View style={sdi.priceBadge}>
+              <Text style={sdi.priceBadgeText}>da 12€</Text>
             </View>
           </View>
-        </Animated.View>
+        </LinearGradient>
+      </Animated.View>
 
-        <Animated.View style={[sd.card, { transform: [{ translateY: card1Y }, { rotate: '-2deg' }] }]}>
-          <LinearGradient
-            colors={['rgba(168,85,247,0.6)', 'rgba(100,50,180,0.85)', '#07080f']}
-            style={sd.cardGradient}
-          >
-            <View style={sd.cardContent}>
-              <Text style={sd.cardGenre}>{MOCK_EVENTS[0].genre}</Text>
-              <Text style={sd.cardName}>{MOCK_EVENTS[0].name}</Text>
-              <Text style={sd.cardVenue}>{MOCK_EVENTS[0].venue}</Text>
-              <View style={sd.cardFooter}>
-                <Text style={sd.cardDate}>{MOCK_EVENTS[0].date}</Text>
-                <View style={sd.cardPriceAccent}><Text style={sd.cardPriceText}>da {MOCK_EVENTS[0].price}</Text></View>
-              </View>
+      <Animated.View style={[sdi.filters, { opacity: fadeIn }]}>
+        <Text style={sdi.filtersLabel}>Filtrabili per</Text>
+        <View style={sdi.filterTags}>
+          {['🎵 Genere', '💶 Prezzo', '📍 Città'].map((f) => (
+            <View key={f} style={sdi.filterTag}>
+              <Text style={sdi.filterTagText}>{f}</Text>
             </View>
-          </LinearGradient>
-        </Animated.View>
-      </View>
-
-      {/* Stats */}
-      <Animated.View style={[sd.stats, { opacity: fadeIn }]}>
-        {[['50+', 'eventi/mese'], ['3', 'city presto'], ['<30s', 'per comprare']].map(([val, label]) => (
-          <View key={label} style={sd.stat}>
-            <Text style={sd.statVal}>{val}</Text>
-            <Text style={sd.statLabel}>{label}</Text>
-          </View>
-        ))}
+          ))}
+        </View>
       </Animated.View>
     </View>
   );
 }
 
-const sd = StyleSheet.create({
-  container: { width, flex: 1, alignItems: 'center', paddingHorizontal: 24, paddingTop: 32 },
-  eyebrow: { fontSize: 11, fontFamily: Font.bold, color: Colors.accent, letterSpacing: 3, marginBottom: 10 },
-  title: { fontSize: 30, fontFamily: Font.black, color: Colors.textPrimary, textAlign: 'center', lineHeight: 36, marginBottom: 20 },
-  cardsArea: { width: '100%', height: 180, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  card: {
-    position: 'absolute',
-    width: width * 0.72,
-    height: 160,
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: Colors.accent,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    elevation: 10,
+const sdi = StyleSheet.create({
+  container: { width, flex: 1, alignItems: 'center', paddingHorizontal: 24, paddingTop: 28, paddingBottom: 170 },
+  header: { alignItems: 'center', marginBottom: 28, width: '100%' },
+  eyebrow: { fontSize: 11, fontFamily: Font.bold, color: Colors.accent, letterSpacing: 3, marginBottom: 12 },
+  title: {
+    fontSize: 34, fontFamily: Font.black, color: Colors.textPrimary,
+    textAlign: 'center', lineHeight: 41,
   },
-  cardBack: { backgroundColor: 'rgba(40,20,70,0.9)', borderWidth: 1, borderColor: 'rgba(168,85,247,0.2)' },
-  cardGradient: { flex: 1 },
-  cardContent: { flex: 1, padding: 18, justifyContent: 'space-between' },
-  cardGenre: { fontSize: 11, fontFamily: Font.bold, color: 'rgba(255,255,255,0.6)', letterSpacing: 2 },
-  cardName: { fontSize: 24, fontFamily: Font.black, color: Colors.white },
-  cardVenue: { fontSize: 13, fontFamily: Font.medium, color: 'rgba(255,255,255,0.7)' },
-  cardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  cardDate: { fontSize: 13, fontFamily: Font.semiBold, color: 'rgba(255,255,255,0.6)' },
-  cardPrice: { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 50, paddingHorizontal: 12, paddingVertical: 4 },
-  cardPriceAccent: { backgroundColor: Colors.accent, borderRadius: 50, paddingHorizontal: 12, paddingVertical: 4 },
-  cardPriceText: { fontSize: 12, fontFamily: Font.bold, color: Colors.white },
-  stats: { flexDirection: 'row', gap: 0, width: '100%', marginTop: 8 },
-  stat: {
-    flex: 1, alignItems: 'center', paddingVertical: 16,
-    borderRightWidth: 1, borderRightColor: 'rgba(255,255,255,0.07)',
+  cardShadowWrap: {
+    width: width - 48, borderRadius: 24,
+    shadowColor: Colors.accent, shadowOffset: { width: 0, height: 22 },
+    shadowOpacity: 0.55, shadowRadius: 36, elevation: 20,
+    marginBottom: 28,
   },
-  statVal: { fontSize: 22, fontFamily: Font.black, color: Colors.accent },
-  statLabel: { fontSize: 11, fontFamily: Font.medium, color: Colors.textMuted, marginTop: 2 },
+  card: { padding: 28, minHeight: 196, justifyContent: 'space-between', borderRadius: 24 },
+  cardTag: {
+    fontSize: 10, fontFamily: Font.bold, color: 'rgba(255,255,255,0.4)',
+    letterSpacing: 2.5, marginBottom: 8,
+  },
+  cardName: { fontSize: 46, fontFamily: Font.black, color: Colors.white, marginBottom: 4 },
+  cardVenue: { fontSize: 14, fontFamily: Font.medium, color: 'rgba(255,255,255,0.5)', marginBottom: 22 },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  dateBadge: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 50, paddingHorizontal: 14, paddingVertical: 6,
+  },
+  dateBadgeText: { fontSize: 13, fontFamily: Font.semiBold, color: 'rgba(255,255,255,0.65)' },
+  priceBadge: {
+    backgroundColor: Colors.white,
+    borderRadius: 50, paddingHorizontal: 16, paddingVertical: 6,
+  },
+  priceBadgeText: { fontSize: 13, fontFamily: Font.bold, color: Colors.accentDark },
+  filters: { alignItems: 'center', gap: 10 },
+  filtersLabel: { fontSize: 12, fontFamily: Font.medium, color: Colors.textSecondary },
+  filterTags: { flexDirection: 'row', gap: 8 },
+  filterTag: {
+    backgroundColor: 'rgba(168,85,247,0.15)',
+    borderRadius: 50, borderWidth: 1, borderColor: 'rgba(168,85,247,0.4)',
+    paddingHorizontal: 14, paddingVertical: 7,
+  },
+  filterTagText: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.accent },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SLIDE 3 — 3-tap flow: animated steps
+// SLIDE 2 — Tavoli
 // ─────────────────────────────────────────────────────────────────────────────
-const STEPS = [
-  { emoji: '🔍', label: 'Scegli\nl\'evento', color: Colors.accent },
-  { emoji: '🎟️', label: 'Seleziona\nil biglietto', color: '#818cf8' },
-  { emoji: '💳', label: 'Paga con\nApple Pay', color: '#22c55e' },
-  { emoji: '✅', label: 'QR pronto\nall\'istante', color: '#f59e0b' },
+function SlideTavoli() {
+  const cardY = useRef(new Animated.Value(0)).current;
+  const confirmPulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.loop(Animated.sequence([
+      Animated.timing(cardY, { toValue: -9, duration: 3000, useNativeDriver: true }),
+      Animated.timing(cardY, { toValue: 0, duration: 3000, useNativeDriver: true }),
+    ])).start();
+    Animated.loop(Animated.sequence([
+      Animated.timing(confirmPulse, { toValue: 1.06, duration: 1000, useNativeDriver: true }),
+      Animated.timing(confirmPulse, { toValue: 1, duration: 1000, useNativeDriver: true }),
+    ])).start();
+  }, []);
+
+  return (
+    <View style={stv.container}>
+      <Text style={stv.eyebrow}>TAVOLI</Text>
+      <Text style={stv.title}>Prenota il tavolo.{'\n'}Nessun intermediario.</Text>
+
+      <Animated.View style={[stv.cardWrap, { transform: [{ translateY: cardY }] }]}>
+        <LinearGradient
+          colors={['rgba(100,30,180,0.7)', 'rgba(18,6,38,0.98)']}
+          start={{ x: 0.1, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={stv.card}
+        >
+          {/* Icon + title row */}
+          <View style={stv.cardTop}>
+            <View style={stv.bottleIcon}>
+              <Text style={stv.bottleEmoji}>🍾</Text>
+            </View>
+            <View style={stv.cardTopText}>
+              <Text style={stv.tableName}>Tavolo VIP · 6 persone</Text>
+              <Text style={stv.tableEvent}>SATURNO · Discoteca Anima</Text>
+            </View>
+          </View>
+
+          <View style={stv.cardDivider} />
+
+          {/* Deposit */}
+          <View style={stv.depositRow}>
+            <View>
+              <Text style={stv.depositLabel}>CAPARRA VERSATA</Text>
+              <Text style={stv.depositAmount}>50€</Text>
+              <Text style={stv.depositNote}>Resto saldato in loco</Text>
+            </View>
+            <Animated.View style={[stv.confirmedBadge, { transform: [{ scale: confirmPulse }] }]}>
+              <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
+              <Text style={stv.confirmedText}>Confermato</Text>
+            </Animated.View>
+          </View>
+
+          {/* Date bar */}
+          <View style={stv.dateLine}>
+            <Ionicons name="calendar-outline" size={12} color="rgba(255,255,255,0.4)" />
+            <Text style={stv.dateText}>Sabato 26 Aprile · Ingresso ore 23:00</Text>
+          </View>
+        </LinearGradient>
+      </Animated.View>
+
+      <View style={stv.benefitRow}>
+        {([
+          { icon: 'ban-outline', label: 'Nessun PR' },
+          { icon: 'chatbubble-ellipses-outline', label: 'Nessuna telefonata' },
+          { icon: 'flash-outline', label: 'Prenota in 30s' },
+        ] as { icon: 'ban-outline' | 'chatbubble-ellipses-outline' | 'flash-outline'; label: string }[]).map(({ icon, label }) => (
+          <View key={label} style={stv.benefit}>
+            <Ionicons name={icon} size={14} color={Colors.accent} />
+            <Text style={stv.benefitText}>{label}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const stv = StyleSheet.create({
+  container: { width, flex: 1, alignItems: 'center', paddingHorizontal: 24, paddingTop: 28, paddingBottom: 170 },
+  eyebrow: { fontSize: 11, fontFamily: Font.bold, color: Colors.accent, letterSpacing: 3, marginBottom: 12 },
+  title: {
+    fontSize: 34, fontFamily: Font.black, color: Colors.textPrimary,
+    textAlign: 'center', lineHeight: 41, marginBottom: 28,
+  },
+  cardWrap: {
+    width: width - 48, borderRadius: 24,
+    shadowColor: '#7c3aed', shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.6, shadowRadius: 32, elevation: 18,
+    marginBottom: 28,
+  },
+  card: { padding: 24, borderRadius: 24, gap: 16 },
+  cardTop: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  bottleIcon: {
+    width: 46, height: 46, borderRadius: 23,
+    backgroundColor: 'rgba(168,85,247,0.25)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  bottleEmoji: { fontSize: 22 },
+  cardTopText: { flex: 1 },
+  tableName: { fontSize: 16, fontFamily: Font.bold, color: Colors.white },
+  tableEvent: { fontSize: 12, fontFamily: Font.medium, color: 'rgba(255,255,255,0.45)', marginTop: 2 },
+  cardDivider: { height: 1, backgroundColor: 'rgba(168,85,247,0.2)' },
+  depositRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  depositLabel: {
+    fontSize: 9, fontFamily: Font.bold, color: 'rgba(255,255,255,0.35)',
+    letterSpacing: 2, marginBottom: 4,
+  },
+  depositAmount: { fontSize: 32, fontFamily: Font.black, color: Colors.white },
+  depositNote: { fontSize: 11, fontFamily: Font.medium, color: 'rgba(255,255,255,0.4)', marginTop: 2 },
+  confirmedBadge: {
+    alignItems: 'center', gap: 4,
+    backgroundColor: 'rgba(34,197,94,0.12)',
+    borderRadius: 14, borderWidth: 1, borderColor: 'rgba(34,197,94,0.3)',
+    paddingHorizontal: 14, paddingVertical: 10,
+  },
+  confirmedText: { fontSize: 10, fontFamily: Font.bold, color: Colors.success, letterSpacing: 0.5 },
+  dateLine: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  dateText: { fontSize: 11, fontFamily: Font.medium, color: 'rgba(255,255,255,0.35)' },
+  benefitRow: { flexDirection: 'row', gap: 16, flexWrap: 'wrap', justifyContent: 'center' },
+  benefit: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  benefitText: { fontSize: 12, fontFamily: Font.medium, color: Colors.textMuted },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SLIDE 3 — Ticket
+// ─────────────────────────────────────────────────────────────────────────────
+const QR_GRID = [
+  [1,1,1,1,1,1,1,0,1,0],
+  [1,0,0,0,0,0,1,1,0,1],
+  [1,0,1,1,1,0,1,0,1,0],
+  [1,0,1,1,1,0,1,0,0,1],
+  [1,0,1,1,1,0,1,1,0,0],
+  [1,0,0,0,0,0,1,0,1,1],
+  [1,1,1,1,1,1,1,0,0,1],
+  [0,1,0,0,1,0,0,1,0,0],
+  [1,0,0,1,0,1,0,0,1,1],
+  [0,1,1,0,0,0,1,1,0,1],
 ];
 
-function SlideFast() {
-  const s0o = useRef(new Animated.Value(0)).current;
-  const s1o = useRef(new Animated.Value(0)).current;
-  const s2o = useRef(new Animated.Value(0)).current;
-  const s3o = useRef(new Animated.Value(0)).current;
-  const s0s = useRef(new Animated.Value(0.7)).current;
-  const s1s = useRef(new Animated.Value(0.7)).current;
-  const s2s = useRef(new Animated.Value(0.7)).current;
-  const s3s = useRef(new Animated.Value(0.7)).current;
-  const a0o = useRef(new Animated.Value(0)).current;
-  const a1o = useRef(new Animated.Value(0)).current;
-  const a2o = useRef(new Animated.Value(0)).current;
-  const timerOpacity = useRef(new Animated.Value(0)).current;
-
-  const stepOpacities = [s0o, s1o, s2o, s3o];
-  const stepScales = [s0s, s1s, s2s, s3s];
-  const arrowOpacities = [a0o, a1o, a2o];
+function SlideTicket() {
+  const cardY = useRef(new Animated.Value(0)).current;
+  const glowOpacity = useRef(new Animated.Value(0.5)).current;
 
   useEffect(() => {
-    const sequence: Animated.CompositeAnimation[] = [];
-
-    STEPS.forEach((_, i) => {
-      sequence.push(
-        Animated.parallel([
-          Animated.timing(stepOpacities[i], { toValue: 1, duration: 350, useNativeDriver: true }),
-          Animated.timing(stepScales[i], { toValue: 1, duration: 350, useNativeDriver: true }),
-        ])
-      );
-      if (i < 3) {
-        sequence.push(
-          Animated.timing(arrowOpacities[i], { toValue: 1, duration: 250, useNativeDriver: true })
-        );
-      }
-    });
-
-    sequence.push(
-      Animated.timing(timerOpacity, { toValue: 1, duration: 400, useNativeDriver: true })
-    );
-
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.sequence(sequence),
-        Animated.delay(2000),
-        Animated.parallel([
-          ...stepOpacities.map((v) => Animated.timing(v, { toValue: 0, duration: 300, useNativeDriver: true })),
-          ...stepScales.map((v) => Animated.timing(v, { toValue: 0.7, duration: 300, useNativeDriver: true })),
-          ...arrowOpacities.map((v) => Animated.timing(v, { toValue: 0, duration: 300, useNativeDriver: true })),
-          Animated.timing(timerOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
-        ]),
-        Animated.delay(400),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
+    Animated.loop(Animated.sequence([
+      Animated.timing(cardY, { toValue: -9, duration: 3400, useNativeDriver: true }),
+      Animated.timing(cardY, { toValue: 0, duration: 3400, useNativeDriver: true }),
+    ])).start();
+    Animated.loop(Animated.sequence([
+      Animated.timing(glowOpacity, { toValue: 1, duration: 2000, useNativeDriver: true }),
+      Animated.timing(glowOpacity, { toValue: 0.4, duration: 2000, useNativeDriver: true }),
+    ])).start();
   }, []);
 
   return (
-    <View style={sf.container}>
-      <Text style={sf.eyebrow}>VELOCITÀ</Text>
-      <Text style={sf.title}>Compra in 3 tap.{'\n'}Sul serio.</Text>
+    <View style={st.container}>
+      <Text style={st.eyebrow}>INGRESSO</Text>
+      <Text style={st.title}>Il tuo biglietto.{'\n'}Sempre con te.</Text>
 
-      {/* Steps */}
-      <View style={sf.stepsRow}>
-        {STEPS.map((step, i) => (
-          <React.Fragment key={i}>
-            <Animated.View
-              style={[
-                sf.step,
-                { opacity: stepOpacities[i], transform: [{ scale: stepScales[i] }] },
-              ]}
+      <View style={st.ticketOuter}>
+        <Animated.View style={[st.ticketGlow, { opacity: glowOpacity }]} />
+        <Animated.View style={[st.ticketWrap, { transform: [{ translateY: cardY }] }]}>
+          <View style={st.ticket}>
+            <LinearGradient
+              colors={['rgba(168,85,247,0.28)', 'rgba(100,30,180,0.18)']}
+              style={st.ticketHeader}
             >
-              <View style={[sf.stepCircle, { borderColor: step.color, shadowColor: step.color }]}>
-                <Text style={sf.stepEmoji}>{step.emoji}</Text>
+              <View style={st.ticketHeaderRow}>
+                <View>
+                  <Text style={st.ticketEventName}>SATURNO</Text>
+                  <Text style={st.ticketMeta}>Discoteca Anima · Sab 26 Apr</Text>
+                </View>
+                <View style={st.verifiedBadge}>
+                  <Ionicons name="checkmark-circle" size={22} color={Colors.success} />
+                  <Text style={st.verifiedText}>Valido</Text>
+                </View>
               </View>
-              <Text style={[sf.stepLabel, { color: step.color }]}>{step.label}</Text>
-            </Animated.View>
-            {i < 3 && (
-              <Animated.View style={[sf.arrow, { opacity: arrowOpacities[i] }]}>
-                <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.25)" />
-              </Animated.View>
-            )}
-          </React.Fragment>
-        ))}
-      </View>
+            </LinearGradient>
 
-      {/* Timer badge */}
-      <Animated.View style={[sf.timer, { opacity: timerOpacity }]}>
-        <Text style={sf.timerEmoji}>⚡</Text>
-        <Text style={sf.timerText}>Meno di 30 secondi</Text>
-      </Animated.View>
+            <View style={st.divider}>
+              <View style={st.cutLeft} />
+              <View style={st.dashedLine} />
+              <View style={st.cutRight} />
+            </View>
 
-      {/* Benefits */}
-      <View style={sf.benefits}>
-        {[
-          '🍎 Apple Pay & Google Pay',
-          '📶 Funziona anche offline',
-          '📲 QR salvato automaticamente',
-        ].map((b) => (
-          <View key={b} style={sf.benefit}>
-            <Text style={sf.benefitText}>{b}</Text>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-}
-
-const sf = StyleSheet.create({
-  container: { width, flex: 1, alignItems: 'center', paddingHorizontal: 28, paddingTop: 32 },
-  eyebrow: { fontSize: 11, fontFamily: Font.bold, color: Colors.accent, letterSpacing: 3, marginBottom: 10 },
-  title: { fontSize: 30, fontFamily: Font.black, color: Colors.textPrimary, textAlign: 'center', lineHeight: 36, marginBottom: 32 },
-  stepsRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 28 },
-  step: { alignItems: 'center', gap: 8, flex: 1 },
-  stepCircle: {
-    width: 54, height: 54, borderRadius: 27,
-    backgroundColor: 'rgba(168,85,247,0.1)',
-    borderWidth: 2, alignItems: 'center', justifyContent: 'center',
-    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 12, elevation: 6,
-  },
-  stepEmoji: { fontSize: 24 },
-  stepLabel: { fontSize: 10, fontFamily: Font.bold, textAlign: 'center', lineHeight: 14 },
-  arrow: { alignItems: 'center', justifyContent: 'center', marginBottom: 18 },
-  timer: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: 'rgba(245,158,11,0.12)',
-    borderRadius: 50, borderWidth: 1, borderColor: 'rgba(245,158,11,0.3)',
-    paddingHorizontal: 18, paddingVertical: 10, marginBottom: 24,
-  },
-  timerEmoji: { fontSize: 16 },
-  timerText: { fontSize: 14, fontFamily: Font.bold, color: '#f59e0b' },
-  benefits: { gap: 10, width: '100%' },
-  benefit: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
-    paddingHorizontal: 16, paddingVertical: 12,
-  },
-  benefitText: { fontSize: 14, fontFamily: Font.medium, color: Colors.textSecondary },
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SLIDE 4 — QR Experience: your ticket, always with you
-// ─────────────────────────────────────────────────────────────────────────────
-function SlideQR() {
-  const glow = useRef(new Animated.Value(0.6)).current;
-  const drinkPulse = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glow, { toValue: 1, duration: 1800, useNativeDriver: true }),
-        Animated.timing(glow, { toValue: 0.5, duration: 1800, useNativeDriver: true }),
-      ])
-    ).start();
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(drinkPulse, { toValue: 1.1, duration: 800, useNativeDriver: true }),
-        Animated.timing(drinkPulse, { toValue: 1, duration: 800, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
-
-  return (
-    <View style={sq.container}>
-      <Text style={sq.eyebrow}>INGRESSO</Text>
-      <Text style={sq.title}>Il tuo biglietto.{'\n'}Sempre con te.</Text>
-
-      {/* Mock phone ticket */}
-      <View style={sq.phone}>
-        <View style={sq.ticket}>
-          <LinearGradient
-            colors={['rgba(168,85,247,0.3)', 'rgba(100,30,180,0.2)']}
-            style={sq.ticketHeader}
-          >
-            <Text style={sq.ticketEvent}>SATURNO</Text>
-            <Text style={sq.ticketVenue}>Discoteca Anima · Sab 26 Apr</Text>
-          </LinearGradient>
-
-          <View style={sq.ticketBody}>
-            {/* Mock QR */}
-            <Animated.View style={[sq.qrWrap, { opacity: glow }]}>
-              <View style={sq.qrMock}>
-                {Array.from({ length: 5 }).map((_, row) => (
-                  <View key={row} style={sq.qrRow}>
-                    {Array.from({ length: 5 }).map((_, col) => (
+            <View style={st.ticketBody}>
+              <View style={st.qrBox}>
+                {QR_GRID.map((row, ri) => (
+                  <View key={ri} style={st.qrRow}>
+                    {row.map((cell, ci) => (
                       <View
-                        key={col}
-                        style={[
-                          sq.qrCell,
-                          {
-                            backgroundColor:
-                              (row + col) % 3 === 0 || (row * col) % 4 === 0
-                                ? Colors.textPrimary
-                                : 'transparent',
-                          },
-                        ]}
+                        key={ci}
+                        style={[st.qrCell, { backgroundColor: cell ? '#07080f' : 'transparent' }]}
                       />
                     ))}
                   </View>
                 ))}
               </View>
-            </Animated.View>
-
-            <Text style={sq.qrLabel}>Scansiona per entrare</Text>
-
-            {/* Drink badge */}
-            <Animated.View style={[sq.drinkBadge, { transform: [{ scale: drinkPulse }] }]}>
-              <Text style={sq.drinkEmoji}>🥂</Text>
-              <Text style={sq.drinkText}>Free drink incluso</Text>
-              <View style={sq.drinkDot} />
-            </Animated.View>
+              <Text style={st.scanLabel}>Scansiona per entrare</Text>
+              <View style={st.drinkBadge}>
+                <Text style={st.drinkEmoji}>🥂</Text>
+                <Text style={st.drinkText}>Free drink incluso</Text>
+                <View style={st.drinkDot} />
+              </View>
+            </View>
           </View>
-        </View>
+        </Animated.View>
       </View>
 
-      {/* Perks */}
-      <View style={sq.perks}>
-        {[
-          { icon: '📵', text: 'Funziona senza internet' },
-          { icon: '🔒', text: 'QR unico e sicuro' },
-          { icon: '⚡', text: 'Ingresso immediato' },
-        ].map(({ icon, text }) => (
-          <View key={text} style={sq.perk}>
-            <Text style={sq.perkIcon}>{icon}</Text>
-            <Text style={sq.perkText}>{text}</Text>
+      <View style={st.features}>
+        {([
+          { icon: 'flash-outline', label: 'Acquisto istantaneo' },
+          { icon: 'phone-portrait-outline', label: 'Funziona offline' },
+          { icon: 'shield-checkmark-outline', label: 'QR unico e sicuro' },
+        ] as { icon: 'flash-outline' | 'phone-portrait-outline' | 'shield-checkmark-outline'; label: string }[]).map(({ icon, label }) => (
+          <View key={label} style={st.feature}>
+            <Ionicons name={icon} size={15} color={Colors.accent} />
+            <Text style={st.featureText}>{label}</Text>
           </View>
         ))}
       </View>
@@ -607,184 +446,64 @@ function SlideQR() {
   );
 }
 
-const sq = StyleSheet.create({
-  container: { width, flex: 1, alignItems: 'center', paddingHorizontal: 24, paddingTop: 28 },
-  eyebrow: { fontSize: 11, fontFamily: Font.bold, color: Colors.accent, letterSpacing: 3, marginBottom: 10 },
-  title: { fontSize: 30, fontFamily: Font.black, color: Colors.textPrimary, textAlign: 'center', lineHeight: 36, marginBottom: 20 },
-  phone: { width: width * 0.65, marginBottom: 20 },
+const st = StyleSheet.create({
+  container: { width, flex: 1, alignItems: 'center', paddingHorizontal: 24, paddingTop: 28, paddingBottom: 170 },
+  eyebrow: { fontSize: 11, fontFamily: Font.bold, color: Colors.accent, letterSpacing: 3, marginBottom: 12 },
+  title: {
+    fontSize: 36, fontFamily: Font.black, color: Colors.textPrimary,
+    textAlign: 'center', lineHeight: 43, marginBottom: 24,
+  },
+  ticketOuter: { width: width * 0.76, marginBottom: 28, alignItems: 'center' },
+  ticketGlow: {
+    position: 'absolute', top: 16, left: -14, right: -14, bottom: -14,
+    backgroundColor: 'rgba(168,85,247,0.18)',
+    borderRadius: 28,
+  },
+  ticketWrap: { width: '100%' },
   ticket: {
     borderRadius: 20, overflow: 'hidden',
-    borderWidth: 1, borderColor: 'rgba(168,85,247,0.3)',
-    backgroundColor: 'rgba(18,14,30,0.9)',
-    shadowColor: Colors.accent, shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4, shadowRadius: 24, elevation: 12,
+    borderWidth: 1, borderColor: 'rgba(168,85,247,0.28)',
+    backgroundColor: 'rgba(12,8,22,0.98)',
   },
-  ticketHeader: { padding: 16 },
-  ticketEvent: { fontSize: 18, fontFamily: Font.black, color: Colors.white },
-  ticketVenue: { fontSize: 12, fontFamily: Font.medium, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
-  ticketBody: { padding: 16, alignItems: 'center', gap: 10 },
-  qrWrap: {
-    width: 100, height: 100, borderRadius: 12,
-    backgroundColor: Colors.white, padding: 10,
-    alignItems: 'center', justifyContent: 'center',
+  ticketHeader: { padding: 20 },
+  ticketHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  ticketEventName: { fontSize: 22, fontFamily: Font.black, color: Colors.white },
+  ticketMeta: { fontSize: 11, fontFamily: Font.medium, color: 'rgba(255,255,255,0.45)', marginTop: 4 },
+  verifiedBadge: { alignItems: 'center', gap: 2 },
+  verifiedText: { fontSize: 9, fontFamily: Font.bold, color: Colors.success, letterSpacing: 1 },
+  divider: { flexDirection: 'row', alignItems: 'center', overflow: 'visible' },
+  cutLeft: {
+    width: 14, height: 14, borderRadius: 7,
+    backgroundColor: Colors.background, marginLeft: -7,
   },
-  qrMock: { gap: 4 },
-  qrRow: { flexDirection: 'row', gap: 4 },
-  qrCell: { width: 12, height: 12, borderRadius: 2 },
-  qrLabel: { fontSize: 11, fontFamily: Font.medium, color: Colors.textMuted },
+  dashedLine: {
+    flex: 1, height: 1, borderStyle: 'dashed', borderWidth: 0.5,
+    borderColor: 'rgba(168,85,247,0.2)', marginHorizontal: 4,
+  },
+  cutRight: {
+    width: 14, height: 14, borderRadius: 7,
+    backgroundColor: Colors.background, marginRight: -7,
+  },
+  ticketBody: { padding: 18, alignItems: 'center', gap: 10 },
+  qrBox: {
+    backgroundColor: Colors.white, borderRadius: 8,
+    padding: 7, gap: 2,
+  },
+  qrRow: { flexDirection: 'row', gap: 2 },
+  qrCell: { width: 6.5, height: 6.5, borderRadius: 1 },
+  scanLabel: { fontSize: 11, fontFamily: Font.medium, color: Colors.textMuted },
   drinkBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: 'rgba(34,197,94,0.12)',
-    borderRadius: 50, borderWidth: 1, borderColor: 'rgba(34,197,94,0.3)',
+    backgroundColor: 'rgba(34,197,94,0.09)',
+    borderRadius: 50, borderWidth: 1, borderColor: 'rgba(34,197,94,0.25)',
     paddingHorizontal: 14, paddingVertical: 6,
   },
-  drinkEmoji: { fontSize: 14 },
-  drinkText: { fontSize: 12, fontFamily: Font.semiBold, color: '#22c55e' },
-  drinkDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#22c55e' },
-  perks: { flexDirection: 'row', gap: 8, width: '100%' },
-  perk: {
-    flex: 1, backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
-    padding: 12, alignItems: 'center', gap: 6,
-  },
-  perkIcon: { fontSize: 22 },
-  perkText: { fontSize: 11, fontFamily: Font.semiBold, color: Colors.textSecondary, textAlign: 'center', lineHeight: 16 },
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SLIDE 5 — Commission: justify the 8%
-// ─────────────────────────────────────────────────────────────────────────────
-const WHAT_YOU_GET = [
-  { emoji: '🎟️', text: 'Biglietto garantito' },
-  { emoji: '🥂', text: 'Free drink incluso' },
-  { emoji: '📲', text: 'QR digitale sicuro' },
-  { emoji: '💬', text: 'Supporto immediato' },
-  { emoji: '🚫', text: 'Zero PR, zero markup' },
-];
-
-function SlideCommission() {
-  const barWidth = useRef(new Animated.Value(0)).current;
-  const fadeIn = useRef(new Animated.Value(0)).current;
-  const countVal = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.timing(fadeIn, { toValue: 1, duration: 600, useNativeDriver: true }).start();
-    Animated.timing(barWidth, { toValue: 1, duration: 1200, useNativeDriver: false }).start();
-  }, []);
-
-  const barInterpolate = barWidth.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '8%'],
-  });
-
-  return (
-    <View style={sc.container}>
-      <Animated.View style={{ opacity: fadeIn, alignItems: 'center' }}>
-        <Text style={sc.eyebrow}>TRASPARENZA</Text>
-        <Text style={sc.title}>L'8% che{'\n'}vale tutto.</Text>
-      </Animated.View>
-
-      {/* Price breakdown */}
-      <Animated.View style={[sc.breakdown, { opacity: fadeIn }]}>
-        <View style={sc.priceRow}>
-          <Text style={sc.priceLabel}>Biglietto esempio</Text>
-          <Text style={sc.priceValue}>15,00 €</Text>
-        </View>
-        <View style={sc.divider} />
-        <View style={sc.priceRow}>
-          <View>
-            <Text style={sc.commLabel}>Commissione MyNox</Text>
-            <Text style={sc.commSub}>8% fisso e trasparente</Text>
-          </View>
-          <Text style={sc.commValue}>1,20 €</Text>
-        </View>
-
-        {/* Bar */}
-        <View style={sc.barTrack}>
-          <Animated.View style={[sc.barFill, { width: barInterpolate }]} />
-          <View style={sc.barRest} />
-        </View>
-        <View style={sc.barLabels}>
-          <Text style={sc.barLabelAccent}>8% MyNox</Text>
-          <Text style={sc.barLabelGray}>92% va all'evento</Text>
-        </View>
-
-        <View style={sc.vsRow}>
-          <View style={sc.vsBadge}>
-            <Text style={sc.vsBadgeText}>🚫 PR: 20-30% nascosto</Text>
-          </View>
-          <Text style={sc.vsArrow}>→</Text>
-          <View style={sc.vsOurBadge}>
-            <Text style={sc.vsOurText}>✓ Noi: 8% fisso</Text>
-          </View>
-        </View>
-      </Animated.View>
-
-      {/* What you get */}
-      <Animated.View style={[sc.getWrap, { opacity: fadeIn }]}>
-        <Text style={sc.getTitle}>Con quell'8% ottieni:</Text>
-        <View style={sc.getGrid}>
-          {WHAT_YOU_GET.map(({ emoji, text }) => (
-            <View key={text} style={sc.getItem}>
-              <Text style={sc.getEmoji}>{emoji}</Text>
-              <Text style={sc.getText}>{text}</Text>
-            </View>
-          ))}
-        </View>
-      </Animated.View>
-
-      <Animated.View style={[sc.final, { opacity: fadeIn }]}>
-        <Text style={sc.finalText}>☕ Meno di un caffè. Serata garantita.</Text>
-      </Animated.View>
-    </View>
-  );
-}
-
-const sc = StyleSheet.create({
-  container: { width, flex: 1, paddingHorizontal: 24, paddingTop: 28, alignItems: 'center' },
-  eyebrow: { fontSize: 11, fontFamily: Font.bold, color: Colors.accent, letterSpacing: 3, marginBottom: 10 },
-  title: { fontSize: 30, fontFamily: Font.black, color: Colors.textPrimary, textAlign: 'center', lineHeight: 36, marginBottom: 16 },
-  breakdown: {
-    width: '100%', backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
-    padding: 18, marginBottom: 14,
-  },
-  priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  priceLabel: { fontSize: 14, fontFamily: Font.medium, color: Colors.textSecondary },
-  priceValue: { fontSize: 18, fontFamily: Font.black, color: Colors.textPrimary },
-  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.07)', marginBottom: 12 },
-  commLabel: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.accent },
-  commSub: { fontSize: 11, fontFamily: Font.regular, color: Colors.textMuted, marginTop: 2 },
-  commValue: { fontSize: 18, fontFamily: Font.black, color: Colors.accent },
-  barTrack: { flexDirection: 'row', height: 8, borderRadius: 4, overflow: 'hidden', marginTop: 12, backgroundColor: 'rgba(255,255,255,0.08)' },
-  barFill: { height: 8, backgroundColor: Colors.accent, borderRadius: 4 },
-  barRest: { flex: 1, height: 8 },
-  barLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
-  barLabelAccent: { fontSize: 11, fontFamily: Font.bold, color: Colors.accent },
-  barLabelGray: { fontSize: 11, fontFamily: Font.medium, color: Colors.textMuted },
-  vsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 14 },
-  vsBadge: { backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: 50, borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', paddingHorizontal: 10, paddingVertical: 5 },
-  vsBadgeText: { fontSize: 11, fontFamily: Font.semiBold, color: '#ef4444' },
-  vsArrow: { fontSize: 12, color: Colors.textMuted },
-  vsOurBadge: { backgroundColor: 'rgba(34,197,94,0.1)', borderRadius: 50, borderWidth: 1, borderColor: 'rgba(34,197,94,0.3)', paddingHorizontal: 10, paddingVertical: 5 },
-  vsOurText: { fontSize: 11, fontFamily: Font.semiBold, color: '#22c55e' },
-  getWrap: { width: '100%' },
-  getTitle: { fontSize: 13, fontFamily: Font.bold, color: Colors.textSecondary, marginBottom: 10 },
-  getGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  getItem: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: 'rgba(168,85,247,0.08)',
-    borderRadius: 50, borderWidth: 1, borderColor: 'rgba(168,85,247,0.2)',
-    paddingHorizontal: 10, paddingVertical: 5,
-  },
-  getEmoji: { fontSize: 12 },
-  getText: { fontSize: 11, fontFamily: Font.semiBold, color: Colors.textSecondary },
-  final: {
-    marginTop: 14, backgroundColor: 'rgba(168,85,247,0.1)',
-    borderRadius: 50, borderWidth: 1, borderColor: 'rgba(168,85,247,0.3)',
-    paddingHorizontal: 18, paddingVertical: 10,
-  },
-  finalText: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.accent },
+  drinkEmoji: { fontSize: 13 },
+  drinkText: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.success },
+  drinkDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: Colors.success },
+  features: { flexDirection: 'row', gap: 20, flexWrap: 'wrap', justifyContent: 'center' },
+  feature: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  featureText: { fontSize: 12, fontFamily: Font.medium, color: Colors.textMuted },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -823,7 +542,6 @@ export default function OnboardingScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (selectedGenres.length > 0) setMusicGenres(selectedGenres);
     completeOnboarding();
-    // if user already has a session (came from registration), go to tabs directly
     router.replace(user ? '/(tabs)' : '/login');
   }
 
@@ -834,22 +552,26 @@ export default function OnboardingScreen() {
 
   const SLIDE_COMPONENTS = [
     <SlideWelcome key="welcome" />,
-    <SlideNoPR key="nopr" />,
     <SlideDiscover key="discover" />,
-    <SlideFast key="fast" />,
-    <SlideQR key="qr" />,
+    <SlideTavoli key="tavoli" />,
+    <SlideTicket key="ticket" />,
   ];
 
   const SLIDE_GRADIENTS: [string, string, string][] = [
     ['rgba(168,85,247,0.22)', 'rgba(168,85,247,0.05)', 'transparent'],
-    ['rgba(239,68,68,0.12)', 'rgba(168,85,247,0.08)', 'transparent'],
-    ['rgba(168,85,247,0.18)', 'rgba(59,130,246,0.06)', 'transparent'],
-    ['rgba(168,85,247,0.15)', 'rgba(99,102,241,0.08)', 'transparent'],
-    ['rgba(34,197,94,0.1)', 'rgba(168,85,247,0.1)', 'transparent'],
-    ['rgba(168,85,247,0.14)', 'rgba(168,85,247,0.04)', 'transparent'],
+    ['rgba(148,65,237,0.18)', 'rgba(59,130,246,0.04)', 'transparent'],
+    ['rgba(100,30,180,0.20)', 'rgba(168,85,247,0.06)', 'transparent'],
+    ['rgba(34,197,94,0.06)', 'rgba(168,85,247,0.12)', 'transparent'],
+    ['rgba(168,85,247,0.16)', 'rgba(168,85,247,0.03)', 'transparent'],
   ];
 
   const gradientIndex = Math.min(currentIndex, SLIDE_GRADIENTS.length - 1);
+
+  const ctaLabel = isGenreStep
+    ? 'Inizia ora'
+    : currentIndex === TOTAL_SLIDES - 1
+    ? 'Scegli i tuoi generi'
+    : 'Avanti';
 
   return (
     <View style={styles.container}>
@@ -859,7 +581,6 @@ export default function OnboardingScreen() {
         pointerEvents="none"
       />
 
-      {/* Logo */}
       <SafeAreaView style={styles.logoBar}>
         <Image
           source={require('../assets/logo-cropped.png')}
@@ -868,7 +589,6 @@ export default function OnboardingScreen() {
         />
       </SafeAreaView>
 
-      {/* Slides scrollview */}
       {!isGenreStep ? (
         <ScrollView
           ref={scrollRef}
@@ -883,7 +603,6 @@ export default function OnboardingScreen() {
           {SLIDE_COMPONENTS}
         </ScrollView>
       ) : (
-        /* Genre step */
         <View style={styles.genreStep}>
           <Text style={styles.genreTitle}>Che musica ti piace?</Text>
           <Text style={styles.genreSubtitle}>
@@ -914,7 +633,6 @@ export default function OnboardingScreen() {
         </View>
       )}
 
-      {/* Progress dots */}
       <View style={styles.dots}>
         {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
           <View
@@ -928,12 +646,9 @@ export default function OnboardingScreen() {
         ))}
       </View>
 
-      {/* Footer buttons */}
       <SafeAreaView style={styles.footer} edges={['bottom']}>
         <TouchableOpacity style={styles.ctaButton} onPress={goNext} activeOpacity={0.85}>
-          <Text style={styles.ctaText}>
-            {isGenreStep ? 'Inizia ora' : currentIndex === TOTAL_SLIDES - 1 ? 'Personalizza' : 'Avanti'}
-          </Text>
+          <Text style={styles.ctaText}>{ctaLabel}</Text>
           <Ionicons
             name={isGenreStep ? 'checkmark' : 'arrow-forward'}
             size={18}
@@ -955,19 +670,18 @@ export default function OnboardingScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  bgGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 500 },
+  bgGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 520 },
 
-  logoBar: { alignItems: 'center', paddingTop: 20 },
-  logoImage: { width: 200, height: 56 },
+  logoBar: { alignItems: 'center', paddingTop: 16 },
+  logoImage: { width: 190, height: 54 },
 
   slider: { flex: 1 },
 
-  dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, paddingVertical: 14 },
+  dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, paddingVertical: 12 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.border },
   dotActive: { width: 22, backgroundColor: Colors.accent },
-  dotDone: { backgroundColor: 'rgba(168,85,247,0.45)' },
+  dotDone: { backgroundColor: 'rgba(168,85,247,0.4)' },
 
-  // Genre step
   genreStep: { flex: 1, paddingHorizontal: 24, paddingTop: 16 },
   genreTitle: {
     fontSize: 28, fontFamily: Font.black, color: Colors.textPrimary,
@@ -992,7 +706,6 @@ const styles = StyleSheet.create({
     fontSize: 13, color: Colors.accent, fontFamily: Font.bold,
   },
 
-  // Footer
   footer: { paddingHorizontal: 24, paddingBottom: 8, gap: 8 },
   ctaButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,

@@ -23,15 +23,17 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginScreen() {
   const router = useRouter(); // used for push('/register') and push('forgot-password')
-  const { login, loginWithGoogle, isLoading } = useAuth();
+  const { login, loginWithGoogle, resetPassword, isLoading } = useAuth();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState('');
 
   async function handleLogin() {
+    setLoginError('');
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Errore', 'Inserisci email e password.');
+      setLoginError('Inserisci email e password.');
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -39,7 +41,8 @@ export default function LoginScreen() {
       await login(email.trim(), password);
       // navigation handled by _layout.tsx once auth state updates
     } catch (e: any) {
-      Alert.alert('Accesso fallito', e.message ?? 'Credenziali non valide.');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setLoginError(e.message ?? 'Credenziali non valide.');
     }
   }
 
@@ -111,11 +114,43 @@ export default function LoginScreen() {
 
               <TouchableOpacity
                 style={styles.forgotBtn}
-                onPress={() => Alert.alert('Password dimenticata', 'Riceverai un\'email per il reset. Funzionalità in arrivo con Supabase Auth.')}
+                onPress={() => {
+                  const target = email.trim();
+                  if (!target) {
+                    Alert.alert('Password dimenticata', 'Inserisci prima la tua email nel campo qui sopra.');
+                    return;
+                  }
+                  Alert.alert(
+                    'Reset password',
+                    `Inviamo un\'email di reset a ${target}?`,
+                    [
+                      { text: 'Annulla', style: 'cancel' },
+                      {
+                        text: 'Invia email',
+                        onPress: async () => {
+                          try {
+                            await resetPassword(target);
+                            Alert.alert('Email inviata', `Controlla la casella di ${target} per il link di reset.`);
+                          } catch (e: any) {
+                            Alert.alert('Errore', e.message ?? 'Impossibile inviare l\'email di reset.');
+                          }
+                        },
+                      },
+                    ],
+                  );
+                }}
               >
                 <Text style={styles.forgotText}>Password dimenticata?</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Errore login */}
+            {loginError ? (
+              <View style={styles.errorBanner}>
+                <Ionicons name="alert-circle-outline" size={15} color="#f87171" />
+                <Text style={styles.errorText}>{loginError}</Text>
+              </View>
+            ) : null}
 
             {/* CTA */}
             <TouchableOpacity
@@ -192,13 +227,13 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   bgGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 350 },
-  scroll: { paddingHorizontal: 24, paddingBottom: 40 },
+  scroll: { paddingHorizontal: 24, paddingBottom: 20 },
 
-  logoSection: { alignItems: 'center', paddingTop: 100, paddingBottom: 44 },
+  logoSection: { alignItems: 'center', paddingTop: 60, paddingBottom: 32 },
   logoImage: { width: 254, height: 72, marginBottom: 12 },
   logoSub: { fontSize: 16, color: Colors.textSecondary, fontFamily: Font.medium },
 
-  form: { gap: 20, marginBottom: 28 },
+  form: { gap: 20, marginBottom: 12 },
   fieldGroup: { gap: 8 },
   fieldLabel: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 },
   inputRow: {
@@ -213,6 +248,20 @@ const styles = StyleSheet.create({
 
   forgotBtn: { alignSelf: 'flex-end', marginTop: -8 },
   forgotText: { fontSize: 13, color: Colors.accent },
+
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(248,113,113,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(248,113,113,0.20)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 16,
+  },
+  errorText: { fontSize: 13, color: '#f87171', flex: 1, fontFamily: Font.regular },
 
   ctaButton: {
     backgroundColor: Colors.accent,
@@ -229,7 +278,7 @@ const styles = StyleSheet.create({
   socialButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
     backgroundColor: Colors.surface,
-    borderRadius: 16, borderWidth: 1, borderColor: Colors.border,
+    borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
     paddingVertical: 15, marginBottom: 12,
   },
   socialText: { fontSize: 15, fontFamily: Font.semiBold, color: Colors.textPrimary },

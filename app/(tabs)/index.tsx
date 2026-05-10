@@ -134,11 +134,17 @@ export default function HomeScreen() {
     return { year: now.getFullYear(), month: now.getMonth() };
   });
 
-  // Filter state
+  // Filter state (applicato alla lista)
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
   const [ageFilter, setAgeFilter] = useState<AgeFilter>('all');
+
+  // Draft state (usato solo dentro il modal, applicato solo al tap su "Applica")
+  const [draftMaxPrice, setDraftMaxPrice] = useState<number | null>(null);
+  const [draftOnlyAvailable, setDraftOnlyAvailable] = useState(false);
+  const [draftSelectedGenres, setDraftSelectedGenres] = useState<Genre[]>([]);
+  const [draftAgeFilter, setDraftAgeFilter] = useState<AgeFilter>('all');
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -150,7 +156,7 @@ export default function HomeScreen() {
 
   function toggleGenre(genre: Genre) {
     Haptics.selectionAsync();
-    setSelectedGenres((prev) =>
+    setDraftSelectedGenres((prev) =>
       prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
     );
   }
@@ -339,12 +345,12 @@ export default function HomeScreen() {
                 </View>
                 <View style={styles.filterTitleRow}>
                   <Text style={styles.filterTitle}>Filtra eventi</Text>
-                  {hasActiveFilters && (
+                  {(draftMaxPrice !== null || draftOnlyAvailable || draftSelectedGenres.length > 0 || draftAgeFilter !== 'all') && (
                     <TouchableOpacity onPress={() => {
-                      setMaxPrice(null);
-                      setOnlyAvailable(false);
-                      setSelectedGenres([]);
-                      setAgeFilter('all');
+                      setDraftMaxPrice(null);
+                      setDraftOnlyAvailable(false);
+                      setDraftSelectedGenres([]);
+                      setDraftAgeFilter('all');
                     }}>
                       <Text style={styles.filterReset}>Azzera</Text>
                     </TouchableOpacity>
@@ -357,11 +363,11 @@ export default function HomeScreen() {
                   {MAX_PRICE_OPTIONS.map((opt) => (
                     <TouchableOpacity
                       key={String(opt.value)}
-                      style={[styles.priceChip, maxPrice === opt.value && styles.priceChipActive]}
-                      onPress={() => { Haptics.selectionAsync(); setMaxPrice(opt.value); }}
+                      style={[styles.priceChip, draftMaxPrice === opt.value && styles.priceChipActive]}
+                      onPress={() => { Haptics.selectionAsync(); setDraftMaxPrice(opt.value); }}
                       activeOpacity={0.8}
                     >
-                      <Text style={[styles.priceChipText, maxPrice === opt.value && styles.priceChipTextActive]}>
+                      <Text style={[styles.priceChipText, draftMaxPrice === opt.value && styles.priceChipTextActive]}>
                         {opt.label}
                       </Text>
                     </TouchableOpacity>
@@ -375,8 +381,8 @@ export default function HomeScreen() {
                     <Text style={styles.toggleSub}>Nasconde eventi esauriti</Text>
                   </View>
                   <Switch
-                    value={onlyAvailable}
-                    onValueChange={(v) => { Haptics.selectionAsync(); setOnlyAvailable(v); }}
+                    value={draftOnlyAvailable}
+                    onValueChange={(v) => { Haptics.selectionAsync(); setDraftOnlyAvailable(v); }}
                     trackColor={{ false: Colors.border, true: Colors.accent }}
                     thumbColor={Colors.white}
                   />
@@ -392,11 +398,11 @@ export default function HomeScreen() {
                   ] as { label: string; value: AgeFilter }[]).map((opt) => (
                     <TouchableOpacity
                       key={opt.value}
-                      style={[styles.priceChip, ageFilter === opt.value && styles.priceChipActive]}
-                      onPress={() => { Haptics.selectionAsync(); setAgeFilter(opt.value); }}
+                      style={[styles.priceChip, draftAgeFilter === opt.value && styles.priceChipActive]}
+                      onPress={() => { Haptics.selectionAsync(); setDraftAgeFilter(opt.value); }}
                       activeOpacity={0.8}
                     >
-                      <Text style={[styles.priceChipText, ageFilter === opt.value && styles.priceChipTextActive]}>
+                      <Text style={[styles.priceChipText, draftAgeFilter === opt.value && styles.priceChipTextActive]}>
                         {opt.label}
                       </Text>
                     </TouchableOpacity>
@@ -409,11 +415,11 @@ export default function HomeScreen() {
                   {ALL_GENRES.map((genre) => (
                     <TouchableOpacity
                       key={genre}
-                      style={[styles.genreChip, selectedGenres.includes(genre) && styles.genreChipActive]}
+                      style={[styles.genreChip, draftSelectedGenres.includes(genre) && styles.genreChipActive]}
                       onPress={() => toggleGenre(genre)}
                       activeOpacity={0.8}
                     >
-                      <Text style={[styles.genreChipText, selectedGenres.includes(genre) && styles.genreChipTextActive]}>
+                      <Text style={[styles.genreChipText, draftSelectedGenres.includes(genre) && styles.genreChipTextActive]}>
                         {genre}
                       </Text>
                     </TouchableOpacity>
@@ -422,7 +428,13 @@ export default function HomeScreen() {
 
                 <TouchableOpacity
                   style={styles.filterApplyBtn}
-                  onPress={() => setFilterOpen(false)}
+                  onPress={() => {
+                    setMaxPrice(draftMaxPrice);
+                    setOnlyAvailable(draftOnlyAvailable);
+                    setSelectedGenres(draftSelectedGenres);
+                    setAgeFilter(draftAgeFilter);
+                    setFilterOpen(false);
+                  }}
                   activeOpacity={0.85}
                 >
                   <Text style={styles.filterApplyText}>Applica filtri</Text>
@@ -462,7 +474,14 @@ export default function HomeScreen() {
 
             <TouchableOpacity
               style={[styles.iconBtn, hasActiveFilters && styles.iconBtnActive]}
-              onPress={() => { Haptics.selectionAsync(); setFilterOpen(true); }}
+              onPress={() => {
+                Haptics.selectionAsync();
+                setDraftMaxPrice(maxPrice);
+                setDraftOnlyAvailable(onlyAvailable);
+                setDraftSelectedGenres([...selectedGenres]);
+                setDraftAgeFilter(ageFilter);
+                setFilterOpen(true);
+              }}
               activeOpacity={0.8}
             >
               <Ionicons
