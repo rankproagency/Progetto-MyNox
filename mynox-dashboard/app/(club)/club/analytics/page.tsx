@@ -133,6 +133,7 @@ export default async function ClubAnalyticsPage() {
   if (!isOwner) {
     const perms = await getStaffPermissions(profile.id, profile.club_id);
     canViewRevenue = perms?.can_view_analytics ?? false;
+    if (!canViewRevenue) redirect('/club/dashboard');
   }
 
   const data = await getAnalyticsData(profile.club_id);
