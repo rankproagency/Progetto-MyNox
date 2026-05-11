@@ -63,7 +63,7 @@ export default function RegisterScreen() {
       Alert.alert('Errore', 'Devi avere almeno 14 anni per registrarti a MyNox.');
       return;
     }
-    if (!email.includes('@')) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
       Alert.alert('Errore', 'Inserisci un indirizzo email valido.');
       return;
     }
@@ -150,6 +150,8 @@ export default function RegisterScreen() {
                     placeholderTextColor={Colors.textMuted}
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
+                    textContentType="oneTimeCode"
+                    autoComplete="off"
                   />
                   <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={styles.eyeBtn}>
                     <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={Colors.textMuted} />
@@ -172,6 +174,8 @@ export default function RegisterScreen() {
                     placeholderTextColor={Colors.textMuted}
                     secureTextEntry={!showConfirmPassword}
                     autoCapitalize="none"
+                    textContentType="oneTimeCode"
+                    autoComplete="off"
                   />
                   <TouchableOpacity onPress={() => setShowConfirmPassword((v) => !v)} style={styles.eyeBtn}>
                     <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={Colors.textMuted} />

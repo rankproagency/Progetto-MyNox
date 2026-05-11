@@ -21,105 +21,11 @@ import { ALL_GENRES } from '../constants/genres';
 import { Genre } from '../types';
 
 const { width } = Dimensions.get('window');
-const TOTAL_SLIDES = 4;
+const TOTAL_SLIDES = 3;
 const TOTAL_STEPS = TOTAL_SLIDES + 1;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SLIDE 0 — Welcome
-// ─────────────────────────────────────────────────────────────────────────────
-function SlideWelcome() {
-  const breathe = useRef(new Animated.Value(1)).current;
-  const star1Y = useRef(new Animated.Value(0)).current;
-  const star2Y = useRef(new Animated.Value(0)).current;
-  const star3Y = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.loop(Animated.sequence([
-      Animated.timing(breathe, { toValue: 1.14, duration: 4200, useNativeDriver: true }),
-      Animated.timing(breathe, { toValue: 0.88, duration: 4200, useNativeDriver: true }),
-    ])).start();
-
-    const float = (val: Animated.Value, delay: number, range: number, dur: number) =>
-      Animated.loop(Animated.sequence([
-        Animated.delay(delay),
-        Animated.timing(val, { toValue: -range, duration: dur, useNativeDriver: true }),
-        Animated.timing(val, { toValue: 0, duration: dur, useNativeDriver: true }),
-      ]));
-
-    float(star1Y, 0, 14, 2800).start();
-    float(star2Y, 1100, 10, 3500).start();
-    float(star3Y, 450, 8, 2300).start();
-  }, []);
-
-  return (
-    <View style={sw.container}>
-      <View style={sw.orbArea}>
-        <View style={sw.halo4} />
-        <View style={sw.halo3} />
-        <View style={sw.halo2} />
-        <Animated.View style={[sw.halo1, { transform: [{ scale: breathe }] }]} />
-        <View style={sw.core}>
-          <LinearGradient
-            colors={['rgba(230,180,255,1)', Colors.accent]}
-            style={sw.coreGrad}
-          />
-        </View>
-      </View>
-
-      <Animated.Text style={[sw.star, { top: 52, left: width * 0.13, transform: [{ translateY: star1Y }] }]}>✦</Animated.Text>
-      <Animated.Text style={[sw.star, { top: 98, right: width * 0.09, fontSize: 8, opacity: 0.45, transform: [{ translateY: star2Y }] }]}>✦</Animated.Text>
-      <Animated.Text style={[sw.star, { top: 230, left: width * 0.71, fontSize: 10, opacity: 0.4, transform: [{ translateY: star3Y }] }]}>✦</Animated.Text>
-
-      <View style={sw.textWrap}>
-        <Text style={sw.title}>La nightlife{'\n'}che merita.</Text>
-        <Text style={sw.subtitle}>Scopri serate, prenota tavoli,{'\n'}entra senza code.</Text>
-      </View>
-    </View>
-  );
-}
-
-const sw = StyleSheet.create({
-  container: { width, flex: 1, alignItems: 'center', paddingBottom: 170 },
-  orbArea: {
-    marginTop: 44,
-    width: 280, height: 280,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  halo4: {
-    position: 'absolute', width: 280, height: 280, borderRadius: 140,
-    backgroundColor: 'rgba(168,85,247,0.14)',
-  },
-  halo3: {
-    position: 'absolute', width: 214, height: 214, borderRadius: 107,
-    backgroundColor: 'rgba(168,85,247,0.26)',
-  },
-  halo2: {
-    position: 'absolute', width: 152, height: 152, borderRadius: 76,
-    backgroundColor: 'rgba(168,85,247,0.42)',
-  },
-  halo1: {
-    position: 'absolute', width: 104, height: 104, borderRadius: 52,
-    backgroundColor: 'rgba(168,85,247,0.65)',
-  },
-  core: {
-    width: 62, height: 62, borderRadius: 31, overflow: 'hidden',
-    borderWidth: 2, borderColor: 'rgba(240,200,255,0.7)',
-  },
-  coreGrad: { flex: 1 },
-  star: { position: 'absolute', fontSize: 14, color: Colors.accent, opacity: 0.65 },
-  textWrap: { paddingHorizontal: 40, marginTop: 40, alignItems: 'center' },
-  title: {
-    fontSize: 42, fontFamily: Font.black, color: Colors.textPrimary,
-    textAlign: 'center', lineHeight: 50, marginBottom: 18,
-  },
-  subtitle: {
-    fontSize: 16, fontFamily: Font.regular, color: Colors.textSecondary,
-    textAlign: 'center', lineHeight: 26,
-  },
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SLIDE 1 — Discover
+// SLIDE 0 — Discover
 // ─────────────────────────────────────────────────────────────────────────────
 function SlideDiscover() {
   const cardY = useRef(new Animated.Value(0)).current;
@@ -150,6 +56,10 @@ function SlideDiscover() {
           <Text style={sdi.cardTag}>TECHNO · HOUSE</Text>
           <Text style={sdi.cardName}>SATURNO</Text>
           <Text style={sdi.cardVenue}>Discoteca Anima</Text>
+          <View style={sdi.freeDrinkBadge}>
+            <Text style={sdi.freeDrinkEmoji}>🥂</Text>
+            <Text style={sdi.freeDrinkText}>Free drink incluso</Text>
+          </View>
           <View style={sdi.cardFooter}>
             <View style={sdi.dateBadge}>
               <Text style={sdi.dateBadgeText}>Sab 26 Apr</Text>
@@ -195,7 +105,15 @@ const sdi = StyleSheet.create({
     letterSpacing: 2.5, marginBottom: 8,
   },
   cardName: { fontSize: 46, fontFamily: Font.black, color: Colors.white, marginBottom: 4 },
-  cardVenue: { fontSize: 14, fontFamily: Font.medium, color: 'rgba(255,255,255,0.5)', marginBottom: 22 },
+  cardVenue: { fontSize: 14, fontFamily: Font.medium, color: 'rgba(255,255,255,0.5)', marginBottom: 10 },
+  freeDrinkBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start',
+    backgroundColor: 'rgba(34,197,94,0.15)',
+    borderRadius: 50, borderWidth: 1, borderColor: 'rgba(34,197,94,0.35)',
+    paddingHorizontal: 10, paddingVertical: 4, marginBottom: 14,
+  },
+  freeDrinkEmoji: { fontSize: 12 },
+  freeDrinkText: { fontSize: 11, fontFamily: Font.semiBold, color: Colors.success },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   dateBadge: {
     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -219,70 +137,84 @@ const sdi = StyleSheet.create({
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SLIDE 2 — Tavoli
+// SLIDE 1 — Tavoli
 // ─────────────────────────────────────────────────────────────────────────────
 function SlideTavoli() {
   const cardY = useRef(new Animated.Value(0)).current;
-  const confirmPulse = useRef(new Animated.Value(1)).current;
+  const vipGlow = useRef(new Animated.Value(0.4)).current;
+  const vipPulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.loop(Animated.sequence([
-      Animated.timing(cardY, { toValue: -9, duration: 3000, useNativeDriver: true }),
-      Animated.timing(cardY, { toValue: 0, duration: 3000, useNativeDriver: true }),
+      Animated.timing(cardY, { toValue: -8, duration: 3200, useNativeDriver: true }),
+      Animated.timing(cardY, { toValue: 0, duration: 3200, useNativeDriver: true }),
     ])).start();
     Animated.loop(Animated.sequence([
-      Animated.timing(confirmPulse, { toValue: 1.06, duration: 1000, useNativeDriver: true }),
-      Animated.timing(confirmPulse, { toValue: 1, duration: 1000, useNativeDriver: true }),
+      Animated.timing(vipGlow, { toValue: 1, duration: 1400, useNativeDriver: true }),
+      Animated.timing(vipGlow, { toValue: 0.3, duration: 1400, useNativeDriver: true }),
+    ])).start();
+    Animated.loop(Animated.sequence([
+      Animated.timing(vipPulse, { toValue: 1.1, duration: 1400, useNativeDriver: true }),
+      Animated.timing(vipPulse, { toValue: 1, duration: 1400, useNativeDriver: true }),
     ])).start();
   }, []);
+
+  const T = () => <View style={stv.table} />;
+  const Gap = () => <View style={stv.tableGap} />;
 
   return (
     <View style={stv.container}>
       <Text style={stv.eyebrow}>TAVOLI</Text>
-      <Text style={stv.title}>Prenota il tavolo.{'\n'}Nessun intermediario.</Text>
+      <Text style={stv.title}>Scegli il tavolo.{'\n'}Nessun intermediario.</Text>
 
-      <Animated.View style={[stv.cardWrap, { transform: [{ translateY: cardY }] }]}>
-        <LinearGradient
-          colors={['rgba(100,30,180,0.7)', 'rgba(18,6,38,0.98)']}
-          start={{ x: 0.1, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={stv.card}
-        >
-          {/* Icon + title row */}
-          <View style={stv.cardTop}>
-            <View style={stv.bottleIcon}>
-              <Text style={stv.bottleEmoji}>🍾</Text>
-            </View>
-            <View style={stv.cardTopText}>
-              <Text style={stv.tableName}>Tavolo VIP · 6 persone</Text>
-              <Text style={stv.tableEvent}>SATURNO · Discoteca Anima</Text>
-            </View>
+      <Animated.View style={[stv.card, { transform: [{ translateY: cardY }] }]}>
+        {/* Header */}
+        <View style={stv.cardHeader}>
+          <Text style={stv.cardHeaderEvent}>SATURNO · Discoteca Anima</Text>
+          <View style={stv.liveBadge}>
+            <View style={stv.liveDot} />
+            <Text style={stv.liveText}>Live</Text>
           </View>
+        </View>
 
-          <View style={stv.cardDivider} />
-
-          {/* Deposit */}
-          <View style={stv.depositRow}>
-            <View>
-              <Text style={stv.depositLabel}>CAPARRA VERSATA</Text>
-              <Text style={stv.depositAmount}>50€</Text>
-              <Text style={stv.depositNote}>Resto saldato in loco</Text>
+        {/* Floor plan */}
+        <View style={stv.floor}>
+          <View style={stv.floorRow}><T /><T /><Gap /><T /><T /><Gap /><T /></View>
+          <View style={stv.floorRow}>
+            <T />
+            {/* VIP table — selected */}
+            <View style={stv.vipWrap}>
+              <Animated.View style={[stv.vipGlowRing, { opacity: vipGlow }]} />
+              <Animated.View style={[stv.vipTable, { transform: [{ scale: vipPulse }] }]}>
+                <Text style={stv.vipLabel}>VIP</Text>
+              </Animated.View>
             </View>
-            <Animated.View style={[stv.confirmedBadge, { transform: [{ scale: confirmPulse }] }]}>
-              <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
-              <Text style={stv.confirmedText}>Confermato</Text>
-            </Animated.View>
+            <T /><Gap /><T /><T />
           </View>
+          <View style={stv.floorRow}><T /><T /><Gap /><T /><Gap /><T /><T /></View>
 
-          {/* Date bar */}
-          <View style={stv.dateLine}>
-            <Ionicons name="calendar-outline" size={12} color="rgba(255,255,255,0.4)" />
-            <Text style={stv.dateText}>Sabato 26 Aprile · Ingresso ore 23:00</Text>
+          {/* DJ Booth */}
+          <View style={stv.booth}>
+            <View style={stv.boothLine} />
+            <Text style={stv.boothLabel}>DJ BOOTH</Text>
+            <View style={stv.boothLine} />
           </View>
-        </LinearGradient>
+        </View>
+
+        {/* Selection bar */}
+        <View style={stv.selBar}>
+          <View>
+            <Text style={stv.selTitle}>Tavolo VIP · 6 persone</Text>
+            <Text style={stv.selSub}>Caparra 50€ · Resto in loco</Text>
+          </View>
+          <View style={stv.prenotaBtn}>
+            <Text style={stv.prenotaText}>Prenota</Text>
+            <Ionicons name="arrow-forward" size={11} color={Colors.white} />
+          </View>
+        </View>
       </Animated.View>
 
-      <View style={stv.benefitRow}>
+      <View style={stv.benefits}>
         {([
           { icon: 'ban-outline', label: 'Nessun PR' },
           { icon: 'chatbubble-ellipses-outline', label: 'Nessuna telefonata' },
@@ -299,53 +231,83 @@ function SlideTavoli() {
 }
 
 const stv = StyleSheet.create({
-  container: { width, flex: 1, alignItems: 'center', paddingHorizontal: 24, paddingTop: 28, paddingBottom: 170 },
-  eyebrow: { fontSize: 11, fontFamily: Font.bold, color: Colors.accent, letterSpacing: 3, marginBottom: 12 },
+  container: { width, flex: 1, alignItems: 'center', paddingHorizontal: 24, paddingTop: 24, paddingBottom: 170 },
+  eyebrow: { fontSize: 11, fontFamily: Font.bold, color: Colors.accent, letterSpacing: 3, marginBottom: 10 },
   title: {
-    fontSize: 34, fontFamily: Font.black, color: Colors.textPrimary,
-    textAlign: 'center', lineHeight: 41, marginBottom: 28,
+    fontSize: 32, fontFamily: Font.black, color: Colors.textPrimary,
+    textAlign: 'center', lineHeight: 39, marginBottom: 18,
   },
-  cardWrap: {
-    width: width - 48, borderRadius: 24,
-    shadowColor: '#7c3aed', shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.6, shadowRadius: 32, elevation: 18,
-    marginBottom: 28,
+
+  card: {
+    width: width - 48, borderRadius: 20, overflow: 'hidden',
+    backgroundColor: 'rgba(22,10,46,0.97)',
+    borderWidth: 1, borderColor: 'rgba(168,85,247,0.3)',
+    shadowColor: Colors.accent, shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.45, shadowRadius: 28, elevation: 16,
+    marginBottom: 20,
   },
-  card: { padding: 24, borderRadius: 24, gap: 16 },
-  cardTop: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  bottleIcon: {
-    width: 46, height: 46, borderRadius: 23,
-    backgroundColor: 'rgba(168,85,247,0.25)',
+
+  cardHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: 16, paddingVertical: 11,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(168,85,247,0.15)',
+  },
+  cardHeaderEvent: { fontSize: 11, fontFamily: Font.bold, color: 'rgba(255,255,255,0.5)', letterSpacing: 1 },
+  liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.success },
+  liveText: { fontSize: 10, fontFamily: Font.bold, color: Colors.success },
+
+  floor: { paddingHorizontal: 14, paddingTop: 14, paddingBottom: 10, gap: 9 },
+  floorRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
+  table: {
+    width: 30, height: 30, borderRadius: 7,
+    backgroundColor: 'rgba(168,85,247,0.09)',
+    borderWidth: 1, borderColor: 'rgba(168,85,247,0.28)',
+  },
+  tableGap: { width: 14 },
+
+  vipWrap: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center' },
+  vipGlowRing: {
+    position: 'absolute', width: 54, height: 54, borderRadius: 27,
+    backgroundColor: 'rgba(168,85,247,0.38)',
+  },
+  vipTable: {
+    width: 36, height: 36, borderRadius: 9,
+    backgroundColor: Colors.accent,
     alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: 'rgba(220,180,255,0.7)',
   },
-  bottleEmoji: { fontSize: 22 },
-  cardTopText: { flex: 1 },
-  tableName: { fontSize: 16, fontFamily: Font.bold, color: Colors.white },
-  tableEvent: { fontSize: 12, fontFamily: Font.medium, color: 'rgba(255,255,255,0.45)', marginTop: 2 },
-  cardDivider: { height: 1, backgroundColor: 'rgba(168,85,247,0.2)' },
-  depositRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  depositLabel: {
-    fontSize: 9, fontFamily: Font.bold, color: 'rgba(255,255,255,0.35)',
-    letterSpacing: 2, marginBottom: 4,
+  vipLabel: { fontSize: 9, fontFamily: Font.black, color: Colors.white, letterSpacing: 0.5 },
+
+  booth: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginTop: 4, paddingHorizontal: 4,
   },
-  depositAmount: { fontSize: 32, fontFamily: Font.black, color: Colors.white },
-  depositNote: { fontSize: 11, fontFamily: Font.medium, color: 'rgba(255,255,255,0.4)', marginTop: 2 },
-  confirmedBadge: {
-    alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(34,197,94,0.12)',
-    borderRadius: 14, borderWidth: 1, borderColor: 'rgba(34,197,94,0.3)',
-    paddingHorizontal: 14, paddingVertical: 10,
+  boothLine: { flex: 1, height: 1, backgroundColor: 'rgba(168,85,247,0.18)' },
+  boothLabel: { fontSize: 9, fontFamily: Font.bold, color: 'rgba(255,255,255,0.22)', letterSpacing: 2 },
+
+  selBar: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: 16, paddingVertical: 11,
+    borderTopWidth: 1, borderTopColor: 'rgba(168,85,247,0.15)',
+    backgroundColor: 'rgba(168,85,247,0.07)',
   },
-  confirmedText: { fontSize: 10, fontFamily: Font.bold, color: Colors.success, letterSpacing: 0.5 },
-  dateLine: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  dateText: { fontSize: 11, fontFamily: Font.medium, color: 'rgba(255,255,255,0.35)' },
-  benefitRow: { flexDirection: 'row', gap: 16, flexWrap: 'wrap', justifyContent: 'center' },
+  selTitle: { fontSize: 13, fontFamily: Font.bold, color: Colors.white },
+  selSub: { fontSize: 11, fontFamily: Font.medium, color: 'rgba(255,255,255,0.38)', marginTop: 2 },
+  prenotaBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: Colors.accent, borderRadius: 50,
+    paddingHorizontal: 14, paddingVertical: 8,
+  },
+  prenotaText: { fontSize: 12, fontFamily: Font.bold, color: Colors.white },
+
+  benefits: { flexDirection: 'row', gap: 16, flexWrap: 'wrap', justifyContent: 'center' },
   benefit: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   benefitText: { fontSize: 12, fontFamily: Font.medium, color: Colors.textMuted },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SLIDE 3 — Ticket
+// SLIDE 2 — Ticket
 // ─────────────────────────────────────────────────────────────────────────────
 const QR_GRID = [
   [1,1,1,1,1,1,1,0,1,0],
@@ -385,7 +347,7 @@ function SlideTicket() {
         <Animated.View style={[st.ticketWrap, { transform: [{ translateY: cardY }] }]}>
           <View style={st.ticket}>
             <LinearGradient
-              colors={['rgba(168,85,247,0.28)', 'rgba(100,30,180,0.18)']}
+              colors={['rgba(168,85,247,0.5)', 'rgba(120,50,200,0.32)']}
               style={st.ticketHeader}
             >
               <View style={st.ticketHeaderRow}>
@@ -407,40 +369,48 @@ function SlideTicket() {
             </View>
 
             <View style={st.ticketBody}>
-              <View style={st.qrBox}>
-                {QR_GRID.map((row, ri) => (
-                  <View key={ri} style={st.qrRow}>
-                    {row.map((cell, ci) => (
-                      <View
-                        key={ci}
-                        style={[st.qrCell, { backgroundColor: cell ? '#07080f' : 'transparent' }]}
-                      />
-                    ))}
+              <View style={st.ticketBodyRow}>
+                <View style={st.qrBox}>
+                  {QR_GRID.map((row, ri) => (
+                    <View key={ri} style={st.qrRow}>
+                      {row.map((cell, ci) => (
+                        <View
+                          key={ci}
+                          style={[st.qrCell, { backgroundColor: cell ? '#07080f' : 'transparent' }]}
+                        />
+                      ))}
+                    </View>
+                  ))}
+                </View>
+                <View style={st.ticketSideInfo}>
+                  <View style={st.drinkHighlight}>
+                    <Text style={st.drinkBigEmoji}>🥂</Text>
+                    <Text style={st.drinkHighlightLabel}>Free drink</Text>
+                    <Text style={st.drinkHighlightSub}>incluso nel biglietto</Text>
                   </View>
-                ))}
+                  <View style={st.sideFeature}>
+                    <Ionicons name="flash-outline" size={13} color={Colors.accent} />
+                    <Text style={st.sideFeatureText}>Istantaneo</Text>
+                  </View>
+                  <View style={st.sideFeature}>
+                    <Ionicons name="shield-checkmark-outline" size={13} color={Colors.accent} />
+                    <Text style={st.sideFeatureText}>QR sicuro</Text>
+                  </View>
+                </View>
               </View>
               <Text style={st.scanLabel}>Scansiona per entrare</Text>
-              <View style={st.drinkBadge}>
-                <Text style={st.drinkEmoji}>🥂</Text>
-                <Text style={st.drinkText}>Free drink incluso</Text>
-                <View style={st.drinkDot} />
-              </View>
             </View>
           </View>
         </Animated.View>
       </View>
 
-      <View style={st.features}>
-        {([
-          { icon: 'flash-outline', label: 'Acquisto istantaneo' },
-          { icon: 'phone-portrait-outline', label: 'Funziona offline' },
-          { icon: 'shield-checkmark-outline', label: 'QR unico e sicuro' },
-        ] as { icon: 'flash-outline' | 'phone-portrait-outline' | 'shield-checkmark-outline'; label: string }[]).map(({ icon, label }) => (
-          <View key={label} style={st.feature}>
-            <Ionicons name={icon} size={15} color={Colors.accent} />
-            <Text style={st.featureText}>{label}</Text>
-          </View>
-        ))}
+      <View style={st.featureRow}>
+        <Ionicons name="people-outline" size={14} color={Colors.accent} />
+        <Text style={st.featureRowText}>Zero code all'ingresso</Text>
+      </View>
+      <View style={st.paymentBadge}>
+        <Ionicons name="lock-closed" size={11} color={Colors.textMuted} />
+        <Text style={st.paymentBadgeText}>Pagamenti protetti e crittografati</Text>
       </View>
     </View>
   );
@@ -462,8 +432,8 @@ const st = StyleSheet.create({
   ticketWrap: { width: '100%' },
   ticket: {
     borderRadius: 20, overflow: 'hidden',
-    borderWidth: 1, borderColor: 'rgba(168,85,247,0.28)',
-    backgroundColor: 'rgba(12,8,22,0.98)',
+    borderWidth: 1, borderColor: 'rgba(168,85,247,0.45)',
+    backgroundColor: 'rgba(35,18,65,0.97)',
   },
   ticketHeader: { padding: 20 },
   ticketHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
@@ -484,26 +454,30 @@ const st = StyleSheet.create({
     width: 14, height: 14, borderRadius: 7,
     backgroundColor: Colors.background, marginRight: -7,
   },
-  ticketBody: { padding: 18, alignItems: 'center', gap: 10 },
+  ticketBody: { padding: 16, backgroundColor: 'rgba(168,85,247,0.06)', gap: 10, alignItems: 'center' },
+  ticketBodyRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   qrBox: {
     backgroundColor: Colors.white, borderRadius: 8,
     padding: 7, gap: 2,
   },
   qrRow: { flexDirection: 'row', gap: 2 },
   qrCell: { width: 6.5, height: 6.5, borderRadius: 1 },
-  scanLabel: { fontSize: 11, fontFamily: Font.medium, color: Colors.textMuted },
-  drinkBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: 'rgba(34,197,94,0.09)',
-    borderRadius: 50, borderWidth: 1, borderColor: 'rgba(34,197,94,0.25)',
-    paddingHorizontal: 14, paddingVertical: 6,
+  ticketSideInfo: { flex: 1, gap: 10 },
+  drinkHighlight: {
+    backgroundColor: 'rgba(34,197,94,0.12)',
+    borderRadius: 12, borderWidth: 1, borderColor: 'rgba(34,197,94,0.28)',
+    padding: 10, alignItems: 'center', gap: 2,
   },
-  drinkEmoji: { fontSize: 13 },
-  drinkText: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.success },
-  drinkDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: Colors.success },
-  features: { flexDirection: 'row', gap: 20, flexWrap: 'wrap', justifyContent: 'center' },
-  feature: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  featureText: { fontSize: 12, fontFamily: Font.medium, color: Colors.textMuted },
+  drinkBigEmoji: { fontSize: 20 },
+  drinkHighlightLabel: { fontSize: 13, fontFamily: Font.bold, color: Colors.success },
+  drinkHighlightSub: { fontSize: 10, fontFamily: Font.medium, color: 'rgba(34,197,94,0.7)', textAlign: 'center' },
+  sideFeature: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  sideFeatureText: { fontSize: 11, fontFamily: Font.medium, color: Colors.textMuted },
+  scanLabel: { fontSize: 11, fontFamily: Font.medium, color: Colors.textMuted },
+  featureRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  featureRowText: { fontSize: 12, fontFamily: Font.medium, color: Colors.textMuted },
+  paymentBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 },
+  paymentBadgeText: { fontSize: 11, fontFamily: Font.medium, color: Colors.textMuted },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -523,6 +497,17 @@ export default function OnboardingScreen() {
     setSelectedGenres((prev) =>
       prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
     );
+  }
+
+  function goBack() {
+    Haptics.selectionAsync();
+    if (isGenreStep) {
+      setCurrentIndex(TOTAL_SLIDES - 1);
+    } else if (currentIndex > 0) {
+      const prev = currentIndex - 1;
+      setCurrentIndex(prev);
+      scrollRef.current?.scrollTo({ x: prev * width, animated: true });
+    }
   }
 
   function goNext() {
@@ -551,17 +536,15 @@ export default function OnboardingScreen() {
   }
 
   const SLIDE_COMPONENTS = [
-    <SlideWelcome key="welcome" />,
     <SlideDiscover key="discover" />,
-    <SlideTavoli key="tavoli" />,
     <SlideTicket key="ticket" />,
+    <SlideTavoli key="tavoli" />,
   ];
 
   const SLIDE_GRADIENTS: [string, string, string][] = [
-    ['rgba(168,85,247,0.22)', 'rgba(168,85,247,0.05)', 'transparent'],
-    ['rgba(148,65,237,0.18)', 'rgba(59,130,246,0.04)', 'transparent'],
-    ['rgba(100,30,180,0.20)', 'rgba(168,85,247,0.06)', 'transparent'],
-    ['rgba(34,197,94,0.06)', 'rgba(168,85,247,0.12)', 'transparent'],
+    ['rgba(148,65,237,0.20)', 'rgba(59,130,246,0.04)', 'transparent'],
+    ['rgba(168,85,247,0.18)', 'rgba(168,85,247,0.05)', 'transparent'],
+    ['rgba(100,30,180,0.22)', 'rgba(168,85,247,0.06)', 'transparent'],
     ['rgba(168,85,247,0.16)', 'rgba(168,85,247,0.03)', 'transparent'],
   ];
 
@@ -582,11 +565,24 @@ export default function OnboardingScreen() {
       />
 
       <SafeAreaView style={styles.logoBar}>
-        <Image
-          source={require('../assets/logo-cropped.png')}
-          style={styles.logoImage}
-          resizeMode="contain"
-        />
+        <View style={styles.logoRow}>
+          <TouchableOpacity
+            style={styles.navBtn}
+            onPress={goBack}
+            activeOpacity={0.7}
+            disabled={currentIndex === 0 && !isGenreStep}
+          >
+            {(currentIndex > 0 || isGenreStep) && (
+              <Ionicons name="chevron-back" size={24} color={Colors.textSecondary} />
+            )}
+          </TouchableOpacity>
+          <Image
+            source={require('../assets/logo-cropped.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+          <View style={styles.navBtn} />
+        </View>
       </SafeAreaView>
 
       {!isGenreStep ? (
@@ -672,8 +668,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   bgGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 520 },
 
-  logoBar: { alignItems: 'center', paddingTop: 16 },
-  logoImage: { width: 190, height: 54 },
+  logoBar: { paddingBottom: 8 },
+  logoRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 8, paddingTop: 4,
+  },
+  navBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  logoImage: { width: 180, height: 50 },
 
   slider: { flex: 1 },
 
