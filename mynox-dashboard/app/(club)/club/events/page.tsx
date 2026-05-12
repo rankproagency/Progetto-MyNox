@@ -106,7 +106,7 @@ export default async function ClubEventsPage() {
                   </td>
                   <td className="px-5 py-4 text-slate-300 hidden md:table-cell">{event.start_time}</td>
                   <td className="px-5 py-4 text-slate-300 hidden md:table-cell">
-                    {event.tickets_sold}{capacityByEvent[event.id] != null ? ` / ${capacityByEvent[event.id]}` : ' / ∞'}
+                    {event.tickets_sold}{event.id in capacityByEvent ? (capacityByEvent[event.id] != null ? ` / ${capacityByEvent[event.id]}` : ' / ∞') : ''}
                   </td>
                   <td className="px-5 py-4 font-semibold text-purple-400 hidden md:table-cell">
                     €{(revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -172,7 +172,7 @@ export default async function ClubEventsPage() {
                     </td>
                     <td className="px-5 py-4 text-slate-400 hidden md:table-cell">{event.start_time}</td>
                     <td className="px-5 py-4 text-slate-400 hidden md:table-cell">
-                      {event.tickets_sold}{capacityByEvent[event.id] != null ? ` / ${capacityByEvent[event.id]}` : ' / ∞'}
+                      {event.tickets_sold}{event.id in capacityByEvent ? (capacityByEvent[event.id] != null ? ` / ${capacityByEvent[event.id]}` : ' / ∞') : ''}
                     </td>
                     <td className="px-5 py-4 font-semibold text-purple-400/70 hidden md:table-cell">
                       €{(revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
