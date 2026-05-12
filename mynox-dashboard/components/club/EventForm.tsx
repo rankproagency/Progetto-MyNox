@@ -632,7 +632,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
         <div className="flex items-center justify-between">
           <div>
             <label className="block text-xs font-medium text-slate-400 uppercase tracking-wide">Tipi di biglietto</label>
-            {ticketTypes.length === 0 && (
+            {ticketTypes.every((t) => !t.label.trim()) && (
               <p className="text-xs text-slate-600 mt-0.5">Se non aggiungi biglietti, l&apos;evento sarà a ingresso libero</p>
             )}
           </div>
