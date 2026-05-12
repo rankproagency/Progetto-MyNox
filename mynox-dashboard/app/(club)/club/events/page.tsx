@@ -35,7 +35,7 @@ export default async function ClubEventsPage() {
         .in('status', ['valid', 'used']),
       supabase
         .from('ticket_types')
-        .select('event_id, quantity_available')
+        .select('event_id, total_quantity')
         .in('event_id', eventIds),
     ]);
 
@@ -47,7 +47,7 @@ export default async function ClubEventsPage() {
 
     for (const tt of ticketTypes ?? []) {
       const id = (tt as any).event_id;
-      const qty = (tt as any).quantity_available;
+      const qty = (tt as any).total_quantity;
       if (qty != null) {
         capacityByEvent[id] = (capacityByEvent[id] ?? 0) + qty;
       } else {
