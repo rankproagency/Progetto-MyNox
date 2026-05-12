@@ -87,9 +87,9 @@ function applyFilters(
   ageFilter: AgeFilter
 ): Event[] {
   return events.filter((e) => {
-    if (onlyAvailable && e.ticketTypes.every((t) => t.available === 0)) return false;
+    if (onlyAvailable && e.ticketTypes.length > 0 && e.ticketTypes.every((t) => t.available === 0)) return false;
     if (maxPrice !== null) {
-      const minPrice = Math.min(...e.ticketTypes.map((t) => t.price));
+      const minPrice = e.ticketTypes.length > 0 ? Math.min(...e.ticketTypes.map((t) => t.price)) : 0;
       if (minPrice > maxPrice) return false;
     }
     if (selectedGenres.length > 0 && !selectedGenres.some((g) => e.genres.includes(g))) return false;
