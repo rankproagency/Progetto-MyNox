@@ -67,15 +67,15 @@ export default function EventScreen() {
 
   const scrollRef = useRef<ScrollView>(null);
   const tableNameRef = useRef<View>(null);
-  const [bookingMode, setBookingMode] = useState<'ticket' | 'table'>('ticket');
+  const hasTables = (event?.tables?.length ?? 0) > 0;
+  const hasTickets = (event?.ticketTypes?.length ?? 0) > 0;
+  const [bookingMode, setBookingMode] = useState<'ticket' | 'table'>(hasTickets ? 'ticket' : 'table');
   const [selectedTicket, setSelectedTicket] = useState<TicketType | null>(null);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [tableName, setTableName] = useState('');
   const [ticketQty, setTicketQty] = useState(1);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [floorPlanModalVisible, setFloorPlanModalVisible] = useState(false);
-
-  const hasTables = (event?.tables?.length ?? 0) > 0;
 
   function switchMode(mode: 'ticket' | 'table') {
     setBookingMode(mode);
@@ -117,7 +117,6 @@ export default function EventScreen() {
   const total = bookingMode === 'table'
     ? tableSubtotal
     : ticketSubtotal + tableSubtotal;
-  const hasTickets = (event?.ticketTypes.length ?? 0) > 0;
   const isSoldOut = hasTickets && (event?.ticketTypes.every((t) => t.available === 0) ?? false);
   const isEventPast = (() => {
     const cutoff = new Date(event.date);
