@@ -81,7 +81,7 @@ export default function EventCard({ event }: Props) {
             {isSoldOut ? (
               <Text style={styles.soldOutText}>Esaurito</Text>
             ) : !hasTickets ? (
-              <Text style={styles.soldOutText}>Ingresso libero</Text>
+              <Text style={styles.freeText}>Ingresso libero</Text>
             ) : (
               <View style={styles.priceRow}>
                 <Text style={styles.priceFrom}>da </Text>
@@ -238,6 +238,11 @@ const styles = StyleSheet.create({
   },
   soldOutText: {
     color: Colors.error,
+    fontSize: 13,
+    fontFamily: Font.bold,
+  },
+  freeText: {
+    color: Colors.textMuted,
     fontSize: 13,
     fontFamily: Font.bold,
   },
