@@ -5,7 +5,7 @@ import EventsTable from './EventsTable';
 export default async function AdminEventsPage() {
   const supabase = createAdminClient();
 
-  const [{ data: events }, { data: ticketRevenue }] = await Promise.all([
+  const [{ data: events }, { data: ticketRevenue }, { data: ticketTypesData }] = await Promise.all([
     supabase
       .from('events')
       .select('*, clubs(name)')
@@ -14,6 +14,9 @@ export default async function AdminEventsPage() {
       .from('tickets')
       .select('event_id, price_paid, ticket_types(price)')
       .in('status', ['valid', 'used']),
+    supabase
+      .from('ticket_types')
+      .select('event_id, total_quantity'),
   ]);
 
   const revenueByEvent: Record<string, number> = {};
@@ -21,6 +24,12 @@ export default async function AdminEventsPage() {
     const id = (t as any).event_id;
     const price = (t as any).ticket_types?.price ?? (t as any).price_paid ?? 0;
     if (id) revenueByEvent[id] = (revenueByEvent[id] ?? 0) + price;
+  }
+
+  const capacityByEvent: Record<string, number> = {};
+  for (const tt of ticketTypesData ?? []) {
+    const id = (tt as any).event_id;
+    capacityByEvent[id] = (capacityByEvent[id] ?? 0) + ((tt as any).total_quantity ?? 0);
   }
 
   const today = new Date();
@@ -42,7 +51,7 @@ export default async function AdminEventsPage() {
     date: e.date,
     start_time: e.start_time,
     tickets_sold: e.tickets_sold,
-    capacity: e.capacity,
+    capacity: capacityByEvent[e.id] ?? e.capacity,
     is_published: e.is_published,
     clubName: e.clubs?.name ?? '—',
     revenue: revenueByEvent[e.id] ?? 0,

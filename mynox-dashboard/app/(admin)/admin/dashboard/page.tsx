@@ -40,10 +40,25 @@ async function getDashboardData() {
     supabase.from('tickets').select('*', { count: 'exact', head: true }).in('status', ['valid', 'used']).not('ticket_type_id', 'is', null),
   ]);
 
+  const upcomingEventIds = (upcomingEvents ?? []).map((e) => e.id);
+  const capacityByEvent: Record<string, number> = {};
+  if (upcomingEventIds.length > 0) {
+    const { data: ticketTypesData } = await supabase
+      .from('ticket_types')
+      .select('event_id, total_quantity')
+      .in('event_id', upcomingEventIds);
+    for (const tt of ticketTypesData ?? []) {
+      capacityByEvent[tt.event_id] = (capacityByEvent[tt.event_id] ?? 0) + (tt.total_quantity ?? 0);
+    }
+  }
+
   return {
     recentUsers: recentUsers ?? [],
     recentTickets: recentTickets ?? [],
-    upcomingEvents: upcomingEvents ?? [],
+    upcomingEvents: (upcomingEvents ?? []).map((e) => ({
+      ...e,
+      capacity: capacityByEvent[e.id] ?? e.capacity,
+    })),
     totalUsers: totalUsers ?? 0,
     totalClubs: totalClubs ?? 0,
     totalTickets: totalTickets ?? 0,

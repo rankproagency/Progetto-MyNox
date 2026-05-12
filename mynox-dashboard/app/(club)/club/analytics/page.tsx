@@ -20,8 +20,9 @@ async function getAnalyticsData(clubId: string) {
 
   let tickets: any[] = [];
   let availableTables: any[] = [];
+  const capacityByEvent: Record<string, number> = {};
   if (eventIds.length > 0) {
-    const [{ data: ticketsData }, { data: tablesData }] = await Promise.all([
+    const [{ data: ticketsData }, { data: tablesData }, { data: ticketTypesData }] = await Promise.all([
       supabase
         .from('tickets')
         .select('event_id, created_at, status, price_paid, ticket_types(price)')
@@ -32,9 +33,16 @@ async function getAnalyticsData(clubId: string) {
         .from('tables')
         .select('event_id')
         .in('event_id', eventIds),
+      supabase
+        .from('ticket_types')
+        .select('event_id, total_quantity')
+        .in('event_id', eventIds),
     ]);
     tickets = ticketsData ?? [];
     availableTables = tablesData ?? [];
+    for (const tt of ticketTypesData ?? []) {
+      capacityByEvent[tt.event_id] = (capacityByEvent[tt.event_id] ?? 0) + (tt.total_quantity ?? 0);
+    }
   }
 
   const now = new Date();
@@ -83,7 +91,7 @@ async function getAnalyticsData(clubId: string) {
       soldByEvent[t.event_id] = (soldByEvent[t.event_id] ?? 0) + 1;
     }
   });
-  const totalCapacity = (events ?? []).reduce((sum, e) => sum + (e.capacity ?? 0), 0);
+  const totalCapacity = (events ?? []).reduce((sum, e) => sum + (capacityByEvent[e.id] ?? e.capacity ?? 0), 0);
   const totalSold = (events ?? []).reduce((sum, e) => sum + (soldByEvent[e.id] ?? 0), 0);
   const fillRate = totalCapacity > 0 ? Math.round((totalSold / totalCapacity) * 100) : 0;
 
@@ -105,7 +113,7 @@ async function getAnalyticsData(clubId: string) {
   const salesByEvent = (events ?? []).map((e) => ({
     name: e.name.length > 20 ? e.name.slice(0, 20) + '…' : e.name,
     venduti: e.tickets_sold,
-    capacita: e.capacity ?? 0,
+    capacita: capacityByEvent[e.id] ?? e.capacity ?? 0,
   }));
 
   const tablesByEvent = (events ?? [])

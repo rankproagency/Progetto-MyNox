@@ -69,6 +69,7 @@ export default async function ClubEventDetailPage({
     revenueByType[tid] = (revenueByType[tid] ?? 0) + price;
   }
   const totalRevenue = Object.values(revenueByType).reduce((s, v) => s + v, 0);
+  const totalTicketsCapacity = (ticketTypes ?? []).reduce((s, t) => s + ((t as any).total_quantity ?? 0), 0);
 
   // Ricavi caparre tavoli
   const totalTableRevenue = (soldTickets ?? [])
@@ -129,7 +130,7 @@ export default async function ClubEventDetailPage({
         <div className="bg-[#111118] border border-white/8 rounded-xl p-4">
           <p className="text-slate-400 text-xs mb-1">Biglietti venduti</p>
           <p className="text-2xl font-bold text-white">{event.tickets_sold ?? 0}</p>
-          <p className="text-slate-500 text-xs mt-1">su {event.capacity ?? '—'} posti</p>
+          <p className="text-slate-500 text-xs mt-1">su {totalTicketsCapacity > 0 ? totalTicketsCapacity : (event.capacity ?? '—')} posti</p>
         </div>
         <div className="bg-[#111118] border border-white/8 rounded-xl p-4">
           <p className="text-slate-400 text-xs mb-1">Tavoli prenotati</p>
