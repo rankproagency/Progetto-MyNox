@@ -385,7 +385,7 @@ export default function EventScreen() {
           ) : (
             <>
               {/* Segment control — solo se ci sono tavoli */}
-              {hasTables && (
+              {hasTables && hasTickets && (
                 <View style={styles.bookingToggle}>
                   <TouchableOpacity
                     style={[styles.bookingToggleBtn, bookingMode === 'ticket' && styles.bookingToggleActive]}
@@ -568,7 +568,7 @@ export default function EventScreen() {
               {onWaitlist ? 'Sei in lista d\'attesa' : 'Avvisami se si libera un posto'}
             </Text>
           </TouchableOpacity>
-        ) : (
+        ) : (!hasTickets && bookingMode === 'ticket') ? null : (
           <>
             {selectedTable && (
               <View style={styles.tableNameBox}>
