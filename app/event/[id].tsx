@@ -117,7 +117,8 @@ export default function EventScreen() {
   const total = bookingMode === 'table'
     ? tableSubtotal
     : ticketSubtotal + tableSubtotal;
-  const isSoldOut = event?.ticketTypes.every((t) => t.available === 0) ?? false;
+  const hasTickets = (event?.ticketTypes.length ?? 0) > 0;
+  const isSoldOut = hasTickets && (event?.ticketTypes.every((t) => t.available === 0) ?? false);
   const isEventPast = (() => {
     const cutoff = new Date(event.date);
     if (event.endTime) {
@@ -371,6 +372,11 @@ export default function EventScreen() {
               <Ionicons name="time-outline" size={20} color={Colors.textMuted} />
               <Text style={[styles.soldOutText, { color: Colors.textMuted }]}>Evento concluso</Text>
             </View>
+          ) : !hasTickets && !hasTables ? (
+            <View style={styles.soldOutBox}>
+              <Ionicons name="checkmark-circle" size={20} color={Colors.accent} />
+              <Text style={[styles.soldOutText, { color: Colors.accent }]}>Ingresso libero — nessuna prevendita</Text>
+            </View>
           ) : isSoldOut ? (
             <View style={styles.soldOutBox}>
               <Ionicons name="close-circle" size={20} color={Colors.error} />
@@ -540,7 +546,7 @@ export default function EventScreen() {
             <Ionicons name="time-outline" size={16} color={Colors.textMuted} />
             <Text style={[styles.ctaText, { color: Colors.textMuted }]}>Evento concluso</Text>
           </View>
-        ) : isSoldOut ? (
+        ) : !hasTickets && !hasTables ? null : isSoldOut ? (
           <TouchableOpacity
             style={[styles.ctaButton, onWaitlist && styles.ctaWaitlistActive]}
             activeOpacity={0.85}
