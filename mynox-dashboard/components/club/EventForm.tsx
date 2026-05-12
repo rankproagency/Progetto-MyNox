@@ -167,6 +167,8 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
     if (!form.name.trim()) { setError('Il nome evento è obbligatorio.'); return; }
     if (!form.date) { setError('La data è obbligatoria.'); return; }
     if (!form.start_time) { setError("L'orario di inizio è obbligatorio."); return; }
+    const incompleteTicket = ticketTypes.find((t) => (t.label.trim() || t.price) && !t.total_quantity);
+    if (incompleteTicket) { setError('La quantità disponibile è obbligatoria per ogni tipo di biglietto.'); return; }
 
     setLoading(true);
     setError('');
@@ -664,10 +666,10 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-500 mb-1">Quantità disponibile</label>
+                <label className="block text-xs text-slate-500 mb-1">Quantità disponibile <span className="text-red-400">*</span></label>
                 <input
                   type="number"
-                  min="0"
+                  min="1"
                   value={ticket.total_quantity}
                   onChange={(e) => updateTicketType(index, 'total_quantity', e.target.value)}
                   placeholder="es. 200"

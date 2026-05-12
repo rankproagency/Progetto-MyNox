@@ -24,18 +24,35 @@ export default async function ClubEventsPage() {
 
   const eventIds = (events ?? []).map((e) => e.id);
   const revenueByEvent: Record<string, number> = {};
+  const capacityByEvent: Record<string, number | null> = {};
 
   if (eventIds.length > 0) {
-    const { data: ticketRevenue } = await supabase
-      .from('tickets')
-      .select('event_id, price_paid, ticket_types(price)')
-      .in('event_id', eventIds)
-      .in('status', ['valid', 'used']);
+    const [{ data: ticketRevenue }, { data: ticketTypes }] = await Promise.all([
+      supabase
+        .from('tickets')
+        .select('event_id, price_paid, ticket_types(price)')
+        .in('event_id', eventIds)
+        .in('status', ['valid', 'used']),
+      supabase
+        .from('ticket_types')
+        .select('event_id, quantity_available')
+        .in('event_id', eventIds),
+    ]);
 
     for (const t of ticketRevenue ?? []) {
       const id = (t as any).event_id;
       const price = (t as any).ticket_types?.price ?? ((t as any).price_paid ?? 0) / 1.08;
       revenueByEvent[id] = (revenueByEvent[id] ?? 0) + price;
+    }
+
+    for (const tt of ticketTypes ?? []) {
+      const id = (tt as any).event_id;
+      const qty = (tt as any).quantity_available;
+      if (qty != null) {
+        capacityByEvent[id] = (capacityByEvent[id] ?? 0) + qty;
+      } else {
+        capacityByEvent[id] = capacityByEvent[id] ?? null;
+      }
     }
   }
 
@@ -89,7 +106,7 @@ export default async function ClubEventsPage() {
                   </td>
                   <td className="px-5 py-4 text-slate-300 hidden md:table-cell">{event.start_time}</td>
                   <td className="px-5 py-4 text-slate-300 hidden md:table-cell">
-                    {event.tickets_sold}{event.capacity ? ` / ${event.capacity}` : ''}
+                    {event.tickets_sold}{capacityByEvent[event.id] != null ? ` / ${capacityByEvent[event.id]}` : ' / ∞'}
                   </td>
                   <td className="px-5 py-4 font-semibold text-purple-400 hidden md:table-cell">
                     €{(revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -155,7 +172,7 @@ export default async function ClubEventsPage() {
                     </td>
                     <td className="px-5 py-4 text-slate-400 hidden md:table-cell">{event.start_time}</td>
                     <td className="px-5 py-4 text-slate-400 hidden md:table-cell">
-                      {event.tickets_sold}{event.capacity ? ` / ${event.capacity}` : ''}
+                      {event.tickets_sold}{capacityByEvent[event.id] != null ? ` / ${capacityByEvent[event.id]}` : ' / ∞'}
                     </td>
                     <td className="px-5 py-4 font-semibold text-purple-400/70 hidden md:table-cell">
                       €{(revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
