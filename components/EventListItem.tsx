@@ -14,8 +14,9 @@ interface Props {
 export default function EventListItem({ event }: Props) {
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const minPrice = Math.min(...event.ticketTypes.map((t) => t.price));
-  const isSoldOut = event.ticketTypes.every((t) => t.available === 0);
+  const hasTickets = event.ticketTypes.length > 0;
+  const minPrice = hasTickets ? Math.min(...event.ticketTypes.map((t) => t.price)) : 0;
+  const isSoldOut = hasTickets && event.ticketTypes.every((t) => t.available === 0);
 
   return (
     <TouchableOpacity
@@ -51,6 +52,8 @@ export default function EventListItem({ event }: Props) {
       <View style={styles.right}>
         {isSoldOut ? (
           <Text style={styles.soldText}>Esaurito</Text>
+        ) : !hasTickets ? (
+          <Text style={styles.freeText}>Ingresso libero</Text>
         ) : (
           <Text style={styles.price}>da €{minPrice}</Text>
         )}
@@ -159,5 +162,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: Font.bold,
     color: Colors.error,
+  },
+  freeText: {
+    fontSize: 12,
+    fontFamily: Font.bold,
+    color: Colors.textMuted,
   },
 });

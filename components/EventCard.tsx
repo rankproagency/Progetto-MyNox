@@ -27,8 +27,9 @@ interface Props {
 export default function EventCard({ event }: Props) {
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const minPrice = Math.min(...event.ticketTypes.map((t) => t.price));
-  const isSoldOut = event.ticketTypes.every((t) => t.available === 0);
+  const hasTickets = event.ticketTypes.length > 0;
+  const minPrice = hasTickets ? Math.min(...event.ticketTypes.map((t) => t.price)) : 0;
+  const isSoldOut = hasTickets && event.ticketTypes.every((t) => t.available === 0);
 
   return (
     <TouchableOpacity
@@ -79,6 +80,8 @@ export default function EventCard({ event }: Props) {
             </View>
             {isSoldOut ? (
               <Text style={styles.soldOutText}>Esaurito</Text>
+            ) : !hasTickets ? (
+              <Text style={styles.soldOutText}>Ingresso libero</Text>
             ) : (
               <View style={styles.priceRow}>
                 <Text style={styles.priceFrom}>da </Text>

@@ -18,8 +18,9 @@ interface Props {
 export default function TonightHero({ event }: Props) {
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const minPrice = Math.min(...event.ticketTypes.map((t) => t.price));
-  const isSoldOut = event.ticketTypes.every((t) => t.available === 0);
+  const hasTickets = event.ticketTypes.length > 0;
+  const minPrice = hasTickets ? Math.min(...event.ticketTypes.map((t) => t.price)) : 0;
+  const isSoldOut = hasTickets && event.ticketTypes.every((t) => t.available === 0);
   const firstArtist = event.lineup[0];
 
   return (
@@ -99,6 +100,11 @@ export default function TonightHero({ event }: Props) {
           {isSoldOut ? (
             <View style={styles.soldOutBtn}>
               <Text style={styles.soldOutBtnText}>Esaurito</Text>
+            </View>
+          ) : !hasTickets ? (
+            <View style={styles.priceButton}>
+              <Text style={styles.priceText}>Ingresso libero</Text>
+              <Ionicons name="arrow-forward" size={13} color={Colors.white} />
             </View>
           ) : (
             <View style={styles.priceButton}>
