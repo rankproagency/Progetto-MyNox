@@ -136,7 +136,7 @@ export default function EventScreen() {
   const remaining = event.capacity - event.ticketsSold;
   const isLowStock = soldPercent >= 80;
   const isMediumStock = soldPercent >= 50 && soldPercent < 80;
-  const showScarcity = !isSoldOut;
+  const showScarcity = hasTickets && !isSoldOut;
 
   async function handleShare() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -449,7 +449,7 @@ export default function EventScreen() {
               {bookingMode === 'ticket' && (
                 <>
                   {!hasTables && <Text style={styles.bookingLabel}>Biglietti</Text>}
-                  {event.ticketTypes.every((t) => t.includesDrink) && (
+                  {hasTickets && event.ticketTypes.every((t) => t.includesDrink) && (
                     <View style={styles.drinkBadge}>
                       <Ionicons name="wine-outline" size={13} color={Colors.accent} />
                       <Text style={styles.drinkBadgeText}>Ogni biglietto include 1 free drink</Text>
