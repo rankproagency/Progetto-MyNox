@@ -532,7 +532,10 @@ export default function OnboardingScreen() {
 
   function handleScroll(e: { nativeEvent: { contentOffset: { x: number } } }) {
     const index = Math.round(e.nativeEvent.contentOffset.x / width);
-    if (index < TOTAL_SLIDES) setCurrentIndex(index);
+    if (index < TOTAL_SLIDES && index !== currentIndex) {
+      Haptics.selectionAsync();
+      setCurrentIndex(index);
+    }
   }
 
   const SLIDE_COMPONENTS = [
@@ -594,7 +597,6 @@ export default function OnboardingScreen() {
           onMomentumScrollEnd={handleScroll}
           scrollEventThrottle={16}
           style={styles.slider}
-          scrollEnabled={false}
         >
           {SLIDE_COMPONENTS}
         </ScrollView>
