@@ -476,9 +476,12 @@ export default function MapScreen() {
                     ) : (
                       <Text style={styles.chipNoEvent}>Nessun evento</Text>
                     )}
-                    {minPrice !== null && (
-                      <Text style={styles.chipPrice}>da €{minPrice}</Text>
-                    )}
+                    {minPrice !== null
+                      ? <Text style={styles.chipPrice}>da €{minPrice}</Text>
+                      : nextEvent && nextEvent.ticketTypes.length === 0
+                        ? <Text style={[styles.chipPrice, { color: Colors.textMuted }]}>Ingresso libero</Text>
+                        : null
+                    }
                   </View>
                 </TouchableOpacity>
               );
@@ -590,11 +593,13 @@ function ClubCard({
                 <Text style={[styles.ageText, nextEvent.minAge > 18 && { color: Colors.warning }]}>
                   {nextEvent.minAge}+
                 </Text>
-                {minPrice !== null && (
+                {minPrice !== null ? (
                   <View style={styles.priceBadge}>
                     <Text style={styles.priceText}>da €{minPrice}</Text>
                   </View>
-                )}
+                ) : nextEvent.ticketTypes.length === 0 ? (
+                  <Text style={[styles.priceText, { color: Colors.textMuted }]}>Ingresso libero</Text>
+                ) : null}
               </View>
             </View>
           ) : (
