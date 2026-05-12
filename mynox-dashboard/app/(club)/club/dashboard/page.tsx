@@ -80,7 +80,7 @@ async function getDashboardData(clubId: string) {
     upcomingEventIds.length > 0
       ? supabase
           .from('tickets')
-          .select('event_id')
+          .select('event_id, ticket_type_id')
           .in('event_id', upcomingEventIds)
           .in('status', ['valid', 'used'])
       : Promise.resolve({ data: [] }),
@@ -104,7 +104,9 @@ async function getDashboardData(clubId: string) {
   // Conta biglietti venduti reali per evento
   const soldByEvent: Record<string, number> = {};
   (soldTicketRows ?? []).forEach((t: any) => {
-    soldByEvent[t.event_id] = (soldByEvent[t.event_id] ?? 0) + 1;
+    if (t.ticket_type_id !== null) {
+      soldByEvent[t.event_id] = (soldByEvent[t.event_id] ?? 0) + 1;
+    }
   });
 
   // Somma posti totali per evento (da ticket_types)
