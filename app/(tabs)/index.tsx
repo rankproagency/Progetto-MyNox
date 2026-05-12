@@ -167,12 +167,14 @@ export default function HomeScreen() {
   const filteredEvents = applyFilters(events, maxPrice, onlyAvailable, selectedGenres, ageFilter);
   const filteredEventsByDay = getEventsByDayFromList(filteredEvents);
 
-  const tonightEvent = filteredEvents.find((e) => e.date === today && e.ticketTypes.some((t) => t.available > 0)) ?? null;
+  const isAvailable = (e: (typeof filteredEvents)[number]) =>
+    e.ticketTypes.length === 0 || e.ticketTypes.some((t) => t.available > 0);
+
+  const tonightEvent = filteredEvents.find((e) => e.date === today && isAvailable(e)) ?? null;
 
   const recommended = musicGenres.length > 0
     ? filteredEvents.filter((e) =>
-        e.genres.some((g) => (musicGenres as string[]).includes(g)) &&
-        e.ticketTypes.some((t) => t.available > 0)
+        e.genres.some((g) => (musicGenres as string[]).includes(g)) && isAvailable(e)
       )
     : [];
 
