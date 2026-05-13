@@ -82,12 +82,7 @@ function getUserAge(dateOfBirth?: string): number | null {
   return age;
 }
 
-const PROMO_CODES: Record<string, { type: 'percent' | 'flat'; value: number; label: string }> = {
-  LAUNCH10: { type: 'percent', value: 10, label: '10% di sconto' },
-  VIP20:    { type: 'percent', value: 20, label: '20% di sconto' },
-  PADOVA:   { type: 'flat',    value: 5,  label: '€5 di sconto' },
-  FRIENDS:  { type: 'percent', value: 15, label: '15% di sconto' },
-};
+type PromoResult = { type: 'percent' | 'flat'; value: number; label: string };
 
 export default function CheckoutScreen() {
   const { eventId, ticketId, tableId, tableName, qty } = useLocalSearchParams<{
@@ -109,7 +104,8 @@ export default function CheckoutScreen() {
   const isTableOnly = !ticket && !!table;
 
   const [promoInput, setPromoInput] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState<(typeof PROMO_CODES)[string] | null>(null);
+  const [appliedPromo, setAppliedPromo] = useState<PromoResult | null>(null);
+  const [appliedPromoCode, setAppliedPromoCode] = useState<string | null>(null);
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<'apple' | 'card' | 'google'>('apple');
@@ -186,17 +182,31 @@ export default function CheckoutScreen() {
     const code = promoInput.trim().toUpperCase();
     if (!code) return;
     setPromoLoading(true);
-    await new Promise((r) => setTimeout(r, 400));
-    setPromoLoading(false);
-    const found = PROMO_CODES[code];
-    if (found) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setAppliedPromo(found);
-      setPromoError('');
-    } else {
+    try {
+      const res = await fetchWithTimeout(`${PROXY_URL}/validate-promo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      }, 8000);
+      const json = await res.json() as { valid?: boolean; type?: string; value?: number; label?: string; error?: string };
+      if (json.valid) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setAppliedPromo({ type: json.type as 'percent' | 'flat', value: json.value!, label: json.label! });
+        setAppliedPromoCode(code);
+        setPromoError('');
+      } else {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        setPromoError(json.error ?? 'Codice non valido o scaduto.');
+        setAppliedPromo(null);
+        setAppliedPromoCode(null);
+      }
+    } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setPromoError('Codice non valido o scaduto.');
+      setPromoError('Impossibile verificare il codice. Riprova.');
       setAppliedPromo(null);
+      setAppliedPromoCode(null);
+    } finally {
+      setPromoLoading(false);
     }
   }
 
@@ -241,10 +251,15 @@ export default function CheckoutScreen() {
         createdTickets = freeJson.tickets;
       } else {
         // Flusso Stripe normale
+        const rawBaseCents = Math.round((ticketSubtotal + tableDeposit) * 100);
         const fnRes = await fetchWithTimeout(`${PROXY_URL}/create-payment-intent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: Math.round(total * 100), metadata }),
+          body: JSON.stringify({
+            base_amount_cents: rawBaseCents,
+            promo_code: appliedPromoCode ?? undefined,
+            metadata,
+          }),
         });
 
         const fnJson = await fnRes.json() as { clientSecret?: string; paymentIntentId?: string; error?: string };
@@ -430,7 +445,7 @@ export default function CheckoutScreen() {
             {appliedPromo ? (
               <TouchableOpacity
                 style={styles.promoRemoveBtn}
-                onPress={() => { setAppliedPromo(null); setPromoInput(''); }}
+                onPress={() => { setAppliedPromo(null); setAppliedPromoCode(null); setPromoInput(''); }}
               >
                 <Ionicons name="close" size={16} color={Colors.textMuted} />
               </TouchableOpacity>

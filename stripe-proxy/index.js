@@ -19,6 +19,20 @@ const CORS_HEADERS = {
   'Content-Type': 'application/json',
 };
 
+const PROMO_CODES = {
+  LAUNCH10: { type: 'percent', value: 10, label: '10% di sconto' },
+  VIP20:    { type: 'percent', value: 20, label: '20% di sconto' },
+  PADOVA:   { type: 'flat',    value: 5,  label: '€5 di sconto' },
+  FRIENDS:  { type: 'percent', value: 15, label: '15% di sconto' },
+};
+
+function applyPromo(baseCents, code) {
+  const promo = PROMO_CODES[String(code ?? '').trim().toUpperCase()];
+  if (!promo) return baseCents;
+  if (promo.type === 'percent') return Math.round(baseCents * (1 - promo.value / 100));
+  return Math.max(0, baseCents - Math.round(promo.value * 100));
+}
+
 function callStripe(path, body) {
   return new Promise((resolve, reject) => {
     const bodyStr = new URLSearchParams(body).toString();
@@ -152,18 +166,42 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // POST /validate-promo
+  if (req.url === '/validate-promo') {
+    const code = String(body.code ?? '').trim().toUpperCase();
+    const promo = PROMO_CODES[code];
+    if (!promo) {
+      res.writeHead(404, CORS_HEADERS);
+      res.end(JSON.stringify({ valid: false, error: 'Codice non valido o scaduto.' }));
+      return;
+    }
+    res.writeHead(200, CORS_HEADERS);
+    res.end(JSON.stringify({ valid: true, type: promo.type, value: promo.value, label: promo.label }));
+    return;
+  }
+
   // POST /create-payment-intent
   if (req.url === '/create-payment-intent' || req.url === '/functions/v1/create-payment-intent') {
     try {
-      const { amount, metadata = {} } = body;
-      if (!amount || amount < 50) {
+      const { amount, base_amount_cents, promo_code, metadata = {} } = body;
+
+      let finalAmountCents;
+      if (base_amount_cents != null) {
+        const discountedBase = applyPromo(base_amount_cents, promo_code);
+        const commission = Math.round(discountedBase * 0.08);
+        finalAmountCents = discountedBase + commission;
+      } else {
+        finalAmountCents = Math.round(amount);
+      }
+
+      if (!finalAmountCents || finalAmountCents < 50) {
         res.writeHead(400, CORS_HEADERS);
         res.end(JSON.stringify({ error: 'Importo non valido' }));
         return;
       }
 
       const stripeBody = {
-        amount: String(Math.round(amount)),
+        amount: String(finalAmountCents),
         currency: 'eur',
         'automatic_payment_methods[enabled]': 'true',
       };
