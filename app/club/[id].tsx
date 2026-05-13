@@ -69,6 +69,7 @@ export default function ClubScreen() {
           capacity: row.capacity ?? 500,
           ticketsSold: row.tickets_sold ?? 0,
           genres: row.genres ?? [],
+          minAge: row.min_age ?? 18,
           description: row.description ?? '',
           lineup: Array.isArray(row.lineup) ? row.lineup : [],
           performers: Array.isArray(row.performers) ? row.performers : [],

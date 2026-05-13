@@ -41,10 +41,10 @@ interface TicketsCtx {
 const TicketsContext = createContext<TicketsCtx>({
   tickets: [],
   addTickets: () => {},
-  markDrinkUsed: () => {},
-  markTicketUsed: () => {},
-  markTicketGifted: () => {},
-  markTicketReclaimed: () => {},
+  markDrinkUsed: async () => {},
+  markTicketUsed: async () => {},
+  markTicketGifted: async () => {},
+  markTicketReclaimed: async () => {},
   removeTicket: () => {},
   refreshTickets: async () => {},
 });

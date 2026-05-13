@@ -246,7 +246,7 @@ export default function RegisterScreen() {
                 setGoogleLoading(true);
                 try {
                   await loginWithGoogle();
-                  router.replace('/(tabs)');
+                  // navigation handled by _layout.tsx once auth state updates
                 } catch (e: any) {
                   Alert.alert('Errore', e.message ?? 'Accesso con Google fallito.');
                 } finally {

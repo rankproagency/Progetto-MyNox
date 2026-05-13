@@ -266,6 +266,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
     await supabase.from('profiles').update(updates).eq('id', session.user.id);
+    if (updates.name) await supabase.auth.updateUser({ data: { name: updates.name } });
     setUser((prev) => prev ? { ...prev, ...updates } : prev);
   }, []);
 
