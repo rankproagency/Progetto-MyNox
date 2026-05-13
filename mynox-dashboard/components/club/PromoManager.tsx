@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Plus, Tag, Trash2, ToggleLeft, ToggleRight, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, Tag, Trash2, ToggleLeft, ToggleRight, X, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface PromoCode {
   id: string;
@@ -41,11 +42,19 @@ const EMPTY_FORM = {
 
 export default function PromoManager({ initialCodes, events, clubId }: Props) {
   const supabase = createClient();
+  const router = useRouter();
   const [codes, setCodes] = useState<PromoCode[]>(initialCodes);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    router.refresh();
+    setTimeout(() => setRefreshing(false), 800);
+  }
 
   const PCT_PRESETS = [10, 15, 20, 25, 50, 100];
   const FLAT_PRESETS = [5, 10, 15, 20];
@@ -132,13 +141,22 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
       {/* Header + crea */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-white">Tutti i codici</h2>
-        <button
-          onClick={() => { setShowModal(true); setError(''); setForm(EMPTY_FORM); }}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold rounded-lg transition-colors"
-        >
-          <Plus size={15} />
-          Crea codice
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleRefresh}
+            title="Aggiorna dati"
+            className="p-2 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-colors"
+          >
+            <RefreshCw size={15} className={refreshing ? 'animate-spin' : ''} />
+          </button>
+          <button
+            onClick={() => { setShowModal(true); setError(''); setForm(EMPTY_FORM); }}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold rounded-lg transition-colors"
+          >
+            <Plus size={15} />
+            Crea codice
+          </button>
+        </div>
       </div>
 
       {/* Tabella */}
