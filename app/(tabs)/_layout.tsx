@@ -1,35 +1,11 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { StyleSheet, Animated } from 'react-native';
-import { useRef, useEffect } from 'react';
+import { StyleSheet } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
-
-function TabIcon({ name, color, focused }: { name: IoniconsName; color: string; focused: boolean }) {
-  const scale = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    if (focused) {
-      scale.setValue(0.5);
-      Animated.spring(scale, {
-        toValue: 1,
-        useNativeDriver: true,
-        damping: 5,
-        stiffness: 280,
-        mass: 0.8,
-      }).start();
-    }
-  }, [focused]);
-
-  return (
-    <Animated.View style={{ transform: [{ scale }] }}>
-      <Ionicons name={name} size={22} color={color} />
-    </Animated.View>
-  );
-}
 
 export default function TabsLayout() {
   return (
@@ -65,35 +41,35 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, focused }) => <TabIcon name="home" color={color} focused={focused} />,
+          tabBarIcon: ({ color }) => <Ionicons name="home" size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: 'Cerca',
-          tabBarIcon: ({ color, focused }) => <TabIcon name="search" color={color} focused={focused} />,
+          tabBarIcon: ({ color }) => <Ionicons name="search" size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="tickets"
         options={{
           title: 'Biglietti',
-          tabBarIcon: ({ color, focused }) => <TabIcon name="ticket" color={color} focused={focused} />,
+          tabBarIcon: ({ color }) => <Ionicons name="ticket" size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="map"
         options={{
           title: 'Mappa',
-          tabBarIcon: ({ color, focused }) => <TabIcon name="map-outline" color={color} focused={focused} />,
+          tabBarIcon: ({ color }) => <Ionicons name="map-outline" size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profilo',
-          tabBarIcon: ({ color, focused }) => <TabIcon name="person" color={color} focused={focused} />,
+          tabBarIcon: ({ color }) => <Ionicons name="person" size={22} color={color} />,
         }}
       />
     </Tabs>

@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Animated } from 'react-native';
+import { useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -14,16 +15,32 @@ interface Props {
 export default function EventListItem({ event }: Props) {
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const scale = useRef(new Animated.Value(1)).current;
+  const heartScale = useRef(new Animated.Value(1)).current;
+
+  const onPressIn = () => Animated.timing(scale, { toValue: 0.97, duration: 100, useNativeDriver: true }).start();
+  const onPressOut = () => Animated.spring(scale, { toValue: 1, useNativeDriver: true, damping: 12, stiffness: 200 }).start();
+
+  const onHeartPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Animated.sequence([
+      Animated.timing(heartScale, { toValue: 1.5, duration: 120, useNativeDriver: true }),
+      Animated.spring(heartScale, { toValue: 1, useNativeDriver: true, damping: 8, stiffness: 200 }),
+    ]).start();
+    toggleFavorite(event.id);
+  };
   const hasTickets = event.ticketTypes.length > 0;
   const minPrice = hasTickets ? Math.min(...event.ticketTypes.map((t) => t.price)) : 0;
   const isSoldOut = hasTickets && event.ticketTypes.every((t) => t.available === 0);
 
   return (
     <TouchableOpacity
-      style={styles.container}
-      activeOpacity={0.8}
+      activeOpacity={1}
       onPress={() => router.push(`/event/${event.id}`)}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
     >
+    <Animated.View style={[styles.container, { transform: [{ scale }] }]}>
       <View style={styles.imageWrapper}>
         <Image source={{ uri: event.imageUrl }} style={styles.image} resizeMode="cover" />
         {isSoldOut && (
@@ -57,21 +74,18 @@ export default function EventListItem({ event }: Props) {
         ) : (
           <Text style={styles.price}>da €{minPrice}</Text>
         )}
-        <TouchableOpacity
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            toggleFavorite(event.id);
-          }}
-          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-        >
-          <Ionicons
-            name={isFavorite(event.id) ? 'heart' : 'heart-outline'}
-            size={16}
-            color={isFavorite(event.id) ? Colors.accent : Colors.textMuted}
-          />
+        <TouchableOpacity onPress={onHeartPress} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
+          <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+            <Ionicons
+              name={isFavorite(event.id) ? 'heart' : 'heart-outline'}
+              size={16}
+              color={isFavorite(event.id) ? Colors.accent : Colors.textMuted}
+            />
+          </Animated.View>
         </TouchableOpacity>
         <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
       </View>
+    </Animated.View>
     </TouchableOpacity>
   );
 }

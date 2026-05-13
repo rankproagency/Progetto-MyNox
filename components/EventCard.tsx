@@ -5,7 +5,9 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
+  Animated,
 } from 'react-native';
+import { useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -27,19 +29,33 @@ interface Props {
 export default function EventCard({ event }: Props) {
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const scale = useRef(new Animated.Value(1)).current;
+  const heartScale = useRef(new Animated.Value(1)).current;
+
+  const onPressIn = () => Animated.timing(scale, { toValue: 0.96, duration: 100, useNativeDriver: true }).start();
+  const onPressOut = () => Animated.spring(scale, { toValue: 1, useNativeDriver: true, damping: 12, stiffness: 200 }).start();
+
+  const onHeartPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Animated.sequence([
+      Animated.timing(heartScale, { toValue: 1.5, duration: 120, useNativeDriver: true }),
+      Animated.spring(heartScale, { toValue: 1, useNativeDriver: true, damping: 8, stiffness: 200 }),
+    ]).start();
+    toggleFavorite(event.id);
+  };
   const hasTickets = event.ticketTypes.length > 0;
   const minPrice = hasTickets ? Math.min(...event.ticketTypes.map((t) => t.price)) : 0;
   const isSoldOut = hasTickets && event.ticketTypes.every((t) => t.available === 0);
 
   return (
     <TouchableOpacity
-      style={styles.cardWrapper}
-      activeOpacity={0.9}
+      activeOpacity={1}
       onPress={() => router.push(`/event/${event.id}`)}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
     >
-      <View style={styles.glow} />
-
-      <View style={styles.card}>
+      <View style={styles.cardWrapper}>
+      <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
         <Image source={{ uri: event.imageUrl }} style={styles.image} resizeMode="cover" />
         <LinearGradient
           colors={['transparent', 'transparent', 'rgba(7,8,15,0.7)', 'rgba(7,8,15,0.98)']}
@@ -92,19 +108,16 @@ export default function EventCard({ event }: Props) {
         </View>
 
         {/* Heart button */}
-        <TouchableOpacity
-          style={styles.heartButton}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            toggleFavorite(event.id);
-          }}
-        >
-          <Ionicons
-            name={isFavorite(event.id) ? 'heart' : 'heart-outline'}
-            size={20}
-            color={isFavorite(event.id) ? Colors.accent : Colors.white}
-          />
+        <TouchableOpacity style={styles.heartButton} onPress={onHeartPress}>
+          <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+            <Ionicons
+              name={isFavorite(event.id) ? 'heart' : 'heart-outline'}
+              size={20}
+              color={isFavorite(event.id) ? Colors.accent : Colors.white}
+            />
+          </Animated.View>
         </TouchableOpacity>
+      </Animated.View>
       </View>
     </TouchableOpacity>
   );
@@ -123,21 +136,6 @@ const styles = StyleSheet.create({
     height: CARD_HEIGHT,
     marginRight: 14,
     position: 'relative',
-  },
-  glow: {
-    position: 'absolute',
-    bottom: -10,
-    left: 20,
-    right: 20,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: Colors.accent,
-    opacity: 0.35,
-    shadowColor: Colors.accent,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 24,
-    elevation: 20,
   },
   card: {
     width: CARD_WIDTH,

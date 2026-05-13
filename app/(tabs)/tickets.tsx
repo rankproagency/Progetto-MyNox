@@ -1,10 +1,10 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Share, Image, Modal, TextInput, Alert, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Share, Image, Modal, TextInput, Alert, ActivityIndicator, RefreshControl, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
 import { useTickets, MockTicket } from '../../contexts/TicketsContext';
@@ -316,10 +316,13 @@ function TicketCard({
   const isPast = tab === 'past';
   const isPending = ticket.status === 'pending';
   const isGifted = ticket.status === 'gifted';
+  const scale = useRef(new Animated.Value(1)).current;
+  const onPressIn = () => Animated.timing(scale, { toValue: 0.97, duration: 100, useNativeDriver: true }).start();
+  const onPressOut = () => Animated.spring(scale, { toValue: 1, useNativeDriver: true, damping: 12, stiffness: 200 }).start();
 
   return (
-    <View style={[styles.ticketCard, isPast && styles.ticketCardPast, isGifted && styles.ticketCardGifted]}>
-      <TouchableOpacity style={styles.ticketMain} activeOpacity={isGifted ? 1 : 0.85} onPress={isGifted ? undefined : onPress}>
+    <Animated.View style={[styles.ticketCard, isPast && styles.ticketCardPast, isGifted && styles.ticketCardGifted, { transform: [{ scale }] }]}>
+      <TouchableOpacity style={styles.ticketMain} activeOpacity={1} onPressIn={isGifted ? undefined : onPressIn} onPressOut={isGifted ? undefined : onPressOut} onPress={isGifted ? undefined : onPress}>
         <View style={styles.ticketLeft}>
           {ticket.eventImageUrl ? (
             <View style={styles.thumbnailWrapper}>
@@ -421,7 +424,7 @@ function TicketCard({
           <Text style={styles.giftText}>Regala questo biglietto</Text>
         </TouchableOpacity>
       )}
-    </View>
+    </Animated.View>
   );
 }
 
