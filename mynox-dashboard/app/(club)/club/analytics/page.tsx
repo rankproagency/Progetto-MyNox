@@ -58,7 +58,7 @@ async function getAnalyticsData(clubId: string) {
     const d = new Date(t.created_at);
     const key = d.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
     if (key in revenueByMonth) {
-      revenueByMonth[key] += t.ticket_types?.price ?? (t.price_paid ?? 0) / 1.08;
+      revenueByMonth[key] += (t.price_paid ?? 0) / 1.08;
       if (t.ticket_types !== null) ticketsByMonth[key] = (ticketsByMonth[key] ?? 0) + 1;
     }
   });
@@ -78,11 +78,11 @@ async function getAnalyticsData(clubId: string) {
     return Math.round(((curr - prev) / prev) * 100);
   }
 
-  const totalRevenue = tickets.reduce((sum: number, t: any) => sum + (t.ticket_types?.price ?? (t.price_paid ?? 0) / 1.08), 0);
+  const totalRevenue = tickets.reduce((sum: number, t: any) => sum + (t.price_paid ?? 0) / 1.08, 0);
   const ticketsOnly = tickets.filter((t: any) => t.ticket_types !== null);
   const totalTickets = ticketsOnly.length;
   const avgTicketPrice = ticketsOnly.length > 0
-    ? ticketsOnly.reduce((sum: number, t: any) => sum + (t.ticket_types?.price ?? 0), 0) / ticketsOnly.length
+    ? ticketsOnly.reduce((sum: number, t: any) => sum + (t.price_paid ?? 0) / 1.08, 0) / ticketsOnly.length
     : 0;
 
   const soldByEvent: Record<string, number> = {};
