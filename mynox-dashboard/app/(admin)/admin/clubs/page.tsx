@@ -6,7 +6,7 @@ import { Plus } from 'lucide-react';
 export default async function AdminClubsPage() {
   const supabase = await createClient();
 
-  const [{ data: clubs }, { data: ticketRevenue }, { data: eventCounts }] = await Promise.all([
+  const [{ data: clubs }, { data: ticketRevenue }, { data: eventCounts }, { data: staffCounts }] = await Promise.all([
     supabase.from('clubs').select('*').order('name'),
     supabase
       .from('tickets')
@@ -14,6 +14,9 @@ export default async function AdminClubsPage() {
       .in('status', ['valid', 'used']),
     supabase
       .from('events')
+      .select('club_id'),
+    supabase
+      .from('club_staff')
       .select('club_id'),
   ]);
 
@@ -28,6 +31,12 @@ export default async function AdminClubsPage() {
   for (const e of eventCounts ?? []) {
     const cid = (e as any).club_id;
     if (cid) eventCountByClub[cid] = (eventCountByClub[cid] ?? 0) + 1;
+  }
+
+  const staffCountByClub: Record<string, number> = {};
+  for (const s of staffCounts ?? []) {
+    const cid = (s as any).club_id;
+    if (cid) staffCountByClub[cid] = (staffCountByClub[cid] ?? 0) + 1;
   }
 
   const totalRevenue = Object.values(revenueByClub).reduce((a, b) => a + b, 0);
@@ -65,6 +74,7 @@ export default async function AdminClubsPage() {
               <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Città</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Eventi</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Staff</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Ricavi</th>
               <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Registrata</th>
               <th className="text-right px-5 py-3 text-slate-400 font-medium">Azioni</th>
@@ -101,6 +111,13 @@ export default async function AdminClubsPage() {
                     <td className="px-5 py-4 text-slate-300 hidden md:table-cell">{club.city}</td>
                     <td className="px-5 py-4">{statusBadge}</td>
                     <td className="px-5 py-4 text-slate-300 hidden md:table-cell">{eventCountByClub[club.id] ?? 0}</td>
+                    <td className="px-5 py-4 hidden md:table-cell">
+                      {staffCountByClub[club.id] ? (
+                        <span className="text-slate-300">{staffCountByClub[club.id]}</span>
+                      ) : (
+                        <span className="text-slate-600">—</span>
+                      )}
+                    </td>
                     <td className="px-5 py-4 font-semibold text-purple-400">
                       €{(revenueByClub[club.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
@@ -115,7 +132,7 @@ export default async function AdminClubsPage() {
               })
             ) : (
               <tr>
-                <td colSpan={7} className="px-5 py-12 text-center text-slate-500">
+                <td colSpan={8} className="px-5 py-12 text-center text-slate-500">
                   Nessuna discoteca registrata.
                 </td>
               </tr>
