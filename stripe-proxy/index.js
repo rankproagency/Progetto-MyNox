@@ -249,10 +249,7 @@ const server = http.createServer(async (req, res) => {
     const { promo_id } = body;
     if (promo_id && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       try {
-        const rows = await callSupabaseGet(`/rest/v1/promo_codes?id=eq.${promo_id}&select=current_uses`);
-        if (Array.isArray(rows) && rows.length > 0) {
-          await callSupabasePatch(`/rest/v1/promo_codes?id=eq.${promo_id}`, { current_uses: rows[0].current_uses + 1 });
-        }
+        await callSupabase('/rest/v1/rpc/increment_promo_uses', { p_promo_id: promo_id });
       } catch (e) {
         console.error('use-promo error:', e.message);
       }
