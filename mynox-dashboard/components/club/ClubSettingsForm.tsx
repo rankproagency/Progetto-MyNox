@@ -342,6 +342,7 @@ const inputClass =
   'w-full bg-[#0d0d14] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors';
 
 function EmailChangeForm() {
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -353,10 +354,23 @@ function EmailChangeForm() {
     setError('');
     setSuccess(false);
     const supabase = createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email: user?.email ?? '',
+      password: currentPassword,
+    });
+    if (signInErr) {
+      setError('Password non corretta.');
+      setLoading(false);
+      return;
+    }
+
     const { error: err } = await supabase.auth.updateUser({ email: newEmail });
     setLoading(false);
     if (err) { setError(err.message); return; }
     setSuccess(true);
+    setCurrentPassword('');
     setNewEmail('');
   }
 
@@ -366,6 +380,16 @@ function EmailChangeForm() {
         <p className="text-sm font-medium text-white">Cambia email</p>
         <p className="text-xs text-slate-500 mt-0.5">Riceverai un link di conferma al nuovo indirizzo prima che il cambio diventi effettivo.</p>
       </div>
+      <Field label="Password attuale">
+        <input
+          required
+          type="password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          placeholder="••••••••"
+          className={inputClass}
+        />
+      </Field>
       <Field label="Nuova email">
         <input
           required
@@ -394,18 +418,22 @@ function EmailChangeForm() {
 function PasswordChangeForm() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setError('Le password non coincidono.');
+      return;
+    }
     setLoading(true);
     setError('');
     setSuccess(false);
     const supabase = createClient();
 
-    // Verifica la password attuale
     const { data: { user } } = await supabase.auth.getUser();
     const { error: signInErr } = await supabase.auth.signInWithPassword({
       email: user?.email ?? '',
@@ -423,6 +451,7 @@ function PasswordChangeForm() {
     setSuccess(true);
     setCurrentPassword('');
     setNewPassword('');
+    setConfirmPassword('');
   }
 
   return (
@@ -449,6 +478,17 @@ function PasswordChangeForm() {
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           placeholder="Minimo 6 caratteri"
+          className={inputClass}
+        />
+      </Field>
+      <Field label="Conferma nuova password">
+        <input
+          required
+          type="password"
+          minLength={6}
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="Ripeti la nuova password"
           className={inputClass}
         />
       </Field>

@@ -49,7 +49,22 @@ function LoginForm() {
       setLoading(false);
       return;
     }
-    router.refresh();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user?.id ?? '')
+      .maybeSingle();
+
+    if (!profile || !['admin', 'club_admin', 'club_staff'].includes(profile.role)) {
+      await supabase.auth.signOut();
+      setError('Account non autorizzato. Contatta l\'amministratore di MyNox.');
+      setLoading(false);
+      return;
+    }
+
+    router.push('/');
   }
 
   async function handleGoogleLogin() {
