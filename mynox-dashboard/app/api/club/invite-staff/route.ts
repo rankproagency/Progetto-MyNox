@@ -107,6 +107,7 @@ export async function POST(req: NextRequest) {
     can_view_analytics: permissions?.can_view_analytics ?? false,
     can_view_participants: permissions?.can_view_participants ?? false,
     can_scan_tickets: permissions?.can_scan_tickets ?? false,
+    can_manage_promos: permissions?.can_manage_promos ?? false,
   }, { onConflict: 'user_id,club_id' });
 
   return NextResponse.json({ success: true });

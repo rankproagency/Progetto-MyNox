@@ -36,7 +36,7 @@ const PRESETS: Preset[] = [
     label: 'Responsabile sala',
     description: 'Gestione tavoli',
     icon: LayoutGrid,
-    permissions: { can_manage_events: false, can_manage_tables: true, can_view_analytics: false, can_view_participants: true, can_scan_tickets: false, can_manage_promos: false },
+    permissions: { can_manage_events: false, can_manage_tables: true, can_view_analytics: false, can_view_participants: true, can_scan_tickets: true, can_manage_promos: false },
   },
   {
     id: 'gestore_eventi',
