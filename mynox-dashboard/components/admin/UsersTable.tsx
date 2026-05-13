@@ -60,6 +60,7 @@ export default function UsersTable({ users, clubs }: { users: User[]; clubs: Clu
           <option value="">Tutti i ruoli</option>
           <option value="customer">Cliente</option>
           <option value="club_admin">Discoteca</option>
+          <option value="club_staff">Staff</option>
           <option value="admin">Admin</option>
         </select>
         <select

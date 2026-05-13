@@ -33,9 +33,10 @@ export default function UserRoleEditor({ userId, currentRole, currentClubId, clu
   const ROLE_STYLES: Record<string, string> = {
     admin:      'bg-purple-500/10 text-purple-400 border-purple-500/20',
     club_admin: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    club_staff: 'bg-teal-500/10 text-teal-400 border-teal-500/20',
     customer:   'bg-slate-500/10 text-slate-400 border-slate-500/20',
   };
-  const ROLE_LABELS: Record<string, string> = { admin: 'Admin', club_admin: 'Discoteca', customer: 'Cliente' };
+  const ROLE_LABELS: Record<string, string> = { admin: 'Admin', club_admin: 'Discoteca', club_staff: 'Staff', customer: 'Cliente' };
 
   if (!editing) {
     return (
