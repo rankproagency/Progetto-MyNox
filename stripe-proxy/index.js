@@ -26,8 +26,29 @@ const PROMO_CODES = {
   FRIENDS:  { type: 'percent', value: 15, label: '15% di sconto' },
 };
 
-function applyPromo(baseCents, code) {
-  const promo = PROMO_CODES[String(code ?? '').trim().toUpperCase()];
+async function applyPromo(baseCents, code, clubId) {
+  if (!code) return baseCents;
+  const normalized = String(code).trim().toUpperCase();
+  if (!normalized) return baseCents;
+
+  if (clubId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const rows = await callSupabaseGet(
+        `/rest/v1/promo_codes?code=eq.${encodeURIComponent(normalized)}&club_id=eq.${clubId}&is_active=eq.true&select=discount_type,discount_value,max_uses,current_uses,expires_at`
+      );
+      if (Array.isArray(rows) && rows.length > 0) {
+        const p = rows[0];
+        if (p.expires_at && new Date(p.expires_at) < new Date()) return baseCents;
+        if (p.max_uses !== null && p.current_uses >= p.max_uses) return baseCents;
+        if (p.discount_type === 'percentage') return Math.round(baseCents * (1 - p.discount_value / 100));
+        return Math.max(0, baseCents - Math.round(p.discount_value * 100));
+      }
+    } catch (e) {
+      console.error('applyPromo error:', e.message);
+    }
+  }
+
+  const promo = PROMO_CODES[normalized];
   if (!promo) return baseCents;
   if (promo.type === 'percent') return Math.round(baseCents * (1 - promo.value / 100));
   return Math.max(0, baseCents - Math.round(promo.value * 100));
@@ -169,6 +190,49 @@ const server = http.createServer(async (req, res) => {
   // POST /validate-promo
   if (req.url === '/validate-promo') {
     const code = String(body.code ?? '').trim().toUpperCase();
+    const clubId = body.club_id;
+    const eventId = body.event_id;
+
+    if (!code) {
+      res.writeHead(400, CORS_HEADERS);
+      res.end(JSON.stringify({ valid: false, error: 'Codice mancante.' }));
+      return;
+    }
+
+    if (clubId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        const rows = await callSupabaseGet(
+          `/rest/v1/promo_codes?code=eq.${encodeURIComponent(code)}&club_id=eq.${clubId}&is_active=eq.true&select=*`
+        );
+        if (Array.isArray(rows) && rows.length > 0) {
+          const p = rows[0];
+          if (p.expires_at && new Date(p.expires_at) < new Date()) {
+            res.writeHead(200, CORS_HEADERS);
+            res.end(JSON.stringify({ valid: false, error: 'Codice scaduto.' }));
+            return;
+          }
+          if (p.max_uses !== null && p.current_uses >= p.max_uses) {
+            res.writeHead(200, CORS_HEADERS);
+            res.end(JSON.stringify({ valid: false, error: 'Codice esaurito.' }));
+            return;
+          }
+          if (p.event_id && eventId && p.event_id !== eventId) {
+            res.writeHead(200, CORS_HEADERS);
+            res.end(JSON.stringify({ valid: false, error: 'Codice non valido per questo evento.' }));
+            return;
+          }
+          const label = p.discount_type === 'percentage'
+            ? `${p.discount_value}% di sconto`
+            : `€${p.discount_value} di sconto`;
+          res.writeHead(200, CORS_HEADERS);
+          res.end(JSON.stringify({ valid: true, promo_id: p.id, type: p.discount_type === 'percentage' ? 'percent' : 'flat', value: p.discount_value, label }));
+          return;
+        }
+      } catch (e) {
+        console.error('validate-promo error:', e.message);
+      }
+    }
+
     const promo = PROMO_CODES[code];
     if (!promo) {
       res.writeHead(404, CORS_HEADERS);
@@ -180,14 +244,32 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // POST /use-promo
+  if (req.url === '/use-promo') {
+    const { promo_id } = body;
+    if (promo_id && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        const rows = await callSupabaseGet(`/rest/v1/promo_codes?id=eq.${promo_id}&select=current_uses`);
+        if (Array.isArray(rows) && rows.length > 0) {
+          await callSupabasePatch(`/rest/v1/promo_codes?id=eq.${promo_id}`, { current_uses: rows[0].current_uses + 1 });
+        }
+      } catch (e) {
+        console.error('use-promo error:', e.message);
+      }
+    }
+    res.writeHead(200, CORS_HEADERS);
+    res.end(JSON.stringify({ success: true }));
+    return;
+  }
+
   // POST /create-payment-intent
   if (req.url === '/create-payment-intent' || req.url === '/functions/v1/create-payment-intent') {
     try {
-      const { amount, base_amount_cents, promo_code, metadata = {} } = body;
+      const { amount, base_amount_cents, promo_code, club_id, metadata = {} } = body;
 
       let finalAmountCents;
       if (base_amount_cents != null) {
-        const discountedBase = applyPromo(base_amount_cents, promo_code);
+        const discountedBase = await applyPromo(base_amount_cents, promo_code, club_id);
         const commission = Math.round(discountedBase * 0.08);
         finalAmountCents = discountedBase + commission;
       } else {
