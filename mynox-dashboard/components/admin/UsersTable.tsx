@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { Search } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import UserRoleEditor from './UserRoleEditor';
 
 interface Club { id: string; name: string }
@@ -18,25 +19,64 @@ interface User {
   confirmed: boolean;
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  admin:      'Admin',
-  club_admin: 'Discoteca',
-  customer:   'Cliente',
-};
+interface Props {
+  users: User[];
+  clubs: Club[];
+  total: number;
+  totalPages: number;
+  perPage: number;
+  currentPage: number;
+  currentQ: string;
+  currentRole: string;
+  currentStatus: string;
+}
 
-export default function UsersTable({ users, clubs }: { users: User[]; clubs: Club[] }) {
-  const [query, setQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+export default function UsersTable({
+  users, clubs, total, totalPages, perPage,
+  currentPage, currentQ, currentRole, currentStatus,
+}: Props) {
+  const router = useRouter();
+  const [localQuery, setLocalQuery] = useState(currentQ);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const q = query.trim().toLowerCase();
+  useEffect(() => {
+    setLocalQuery(currentQ);
+  }, [currentQ]);
 
-  const filtered = users.filter((u) => {
-    const matchesQuery = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
-    const matchesRole = !roleFilter || u.role === roleFilter;
-    const matchesStatus = !statusFilter || (statusFilter === 'confirmed' ? u.confirmed : !u.confirmed);
-    return matchesQuery && matchesRole && matchesStatus;
-  });
+  function buildUrl(overrides: Record<string, string | number>) {
+    const sp = new URLSearchParams();
+    const merged: Record<string, string> = {
+      q: currentQ,
+      role: currentRole,
+      status: currentStatus,
+      page: String(currentPage),
+      ...Object.fromEntries(Object.entries(overrides).map(([k, v]) => [k, String(v)])),
+    };
+    for (const [k, v] of Object.entries(merged)) {
+      if (v) sp.set(k, v);
+    }
+    return `/admin/users?${sp.toString()}`;
+  }
+
+  function navigate(overrides: Record<string, string | number>) {
+    router.push(buildUrl({ page: 1, ...overrides }));
+  }
+
+  function handleQueryChange(value: string) {
+    setLocalQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => navigate({ q: value }), 350);
+  }
+
+  const offset = (currentPage - 1) * perPage;
+
+  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1)
+    .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+    .reduce<(number | '...')[]>((acc, p, i, arr) => {
+      if (i > 0 && (arr[i - 1] as number) !== p - 1) acc.push('...');
+      acc.push(p);
+      return acc;
+    }, []);
 
   return (
     <div>
@@ -47,14 +87,14 @@ export default function UsersTable({ users, clubs }: { users: User[]; clubs: Clu
           <input
             type="text"
             placeholder="Cerca per nome o email…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={localQuery}
+            onChange={(e) => handleQueryChange(e.target.value)}
             className="w-full bg-[#111118] border border-white/8 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/50 transition-colors"
           />
         </div>
         <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
+          value={currentRole}
+          onChange={(e) => navigate({ role: e.target.value })}
           className="bg-[#111118] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50 transition-colors appearance-none cursor-pointer min-w-36"
         >
           <option value="">Tutti i ruoli</option>
@@ -64,8 +104,8 @@ export default function UsersTable({ users, clubs }: { users: User[]; clubs: Clu
           <option value="admin">Admin</option>
         </select>
         <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          value={currentStatus}
+          onChange={(e) => navigate({ status: e.target.value })}
           className="bg-[#111118] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50 transition-colors appearance-none cursor-pointer min-w-36"
         >
           <option value="">Tutti gli stati</option>
@@ -88,14 +128,16 @@ export default function UsersTable({ users, clubs }: { users: User[]; clubs: Clu
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 ? (
+            {users.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-5 py-12 text-center text-slate-500">
-                  {q || roleFilter || statusFilter ? 'Nessun utente corrisponde ai filtri.' : 'Nessun utente trovato.'}
+                  {currentQ || currentRole || currentStatus
+                    ? 'Nessun utente corrisponde ai filtri.'
+                    : 'Nessun utente trovato.'}
                 </td>
               </tr>
             ) : (
-              filtered.map((user) => (
+              users.map((user) => (
                 <tr key={user.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
                   <td className="px-5 py-4 text-white font-medium">{user.name}</td>
                   <td className="px-5 py-4 text-slate-300 hidden md:table-cell">{user.email}</td>
@@ -135,13 +177,47 @@ export default function UsersTable({ users, clubs }: { users: User[]; clubs: Clu
             )}
           </tbody>
         </table>
-      </div>
 
-      {filtered.length > 0 && filtered.length < users.length && (
-        <p className="text-xs text-slate-500 mt-3">
-          {filtered.length} di {users.length} utenti
-        </p>
-      )}
+        {/* Paginazione */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-5 py-3 border-t border-white/8">
+            <p className="text-xs text-slate-500">
+              {offset + 1}–{Math.min(offset + perPage, total)} di {total} utenti
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => router.push(buildUrl({ page: Math.max(1, currentPage - 1) }))}
+                disabled={currentPage === 1}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              {pageNumbers.map((p, i) =>
+                p === '...' ? (
+                  <span key={`e-${i}`} className="w-7 h-7 flex items-center justify-center text-slate-500 text-xs">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => router.push(buildUrl({ page: p }))}
+                    className={`w-7 h-7 rounded-lg text-xs font-medium transition-colors ${
+                      p === currentPage ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+              <button
+                onClick={() => router.push(buildUrl({ page: Math.min(totalPages, currentPage + 1) }))}
+                disabled={currentPage === totalPages}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
