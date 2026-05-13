@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Plus, Tag, Trash2, ToggleLeft, ToggleRight, X, CheckCircle, AlertCircle, Copy } from 'lucide-react';
+import { Plus, Tag, Trash2, ToggleLeft, ToggleRight, X, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface PromoCode {
   id: string;
@@ -46,14 +46,6 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  function copyCode(code: string, id: string) {
-    navigator.clipboard.writeText(code).then(() => {
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 1500);
-    });
-  }
 
   const PCT_PRESETS = [10, 15, 20, 25, 50, 100];
   const FLAT_PRESETS = [5, 10, 15, 20];
@@ -200,22 +192,13 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
                       )}
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-2 justify-end">
-                        <button
-                          onClick={() => copyCode(code.code, code.id)}
-                          title="Copia codice"
-                          className="text-slate-500 hover:text-purple-400 transition-colors"
-                        >
-                          {copiedId === code.id
-                            ? <CheckCircle size={15} className="text-green-400" />
-                            : <Copy size={15} />}
-                        </button>
+                      <div className="flex items-center gap-3 justify-end">
                         <button
                           onClick={() => handleToggle(code)}
                           title={code.is_active ? 'Disattiva' : 'Attiva'}
                           className="text-slate-400 hover:text-white transition-colors"
                         >
-                          {code.is_active ? <ToggleRight size={20} className="text-purple-400" /> : <ToggleLeft size={20} />}
+                          {code.is_active ? <ToggleRight size={28} className="text-purple-400" /> : <ToggleLeft size={28} />}
                         </button>
                         <button
                           onClick={() => handleDelete(code.id)}
