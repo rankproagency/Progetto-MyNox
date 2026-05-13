@@ -70,12 +70,23 @@ function LoginForm() {
     e.preventDefault();
     setResetLoading(true);
     setResetError('');
-    const supabase = createClient();
-    const { error: err } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
+
+    const res = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: resetEmail,
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      }),
     });
+
+    const json = await res.json();
     setResetLoading(false);
-    if (err) { setResetError(err.message); return; }
+
+    if (!res.ok) {
+      setResetError(json.error ?? 'Errore durante l\'invio.');
+      return;
+    }
     setResetSent(true);
   }
 
