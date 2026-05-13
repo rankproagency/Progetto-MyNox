@@ -32,7 +32,6 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const { user, updateUser, deleteAccount, musicGenres, setMusicGenres } = useAuth();
   const [name, setName] = useState(user?.name ?? '');
-  const [email, setEmail] = useState(user?.email ?? '');
   const [selectedGenres, setSelectedGenres] = useState<string[]>(musicGenres);
 
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -49,12 +48,8 @@ export default function EditProfileScreen() {
       Alert.alert('Errore', 'Il nome non può essere vuoto.');
       return;
     }
-    if (!email.trim() || !email.includes('@')) {
-      Alert.alert('Errore', 'Inserisci un indirizzo email valido.');
-      return;
-    }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    updateUser({ name: name.trim(), email: email.trim() });
+    updateUser({ name: name.trim() });
     setMusicGenres(selectedGenres);
     router.back();
   }
@@ -122,16 +117,11 @@ export default function EditProfileScreen() {
 
           <View style={styles.section}>
             <Text style={styles.fieldLabel}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="email@esempio.com"
-              placeholderTextColor={Colors.textMuted}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+            <View style={styles.readonlyRow}>
+              <Ionicons name="mail-outline" size={16} color={Colors.textSecondary} />
+              <Text style={styles.readonlyText}>{user?.email ?? '—'}</Text>
+              <Ionicons name="lock-closed" size={13} color={Colors.textMuted} />
+            </View>
           </View>
 
           <View style={styles.section}>
