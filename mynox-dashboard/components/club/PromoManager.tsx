@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Plus, Tag, Trash2, ToggleLeft, ToggleRight, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, Tag, Trash2, ToggleLeft, ToggleRight, X, CheckCircle, AlertCircle, Copy } from 'lucide-react';
 
 interface PromoCode {
   id: string;
@@ -46,6 +46,17 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  function copyCode(code: string, id: string) {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 1500);
+    });
+  }
+
+  const PCT_PRESETS = [10, 15, 20, 25, 50, 100];
+  const FLAT_PRESETS = [5, 10, 15, 20];
 
   function formatDate(d: string) {
     return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -191,6 +202,15 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2 justify-end">
                         <button
+                          onClick={() => copyCode(code.code, code.id)}
+                          title="Copia codice"
+                          className="text-slate-500 hover:text-purple-400 transition-colors"
+                        >
+                          {copiedId === code.id
+                            ? <CheckCircle size={15} className="text-green-400" />
+                            : <Copy size={15} />}
+                        </button>
+                        <button
                           onClick={() => handleToggle(code)}
                           title={code.is_active ? 'Disattiva' : 'Attiva'}
                           className="text-slate-400 hover:text-white transition-colors"
@@ -263,6 +283,24 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
                     onChange={(e) => setForm((f) => ({ ...f, discount_value: e.target.value }))}
                   />
                 </div>
+              </div>
+
+              {/* Preset rapidi */}
+              <div className="flex flex-wrap gap-1.5">
+                {(form.discount_type === 'percentage' ? PCT_PRESETS : FLAT_PRESETS).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, discount_value: String(v) }))}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors ${
+                      form.discount_value === String(v)
+                        ? 'bg-purple-600 border-purple-500 text-white'
+                        : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:border-white/20'
+                    }`}
+                  >
+                    {form.discount_type === 'percentage' ? `${v}%` : `€${v}`}
+                  </button>
+                ))}
               </div>
 
               {/* Evento */}

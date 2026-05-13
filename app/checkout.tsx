@@ -82,7 +82,7 @@ function getUserAge(dateOfBirth?: string): number | null {
   return age;
 }
 
-type PromoResult = { type: 'percent' | 'flat'; value: number; label: string };
+type PromoResult = { type: 'percent' | 'flat'; value: number; label: string; promoId?: string };
 
 export default function CheckoutScreen() {
   const { eventId, ticketId, tableId, tableName, qty } = useLocalSearchParams<{
@@ -186,12 +186,12 @@ export default function CheckoutScreen() {
       const res = await fetchWithTimeout(`${PROXY_URL}/validate-promo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, club_id: event?.clubId, event_id: event?.id }),
       }, 8000);
-      const json = await res.json() as { valid?: boolean; type?: string; value?: number; label?: string; error?: string };
+      const json = await res.json() as { valid?: boolean; type?: string; value?: number; label?: string; promo_id?: string; error?: string };
       if (json.valid) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        setAppliedPromo({ type: json.type as 'percent' | 'flat', value: json.value!, label: json.label! });
+        setAppliedPromo({ type: json.type as 'percent' | 'flat', value: json.value!, label: json.label!, promoId: json.promo_id });
         setAppliedPromoCode(code);
         setPromoError('');
       } else {
@@ -249,6 +249,14 @@ export default function CheckoutScreen() {
           return;
         }
         createdTickets = freeJson.tickets;
+
+        if (appliedPromo?.promoId) {
+          fetchWithTimeout(`${PROXY_URL}/use-promo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ promo_id: appliedPromo.promoId }),
+          }, 5000).catch(() => {});
+        }
       } else {
         // Flusso Stripe normale
         const rawBaseCents = Math.round((ticketSubtotal + tableDeposit) * 100);
@@ -258,6 +266,7 @@ export default function CheckoutScreen() {
           body: JSON.stringify({
             base_amount_cents: rawBaseCents,
             promo_code: appliedPromoCode ?? undefined,
+            club_id: event?.clubId,
             metadata,
           }),
         });
@@ -305,6 +314,14 @@ export default function CheckoutScreen() {
           return;
         }
         createdTickets = confirmJson.tickets;
+
+        if (appliedPromo?.promoId) {
+          fetchWithTimeout(`${PROXY_URL}/use-promo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ promo_id: appliedPromo.promoId }),
+          }, 5000).catch(() => {});
+        }
       }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
