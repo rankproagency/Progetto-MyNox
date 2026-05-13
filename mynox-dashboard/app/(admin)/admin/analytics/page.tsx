@@ -27,7 +27,7 @@ async function getAnalyticsData() {
   all.forEach((t: any) => {
     const key = new Date(t.created_at).toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
     if (key in revenueByMonth) {
-      revenueByMonth[key] += t.ticket_types?.price ?? (t.price_paid ?? 0) / 1.08;
+      revenueByMonth[key] += (t.price_paid ?? 0) / 1.08;
       if (t.ticket_type_id !== null) ticketsByMonth[key] += 1;
     }
   });
@@ -58,7 +58,7 @@ async function getAnalyticsData() {
     const name = (t.events as any)?.clubs?.name ?? 'Sconosciuto';
     if (!byClub[name]) byClub[name] = { biglietti: 0, ricavi: 0 };
     if (t.ticket_type_id !== null) byClub[name].biglietti += 1;
-    byClub[name].ricavi += t.ticket_types?.price ?? (t.price_paid ?? 0) / 1.08;
+    byClub[name].ricavi += (t.price_paid ?? 0) / 1.08;
   });
   const ticketsByClub = Object.entries(byClub)
     .map(([club, d]) => ({ club, biglietti: d.biglietti, ricavi: +d.ricavi.toFixed(2) }))
@@ -74,14 +74,14 @@ async function getAnalyticsData() {
     const club = (t.events as any)?.clubs?.name ?? '—';
     if (!byEvent[id]) byEvent[id] = { name, club, biglietti: 0, ricavi: 0 };
     if (t.ticket_type_id !== null) byEvent[id].biglietti += 1;
-    byEvent[id].ricavi += t.ticket_types?.price ?? (t.price_paid ?? 0) / 1.08;
+    byEvent[id].ricavi += (t.price_paid ?? 0) / 1.08;
   });
   const topEvents = Object.values(byEvent)
     .sort((a, b) => b.ricavi - a.ricavi)
     .slice(0, 5)
     .map((e) => ({ ...e, ricavi: +e.ricavi.toFixed(2) }));
 
-  const totalRevenue = all.reduce((sum: number, t: any) => sum + (t.ticket_types?.price ?? (t.price_paid ?? 0) / 1.08), 0);
+  const totalRevenue = all.reduce((sum: number, t: any) => sum + (t.price_paid ?? 0) / 1.08, 0);
   const totalCommission = totalRevenue * 0.08;
 
   return {

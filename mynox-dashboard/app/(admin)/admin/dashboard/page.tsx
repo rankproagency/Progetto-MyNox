@@ -155,22 +155,37 @@ export default async function AdminDashboardPage() {
             <div className="px-5 py-10 text-center text-slate-500 text-sm">Nessun biglietto ancora.</div>
           ) : (
             <div className="divide-y divide-white/5">
-              {data.recentTickets.map((t: any) => (
-                <div key={t.id} className="flex items-center justify-between px-5 py-3.5">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-white font-medium truncate">{(t.events as any)?.name ?? '—'}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      {(t.events as any)?.clubs?.name ?? '—'} · {t.ticket_types?.label ?? (t.table_name ? `Tavolo – ${t.table_name}` : '—')}
-                    </p>
+              {data.recentTickets.map((t: any) => {
+                const paidNet = (t.price_paid ?? 0) / 1.08;
+                const listPrice = t.ticket_types?.price ?? null;
+                const hasPromo = listPrice !== null && paidNet < listPrice - 0.01;
+                return (
+                  <div key={t.id} className="flex items-center justify-between px-5 py-3.5">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-white font-medium truncate">{(t.events as any)?.name ?? '—'}</p>
+                        {hasPromo && (
+                          <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400">PROMO</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {(t.events as any)?.clubs?.name ?? '—'} · {t.ticket_types?.label ?? (t.table_name ? `Tavolo – ${t.table_name}` : '—')}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0 ml-4">
+                      <div className="flex items-center gap-1.5 justify-end">
+                        {hasPromo && (
+                          <span className="text-xs text-slate-600 line-through">€{listPrice!.toFixed(2)}</span>
+                        )}
+                        <p className="text-sm font-semibold text-purple-400">€{paidNet.toFixed(2)}</p>
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        {new Date(t.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right shrink-0 ml-4">
-                    <p className="text-sm font-semibold text-purple-400">€{Number(t.ticket_types?.price ?? t.price_paid ?? 0).toFixed(2)}</p>
-                    <p className="text-xs text-slate-500">
-                      {new Date(t.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
