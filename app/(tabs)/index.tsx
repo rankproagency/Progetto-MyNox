@@ -10,11 +10,13 @@ import {
   Dimensions as RNDimensions,
   Switch,
   Image,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/colors';
@@ -114,6 +116,36 @@ function getEventsByDayFromList(events: ReturnType<typeof useEvents>['events']) 
       const label = `${DAY_NAMES[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
       return { day: date, label, events: evs };
     });
+}
+
+function AnimatedListItem({ children, index }: { children: React.ReactNode; index: number }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(18)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 260,
+        delay: Math.min(index * 55, 360),
+        useNativeDriver: true,
+        easing: Easing.out(Easing.quad),
+      }),
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 260,
+        delay: Math.min(index * 55, 360),
+        useNativeDriver: true,
+        easing: Easing.out(Easing.quad),
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
+      {children}
+    </Animated.View>
+  );
 }
 
 export default function HomeScreen() {
@@ -614,19 +646,26 @@ export default function HomeScreen() {
                   <Text style={styles.noResultsText}>Nessun evento trovato</Text>
                   <Text style={styles.noResultsSub}>Prova a cambiare i filtri</Text>
                 </View>
-              ) : (
-                filteredEventsByDay.map(({ day, label, events: dayEvents }) => (
+              ) : (() => {
+                const listKey = `${maxPrice}|${onlyAvailable}|${selectedGenres.join(',')}|${ageFilter}`;
+                let animIdx = 0;
+                return filteredEventsByDay.map(({ day, label, events: dayEvents }) => (
                   <View key={day} style={styles.dayGroup}>
                     <View style={styles.dayHeader}>
                       <Text style={styles.dayLabel}>{label}</Text>
                       <View style={styles.dayLine} />
                     </View>
-                    {dayEvents.map((event) => (
-                      <EventListItem key={event.id} event={event} />
-                    ))}
+                    {dayEvents.map((event) => {
+                      const idx = animIdx++;
+                      return (
+                        <AnimatedListItem key={`${listKey}-${event.id}`} index={idx}>
+                          <EventListItem event={event} />
+                        </AnimatedListItem>
+                      );
+                    })}
                   </View>
-                ))
-              )}
+                ));
+              })()}
             </>
           )}
         </ScrollView>

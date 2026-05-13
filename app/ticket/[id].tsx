@@ -1,9 +1,9 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Image, Animated } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
@@ -15,6 +15,17 @@ export default function TicketScreen() {
   const { tickets, markDrinkUsed, markTicketUsed } = useTickets();
   const ticket = tickets.find((t) => t.id === id);
   const [activeQR, setActiveQR] = useState<'entry' | 'drink'>('entry');
+
+  const qrAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    qrAnim.setValue(0);
+    Animated.spring(qrAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      damping: 14,
+      stiffness: 220,
+    }).start();
+  }, [activeQR]);
 
   const today = new Date().toISOString().split('T')[0];
   const isEventToday = ticket?.rawDate === today;
@@ -156,7 +167,12 @@ export default function TicketScreen() {
           </View>
 
           {/* QR area */}
-          <View style={styles.qrContainer}>
+          <Animated.View style={[styles.qrContainer, {
+            opacity: qrAnim,
+            transform: [{
+              scale: qrAnim.interpolate({ inputRange: [0, 1], outputRange: [0.82, 1] }),
+            }],
+          }]}>
             {activeQR === 'entry' ? (
               <>
                 <View style={[styles.qrWrapper, ticket.status === 'used' && styles.qrUsed]}>
@@ -304,7 +320,7 @@ export default function TicketScreen() {
                 )}
               </>
             ) : null}
-          </View>
+          </Animated.View>
 
         </View>
 
