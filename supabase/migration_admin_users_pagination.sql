@@ -12,7 +12,7 @@ returns table(
   name text,
   role text,
   club_id uuid,
-  member_since date,
+  member_since text,
   created_at timestamptz,
   last_sign_in_at timestamptz,
   email_confirmed_at timestamptz
