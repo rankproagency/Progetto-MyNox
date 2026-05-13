@@ -93,7 +93,10 @@ function RootNavigator() {
   useEffect(() => {
     if (!ready || isLoading) return;
 
-    const authScreens = ['onboarding', 'login', 'register'];
+    // reset-password gestisce il proprio token via Linking.getInitialURL() e non
+    // deve essere reindirizzata dal layout — né prima che setSession() completi
+    // (sessione null), né dopo (sessione recovery attiva ma flusso ancora in corso).
+    const authScreens = ['onboarding', 'login', 'register', 'reset-password'];
     const inAuthScreen = authScreens.includes(segment0 ?? '');
 
     let target: string | null = null;
@@ -101,10 +104,10 @@ function RootNavigator() {
       target = '/onboarding';
     } else if (isOnboarded && !userId && !inAuthScreen) {
       target = '/login';
-    } else if (userId && !isOnboarded && inAuthScreen) {
+    } else if (userId && !isOnboarded && inAuthScreen && segment0 !== 'reset-password') {
       // nuovo utente appena registrato: va direttamente all'onboarding senza passare per tabs
       target = '/onboarding';
-    } else if (userId && isOnboarded && inAuthScreen) {
+    } else if (userId && isOnboarded && inAuthScreen && segment0 !== 'reset-password') {
       target = '/(tabs)';
     }
 
