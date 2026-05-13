@@ -64,7 +64,7 @@ export default async function ClubEventDetailPage({
   for (const t of soldTickets ?? []) {
     const tid = (t as any).ticket_type_id;
     if (tid === null) continue; // tavoli — esclusi
-    const price = (t as any).ticket_types?.price ?? 0;
+    const price = ((t as any).price_paid ?? 0) / 1.08;
     soldCountByType[tid] = (soldCountByType[tid] ?? 0) + 1;
     revenueByType[tid] = (revenueByType[tid] ?? 0) + price;
   }
