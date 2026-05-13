@@ -13,13 +13,13 @@ function TabIcon({ name, color, focused }: { name: IoniconsName; color: string; 
 
   useEffect(() => {
     if (focused) {
-      scale.setValue(0.78);
+      scale.setValue(0.5);
       Animated.spring(scale, {
         toValue: 1,
         useNativeDriver: true,
-        damping: 8,
-        stiffness: 320,
-        mass: 0.7,
+        damping: 5,
+        stiffness: 280,
+        mass: 0.8,
       }).start();
     }
   }, [focused]);
