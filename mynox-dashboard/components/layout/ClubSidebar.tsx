@@ -35,7 +35,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/club/venue', label: 'Piantina & Tavoli', icon: Map, permission: 'can_manage_tables' },
   { href: '/club/analytics', label: 'Analytics', icon: BarChart3, permission: 'can_view_analytics' },
   { href: '/club/scan', label: 'Scanner', icon: ScanLine, permission: 'can_scan_tickets', staffOnly: true },
-  { href: '/club/promo', label: 'Codici Promo', icon: Tag, ownerOnly: true },
+  { href: '/club/promo', label: 'Codici Promo', icon: Tag, permission: 'can_manage_promos' },
   { href: '/club/staff', label: 'Staff', icon: Users, ownerOnly: true },
   { href: '/club/settings', label: 'Profilo club', icon: Settings, ownerOnly: true },
 ];

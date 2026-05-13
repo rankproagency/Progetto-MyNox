@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { UserPlus, Trash2, ShieldCheck, LayoutGrid, BarChart3, Users, Sliders, ScanLine, Check, AlertTriangle } from 'lucide-react';
 import type { ClubStaff, StaffPermissions } from '@/types';
 
-type PermKey = keyof Pick<ClubStaff, 'can_manage_events' | 'can_manage_tables' | 'can_view_analytics' | 'can_view_participants' | 'can_scan_tickets'>;
+type PermKey = keyof Pick<ClubStaff, 'can_manage_events' | 'can_manage_tables' | 'can_view_analytics' | 'can_view_participants' | 'can_scan_tickets' | 'can_manage_promos'>;
 
 const PERMISSION_LABELS: { key: PermKey; label: string }[] = [
   { key: 'can_manage_events', label: 'Gestione eventi' },
@@ -12,6 +12,7 @@ const PERMISSION_LABELS: { key: PermKey; label: string }[] = [
   { key: 'can_view_analytics', label: 'Analytics (incassi)' },
   { key: 'can_view_participants', label: 'Lista partecipanti' },
   { key: 'can_scan_tickets', label: 'Scanner biglietti' },
+  { key: 'can_manage_promos', label: 'Codici promo' },
 ];
 
 interface Preset {
@@ -28,35 +29,35 @@ const PRESETS: Preset[] = [
     label: 'Sicurezza',
     description: 'Solo scanner',
     icon: ScanLine,
-    permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false, can_view_participants: false, can_scan_tickets: true },
+    permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false, can_view_participants: false, can_scan_tickets: true, can_manage_promos: false },
   },
   {
     id: 'responsabile_sala',
     label: 'Responsabile sala',
     description: 'Gestione tavoli',
     icon: LayoutGrid,
-    permissions: { can_manage_events: false, can_manage_tables: true, can_view_analytics: false, can_view_participants: true, can_scan_tickets: false },
+    permissions: { can_manage_events: false, can_manage_tables: true, can_view_analytics: false, can_view_participants: true, can_scan_tickets: false, can_manage_promos: false },
   },
   {
     id: 'gestore_eventi',
     label: 'Gestore eventi',
     description: 'Crea eventi + analytics',
     icon: BarChart3,
-    permissions: { can_manage_events: true, can_manage_tables: false, can_view_analytics: true, can_view_participants: true, can_scan_tickets: false },
+    permissions: { can_manage_events: true, can_manage_tables: false, can_view_analytics: true, can_view_participants: true, can_scan_tickets: false, can_manage_promos: true },
   },
   {
     id: 'full',
     label: 'Accesso completo',
     description: 'Tutti i permessi',
     icon: Users,
-    permissions: { can_manage_events: true, can_manage_tables: true, can_view_analytics: true, can_view_participants: true, can_scan_tickets: true },
+    permissions: { can_manage_events: true, can_manage_tables: true, can_view_analytics: true, can_view_participants: true, can_scan_tickets: true, can_manage_promos: true },
   },
   {
     id: 'custom',
     label: 'Custom',
     description: 'Configura manualmente',
     icon: Sliders,
-    permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false, can_view_participants: false, can_scan_tickets: false },
+    permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false, can_view_participants: false, can_scan_tickets: false, can_manage_promos: false },
   },
 ];
 
@@ -74,6 +75,7 @@ export default function StaffManager({ initialStaff }: Props) {
     can_view_analytics: false,
     can_view_participants: false,
     can_scan_tickets: false,
+    can_manage_promos: false,
   });
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState('');
@@ -132,7 +134,7 @@ export default function StaffManager({ initialStaff }: Props) {
   }
 
   function detectPreset(member: ClubStaff): string {
-    const keys: PermKey[] = ['can_manage_events', 'can_manage_tables', 'can_view_analytics', 'can_view_participants', 'can_scan_tickets'];
+    const keys: PermKey[] = ['can_manage_events', 'can_manage_tables', 'can_view_analytics', 'can_view_participants', 'can_scan_tickets', 'can_manage_promos'];
     const match = PRESETS.find(
       (p) => p.id !== 'custom' && keys.every((k) => p.permissions[k] === member[k])
     );

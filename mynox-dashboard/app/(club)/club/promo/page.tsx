@@ -1,12 +1,17 @@
 import { redirect } from 'next/navigation';
-import { getProfile } from '@/lib/auth';
+import { getProfile, getStaffPermissions } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import PromoManager from '@/components/club/PromoManager';
 
 export default async function PromoPage() {
   const profile = await getProfile();
-  if (!profile || profile.role !== 'club_admin') redirect('/club/dashboard');
-  if (!profile.club_id) return <p className="text-slate-400">Club non configurato.</p>;
+  if (!profile || !profile.club_id) redirect('/club/dashboard');
+
+  const isOwner = profile.role === 'club_admin';
+  if (!isOwner) {
+    const perms = await getStaffPermissions(profile.id, profile.club_id);
+    if (!perms?.can_manage_promos) redirect('/club/dashboard');
+  }
 
   const supabase = await createClient();
 
