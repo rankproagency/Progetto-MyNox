@@ -196,6 +196,18 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
       );
       throw error;
     }
+    // Aggiorna la cache offline dopo un mark riuscito
+    const userId = currentUserIdRef.current;
+    if (userId) {
+      try {
+        const cached = await AsyncStorage.getItem(ticketCacheKey(userId));
+        if (cached) {
+          const parsed: MockTicket[] = JSON.parse(cached);
+          const updated = parsed.map((t) => (t.id === id ? { ...t, drinkUsed: true } : t));
+          await AsyncStorage.setItem(ticketCacheKey(userId), JSON.stringify(updated));
+        }
+      } catch (_) {}
+    }
   }, []);
 
   const markTicketUsed = useCallback(async (id: string) => {
@@ -208,6 +220,17 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
         prev.map((t) => (t.id === id ? { ...t, status: 'valid' as const } : t))
       );
       throw error;
+    }
+    const userId = currentUserIdRef.current;
+    if (userId) {
+      try {
+        const cached = await AsyncStorage.getItem(ticketCacheKey(userId));
+        if (cached) {
+          const parsed: MockTicket[] = JSON.parse(cached);
+          const updated = parsed.map((t) => (t.id === id ? { ...t, status: 'used' as const } : t));
+          await AsyncStorage.setItem(ticketCacheKey(userId), JSON.stringify(updated));
+        }
+      } catch (_) {}
     }
   }, []);
 
@@ -225,13 +248,16 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const markTicketReclaimed = useCallback(async (id: string) => {
-    setTickets((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status: 'valid' as const, giftCode: undefined } : t))
-    );
+    // Cattura il giftCode corrente prima dell'update ottimistico per poterlo restaurare in caso di errore
+    let previousGiftCode: string | undefined;
+    setTickets((prev) => {
+      previousGiftCode = prev.find((t) => t.id === id)?.giftCode;
+      return prev.map((t) => (t.id === id ? { ...t, status: 'valid' as const, giftCode: undefined } : t));
+    });
     const { error } = await supabase.from('tickets').update({ status: 'valid' }).eq('id', id);
     if (error) {
       setTickets((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, status: 'gifted' as const } : t))
+        prev.map((t) => (t.id === id ? { ...t, status: 'gifted' as const, giftCode: previousGiftCode } : t))
       );
       throw error;
     }
