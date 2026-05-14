@@ -25,6 +25,7 @@ export interface MockTicket {
   drinkUsed?: boolean;
   status: 'valid' | 'used' | 'denied' | 'pending' | 'gifted';
   giftCode?: string;
+  giftCodeExpiresAt?: string;
   entryCode?: string;
   imageUrl?: string;
   eventImageUrl?: string;
@@ -35,7 +36,7 @@ interface TicketsCtx {
   addTickets: (tickets: MockTicket[]) => void;
   markDrinkUsed: (id: string) => Promise<void>;
   markTicketUsed: (id: string) => Promise<void>;
-  markTicketGifted: (id: string, code: string) => Promise<void>;
+  markTicketGifted: (id: string, code: string, expiresAt?: string) => Promise<void>;
   markTicketReclaimed: (id: string) => Promise<void>;
   removeTicket: (id: string) => void;
   refreshTickets: () => Promise<void>;
@@ -46,7 +47,7 @@ const TicketsContext = createContext<TicketsCtx>({
   addTickets: () => {},
   markDrinkUsed: async () => {},
   markTicketUsed: async () => {},
-  markTicketGifted: async () => {},
+  markTicketGifted: async (_id, _code, _expiresAt) => {},
   markTicketReclaimed: async () => {},
   removeTicket: () => {},
   refreshTickets: async () => {},
@@ -89,6 +90,7 @@ function dbRowToMockTicket(row: any): MockTicket {
     drinkUsed: row.drink_used ?? false,
     status: effectiveStatus,
     giftCode: pendingGift?.code ?? undefined,
+    giftCodeExpiresAt: pendingGift?.expires_at ?? undefined,
     entryCode: row.entry_code ?? undefined,
     imageUrl: ev?.clubs?.image_url ?? undefined,
     eventImageUrl: ev?.image_url ?? undefined,
@@ -115,7 +117,7 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
         ticket_types(label, includes_drink),
         events(id, name, date, start_time, end_time, image_url, clubs(name, image_url)),
         tables(label, capacity, section),
-        gift_codes(code, status)
+        gift_codes(code, status, expires_at)
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -234,14 +236,14 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const markTicketGifted = useCallback(async (id: string, code: string) => {
+  const markTicketGifted = useCallback(async (id: string, code: string, expiresAt?: string) => {
     setTickets((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status: 'gifted' as const, giftCode: code } : t))
+      prev.map((t) => (t.id === id ? { ...t, status: 'gifted' as const, giftCode: code, giftCodeExpiresAt: expiresAt } : t))
     );
     const { error } = await supabase.from('tickets').update({ status: 'gifted' }).eq('id', id);
     if (error) {
       setTickets((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, status: 'valid' as const, giftCode: undefined } : t))
+        prev.map((t) => (t.id === id ? { ...t, status: 'valid' as const, giftCode: undefined, giftCodeExpiresAt: undefined } : t))
       );
       throw error;
     }

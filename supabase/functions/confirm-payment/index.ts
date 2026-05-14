@@ -98,7 +98,16 @@ Deno.serve(async (req) => {
       .insert(toInsert)
       .select(TICKET_SELECT);
 
-    if (error) throw error;
+    if (error) {
+      if (error.message === 'tickets_sold_out') {
+        console.error('OVERSELL payment_intent_id=' + payment_intent_id + ' — rimborso manuale richiesto');
+        return new Response(
+          JSON.stringify({ error: 'sold_out' }),
+          { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      throw error;
+    }
 
     // Aggiorna sold_quantity sul tipo biglietto
     if (meta.ticket_type_id) {

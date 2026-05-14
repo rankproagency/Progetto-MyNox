@@ -304,6 +304,7 @@ export default function CheckoutScreen() {
         }
 
         let confirmedTickets: any[] | null = null;
+        let fatalError: string | null = null;
         for (let attempt = 0; attempt < 3; attempt++) {
           try {
             if (attempt > 0) await new Promise((r) => setTimeout(r, 2500));
@@ -317,14 +318,29 @@ export default function CheckoutScreen() {
               confirmedTickets = confirmJson.tickets;
               break;
             }
+            // 4xx = errore non recuperabile, non ha senso ritentare
+            if (confirmRes.status >= 400 && confirmRes.status < 500) {
+              fatalError = confirmJson.error ?? 'Errore sconosciuto';
+              break;
+            }
           } catch (_) {}
+        }
+
+        if (fatalError) {
+          // Pagamento addebitato ma biglietti non creati (es. esauriti in gara).
+          // Il team MyNox vedrà il log e gestirà il rimborso manualmente.
+          Alert.alert(
+            'Problema con i biglietti',
+            'Il pagamento è stato ricevuto ma i biglietti risultano esauriti. Contatta support@mynox.it per il rimborso.',
+            [{ text: 'OK' }]
+          );
+          return;
         }
 
         if (confirmedTickets) {
           createdTickets = confirmedTickets;
         } else {
-          // Pagamento avvenuto ma il server non ha risposto in tempo.
-          // Il webhook Stripe creerà il biglietto — mostriamo uno stato "in arrivo".
+          // Timeout — pagamento avvenuto, il webhook Stripe creerà il biglietto.
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           setPaymentPending(true);
           setShowSuccess(true);

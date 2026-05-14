@@ -279,6 +279,46 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      // Soft capacity check: blocca prima di addebitare se il tipo biglietto è esaurito.
+      // Il trigger DB farà il check definitivo e atomico in confirm-payment.
+      const { ticket_type_id, quantity: qtyStr, table_id } = metadata;
+      if (ticket_type_id && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        try {
+          const rows = await callSupabaseGet(
+            `/rest/v1/ticket_types?id=eq.${encodeURIComponent(ticket_type_id)}&select=total_quantity,sold_quantity`
+          );
+          if (Array.isArray(rows) && rows.length > 0) {
+            const tt = rows[0];
+            if (tt.total_quantity !== null) {
+              const requestedQty = parseInt(qtyStr, 10) || 1;
+              if (tt.sold_quantity + requestedQty > tt.total_quantity) {
+                res.writeHead(409, CORS_HEADERS);
+                res.end(JSON.stringify({ error: 'Biglietti esauriti. Scegline un\'altra tipologia.' }));
+                return;
+              }
+            }
+          }
+        } catch (e) {
+          console.error('capacity check error:', e.message);
+        }
+      }
+
+      // Soft table check: blocca prima di addebitare se il tavolo è già prenotato.
+      if (table_id && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        try {
+          const rows = await callSupabaseGet(
+            `/rest/v1/tables?id=eq.${encodeURIComponent(table_id)}&select=is_available`
+          );
+          if (Array.isArray(rows) && rows.length > 0 && rows[0].is_available === false) {
+            res.writeHead(409, CORS_HEADERS);
+            res.end(JSON.stringify({ error: 'Questo tavolo è stato appena prenotato. Selezionane un altro.' }));
+            return;
+          }
+        } catch (e) {
+          console.error('table availability check error:', e.message);
+        }
+      }
+
       const stripeBody = {
         amount: String(finalAmountCents),
         currency: 'eur',
@@ -333,11 +373,11 @@ const server = http.createServer(async (req, res) => {
       let code = '';
       for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
 
-      // Salva in Supabase — se fallisce lancia eccezione catturata dal catch
-      await callSupabase('/rest/v1/gift_codes', { code, ticket_id, gifter_id, status: 'pending' });
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      await callSupabase('/rest/v1/gift_codes', { code, ticket_id, gifter_id, status: 'pending', expires_at: expiresAt });
 
       res.writeHead(200, CORS_HEADERS);
-      res.end(JSON.stringify({ code }));
+      res.end(JSON.stringify({ code, expires_at: expiresAt }));
     } catch (err) {
       res.writeHead(500, CORS_HEADERS);
       res.end(JSON.stringify({ error: err.message }));
@@ -355,21 +395,30 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      // UPDATE atomico: transita da pending→claimed solo se il codice è ancora pending
-      // e il claimer non è il gifter. Una sola richiesta può vincere la race condition.
+      // UPDATE atomico: transita da pending→claimed solo se il codice è ancora pending,
+      // non scaduto, e il claimer non è il gifter.
+      const now = new Date().toISOString();
       const claimed = await callSupabasePatch(
-        `/rest/v1/gift_codes?code=eq.${encodeURIComponent(code)}&status=eq.pending&gifter_id=neq.${claimer_id}`,
-        { status: 'claimed', claimed_by: claimer_id, claimed_at: new Date().toISOString() }
+        `/rest/v1/gift_codes?code=eq.${encodeURIComponent(code)}&status=eq.pending&gifter_id=neq.${claimer_id}&expires_at=gte.${encodeURIComponent(now)}`,
+        { status: 'claimed', claimed_by: claimer_id, claimed_at: now }
       );
 
       if (!Array.isArray(claimed) || claimed.length === 0) {
-        // Nessuna riga aggiornata: codice inesistente, già riscattato, o auto-riscatto
+        // Nessuna riga aggiornata: codice inesistente, già riscattato, scaduto, o auto-riscatto
         const check = await callSupabaseGet(
-          `/rest/v1/gift_codes?code=eq.${encodeURIComponent(code)}&select=status,gifter_id`
+          `/rest/v1/gift_codes?code=eq.${encodeURIComponent(code)}&select=status,gifter_id,expires_at`
         );
-        if (Array.isArray(check) && check.length > 0 && check[0].gifter_id === claimer_id) {
-          res.writeHead(400, CORS_HEADERS);
-          res.end(JSON.stringify({ error: 'Non puoi riscattare il tuo stesso biglietto' }));
+        if (Array.isArray(check) && check.length > 0) {
+          if (check[0].gifter_id === claimer_id) {
+            res.writeHead(400, CORS_HEADERS);
+            res.end(JSON.stringify({ error: 'Non puoi riscattare il tuo stesso biglietto' }));
+          } else if (check[0].expires_at && new Date(check[0].expires_at) < new Date()) {
+            res.writeHead(410, CORS_HEADERS);
+            res.end(JSON.stringify({ error: 'Codice scaduto. Chiedi al mittente di inviarne uno nuovo.' }));
+          } else {
+            res.writeHead(404, CORS_HEADERS);
+            res.end(JSON.stringify({ error: 'Codice non valido o già usato' }));
+          }
         } else {
           res.writeHead(404, CORS_HEADERS);
           res.end(JSON.stringify({ error: 'Codice non valido o già usato' }));

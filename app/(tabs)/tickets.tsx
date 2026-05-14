@@ -155,11 +155,10 @@ export default function TicketsScreen() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ticket_id: ticket.id, gifter_id: user.id }),
               });
-              const json = await res.json() as { code?: string; error?: string };
+              const json = await res.json() as { code?: string; expires_at?: string; error?: string };
               if (!json.code) { Alert.alert('Errore', json.error ?? 'Impossibile creare il codice regalo'); return; }
 
-              // Segna il biglietto come regalato (resta visibile finché non viene riscattato)
-              await markTicketGifted(ticket.id, json.code);
+              await markTicketGifted(ticket.id, json.code, json.expires_at);
 
               await Share.share({
                 message: buildGiftMessage(ticket, json.code),
@@ -404,6 +403,11 @@ function TicketCard({
               <View style={styles.giftCodeBox}>
                 <Text style={styles.giftCodeLabel}>Codice regalo</Text>
                 <Text style={styles.giftCodeValue}>{ticket.giftCode}</Text>
+                {ticket.giftCodeExpiresAt && (
+                  <Text style={styles.giftCodeExpiry}>
+                    Scade il {new Date(ticket.giftCodeExpiresAt).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}
+                  </Text>
+                )}
               </View>
               <TouchableOpacity style={styles.reshareBtn} activeOpacity={0.8} onPress={onReshare}>
                 <Ionicons name="share-outline" size={15} color={Colors.accent} />
@@ -545,6 +549,7 @@ const styles = StyleSheet.create({
   giftCodeBox: { flex: 1 },
   giftCodeLabel: { fontSize: 10, fontFamily: Font.semiBold, color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 },
   giftCodeValue: { fontSize: 18, fontFamily: Font.bold, color: Colors.accent, letterSpacing: 3 },
+  giftCodeExpiry: { fontSize: 10, fontFamily: Font.regular, color: Colors.textMuted, marginTop: 3 },
   reshareBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 12, paddingVertical: 8,
