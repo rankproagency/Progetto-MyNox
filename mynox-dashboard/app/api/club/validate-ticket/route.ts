@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
   const clubId = await getCallerClubId();
   if (!clubId) return NextResponse.json({ ok: false, reason: 'unauthorized' }, { status: 403 });
 
-  const { code } = await req.json();
+  const { code, eventId } = await req.json();
   if (!code) return NextResponse.json({ ok: false, reason: 'invalid' }, { status: 400 });
 
   const admin = createAdminClient();
@@ -66,11 +66,16 @@ export async function POST(req: NextRequest) {
 
   const { data: ticket } = await admin
     .from('tickets')
-    .select('id, status, created_at, user_id, ticket_type_id, event_id')
+    .select('id, status, scanned_at, user_id, ticket_type_id, event_id')
     .eq(field, trimmedCode)
     .maybeSingle();
 
   if (!ticket) return NextResponse.json({ ok: false, reason: 'invalid' });
+
+  // Se il buttafuori ha selezionato un evento specifico, verifica che il biglietto sia esattamente per quell'evento
+  if (eventId && ticket.event_id !== eventId) {
+    return NextResponse.json({ ok: false, reason: 'wrong_event' });
+  }
 
   if (ticket.event_id) {
     const { data: event } = await admin
@@ -96,13 +101,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       ok: false,
       reason: 'already_used',
-      usedAt: new Date(ticket.created_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }),
+      usedAt: ticket.scanned_at
+        ? new Date(ticket.scanned_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+        : null,
     });
   }
 
   if (ticket.status !== 'valid') return NextResponse.json({ ok: false, reason: 'invalid' });
 
-  await admin.from('tickets').update({ status: 'used' }).eq('id', ticket.id);
+  await admin.from('tickets').update({ status: 'used', scanned_at: new Date().toISOString() }).eq('id', ticket.id);
 
   const [{ data: profile }, { data: ticketType }] = await Promise.all([
     admin.from('profiles').select('name').eq('id', ticket.user_id).single(),

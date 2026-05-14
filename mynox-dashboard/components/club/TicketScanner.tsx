@@ -10,7 +10,7 @@ interface ScanResult {
   ok: boolean;
   name?: string;
   ticketType?: string;
-  reason?: 'already_used' | 'invalid' | 'unauthorized' | 'not_yet' | 'event_ended';
+  reason?: 'already_used' | 'invalid' | 'unauthorized' | 'not_yet' | 'event_ended' | 'wrong_event';
   usedAt?: string;
   eventDate?: string;
 }
@@ -250,7 +250,12 @@ function ResultCard({ result }: { result: ScanResult }) {
         ) : result.reason === 'already_used' ? (
           <>
             <p className="text-orange-400 font-bold text-base">Biglietto già usato</p>
-            <p className="text-slate-300 text-sm mt-0.5">Prima scansione alle {result.usedAt}</p>
+            {result.usedAt && <p className="text-slate-300 text-sm mt-0.5">Prima scansione alle {result.usedAt}</p>}
+          </>
+        ) : result.reason === 'wrong_event' ? (
+          <>
+            <p className="text-red-400 font-bold text-base">Biglietto per un altro evento</p>
+            <p className="text-slate-300 text-sm mt-0.5">Questo biglietto non è valido per la serata selezionata.</p>
           </>
         ) : result.reason === 'not_yet' ? (
           <>
