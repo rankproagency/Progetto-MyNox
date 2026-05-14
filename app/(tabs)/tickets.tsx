@@ -126,7 +126,7 @@ export default function TicketsScreen() {
                 return;
               }
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              markTicketReclaimed(ticket.id);
+              await markTicketReclaimed(ticket.id);
             } catch {
               Alert.alert('Errore', 'Impossibile completare l\'operazione');
             }
@@ -159,7 +159,7 @@ export default function TicketsScreen() {
               if (!json.code) { Alert.alert('Errore', json.error ?? 'Impossibile creare il codice regalo'); return; }
 
               // Segna il biglietto come regalato (resta visibile finché non viene riscattato)
-              markTicketGifted(ticket.id, json.code);
+              await markTicketGifted(ticket.id, json.code);
 
               await Share.share({
                 message: buildGiftMessage(ticket, json.code),

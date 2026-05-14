@@ -189,28 +189,52 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
     setTickets((prev) =>
       prev.map((t) => (t.id === id ? { ...t, drinkUsed: true } : t))
     );
-    await supabase.from('tickets').update({ drink_used: true }).eq('id', id);
+    const { error } = await supabase.from('tickets').update({ drink_used: true }).eq('id', id);
+    if (error) {
+      setTickets((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, drinkUsed: false } : t))
+      );
+      throw error;
+    }
   }, []);
 
   const markTicketUsed = useCallback(async (id: string) => {
     setTickets((prev) =>
       prev.map((t) => (t.id === id ? { ...t, status: 'used' as const } : t))
     );
-    await supabase.from('tickets').update({ status: 'used' }).eq('id', id);
+    const { error } = await supabase.from('tickets').update({ status: 'used' }).eq('id', id);
+    if (error) {
+      setTickets((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, status: 'valid' as const } : t))
+      );
+      throw error;
+    }
   }, []);
 
   const markTicketGifted = useCallback(async (id: string, code: string) => {
     setTickets((prev) =>
       prev.map((t) => (t.id === id ? { ...t, status: 'gifted' as const, giftCode: code } : t))
     );
-    await supabase.from('tickets').update({ status: 'gifted' }).eq('id', id);
+    const { error } = await supabase.from('tickets').update({ status: 'gifted' }).eq('id', id);
+    if (error) {
+      setTickets((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, status: 'valid' as const, giftCode: undefined } : t))
+      );
+      throw error;
+    }
   }, []);
 
   const markTicketReclaimed = useCallback(async (id: string) => {
     setTickets((prev) =>
       prev.map((t) => (t.id === id ? { ...t, status: 'valid' as const, giftCode: undefined } : t))
     );
-    await supabase.from('tickets').update({ status: 'valid' }).eq('id', id);
+    const { error } = await supabase.from('tickets').update({ status: 'valid' }).eq('id', id);
+    if (error) {
+      setTickets((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, status: 'gifted' as const } : t))
+      );
+      throw error;
+    }
   }, []);
 
   const removeTicket = useCallback((id: string) => {

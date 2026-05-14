@@ -231,9 +231,13 @@ export default function TicketScreen() {
                                 {
                                   text: 'Conferma ingresso',
                                   style: 'destructive',
-                                  onPress: () => {
+                                  onPress: async () => {
                                     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                                    markTicketUsed(ticket.id);
+                                    try {
+                                      await markTicketUsed(ticket.id);
+                                    } catch {
+                                      Alert.alert('Errore', 'Impossibile aggiornare il biglietto. Riprova.');
+                                    }
                                   },
                                 },
                                 { text: 'Annulla', style: 'cancel' },
@@ -297,9 +301,13 @@ export default function TicketScreen() {
                             {
                               text: 'Conferma riscatto',
                               style: 'destructive',
-                              onPress: () => {
+                              onPress: async () => {
                                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                                markDrinkUsed(ticket.id);
+                                try {
+                                  await markDrinkUsed(ticket.id);
+                                } catch {
+                                  Alert.alert('Errore', 'Impossibile registrare il riscatto. Riprova.');
+                                }
                               },
                             },
                             { text: 'Annulla', style: 'cancel' },
