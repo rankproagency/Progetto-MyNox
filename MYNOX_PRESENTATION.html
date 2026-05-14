@@ -539,79 +539,96 @@
 <div class="slide">
   <div class="blob-tr"></div>
   <div class="blob-bl"></div>
-  <div class="pad flex" style="height:100%; gap:56px; align-items:center;">
+  <div class="pad-sm flex col" style="height:100%;">
 
-    <div class="flex col" style="flex:1;">
-      <div class="label">Analytics in tempo reale</div>
-      <h2 class="h3 mt3">Dati reali.<br>Decisioni migliori.</h2>
-      <div class="divider"></div>
-      <ul class="checks" style="gap:16px;">
-        <li><span class="ck">✓</span><span>Biglietti venduti per evento e per tipologia, aggiornati in tempo reale durante la serata</span></li>
-        <li><span class="ck">✓</span><span>Ricavi totali con storico completo di tutte le serate, accessibile sempre dalla dashboard</span></li>
-        <li><span class="ck">✓</span><span>Ingressi validati in diretta: sai quante persone sono già dentro mentre la serata è in corso</span></li>
-        <li><span class="ck">✓</span><span>Archivio eventi separato tra futuri e passati — tutto sempre rintracciabile</span></li>
-      </ul>
+    <!-- header -->
+    <div class="flex" style="align-items:flex-end; justify-content:space-between;">
+      <div>
+        <div class="label">Analytics in tempo reale</div>
+        <h2 class="h3 mt2">Dati reali. <span class="accent">Decisioni migliori.</span></h2>
+      </div>
+      <div style="display:flex; align-items:center; gap:7px; font-size:11px; font-weight:700; color:var(--green); background:var(--green-dim); border:1px solid var(--green-border); padding:7px 16px; border-radius:999px; flex-shrink:0;">
+        <div style="width:7px; height:7px; border-radius:50%; background:var(--green);"></div>
+        Live — Sabato 10 Maggio
+      </div>
     </div>
 
-    <div class="dash" style="width:460px; height:368px; flex-shrink:0;">
-      <div class="dash-bar">
-        <div class="dot" style="background:#ef4444;"></div>
-        <div class="dot" style="background:#f59e0b;"></div>
-        <div class="dot" style="background:#22c55e;"></div>
-        <span style="font-size:10px; color:#475569; margin-left:8px;">Sabato 10 Maggio — Live</span>
-        <div style="margin-left:auto; display:flex; align-items:center; gap:5px; font-size:10px; font-weight:700; color:var(--green);">
-          <div style="width:6px; height:6px; border-radius:50%; background:var(--green);"></div>Live
+    <!-- 3 big stats -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-top:20px;">
+      <div class="card" style="text-align:center; padding:20px 16px;">
+        <div style="font-size:48px; font-weight:900; color:var(--purple); line-height:1; text-shadow:0 0 32px rgba(168,85,247,0.3);">847</div>
+        <div style="font-size:11px; color:var(--slate); margin-top:7px; font-weight:500;">Biglietti venduti</div>
+      </div>
+      <div style="background:var(--purple-dim); border:1px solid var(--purple-border); border-radius:18px; text-align:center; padding:20px 16px;">
+        <div style="font-size:48px; font-weight:900; color:var(--white); line-height:1;">€ 12.340</div>
+        <div style="font-size:11px; color:var(--slate); margin-top:7px; font-weight:500;">Incasso totale</div>
+      </div>
+      <div class="card" style="text-align:center; padding:20px 16px;">
+        <div style="font-size:48px; font-weight:900; color:var(--green); line-height:1; text-shadow:0 0 32px rgba(34,197,94,0.25);">94%</div>
+        <div style="font-size:11px; color:var(--slate); margin-top:7px; font-weight:500;">Occupazione</div>
+      </div>
+    </div>
+
+    <!-- bottom: chart + checklist -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; flex:1; margin-top:14px;">
+
+      <div class="card flex col" style="padding:24px 26px; gap:0; justify-content:space-between;">
+        <div>
+          <div style="font-size:9px; color:#475569; text-transform:uppercase; letter-spacing:.8px; margin-bottom:16px;">Vendite per tipologia</div>
+          <div style="display:flex; flex-direction:column; gap:18px;">
+            <div class="bar-row">
+              <span style="font-size:12px; color:var(--slate); width:126px; flex-shrink:0;">Ingresso Standard</span>
+              <div class="bar-track"><div class="bar-fill" style="width:65%;"></div></div>
+              <span style="font-size:12px; color:var(--purple); font-weight:700; width:34px; text-align:right;">412</span>
+            </div>
+            <div class="bar-row">
+              <span style="font-size:12px; color:var(--slate); width:126px; flex-shrink:0;">Donna + Drink</span>
+              <div class="bar-track"><div class="bar-fill-g" style="width:45%;"></div></div>
+              <span style="font-size:12px; color:var(--green); font-weight:700; width:34px; text-align:right;">286</span>
+            </div>
+            <div class="bar-row">
+              <span style="font-size:12px; color:var(--slate); width:126px; flex-shrink:0;">Tavoli VIP</span>
+              <div class="bar-track"><div class="bar-fill" style="width:28%; background:linear-gradient(90deg,#6366f1,#818cf8);"></div></div>
+              <span style="font-size:12px; color:#818cf8; font-weight:700; width:34px; text-align:right;">149</span>
+            </div>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--border); padding-top:18px;">
+          <div style="font-size:9px; color:#475569; text-transform:uppercase; letter-spacing:.8px; margin-bottom:14px;">Ultimi ingressi</div>
+          <div style="display:flex; flex-direction:column; gap:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+              <span style="font-size:11px; color:var(--slate);">23:14 — Marco R.</span>
+              <span class="tag-g">✓ Ingresso Standard</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+              <span style="font-size:11px; color:var(--slate);">23:12 — Giulia M.</span>
+              <span class="tag-g">✓ Donna + Drink</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0;">
+              <span style="font-size:11px; color:var(--slate);">23:09 — Alessandro B.</span>
+              <span class="tag-g">✓ Tavolo VIP 7</span>
+            </div>
+          </div>
         </div>
       </div>
-      <div style="padding:18px 20px; display:flex; flex-direction:column; gap:12px; height:calc(100% - 34px); overflow:hidden;">
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-          <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center;">
-            <div style="font-size:22px; font-weight:900; color:var(--purple);">847</div>
-            <div style="font-size:9px; color:#475569; margin-top:3px;">Biglietti venduti</div>
-          </div>
-          <div style="background:var(--purple-dim); border:1px solid var(--purple-border); border-radius:10px; padding:12px; text-align:center;">
-            <div style="font-size:22px; font-weight:900; color:var(--white);">€ 12.340</div>
-            <div style="font-size:9px; color:#475569; margin-top:3px;">Incasso totale</div>
-          </div>
-          <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center;">
-            <div style="font-size:22px; font-weight:900; color:var(--green);">94%</div>
-            <div style="font-size:9px; color:#475569; margin-top:3px;">Occupazione</div>
-          </div>
-        </div>
-        <div style="font-size:9px; color:#475569; text-transform:uppercase; letter-spacing:.8px;">Vendite per tipologia</div>
-        <div style="display:flex; flex-direction:column; gap:8px;">
-          <div class="bar-row">
-            <span style="font-size:11px; color:var(--slate); width:110px; flex-shrink:0;">Ingresso Standard</span>
-            <div class="bar-track"><div class="bar-fill" style="width:65%;"></div></div>
-            <span style="font-size:11px; color:var(--purple); font-weight:700; width:30px; text-align:right;">412</span>
-          </div>
-          <div class="bar-row">
-            <span style="font-size:11px; color:var(--slate); width:110px; flex-shrink:0;">Donna + Drink</span>
-            <div class="bar-track"><div class="bar-fill-g" style="width:45%;"></div></div>
-            <span style="font-size:11px; color:var(--green); font-weight:700; width:30px; text-align:right;">286</span>
-          </div>
-          <div class="bar-row">
-            <span style="font-size:11px; color:var(--slate); width:110px; flex-shrink:0;">Tavoli VIP</span>
-            <div class="bar-track"><div class="bar-fill" style="width:28%; background:linear-gradient(90deg,#6366f1,#818cf8);"></div></div>
-            <span style="font-size:11px; color:#818cf8; font-weight:700; width:30px; text-align:right;">149</span>
-          </div>
-        </div>
-        <div style="font-size:9px; color:#475569; text-transform:uppercase; letter-spacing:.8px; margin-top:4px;">Ultimi ingressi</div>
-        <div style="display:flex; flex-direction:column; gap:4px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
-            <span style="font-size:11px; color:var(--slate);">23:14 — Marco R.</span>
-            <span class="tag-g">✓ Ingresso Standard</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
-            <span style="font-size:11px; color:var(--slate);">23:12 — Giulia M.</span>
-            <span class="tag-g">✓ Donna + Drink</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0;">
-            <span style="font-size:11px; color:var(--slate);">23:09 — Alessandro B.</span>
-            <span class="tag-g">✓ Tavolo VIP 7</span>
+
+      <div class="card flex col" style="padding:20px 22px; gap:14px;">
+        <div style="font-size:9px; color:#475569; text-transform:uppercase; letter-spacing:.8px;">Cosa monitora MyNox</div>
+        <div style="display:flex; flex-direction:column; gap:24px; flex:1; justify-content:center;">
+          <ul class="checks" style="gap:16px;">
+            <li><span class="ck">✓</span><span>Biglietti per tipologia — live durante la serata</span></li>
+            <li><span class="ck">✓</span><span>Ricavi totali e storico sempre accessibili</span></li>
+            <li><span class="ck">✓</span><span>Ingressi in diretta: quante persone sono dentro</span></li>
+            <li><span class="ck">✓</span><span>Confronta serate e identifica i trend nel tempo</span></li>
+            <li><span class="ck">✓</span><span>Archivio futuri/passati — tutto rintracciabile</span></li>
+          </ul>
+          <div style="padding:14px 18px; background:var(--purple-dim); border:1px solid var(--purple-border); border-radius:12px;">
+            <div style="font-size:13px; font-weight:700; color:var(--white); margin-bottom:4px;">Sai tutto. In ogni momento.</div>
+            <div style="font-size:12px; color:var(--slate);">Nessuna sorpresa a fine serata — aggiornato in tempo reale.</div>
           </div>
         </div>
       </div>
+
     </div>
 
   </div>
