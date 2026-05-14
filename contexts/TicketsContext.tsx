@@ -184,7 +184,14 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addTickets = useCallback((newTickets: MockTicket[]) => {
-    setTickets((prev) => [...prev, ...newTickets]);
+    setTickets((prev) => {
+      const updated = [...prev, ...newTickets];
+      const userId = currentUserIdRef.current;
+      if (userId) {
+        AsyncStorage.setItem(ticketCacheKey(userId), JSON.stringify(updated)).catch(() => {});
+      }
+      return updated;
+    });
   }, []);
 
   const markDrinkUsed = useCallback(async (id: string) => {

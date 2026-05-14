@@ -514,8 +514,11 @@ const server = http.createServer(async (req, res) => {
       const quantity = parseInt(qty ?? '1', 10);
       const includesDrink = includes_drink === 'true';
 
+      const charset = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
       const toInsert = Array.from({ length: quantity }, () => {
         const id = crypto.randomUUID();
+        const entryBytes = Array.from(crypto.randomBytes(6));
+        const entryCode = entryBytes.map((b) => charset[b % charset.length]).join('');
         return {
           id,
           event_id,
@@ -529,10 +532,11 @@ const server = http.createServer(async (req, res) => {
           status: 'valid',
           price_paid: 0,
           stripe_payment_intent_id: null,
+          entry_code: entryCode,
         };
       });
 
-      const selectQuery = 'id,qr_code,drink_qr_code,status,drink_used,price_paid,table_name,ticket_types(label,includes_drink),events(id,name,date,start_time,clubs(name,image_url))';
+      const selectQuery = 'id,qr_code,drink_qr_code,entry_code,status,drink_used,price_paid,table_name,ticket_types(label,includes_drink),events(id,name,date,start_time,clubs(name,image_url))';
       const inserted = await supabaseRequest('POST', `/rest/v1/tickets?select=${encodeURIComponent(selectQuery)}`, toInsert);
 
       if (!Array.isArray(inserted) || inserted.length === 0) {
