@@ -58,14 +58,20 @@ Deno.serve(async (req) => {
       .insert({ payment_intent_id, ticket_count: quantity });
 
     if (idempotencyError) {
-      const { data: existing } = await supabase
-        .from('tickets')
-        .select(TICKET_SELECT)
-        .eq('stripe_payment_intent_id', payment_intent_id);
-      return new Response(
-        JSON.stringify({ tickets: existing ?? [] }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (idempotencyError.code === '23505') {
+        // Chiave duplicata → webhook già processato → restituiamo i biglietti esistenti
+        const { data: existing } = await supabase
+          .from('tickets')
+          .select(TICKET_SELECT)
+          .eq('stripe_payment_intent_id', payment_intent_id);
+        return new Response(
+          JSON.stringify({ tickets: existing ?? [] }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      // Qualsiasi altro errore sulla tabella di idempotency: logghiamo ma procediamo
+      // (meglio creare biglietti in più che non crearli dopo un pagamento avvenuto)
+      console.error('stripe_payment_events insert error:', idempotencyError.message);
     }
 
     const toInsert = Array.from({ length: quantity }, () => {
