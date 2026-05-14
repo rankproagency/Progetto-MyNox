@@ -102,9 +102,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Prenota il tavolo in modo atomico tramite RPC
+    // Prenota il tavolo in modo atomico tramite RPC.
+    // Non propaghiamo l'errore: i biglietti sono già stati creati e il pagamento addebitato.
     if (meta.table_id) {
-      await supabase.rpc('book_table', { p_table_id: meta.table_id });
+      const { error: bookErr } = await supabase.rpc('book_table', {
+        p_table_id: meta.table_id,
+        p_reserved_by: meta.table_name || null,
+      });
+      if (bookErr) console.error('book_table error:', bookErr.message);
     }
 
     return new Response(

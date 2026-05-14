@@ -466,7 +466,10 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (table_id) {
-        const bookResult = await callSupabase('/rest/v1/rpc/book_table', { p_table_id: table_id });
+        const bookResult = await callSupabase('/rest/v1/rpc/book_table', {
+          p_table_id: table_id,
+          p_reserved_by: table_name || null,
+        });
         if (bookResult && bookResult.message && bookResult.message.includes('table_already_booked')) {
           res.writeHead(409, CORS_HEADERS);
           res.end(JSON.stringify({ error: 'Il tavolo è già stato prenotato da qualcun altro.' }));
