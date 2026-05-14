@@ -32,6 +32,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
     price: String(t.price),
     total_quantity: String(t.total_quantity ?? ''),
     includes_drink: t.includes_drink,
+    sold_quantity: t.sold_quantity ?? 0,
   }));
 
   // Costruisci la lista tavoli per questo evento: usa quelli esistenti se ci sono,
@@ -46,7 +47,9 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
   }));
 
   const initialEventTables = mappedClubTables.map((ct: any) => {
-    const existing = (eventTables ?? []).find((et: any) => et.label === ct.label);
+    const existing = (eventTables ?? []).find((et: any) =>
+      et.club_table_id ? et.club_table_id === ct.id : et.label === ct.label
+    );
     return {
       id: existing?.id as string | undefined,
       clubTableId: ct.id,

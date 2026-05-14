@@ -18,6 +18,7 @@ interface TicketTypeRow {
   price: string;
   total_quantity: string;
   includes_drink: boolean;
+  sold_quantity?: number;
 }
 
 interface ClubTableData {
@@ -228,6 +229,18 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
           const { error: delErr } = await supabase.from('ticket_types').delete().in('id', removedIds);
           if (delErr) { setError('Errore eliminazione biglietti rimossi: ' + delErr.message); setLoading(false); return; }
         }
+        // Valida che la nuova quantità non sia inferiore ai biglietti già venduti
+        for (const t of validTickets.filter((t) => t.id)) {
+          if (t.total_quantity && t.sold_quantity !== undefined && t.sold_quantity > 0) {
+            const newQty = parseInt(t.total_quantity);
+            if (newQty < t.sold_quantity) {
+              setError(`La quantità di "${t.label}" non può essere inferiore ai biglietti già venduti (${t.sold_quantity}).`);
+              setLoading(false);
+              return;
+            }
+          }
+        }
+
         // Aggiorna i biglietti esistenti (preserva sold_quantity)
         for (const t of validTickets.filter((t) => t.id)) {
           const { error: updErr } = await supabase.from('ticket_types').update({
@@ -276,6 +289,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
         for (const t of eventTables) {
           const clubTable = clubTables?.find((ct) => ct.id === t.clubTableId);
           const tableData = {
+            club_table_id: t.clubTableId,
             label: t.label,
             capacity: t.capacity,
             deposit: t.deposit ? parseFloat(t.deposit) : 0,
@@ -301,6 +315,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
             const clubTable = clubTables?.find((ct) => ct.id === t.clubTableId);
             return {
               event_id: eventId,
+              club_table_id: t.clubTableId,
               label: t.label,
               capacity: t.capacity,
               deposit: t.deposit ? parseFloat(t.deposit) : 0,
@@ -717,12 +732,15 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
                 <label className="block text-xs text-slate-500 mb-1">Quantità disponibile <span className="text-red-400">*</span></label>
                 <input
                   type="number"
-                  min="1"
+                  min={ticket.sold_quantity && ticket.sold_quantity > 0 ? ticket.sold_quantity : 1}
                   value={ticket.total_quantity}
                   onChange={(e) => updateTicketType(index, 'total_quantity', e.target.value)}
                   placeholder="es. 200"
                   className={inputClass}
                 />
+                {ticket.sold_quantity !== undefined && ticket.sold_quantity > 0 && (
+                  <p className="text-xs text-slate-500 mt-1">{ticket.sold_quantity} già venduti</p>
+                )}
               </div>
             </div>
             <div className="flex items-center justify-between">
