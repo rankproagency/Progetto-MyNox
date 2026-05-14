@@ -52,12 +52,18 @@ export default function TicketScanner({ events, defaultEventId }: Props) {
     setResult(data);
     setScanState(data.ok ? 'success' : 'error');
 
+    if (data.ok) {
+      navigator.vibrate?.([80]);
+    } else {
+      navigator.vibrate?.([120, 60, 120]);
+    }
+
     clearTimeout(resetTimerRef.current);
     resetTimerRef.current = setTimeout(() => {
       setScanState('idle');
       setResult(null);
       processingRef.current = false;
-    }, 4000);
+    }, 2000);
   }
 
   useEffect(() => {
@@ -227,14 +233,19 @@ export default function TicketScanner({ events, defaultEventId }: Props) {
 }
 
 function ResultCard({ result }: { result: ScanResult }) {
+  const isOrange = !result.ok && (result.reason === 'already_used' || result.reason === 'not_yet' || result.reason === 'event_ended');
+  const cardClass = result.ok
+    ? 'bg-green-500/10 border-green-500/40'
+    : isOrange
+      ? 'bg-orange-500/10 border-orange-500/40'
+      : 'bg-red-500/10 border-red-500/40';
+
   return (
-    <div className={`w-full rounded-2xl p-4 flex items-center gap-3 border-2 transition-all ${
-      result.ok ? 'bg-green-500/10 border-green-500/40' : 'bg-red-500/10 border-red-500/40'
-    }`}>
+    <div className={`w-full rounded-2xl p-4 flex items-center gap-3 border-2 transition-all ${cardClass}`}>
       <div className="shrink-0">
         {result.ok ? (
           <CheckCircle2 size={36} className="text-green-400" />
-        ) : result.reason === 'already_used' || result.reason === 'not_yet' || result.reason === 'event_ended' ? (
+        ) : isOrange ? (
           <Clock size={36} className="text-orange-400" />
         ) : (
           <XCircle size={36} className="text-red-400" />
