@@ -306,6 +306,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
 
   async function handleDelete() {
     if (!event) return;
+    setLoading(true);
     const supabase = createClient();
 
     // Controlla se esistono biglietti venduti per questo evento
@@ -317,13 +318,16 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
 
     if (count === null) {
       alert('Impossibile verificare i biglietti venduti. Riprova tra qualche secondo.');
+      setLoading(false);
       return;
     }
     if (count > 0) {
       alert(`Impossibile eliminare: ci sono ${count} bigliett${count === 1 ? 'o venduto' : 'i venduti'} per questo evento. Annulla o attendi che l'evento sia concluso.`);
+      setLoading(false);
       return;
     }
 
+    setLoading(false);
     if (!confirm('Sei sicuro di voler eliminare questo evento? L\'operazione è irreversibile.')) return;
 
     setLoading(true);

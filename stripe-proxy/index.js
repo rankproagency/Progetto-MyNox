@@ -414,8 +414,9 @@ const server = http.createServer(async (req, res) => {
 
       const gift = gifts[0];
 
-      // Annulla il codice regalo
-      await callSupabasePatch(`/rest/v1/gift_codes?code=eq.${gift.code}`, { status: 'cancelled' });
+      // Elimina il codice regalo — impostare status='cancelled' violerebbe il CHECK constraint
+      // ('pending','claimed'). La delete è l'unico modo per invalidarlo atomicamente.
+      await supabaseRequest('DELETE', `/rest/v1/gift_codes?code=eq.${encodeURIComponent(gift.code)}`, null);
 
       res.writeHead(200, CORS_HEADERS);
       res.end(JSON.stringify({ success: true }));
