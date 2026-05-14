@@ -2,9 +2,8 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getProfile, getStaffPermissions } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { Plus, Pencil, Lock } from 'lucide-react';
-import DuplicateEventButton from '@/components/club/DuplicateEventButton';
-import PublishToggle from '@/components/club/PublishToggle';
+import { Plus } from 'lucide-react';
+import ClubEventsTable from './ClubEventsTable';
 
 export default async function ClubEventsPage() {
   const profile = await getProfile();
@@ -30,7 +29,7 @@ export default async function ClubEventsPage() {
     const [{ data: ticketRevenue }, { data: ticketTypes }] = await Promise.all([
       supabase
         .from('tickets')
-        .select('event_id, price_paid, ticket_types(price)')
+        .select('event_id, price_paid')
         .in('event_id', eventIds)
         .in('status', ['valid', 'used']),
       supabase
@@ -59,8 +58,19 @@ export default async function ClubEventsPage() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const futureEvents = (events ?? []).filter((e) => new Date(e.date) >= today);
-  const pastEvents = (events ?? []).filter((e) => new Date(e.date) < today);
+  const toRow = (e: any) => ({
+    id: e.id,
+    name: e.name,
+    date: e.date,
+    start_time: e.start_time,
+    tickets_sold: e.tickets_sold ?? 0,
+    capacity: capacityByEvent[e.id] ?? null,
+    is_published: e.is_published,
+    revenue: revenueByEvent[e.id] ?? 0,
+  });
+
+  const futureEvents = (events ?? []).filter((e) => new Date(e.date) >= today).map(toRow);
+  const pastEvents   = (events ?? []).filter((e) => new Date(e.date) < today).map(toRow);
 
   return (
     <div>
@@ -78,123 +88,7 @@ export default async function ClubEventsPage() {
         </Link>
       </div>
 
-      <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-white/8">
-              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Nome</th>
-              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Data</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Orario</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Biglietti</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Ricavi</th>
-              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Stato</th>
-              <th className="px-3 md:px-5 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {/* ── Eventi futuri ── */}
-            {futureEvents.length > 0 ? (
-              futureEvents.map((event) => (
-                <tr key={event.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
-                  <td className="px-3 md:px-5 py-4 font-medium">
-                    <Link href={`/club/events/${event.id}`} className="text-white hover:text-purple-400 transition-colors">
-                      {event.name}
-                    </Link>
-                  </td>
-                  <td className="px-3 md:px-5 py-4 text-slate-300 whitespace-nowrap">
-                    {new Date(event.date).toLocaleDateString('it-IT')}
-                  </td>
-                  <td className="px-5 py-4 text-slate-300 hidden md:table-cell">{event.start_time}</td>
-                  <td className="px-5 py-4 text-slate-300 hidden md:table-cell">
-                    {event.tickets_sold}{event.id in capacityByEvent ? (capacityByEvent[event.id] != null ? ` / ${capacityByEvent[event.id]}` : ' / ∞') : ''}
-                  </td>
-                  <td className="px-5 py-4 font-semibold text-purple-400 hidden md:table-cell">
-                    €{(revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </td>
-                  <td className="px-3 md:px-5 py-4">
-                    <PublishToggle eventId={event.id} isPublished={event.is_published} />
-                  </td>
-                  <td className="px-3 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <span className="hidden md:block">
-                        <DuplicateEventButton eventId={event.id} />
-                      </span>
-                      <Link
-                        href={`/club/events/${event.id}/edit`}
-                        className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-2 md:px-3 py-1.5 rounded-lg transition-colors"
-                      >
-                        <Pencil size={12} />
-                        <span className="hidden md:inline">Modifica</span>
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={7} className="px-5 py-16 text-center">
-                  <p className="text-slate-400 font-medium mb-1">Nessun evento in programma</p>
-                  <p className="text-slate-500 text-xs mb-4">Crea il tuo primo evento per iniziare a vendere biglietti.</p>
-                  <Link
-                    href="/club/events/new"
-                    className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-                  >
-                    <Plus size={14} />
-                    Crea evento
-                  </Link>
-                </td>
-              </tr>
-            )}
-
-            {/* ── Separatore eventi passati ── */}
-            {pastEvents.length > 0 && (
-              <>
-                <tr>
-                  <td colSpan={7} className="px-5 py-2.5 bg-white/3 border-y border-white/8">
-                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      Eventi passati
-                    </span>
-                  </td>
-                </tr>
-
-                {pastEvents.map((event, i) => (
-                  <tr
-                    key={event.id}
-                    className={`border-b border-white/5 opacity-60 ${i === pastEvents.length - 1 ? 'border-b-0' : ''}`}
-                  >
-                    <td className="px-5 py-4 font-medium">
-                      <Link href={`/club/events/${event.id}`} className="text-slate-300 hover:text-white transition-colors">
-                        {event.name}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-4 text-slate-400">
-                      {new Date(event.date).toLocaleDateString('it-IT')}
-                    </td>
-                    <td className="px-5 py-4 text-slate-400 hidden md:table-cell">{event.start_time}</td>
-                    <td className="px-5 py-4 text-slate-400 hidden md:table-cell">
-                      {event.tickets_sold}{event.id in capacityByEvent ? (capacityByEvent[event.id] != null ? ` / ${capacityByEvent[event.id]}` : ' / ∞') : ''}
-                    </td>
-                    <td className="px-5 py-4 font-semibold text-purple-400/70 hidden md:table-cell">
-                      €{(revenueByEvent[event.id] ?? 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-slate-500/10 text-slate-500 border-slate-500/20">
-                        Concluso
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <span className="inline-flex items-center gap-1.5 text-xs text-slate-600 select-none">
-                        <Lock size={11} />
-                        Non modificabile
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <ClubEventsTable futureEvents={futureEvents} pastEvents={pastEvents} />
     </div>
   );
 }
