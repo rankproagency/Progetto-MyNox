@@ -18,7 +18,7 @@ const corsHeaders = {
 };
 
 const TICKET_SELECT = `
-  id, qr_code, drink_qr_code, status, drink_used, price_paid, table_name,
+  id, qr_code, drink_qr_code, entry_code, status, drink_used, price_paid, table_name,
   ticket_types(label, includes_drink),
   events(id, name, date, start_time, clubs(name, image_url))
 `;

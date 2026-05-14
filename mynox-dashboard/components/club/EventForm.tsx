@@ -210,6 +210,21 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
         const keptIds = validTickets.filter((t) => t.id).map((t) => t.id) as string[];
         const removedIds = originalIds.filter((id) => !keptIds.includes(id));
         if (removedIds.length > 0) {
+          const { count: soldCount } = await supabase
+            .from('tickets')
+            .select('id', { count: 'exact', head: true })
+            .in('ticket_type_id', removedIds)
+            .in('status', ['valid', 'used', 'gifted']);
+          if (soldCount === null) {
+            setError('Impossibile verificare i biglietti venduti. Riprova.');
+            setLoading(false);
+            return;
+          }
+          if (soldCount > 0) {
+            setError(`Impossibile rimuovere ${removedIds.length > 1 ? 'alcune tipologie' : 'questa tipologia'}: ci sono ${soldCount} bigliett${soldCount === 1 ? 'o venduto' : 'i venduti'} associati. Puoi modificare etichetta o prezzo, ma non eliminarla.`);
+            setLoading(false);
+            return;
+          }
           const { error: delErr } = await supabase.from('ticket_types').delete().in('id', removedIds);
           if (delErr) { setError('Errore eliminazione biglietti rimossi: ' + delErr.message); setLoading(false); return; }
         }

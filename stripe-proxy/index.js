@@ -140,6 +140,29 @@ function readBody(req) {
   });
 }
 
+// Rate limiter in-memory: max 20 richieste per IP al minuto
+const rateLimitMap = new Map();
+function isRateLimited(ip) {
+  const now = Date.now();
+  const windowMs = 60 * 1000;
+  const max = 20;
+  const entry = rateLimitMap.get(ip) ?? { count: 0, start: now };
+  if (now - entry.start > windowMs) {
+    rateLimitMap.set(ip, { count: 1, start: now });
+    return false;
+  }
+  entry.count += 1;
+  rateLimitMap.set(ip, entry);
+  return entry.count > max;
+}
+// Pulizia periodica per evitare memory leak
+setInterval(() => {
+  const cutoff = Date.now() - 2 * 60 * 1000;
+  for (const [ip, entry] of rateLimitMap) {
+    if (entry.start < cutoff) rateLimitMap.delete(ip);
+  }
+}, 60 * 1000);
+
 const server = http.createServer(async (req, res) => {
   // CORS preflight
   if (req.method === 'OPTIONS') {
@@ -151,6 +174,13 @@ const server = http.createServer(async (req, res) => {
   if (req.method !== 'POST') {
     res.writeHead(404, CORS_HEADERS);
     res.end(JSON.stringify({ error: 'Not found' }));
+    return;
+  }
+
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ?? req.socket.remoteAddress ?? 'unknown';
+  if (isRateLimited(ip)) {
+    res.writeHead(429, CORS_HEADERS);
+    res.end(JSON.stringify({ error: 'Troppe richieste. Riprova tra un minuto.' }));
     return;
   }
 
