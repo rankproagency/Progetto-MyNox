@@ -355,32 +355,32 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      // Cerca il codice
-      const gifts = await callSupabaseGet(`/rest/v1/gift_codes?code=eq.${encodeURIComponent(code)}&status=eq.pending&select=*`);
+      // UPDATE atomico: transita da pending→claimed solo se il codice è ancora pending
+      // e il claimer non è il gifter. Una sola richiesta può vincere la race condition.
+      const claimed = await callSupabasePatch(
+        `/rest/v1/gift_codes?code=eq.${encodeURIComponent(code)}&status=eq.pending&gifter_id=neq.${claimer_id}`,
+        { status: 'claimed', claimed_by: claimer_id, claimed_at: new Date().toISOString() }
+      );
 
-      if (!Array.isArray(gifts) || gifts.length === 0) {
-        res.writeHead(404, CORS_HEADERS);
-        res.end(JSON.stringify({ error: 'Codice non valido o già usato' }));
+      if (!Array.isArray(claimed) || claimed.length === 0) {
+        // Nessuna riga aggiornata: codice inesistente, già riscattato, o auto-riscatto
+        const check = await callSupabaseGet(
+          `/rest/v1/gift_codes?code=eq.${encodeURIComponent(code)}&select=status,gifter_id`
+        );
+        if (Array.isArray(check) && check.length > 0 && check[0].gifter_id === claimer_id) {
+          res.writeHead(400, CORS_HEADERS);
+          res.end(JSON.stringify({ error: 'Non puoi riscattare il tuo stesso biglietto' }));
+        } else {
+          res.writeHead(404, CORS_HEADERS);
+          res.end(JSON.stringify({ error: 'Codice non valido o già usato' }));
+        }
         return;
       }
 
-      const gift = gifts[0];
+      const gift = claimed[0];
 
-      if (gift.gifter_id === claimer_id) {
-        res.writeHead(400, CORS_HEADERS);
-        res.end(JSON.stringify({ error: 'Non puoi riscattare il tuo stesso biglietto' }));
-        return;
-      }
-
-      // Trasferisci il biglietto al nuovo proprietario e ripristina lo status
+      // Trasferisci il biglietto al nuovo proprietario
       await callSupabasePatch(`/rest/v1/tickets?id=eq.${gift.ticket_id}`, { user_id: claimer_id, status: 'valid' });
-
-      // Segna il codice come usato
-      await callSupabasePatch(`/rest/v1/gift_codes?code=eq.${code}`, {
-        status: 'claimed',
-        claimed_by: claimer_id,
-        claimed_at: new Date().toISOString(),
-      });
 
       res.writeHead(200, CORS_HEADERS);
       res.end(JSON.stringify({ success: true, ticket_id: gift.ticket_id }));
