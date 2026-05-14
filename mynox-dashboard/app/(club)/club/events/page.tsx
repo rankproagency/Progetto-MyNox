@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getProfile, getStaffPermissions } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { Plus, Pencil, Lock } from 'lucide-react';
+import { Plus, Pencil, Lock, CalendarDays, FileEdit, Clock } from 'lucide-react';
 import DuplicateEventButton from '@/components/club/DuplicateEventButton';
 import PublishToggle from '@/components/club/PublishToggle';
 
@@ -62,6 +62,9 @@ export default async function ClubEventsPage() {
   const futureEvents = (events ?? []).filter((e) => new Date(e.date) >= today);
   const pastEvents = (events ?? []).filter((e) => new Date(e.date) < today);
 
+  const publishedCount = futureEvents.filter((e) => e.is_published).length;
+  const draftCount = futureEvents.filter((e) => !e.is_published).length;
+
   return (
     <div>
       <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
@@ -76,6 +79,33 @@ export default async function ClubEventsPage() {
           <Plus size={16} />
           Nuovo evento
         </Link>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3 md:gap-4 mb-8">
+        <div className="bg-[#111118] border border-white/8 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <CalendarDays size={16} className="text-green-400" />
+            <span className="text-xs text-slate-400 uppercase tracking-wider">Pubblicati</span>
+          </div>
+          <p className="text-2xl font-bold text-green-400">{publishedCount}</p>
+          <p className="text-xs text-slate-500 mt-1">eventi futuri visibili nell&apos;app</p>
+        </div>
+        <div className="bg-[#111118] border border-white/8 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <FileEdit size={16} className="text-amber-400" />
+            <span className="text-xs text-slate-400 uppercase tracking-wider">In bozza</span>
+          </div>
+          <p className="text-2xl font-bold text-amber-400">{draftCount}</p>
+          <p className="text-xs text-slate-500 mt-1">futuri, non ancora pubblicati</p>
+        </div>
+        <div className="bg-[#111118] border border-white/8 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Clock size={16} className="text-slate-400" />
+            <span className="text-xs text-slate-400 uppercase tracking-wider">Passati</span>
+          </div>
+          <p className="text-2xl font-bold text-slate-400">{pastEvents.length}</p>
+          <p className="text-xs text-slate-500 mt-1">eventi conclusi</p>
+        </div>
       </div>
 
       <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
