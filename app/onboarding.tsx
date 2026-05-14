@@ -8,7 +8,11 @@ import {
   ScrollView,
   Image,
   Animated,
+  Modal,
+  ActivityIndicator,
+  Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -485,10 +489,17 @@ const st = StyleSheet.create({
 // ─────────────────────────────────────────────────────────────────────────────
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { completeOnboarding, setMusicGenres, user } = useAuth();
+  const { completeOnboarding, setMusicGenres, updateDateOfBirth, user } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
   const scrollRef = useRef<ScrollView>(null);
+
+  const MAX_DOB = new Date();
+  MAX_DOB.setFullYear(MAX_DOB.getFullYear() - 14);
+
+  const [showDobModal, setShowDobModal] = useState(false);
+  const [dobTempDate, setDobTempDate] = useState<Date>(MAX_DOB);
+  const [dobSaving, setDobSaving] = useState(false);
 
   const isGenreStep = currentIndex === TOTAL_SLIDES;
 
@@ -523,11 +534,30 @@ export default function OnboardingScreen() {
     }
   }
 
-  function handleStart() {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  async function finishOnboarding() {
     if (selectedGenres.length > 0) setMusicGenres(selectedGenres);
     completeOnboarding();
     router.replace(user ? '/(tabs)' : '/login');
+  }
+
+  function handleStart() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (user && !user.dateOfBirth) {
+      setShowDobModal(true);
+    } else {
+      finishOnboarding();
+    }
+  }
+
+  async function handleDobConfirm() {
+    setDobSaving(true);
+    try {
+      await updateDateOfBirth(dobTempDate);
+    } finally {
+      setDobSaving(false);
+      setShowDobModal(false);
+      finishOnboarding();
+    }
   }
 
   function handleScroll(e: { nativeEvent: { contentOffset: { x: number } } }) {
@@ -561,6 +591,41 @@ export default function OnboardingScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Modal data di nascita — mostrato solo per utenti senza DOB (es. staff) */}
+      <Modal visible={showDobModal} transparent animationType="slide" onRequestClose={() => {}}>
+        <View style={styles.dobOverlay}>
+          <View style={styles.dobSheet}>
+            <View style={styles.dobHandle} />
+            <Text style={styles.dobTitle}>Un'ultima cosa</Text>
+            <Text style={styles.dobSubtitle}>
+              Inserisci la tua data di nascita per verificare l'età agli eventi.
+            </Text>
+            <DateTimePicker
+              value={dobTempDate}
+              mode="date"
+              display="spinner"
+              maximumDate={MAX_DOB}
+              minimumDate={new Date(1920, 0, 1)}
+              onChange={(_, date) => { if (date) setDobTempDate(date); }}
+              textColor={Colors.textPrimary}
+              locale="it-IT"
+              style={styles.dobPicker}
+            />
+            <TouchableOpacity
+              style={[styles.dobConfirmBtn, dobSaving && { opacity: 0.6 }]}
+              onPress={handleDobConfirm}
+              disabled={dobSaving}
+              activeOpacity={0.85}
+            >
+              {dobSaving
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <Text style={styles.dobConfirmText}>Conferma e inizia</Text>
+              }
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <LinearGradient
         colors={SLIDE_GRADIENTS[gradientIndex]}
         style={styles.bgGradient}
@@ -708,6 +773,24 @@ const styles = StyleSheet.create({
     textAlign: 'center', marginTop: 20,
     fontSize: 13, color: Colors.accent, fontFamily: Font.bold,
   },
+
+  dobOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.6)' },
+  dobSheet: {
+    backgroundColor: '#111120',
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingHorizontal: 24, paddingBottom: 40, paddingTop: 12,
+    alignItems: 'center',
+  },
+  dobHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)', marginBottom: 20 },
+  dobTitle: { fontSize: 22, fontFamily: Font.black, color: Colors.textPrimary, marginBottom: 8 },
+  dobSubtitle: { fontSize: 14, fontFamily: Font.regular, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22, marginBottom: 8 },
+  dobPicker: { width: '100%', height: 180 },
+  dobConfirmBtn: {
+    backgroundColor: Colors.accent, borderRadius: 16,
+    paddingVertical: 16, alignItems: 'center',
+    width: '100%', marginTop: 8,
+  },
+  dobConfirmText: { fontSize: 16, fontFamily: Font.extraBold, color: Colors.white },
 
   footer: { paddingHorizontal: 24, paddingBottom: 8, gap: 8 },
   ctaButton: {

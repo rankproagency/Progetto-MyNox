@@ -113,8 +113,9 @@ export default function CheckoutScreen() {
   const [paying, setPaying] = useState(false);
   const [ageConfirmed, setAgeConfirmed] = useState(false);
 
+  const hasDob = !!user?.dateOfBirth;
   const userAge = getUserAge(user?.dateOfBirth);
-  const needsAgeConfirm = userAge === null || userAge < 18;
+  const needsAgeConfirm = hasDob && userAge !== null && userAge < 18;
 
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
@@ -506,7 +507,25 @@ export default function CheckoutScreen() {
           </View>
         </View>
 
-        {/* Conferma maggiore età — solo per utenti under 18 o senza data di nascita */}
+        {/* DOB mancante — blocco acquisto con rimando al profilo */}
+        {!hasDob && (
+          <View style={styles.section}>
+            <View style={styles.dobMissingBanner}>
+              <Ionicons name="calendar-outline" size={18} color="#f59e0b" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.dobMissingTitle}>Data di nascita mancante</Text>
+                <Text style={styles.dobMissingText}>
+                  Per acquistare biglietti aggiungi la tua data di nascita in{' '}
+                  <Text style={styles.dobMissingLink} onPress={() => router.push('/edit-profile')}>
+                    Profilo → Modifica profilo
+                  </Text>
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Conferma maggiore età — solo per utenti under 18 con DOB impostata */}
         {needsAgeConfirm && (
           <View style={styles.section}>
             <TouchableOpacity
@@ -537,10 +556,10 @@ export default function CheckoutScreen() {
 
       <View style={styles.ctaContainer}>
         <TouchableOpacity
-          style={[styles.ctaButton, (paying || (needsAgeConfirm && !ageConfirmed)) && { opacity: 0.5 }]}
+          style={[styles.ctaButton, (paying || !hasDob || (needsAgeConfirm && !ageConfirmed)) && { opacity: 0.5 }]}
           activeOpacity={0.85}
           onPress={handlePay}
-          disabled={paying || (needsAgeConfirm && !ageConfirmed)}
+          disabled={paying || !hasDob || (needsAgeConfirm && !ageConfirmed)}
         >
           {paying ? (
             <ActivityIndicator size="small" color={Colors.white} />
@@ -675,6 +694,16 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   disclaimerText: { flex: 1, fontSize: 12, color: Colors.textMuted, lineHeight: 18 },
+
+  dobMissingBanner: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 12,
+    backgroundColor: 'rgba(245,158,11,0.08)',
+    borderRadius: 12, borderWidth: 1, borderColor: 'rgba(245,158,11,0.3)',
+    padding: 14,
+  },
+  dobMissingTitle: { fontSize: 13, fontFamily: Font.bold, color: '#f59e0b', marginBottom: 3 },
+  dobMissingText: { fontSize: 12, color: Colors.textMuted, lineHeight: 18 },
+  dobMissingLink: { color: '#f59e0b', fontFamily: Font.semiBold },
 
   ageCheckRow: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,

@@ -8,7 +8,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,11 +33,26 @@ function formatDOB(date: Date): string {
 
 export default function EditProfileScreen() {
   const router = useRouter();
-  const { user, updateUser, deleteAccount, musicGenres, setMusicGenres } = useAuth();
+  const { user, updateUser, updateDateOfBirth, deleteAccount, musicGenres, setMusicGenres } = useAuth();
   const [name, setName] = useState(user?.name ?? '');
   const [selectedGenres, setSelectedGenres] = useState<string[]>(musicGenres);
-
   const [deletingAccount, setDeletingAccount] = useState(false);
+
+  const MAX_DOB = new Date();
+  MAX_DOB.setFullYear(MAX_DOB.getFullYear() - 14);
+  const [showDobPicker, setShowDobPicker] = useState(false);
+  const [dobTempDate, setDobTempDate] = useState<Date>(MAX_DOB);
+  const [savingDob, setSavingDob] = useState(false);
+
+  async function handleDobConfirm() {
+    setSavingDob(true);
+    try {
+      await updateDateOfBirth(dobTempDate);
+    } finally {
+      setSavingDob(false);
+      setShowDobPicker(false);
+    }
+  }
 
   function toggleGenre(genre: string) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -153,17 +171,56 @@ export default function EditProfileScreen() {
             </View>
           </View>
 
-          {/* Data di nascita — sola lettura */}
+          {/* Data di nascita */}
           <View style={styles.section}>
             <Text style={styles.fieldLabel}>Data di nascita</Text>
-            <View style={styles.readonlyRow}>
-              <Ionicons name="calendar-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.readonlyText}>
-                {user?.dateOfBirth ? formatDOB(new Date(user.dateOfBirth)) : 'Non impostata'}
-              </Text>
-              <Ionicons name="lock-closed" size={13} color={Colors.textMuted} />
-            </View>
+            {user?.dateOfBirth ? (
+              <View style={styles.readonlyRow}>
+                <Ionicons name="calendar-outline" size={16} color={Colors.textSecondary} />
+                <Text style={styles.readonlyText}>{formatDOB(new Date(user.dateOfBirth))}</Text>
+                <Ionicons name="lock-closed" size={13} color={Colors.textMuted} />
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.dobEditRow} onPress={() => setShowDobPicker(true)} activeOpacity={0.8}>
+                <Ionicons name="calendar-outline" size={16} color="#f59e0b" />
+                <Text style={styles.dobEditText}>Imposta data di nascita</Text>
+                <Ionicons name="chevron-forward" size={14} color="#f59e0b" />
+              </TouchableOpacity>
+            )}
           </View>
+
+          {/* Picker modal DOB */}
+          {showDobPicker && (
+            <Modal transparent animationType="slide" onRequestClose={() => setShowDobPicker(false)}>
+              <TouchableOpacity style={styles.pickerOverlay} activeOpacity={1} onPress={() => setShowDobPicker(false)} />
+              <View style={styles.pickerSheet}>
+                <View style={styles.pickerHandle} />
+                <View style={styles.pickerHeader}>
+                  <TouchableOpacity onPress={() => setShowDobPicker(false)}>
+                    <Text style={styles.pickerCancel}>Annulla</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.pickerTitle}>Data di nascita</Text>
+                  <TouchableOpacity onPress={handleDobConfirm} disabled={savingDob}>
+                    {savingDob
+                      ? <ActivityIndicator size="small" color={Colors.accent} />
+                      : <Text style={styles.pickerConfirm}>Salva</Text>
+                    }
+                  </TouchableOpacity>
+                </View>
+                <DateTimePicker
+                  value={dobTempDate}
+                  mode="date"
+                  display="spinner"
+                  maximumDate={MAX_DOB}
+                  minimumDate={new Date(1920, 0, 1)}
+                  onChange={(_, date) => { if (date) setDobTempDate(date); }}
+                  textColor={Colors.textPrimary}
+                  locale="it-IT"
+                  style={styles.picker}
+                />
+              </View>
+            </Modal>
+          )}
 
           <View style={styles.section}>
             <Text style={styles.fieldLabel}>Password</Text>
@@ -286,6 +343,31 @@ const styles = StyleSheet.create({
   },
   genreTagText: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.textMuted },
   genreTagTextActive: { fontSize: 13, fontFamily: Font.semiBold, color: '#ffffff' },
+
+  dobEditRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: 'rgba(245,158,11,0.08)',
+    borderRadius: 14, borderWidth: 1, borderColor: 'rgba(245,158,11,0.35)',
+    paddingHorizontal: 16, paddingVertical: 14,
+  },
+  dobEditText: { flex: 1, fontSize: 15, color: '#f59e0b', fontFamily: Font.medium },
+
+  pickerOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
+  pickerSheet: {
+    backgroundColor: '#111120',
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingBottom: 32,
+  },
+  pickerHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)', alignSelf: 'center', marginTop: 12, marginBottom: 4 },
+  pickerHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: 20, paddingVertical: 14,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
+  pickerCancel: { fontSize: 15, fontFamily: Font.medium, color: Colors.textMuted },
+  pickerTitle: { fontSize: 15, fontFamily: Font.bold, color: Colors.textPrimary },
+  pickerConfirm: { fontSize: 15, fontFamily: Font.bold, color: Colors.accent },
+  picker: { width: '100%', height: 200 },
 
   dangerZone: { marginTop: 12, borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: 24 },
   dangerLabel: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.textMuted, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
