@@ -109,7 +109,18 @@ export async function POST(req: NextRequest) {
 
   if (ticket.status !== 'valid') return NextResponse.json({ ok: false, reason: 'invalid' });
 
-  await admin.from('tickets').update({ status: 'used', scanned_at: new Date().toISOString() }).eq('id', ticket.id);
+  // UPDATE atomico: aggiunge WHERE status='valid' per prevenire doppia scansione concorrente.
+  // Se un'altra richiesta ha già aggiornato il biglietto, questa non trova righe e torna already_used.
+  const { data: updated } = await admin
+    .from('tickets')
+    .update({ status: 'used', scanned_at: new Date().toISOString() })
+    .eq('id', ticket.id)
+    .eq('status', 'valid')
+    .select('id');
+
+  if (!updated || updated.length === 0) {
+    return NextResponse.json({ ok: false, reason: 'already_used', usedAt: null });
+  }
 
   const [{ data: profile }, { data: ticketType }] = await Promise.all([
     admin.from('profiles').select('name').eq('id', ticket.user_id).single(),
