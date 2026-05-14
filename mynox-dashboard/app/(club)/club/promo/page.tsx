@@ -25,7 +25,8 @@ export default async function PromoPage() {
       .from('events')
       .select('id, name, date')
       .eq('club_id', profile.club_id)
-      .order('date', { ascending: false }),
+      .gte('date', new Date().toISOString().split('T')[0])
+      .order('date', { ascending: true }),
   ]);
 
   return (

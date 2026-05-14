@@ -1,6 +1,9 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from 'react';
 import { AppState } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
+
+const ticketCacheKey = (uid: string) => `@mynox_tickets_${uid}`;
 
 export interface MockTicket {
   id: string;
@@ -98,6 +101,12 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
   const currentUserIdRef = useRef<string | null>(null);
 
   async function loadTickets(userId: string) {
+    // Show cached tickets immediately so QR codes are available offline
+    try {
+      const cached = await AsyncStorage.getItem(ticketCacheKey(userId));
+      if (cached) setTickets(JSON.parse(cached));
+    } catch (_) {}
+
     setLoaded(false);
     const { data } = await supabase
       .from('tickets')
@@ -111,7 +120,14 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
-    setTickets((data ?? []).map(dbRowToMockTicket));
+    if (data) {
+      const mapped = data.map(dbRowToMockTicket);
+      setTickets(mapped);
+      try {
+        await AsyncStorage.setItem(ticketCacheKey(userId), JSON.stringify(mapped));
+      } catch (_) {}
+    }
+    // If data is null (offline), keep showing cached data from above
     setLoaded(true);
   }
 
@@ -132,9 +148,13 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
         currentUserIdRef.current = userId;
         loadTickets(userId);
       } else if (!userId) {
+        const prevUserId = currentUserIdRef.current;
         currentUserIdRef.current = null;
         setTickets([]);
         setLoaded(true);
+        if (prevUserId) {
+          AsyncStorage.removeItem(ticketCacheKey(prevUserId)).catch(() => {});
+        }
       }
     });
 

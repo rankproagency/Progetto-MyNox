@@ -110,6 +110,7 @@ export default function CheckoutScreen() {
   const [promoLoading, setPromoLoading] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<'apple' | 'card' | 'google'>('apple');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [paymentPending, setPaymentPending] = useState(false);
   const [paying, setPaying] = useState(false);
   const [ageConfirmed, setAgeConfirmed] = useState(false);
 
@@ -302,19 +303,33 @@ export default function CheckoutScreen() {
           return;
         }
 
-        const confirmRes = await fetchWithTimeout(`${PROXY_URL}/confirm-payment`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payment_intent_id: fnJson.paymentIntentId }),
-        });
+        let confirmedTickets: any[] | null = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            if (attempt > 0) await new Promise((r) => setTimeout(r, 2500));
+            const confirmRes = await fetchWithTimeout(`${PROXY_URL}/confirm-payment`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ payment_intent_id: fnJson.paymentIntentId }),
+            }, attempt === 0 ? 12000 : 8000);
+            const confirmJson = await confirmRes.json() as { tickets?: any[]; error?: string };
+            if (confirmJson.tickets && confirmJson.tickets.length > 0) {
+              confirmedTickets = confirmJson.tickets;
+              break;
+            }
+          } catch (_) {}
+        }
 
-        const confirmJson = await confirmRes.json() as { tickets?: any[]; error?: string };
-
-        if (!confirmJson.tickets || confirmJson.tickets.length === 0) {
-          Alert.alert('Errore', confirmJson.error ?? 'Impossibile creare i biglietti.');
+        if (confirmedTickets) {
+          createdTickets = confirmedTickets;
+        } else {
+          // Pagamento avvenuto ma il server non ha risposto in tempo.
+          // Il webhook Stripe creerà il biglietto — mostriamo uno stato "in arrivo".
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          setPaymentPending(true);
+          setShowSuccess(true);
           return;
         }
-        createdTickets = confirmJson.tickets;
 
         if (appliedPromo?.promoId) {
           fetchWithTimeout(`${PROXY_URL}/use-promo`, {
@@ -360,20 +375,31 @@ export default function CheckoutScreen() {
               pointerEvents="none"
             />
             <View style={styles.successIconRing}>
-              <Ionicons name="checkmark" size={38} color={Colors.white} />
+              <Ionicons name={paymentPending ? 'time-outline' : 'checkmark'} size={38} color={Colors.white} />
             </View>
-            <Text style={styles.successTitle}>Acquisto completato!</Text>
+            <Text style={styles.successTitle}>
+              {paymentPending ? 'Pagamento ricevuto!' : 'Acquisto completato!'}
+            </Text>
             <Text style={styles.successEventName}>{event!.name}</Text>
             <Text style={styles.successMeta}>{event!.club?.name} · {formatDate(event!.date)}</Text>
             <View style={styles.successDivider} />
-            <View style={styles.successDetail}>
-              <Ionicons name="ticket-outline" size={14} color={Colors.accent} />
-              <Text style={styles.successDetailText}>{successLabel}</Text>
-            </View>
-            <View style={styles.successDetail}>
-              <Ionicons name="card-outline" size={14} color={Colors.accent} />
-              <Text style={styles.successDetailText}>€{total} pagati</Text>
-            </View>
+            {paymentPending ? (
+              <View style={styles.successDetail}>
+                <Ionicons name="hourglass-outline" size={14} color={Colors.accent} />
+                <Text style={styles.successDetailText}>Il tuo biglietto è in arrivo — apparirà tra qualche secondo</Text>
+              </View>
+            ) : (
+              <>
+                <View style={styles.successDetail}>
+                  <Ionicons name="ticket-outline" size={14} color={Colors.accent} />
+                  <Text style={styles.successDetailText}>{successLabel}</Text>
+                </View>
+                <View style={styles.successDetail}>
+                  <Ionicons name="card-outline" size={14} color={Colors.accent} />
+                  <Text style={styles.successDetailText}>€{total} pagati</Text>
+                </View>
+              </>
+            )}
             <TouchableOpacity
               style={styles.successBtn}
               activeOpacity={0.85}
@@ -382,7 +408,7 @@ export default function CheckoutScreen() {
                 router.replace('/(tabs)/tickets');
               }}
             >
-              <Text style={styles.successBtnText}>Vedi il mio biglietto</Text>
+              <Text style={styles.successBtnText}>Vedi i miei biglietti</Text>
               <Ionicons name="arrow-forward" size={16} color={Colors.white} />
             </TouchableOpacity>
           </Animated.View>

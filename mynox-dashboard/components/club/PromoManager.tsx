@@ -328,6 +328,12 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
               </div>
             </div>
 
+            {!form.event_id && !form.expires_at && (
+              <p className="text-xs text-amber-400 bg-amber-400/8 border border-amber-400/20 rounded-lg px-3 py-2">
+                Nessun evento né scadenza impostati — questo codice sarà valido per sempre su tutti gli eventi.
+              </p>
+            )}
+
             {error && (
               <p className="text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2">{error}</p>
             )}
