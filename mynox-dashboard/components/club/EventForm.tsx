@@ -305,10 +305,30 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
   }
 
   async function handleDelete() {
-    if (!event || !confirm('Sei sicuro di voler eliminare questo evento?')) return;
-    setLoading(true);
+    if (!event) return;
     const supabase = createClient();
-    await supabase.from('events').delete().eq('id', event.id);
+
+    // Controlla se esistono biglietti venduti per questo evento
+    const { count } = await supabase
+      .from('tickets')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_id', event.id)
+      .in('status', ['valid', 'used', 'gifted']);
+
+    if (count && count > 0) {
+      alert(`Impossibile eliminare: ci sono ${count} bigliett${count === 1 ? 'o venduto' : 'i venduti'} per questo evento. Annulla o attendi che l'evento sia concluso.`);
+      return;
+    }
+
+    if (!confirm('Sei sicuro di voler eliminare questo evento? L\'operazione è irreversibile.')) return;
+
+    setLoading(true);
+    const { error } = await supabase.from('events').delete().eq('id', event.id);
+    if (error) {
+      alert('Errore durante l\'eliminazione: ' + error.message);
+      setLoading(false);
+      return;
+    }
     router.push('/club/events');
     router.refresh();
   }
