@@ -8,30 +8,45 @@ import { createAdminClient } from '@/lib/supabase/admin';
 export default async function ClubLayout({ children }: { children: React.ReactNode }) {
   const profile = await getProfile();
 
-  if (!profile || (profile.role !== 'club_admin' && profile.role !== 'club_staff')) {
-    redirect('/login');
+  if (!profile) redirect('/login');
+
+  const isOwner = profile.role === 'club_admin';
+  let effectiveClubId = profile.club_id;
+
+  // Un customer può essere anche staff: cerca il record in club_staff
+  if (profile.role !== 'club_admin' && profile.role !== 'club_staff') {
+    const supabase = await createClient();
+    const { data: staffRecord } = await supabase
+      .from('club_staff')
+      .select('club_id')
+      .eq('user_id', profile.id)
+      .single();
+
+    if (!staffRecord) redirect('/login');
+    effectiveClubId = staffRecord.club_id;
   }
+
+  if (!effectiveClubId) redirect('/login');
 
   const supabase = await createClient();
   const { data: club } = await supabase
     .from('clubs')
     .select('name, is_active')
-    .eq('id', profile.club_id!)
+    .eq('id', effectiveClubId)
     .single();
 
   // Attiva il club al primo accesso del gestore alla dashboard
-  if (club && club.is_active === false && profile.role === 'club_admin') {
+  if (club && club.is_active === false && isOwner) {
     const adminSupabase = createAdminClient();
     await adminSupabase
       .from('clubs')
       .update({ is_active: true })
-      .eq('id', profile.club_id!);
+      .eq('id', effectiveClubId);
   }
 
-  const isOwner = profile.role === 'club_admin';
   const permissions = isOwner
     ? FULL_PERMISSIONS
-    : await getStaffPermissions(profile.id, profile.club_id!) ?? {
+    : await getStaffPermissions(profile.id, effectiveClubId) ?? {
         can_manage_events: false,
         can_manage_tables: false,
         can_view_analytics: false,
@@ -48,7 +63,7 @@ export default async function ClubLayout({ children }: { children: React.ReactNo
         permissions={permissions}
       />
       <RealtimeRefresher
-        clubId={profile.club_id!}
+        clubId={effectiveClubId}
         tables={['events', 'club_staff', 'tickets', 'tables']}
       />
       <main className="md:ml-56 flex-1 min-w-0 overflow-x-hidden p-4 pt-16 md:p-8 relative">

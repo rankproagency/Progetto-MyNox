@@ -92,11 +92,20 @@ export async function POST(req: NextRequest) {
     targetUserId = data.user.id;
   }
 
-  // Aggiorna il profilo (funziona per utenti esistenti; per i nuovi viene fatto nel callback)
-  await admin.from('profiles')
-    .update({ role: 'club_staff', club_id: profile.club_id })
+  // Per utenti già esistenti come customer: mantieni il ruolo customer
+  // così possono continuare ad usare l'app mobile. Il record in club_staff è
+  // sufficiente per dargli accesso alla dashboard.
+  const { data: existingProfile } = await admin
+    .from('profiles')
+    .select('role')
     .eq('id', targetUserId)
-    .in('role', ['customer', 'club_staff']);
+    .single();
+
+  if (existingProfile?.role !== 'customer') {
+    await admin.from('profiles')
+      .update({ role: 'club_staff', club_id: profile.club_id })
+      .eq('id', targetUserId);
+  }
 
   await admin.from('club_staff').upsert({
     user_id: targetUserId,
