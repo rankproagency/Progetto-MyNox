@@ -315,7 +315,11 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
       .eq('event_id', event.id)
       .in('status', ['valid', 'used', 'gifted']);
 
-    if (count && count > 0) {
+    if (count === null) {
+      alert('Impossibile verificare i biglietti venduti. Riprova tra qualche secondo.');
+      return;
+    }
+    if (count > 0) {
       alert(`Impossibile eliminare: ci sono ${count} bigliett${count === 1 ? 'o venduto' : 'i venduti'} per questo evento. Annulla o attendi che l'evento sia concluso.`);
       return;
     }
