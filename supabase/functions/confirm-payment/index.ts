@@ -46,23 +46,27 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Controllo duplicati — se il webhook è già passato restituiamo i biglietti esistenti
-    const { data: existing } = await supabase
-      .from('tickets')
-      .select(TICKET_SELECT)
-      .eq('stripe_payment_intent_id', payment_intent_id);
-
-    if (existing && existing.length > 0) {
-      return new Response(
-        JSON.stringify({ tickets: existing }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     const meta = paymentIntent.metadata;
     const quantity = parseInt(meta.quantity ?? '1', 10);
     const includesDrink = meta.includes_drink === 'true';
     const priceEach = parseFloat((paymentIntent.amount / 100 / quantity).toFixed(2));
+
+    // Idempotency atomica: INSERT nella tabella dedicata.
+    // Se la riga esiste già (conflitto su PK) → webhook duplicato → restituiamo i biglietti già creati.
+    const { error: idempotencyError } = await supabase
+      .from('stripe_payment_events')
+      .insert({ payment_intent_id, ticket_count: quantity });
+
+    if (idempotencyError) {
+      const { data: existing } = await supabase
+        .from('tickets')
+        .select(TICKET_SELECT)
+        .eq('stripe_payment_intent_id', payment_intent_id);
+      return new Response(
+        JSON.stringify({ tickets: existing ?? [] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const toInsert = Array.from({ length: quantity }, () => {
       const id = crypto.randomUUID();
@@ -98,12 +102,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Segna il tavolo come prenotato
+    // Prenota il tavolo in modo atomico tramite RPC
     if (meta.table_id) {
-      await supabase
-        .from('tables')
-        .update({ is_available: false, reserved_by: meta.table_name || null })
-        .eq('id', meta.table_id);
+      await supabase.rpc('book_table', { p_table_id: meta.table_id });
     }
 
     return new Response(
