@@ -65,13 +65,15 @@ export default function ClubSidebar({ clubName, isOwner, permissions }: ClubSide
 
   return (
     <>
-      {/* Hamburger button — solo mobile */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-[#111118] border border-white/8 text-slate-400"
-      >
-        <Menu size={20} />
-      </button>
+      {/* Hamburger button — solo mobile, nascosto sullo scanner */}
+      {!pathname.startsWith('/club/scan') && (
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-[#111118] border border-white/8 text-slate-400"
+        >
+          <Menu size={20} />
+        </button>
+      )}
 
       {/* Overlay — solo mobile */}
       {mobileOpen && (
