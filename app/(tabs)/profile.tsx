@@ -90,6 +90,10 @@ export default function ProfileScreen() {
     router.push('/privacy');
   }
 
+  function handleTerms() {
+    router.push('/terms');
+  }
+
   function handleSupport() {
     Linking.openURL('mailto:mynoxsupport@gmail.com?subject=Assistenza%20MyNox');
   }
@@ -336,6 +340,11 @@ export default function ProfileScreen() {
               icon="shield-outline"
               label="Privacy e sicurezza"
               onPress={handlePrivacy}
+            />
+            <AccountRow
+              icon="document-text-outline"
+              label="Termini e Condizioni"
+              onPress={handleTerms}
             />
             <AccountRow
               icon="help-circle-outline"

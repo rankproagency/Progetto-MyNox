@@ -47,14 +47,15 @@ export default function RegisterScreen() {
   const [showPicker, setShowPicker] = useState(false);
   const [tempDate, setTempDate] = useState<Date>(MAX_DATE);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   async function handleRegister() {
     if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim() || !dateOfBirth) {
       Alert.alert('Errore', 'Compila tutti i campi.');
       return;
     }
-    if (!privacyAccepted) {
-      Alert.alert('Errore', 'Devi accettare la Privacy Policy per continuare.');
+    if (!privacyAccepted || !termsAccepted) {
+      Alert.alert('Errore', 'Devi accettare la Privacy Policy e i Termini e Condizioni per continuare.');
       return;
     }
     const minDate = new Date();
@@ -220,10 +221,26 @@ export default function RegisterScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.ctaButton, (!privacyAccepted || !dateOfBirth || isLoading) && styles.ctaDisabled]}
+              style={styles.checkboxRow}
+              activeOpacity={0.7}
+              onPress={() => { Haptics.selectionAsync(); setTermsAccepted((v) => !v); }}
+            >
+              <View style={[styles.checkbox, termsAccepted && styles.checkboxChecked]}>
+                {termsAccepted && <Ionicons name="checkmark" size={12} color={Colors.white} />}
+              </View>
+              <Text style={styles.checkboxLabel}>
+                Ho letto e accetto i{' '}
+                <Text style={styles.checkboxLink} onPress={() => router.push('/terms')}>
+                  Termini e Condizioni
+                </Text>
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.ctaButton, (!privacyAccepted || !termsAccepted || !dateOfBirth || isLoading) && styles.ctaDisabled]}
               activeOpacity={0.85}
               onPress={handleRegister}
-              disabled={!privacyAccepted || !dateOfBirth || isLoading}
+              disabled={!privacyAccepted || !termsAccepted || !dateOfBirth || isLoading}
             >
               {isLoading ? (
                 <ActivityIndicator color={Colors.white} />
