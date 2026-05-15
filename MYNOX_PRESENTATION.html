@@ -56,8 +56,8 @@
 
   /* ── Print ── */
   @media print {
-    @page { size: 1280px 720px; margin: 0; }
-    body { background: var(--bg); }
+    @page { size: 13.333in 7.5in; margin: 0; }
+    html, body { background: var(--bg) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .deck { padding: 0; gap: 0; }
     .slide { page-break-after: always; break-after: page; margin: 0; }
     .slide:last-child { page-break-after: auto; break-after: auto; }
