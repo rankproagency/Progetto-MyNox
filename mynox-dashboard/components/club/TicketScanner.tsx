@@ -125,7 +125,7 @@ export default function TicketScanner({ events, defaultEventId }: Props) {
     <div className="fixed inset-0 z-40 flex flex-col bg-[#07080f]">
 
       {/* Header */}
-      <div className="flex-none pl-14 pr-4 md:px-4 pt-safe pt-4 pb-3 flex items-center justify-between gap-3">
+      <div className="flex-none px-4 pt-10 pb-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full flex-none ${
             scanState === 'idle' ? 'bg-green-400 animate-pulse' :
