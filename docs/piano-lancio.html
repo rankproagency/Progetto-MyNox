@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyNox — Piano di Lancio</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #07080f;
+    --surface: #111118;
+    --surface2: #1a1a28;
+    --border: rgba(255,255,255,0.08);
+    --accent: #a855f7;
+    --accent2: #7c3aed;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --error: #ef4444;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 0 0 80px;
+  }
+
+  /* COVER */
+  .cover {
+    background: linear-gradient(135deg, #0d0520 0%, #07080f 60%);
+    padding: 80px 48px 64px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -120px; left: -120px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(168,85,247,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cover-badge {
+    display: inline-block;
+    background: rgba(168,85,247,0.15);
+    border: 1px solid rgba(168,85,247,0.3);
+    color: #c084fc;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 100px;
+    margin-bottom: 24px;
+  }
+  .cover h1 {
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 900;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, #fff 40%, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+  }
+  .cover p {
+    color: var(--muted);
+    font-size: 16px;
+    max-width: 600px;
+    margin-bottom: 40px;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .cover-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .cover-meta-item .label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .cover-meta-item .value {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* CONTAINER */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 48px;
+  }
+
+  /* SECTION */
+  .section {
+    padding: 64px 0 0;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .section-sub {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 40px;
+    max-width: 600px;
+  }
+
+  /* TIMELINE */
+  .timeline {
+    display: flex;
+    gap: 0;
+    margin: 48px 0;
+    position: relative;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    top: 28px; left: 28px; right: 28px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), #7c3aed, #4f46e5, var(--surface2));
+    z-index: 0;
+  }
+  .tl-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  .tl-dot {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 900;
+    border: 2px solid var(--border);
+    margin-bottom: 16px;
+    flex-shrink: 0;
+  }
+  .tl-dot.phase0 { background: linear-gradient(135deg, #a855f7, #7c3aed); border-color: #a855f7; }
+  .tl-dot.phase1 { background: linear-gradient(135deg, #3b82f6, #2563eb); border-color: #3b82f6; }
+  .tl-dot.phase2 { background: linear-gradient(135deg, #22c55e, #16a34a); border-color: #22c55e; }
+  .tl-dot.phase3 { background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #f59e0b; }
+  .tl-phase {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+    text-align: center;
+  }
+  .tl-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .tl-period {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* PHASE CARDS */
+  .phase-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .phase-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .phase-card.phase0::before { background: linear-gradient(90deg, #a855f7, #7c3aed); }
+  .phase-card.phase1::before { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+  .phase-card.phase2::before { background: linear-gradient(90deg, #22c55e, #16a34a); }
+  .phase-card.phase3::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+
+  .phase-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .phase-badge {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 100px;
+  }
+  .phase-badge.phase0 { background: rgba(168,85,247,0.15); color: #c084fc; }
+  .phase-badge.phase1 { background: rgba(59,130,246,0.15); color: #93c5fd; }
+  .phase-badge.phase2 { background: rgba(34,197,94,0.15); color: #86efac; }
+  .phase-badge.phase3 { background: rgba(245,158,11,0.15); color: #fcd34d; }
+
+  .phase-title { font-size: 22px; font-weight: 800; margin: 6px 0 4px; }
+  .phase-period { font-size: 13px; color: var(--muted); }
+  .phase-goal {
+    background: var(--surface2);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 14px;
+    color: var(--muted);
+    flex-shrink: 0;
+    max-width: 280px;
+  }
+  .phase-goal strong { color: var(--text); display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+
+  .phase-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+  }
+  .phase-col h4 {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .checklist { list-style: none; }
+  .checklist li {
+    display: flex;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  .checklist li::before {
+    content: '○';
+    color: var(--accent);
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .checklist li strong { color: var(--text); }
+
+  .kpi-row {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .kpi {
+    background: var(--surface2);
+    border-radius: 12px;
+    padding: 16px 20px;
+    flex: 1;
+    min-width: 120px;
+  }
+  .kpi .kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .kpi .kpi-value { font-size: 22px; font-weight: 900; color: var(--text); }
+  .kpi .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* COMMISSION CHART */
+  .commission-timeline {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    height: 200px;
+    padding: 20px 0 0;
+    margin-bottom: 32px;
+  }
+  .comm-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .comm-bar {
+    width: 100%;
+    border-radius: 8px 8px 0 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 900;
+    color: white;
+    transition: all 0.3s;
+  }
+  .comm-bar-label { font-size: 11px; color: var(--muted); text-align: center; }
+  .comm-bar-period { font-size: 10px; color: var(--muted); text-align: center; }
+
+  /* REVENUE CHART */
+  .revenue-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    height: 220px;
+    padding: 0 0 0;
+    position: relative;
+  }
+  .revenue-chart::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: var(--border);
+  }
+  .rev-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+  .rev-bar {
+    width: 100%;
+    border-radius: 6px 6px 0 0;
+    background: linear-gradient(180deg, #a855f7, #7c3aed);
+    position: relative;
+    min-height: 4px;
+  }
+  .rev-bar.highlight { background: linear-gradient(180deg, #c084fc, #a855f7); box-shadow: 0 0 20px rgba(168,85,247,0.4); }
+  .rev-amount { font-size: 11px; font-weight: 700; color: var(--text); text-align: center; white-space: nowrap; }
+  .rev-month { font-size: 10px; color: var(--muted); text-align: center; }
+
+  /* MARKETING */
+  .strategy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .strategy-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .strategy-icon { font-size: 28px; margin-bottom: 12px; }
+  .strategy-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  .strategy-card p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .strategy-tag {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 100px;
+    background: rgba(168,85,247,0.15);
+    color: #c084fc;
+  }
+  .strategy-tag.free { background: rgba(34,197,94,0.15); color: #86efac; }
+  .strategy-tag.paid { background: rgba(245,158,11,0.15); color: #fcd34d; }
+
+  /* PRIORITIES */
+  .priority-list { display: flex; flex-direction: column; gap: 12px; }
+  .priority-item {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+  }
+  .priority-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 900;
+    flex-shrink: 0;
+  }
+  .priority-item h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .priority-item p { font-size: 13px; color: var(--muted); }
+  .priority-item .timing {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+
+  /* USER GROWTH */
+  .growth-track {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 32px 0;
+    position: relative;
+  }
+  .growth-node {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+  }
+  .growth-node::after {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    right: -50%;
+    height: 2px;
+    background: var(--border);
+    z-index: 0;
+  }
+  .growth-node:last-child::after { display: none; }
+  .growth-circle {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800; color: var(--accent);
+    position: relative; z-index: 1;
+  }
+  .growth-value { font-size: 16px; font-weight: 900; color: var(--text); }
+  .growth-label { font-size: 10px; color: var(--muted); text-align: center; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left; padding: 12px 16px;
+    font-size: 11px; font-weight: 800; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--muted); }
+  td:first-child { color: var(--text); font-weight: 600; }
+  td strong { color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 64px 0 0;
+  }
+
+  .footer {
+    margin-top: 64px;
+    padding: 32px 48px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: gap;
+  }
+  .footer p { font-size: 12px; color: var(--muted); }
+  .footer strong { color: var(--accent); }
+
+  @media (max-width: 700px) {
+    .container { padding: 0 20px; }
+    .cover { padding: 48px 20px 40px; }
+    .timeline::before { display: none; }
+    .timeline { flex-direction: column; gap: 24px; }
+    .tl-item { flex-direction: row; align-items: center; gap: 16px; }
+    .tl-dot { margin-bottom: 0; }
+    .commission-timeline { height: auto; flex-wrap: wrap; }
+    .phase-header { flex-direction: column; }
+    .phase-goal { max-width: 100%; }
+    .footer { flex-direction: column; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-badge">Confidenziale — Solo uso interno</div>
+  <h1>MyNox<br>Piano di Lancio</h1>
+  <p>Roadmap operativa completa dalla fase pre-lancio all'espansione nazionale. Commissioni, proiezioni utenti, marketing e priorità immediate.</p>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <span class="label">Città di lancio</span>
+      <span class="value">Padova</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="label">Mercato target</span>
+      <span class="value">~30.000 persone</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="label">Commissione iniziale</span>
+      <span class="value">8%</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="label">Orizzonte piano</span>
+      <span class="value">24 mesi</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="label">Aggiornato</span>
+      <span class="value">Maggio 2026</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- OVERVIEW TIMELINE -->
+  <div class="section">
+    <div class="section-label">Panoramica</div>
+    <div class="section-title">4 fasi verso la scalabilità</div>
+    <div class="section-sub">Dal setup legale al dominio del mercato nightlife italiano in 24 mesi.</div>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot phase0">0</div>
+        <div class="tl-phase">Fase 0</div>
+        <div class="tl-name">Pre-lancio</div>
+        <div class="tl-period">Settimane 1–6</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot phase1">1</div>
+        <div class="tl-phase">Fase 1</div>
+        <div class="tl-name">Soft Launch</div>
+        <div class="tl-period">Mesi 1–2</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot phase2">2</div>
+        <div class="tl-phase">Fase 2</div>
+        <div class="tl-name">Crescita</div>
+        <div class="tl-period">Mesi 3–6</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot phase3">3</div>
+        <div class="tl-phase">Fase 3</div>
+        <div class="tl-name">Espansione</div>
+        <div class="tl-period">Mesi 7–24</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FASE 0 -->
+  <div class="section">
+    <div class="section-label">Fase 0 — Settimane 1-6</div>
+    <div class="section-title">Pre-lancio: setup operativo</div>
+    <div class="section-sub">Prima di toccare un utente reale, queste cose devono essere a posto. Nessuna scorciatoia.</div>
+
+    <div class="phase-card phase0">
+      <div class="phase-header">
+        <div>
+          <div class="phase-badge phase0">Priorità Assoluta</div>
+          <div class="phase-title">Setup legale, pagamenti e store</div>
+          <div class="phase-period">Durata stimata: 4–6 settimane in parallelo</div>
+        </div>
+        <div class="phase-goal">
+          <strong>Obiettivo fase</strong>
+          App live sugli store, pagamenti reali funzionanti, almeno 1 club partner firmato.
+        </div>
+      </div>
+
+      <div class="phase-grid">
+        <div class="phase-col">
+          <h4>🏛️ Legale</h4>
+          <ul class="checklist">
+            <li><strong>Partita IVA — non serve subito</strong> — Stripe accetta il codice fiscale personale per iniziare. Nessun blocco immediato.</li>
+            <li><strong>Quando aprire la P.IVA</strong> — appena vedete che il prodotto funziona e arrivano ricavi (entro 2–3 mesi dall'attivazione live). Costa €200–300 con un commercialista.</li>
+            <li><strong>Contratto club template</strong> — documento semplice: diritto d'uso piattaforma, commissione a carico buyer, durata 12 mesi. Fatelo revisionare da un avvocato (€200–400 una tantum).</li>
+            <li><strong>S.r.l. — aspettate</strong> — apritela solo quando superate €2.000/mese di ricavi. Ora è inutile.</li>
+            <li><strong>Conto bancario</strong> — Revolut o N26 personale per ora. Stripe versa lì senza problemi.</li>
+          </ul>
+        </div>
+        <div class="phase-col">
+          <h4>💳 Pagamenti</h4>
+          <ul class="checklist">
+            <li><strong>Attivate Stripe live con CF</strong> — codice fiscale + documento identità su dashboard.stripe.com. Approvazione in 2–5 giorni. Nessuna P.IVA richiesta all'inizio.</li>
+            <li><strong>Stripe vi chiederà la P.IVA</strong> — solo quando superate €10.000–15.000 di volume processato. Avete tempo.</li>
+            <li><strong>Rimuovete la modalità test</strong> — cambiate le chiavi nell'app da test a produzione.</li>
+            <li><strong>Test con carta vera</strong> — fate un acquisto reale di €1 e verificate che i soldi arrivino.</li>
+            <li><strong>Verificate il webhook</strong> — il QR deve generarsi SOLO dopo conferma Stripe, non prima.</li>
+          </ul>
+        </div>
+        <div class="phase-col">
+          <h4>📱 App Store</h4>
+          <ul class="checklist">
+            <li><strong>Apple Developer Program</strong> — €99/anno. Registrazione a appleid.apple.com. Approvazione account 1–2 giorni.</li>
+            <li><strong>Google Play Console</strong> — €25 una tantum. Quasi immediato.</li>
+            <li><strong>Submission app</strong> — preparate screenshot, descrizione, icona. Apple review: 1–3 giorni. Google: 1–2 giorni.</li>
+            <li><strong>Mettetevi avanti</strong> — la review Apple può bloccarsi. Mandate subito, revisate dopo.</li>
+          </ul>
+        </div>
+        <div class="phase-col">
+          <h4>🤝 Primo club</h4>
+          <ul class="checklist">
+            <li><strong>Offerta lancio: primo mese 0%</strong> — nessun rischio per il club, nessun costo per voi (l'app è già fatta).</li>
+            <li><strong>Demo live</strong> — mostrate la dashboard, lo scanner, gli analytics. Fate vedere che funziona davvero.</li>
+            <li><strong>Scegliete il club giusto</strong> — non il più grande, ma quello con il titolare più aperto e un evento frequente. Serve come caso studio.</li>
+            <li><strong>Firmate prima di lanciare</strong> — non andate live senza almeno 1 club attivo.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Costo stimato fase 0</div>
+          <div class="kpi-value">€150–450</div>
+          <div class="kpi-sub">Contratto + store (P.IVA dopo)</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Durata</div>
+          <div class="kpi-value">2–4 sett.</div>
+          <div class="kpi-sub">In parallelo</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Blockers critici</div>
+          <div class="kpi-value">2</div>
+          <div class="kpi-sub">Stripe live + 1 club</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Review Apple</div>
+          <div class="kpi-value">1–3 gg</div>
+          <div class="kpi-sub">Mandate subito</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FASE 1 -->
+  <div class="section">
+    <div class="section-label">Fase 1 — Mesi 1-2</div>
+    <div class="section-title">Soft launch: prove reali</div>
+    <div class="section-sub">Non scalate ancora. L'obiettivo è trovare i problemi prima che li trovino i clienti.</div>
+
+    <div class="phase-card phase1">
+      <div class="phase-header">
+        <div>
+          <div class="phase-badge phase1">Soft Launch</div>
+          <div class="phase-title">1–2 club, 300–600 utenti</div>
+          <div class="phase-period">Mesi 1–2 dal lancio</div>
+        </div>
+        <div class="phase-goal">
+          <strong>Obiettivo fase</strong>
+          Validare il flusso completo su utenti reali. Biglietti venduti, QR scansionati, zero crash critici.
+        </div>
+      </div>
+
+      <div class="phase-grid">
+        <div class="phase-col">
+          <h4>🎯 Acquisizione utenti</h4>
+          <ul class="checklist">
+            <li><strong>Network personale</strong> — invitate amici, conoscenti, colleghi. I primi 100 utenti vengono sempre da chi conoscete.</li>
+            <li><strong>Gruppi universitari</strong> — Telegram e WhatsApp di ESU Padova, gruppi Erasmus, gruppi per facoltà. 60.000 studenti in città.</li>
+            <li><strong>Flyer fisici al club</strong> — QR code che porta all'app. Costo: €50–80 di stampa.</li>
+            <li><strong>Passaparola strutturato</strong> — chiedete ai primi utenti di portare 2 amici in cambio di un benefit (sconto, priorità, accesso early).</li>
+          </ul>
+        </div>
+        <div class="phase-col">
+          <h4>📊 Cosa monitorare</h4>
+          <ul class="checklist">
+            <li><strong>Tasso di completamento checkout</strong> — quanti iniziano vs quanti completano l'acquisto. Se è sotto 50% c'è un problema di UX.</li>
+            <li><strong>Errori Stripe</strong> — monitorate la dashboard Stripe per pagamenti falliti.</li>
+            <li><strong>QR scansionati</strong> — ogni sera verificate che lo scanner funzioni davvero in loco.</li>
+            <li><strong>Feedback qualitativo</strong> — chiamate i primi 20 utenti. Chiedete cosa non ha funzionato. Non mandate solo form.</li>
+          </ul>
+        </div>
+        <div class="phase-col">
+          <h4>📱 Social media</h4>
+          <ul class="checklist">
+            <li><strong>Instagram @mynox.it</strong> — create l'account ora. Stories delle serate, behind the scenes dello scanner, repost dei club partner.</li>
+            <li><strong>TikTok</strong> — video brevi: "come funziona MyNox in 30 secondi", "prima vs dopo (PR vs app)".</li>
+            <li><strong>Nessuna pubblicità pagata ancora</strong> — spendete zero in ads. Raccogliete i dati di conversione prima.</li>
+            <li><strong>Contenuto autentico</strong> — a Padova il passaparola batte qualsiasi campagna pagata.</li>
+          </ul>
+        </div>
+        <div class="phase-col">
+          <h4>⚠️ Cosa NON fare</h4>
+          <ul class="checklist">
+            <li><strong>Non onboardate troppi club</strong> — 1–2 max. Non riuscireste a supportarli tutti.</li>
+            <li><strong>Non fate PR/stampa</strong> — troppo presto. Se qualcosa si rompe, è pubblica.</li>
+            <li><strong>Non alzate la commissione</strong> — restate all'8%. Prima provate il prodotto.</li>
+            <li><strong>Non ignorare i bug</strong> — ogni segnalazione va risolta in 24h. La reputazione iniziale è tutto.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Target utenti</div>
+          <div class="kpi-value">300–600</div>
+          <div class="kpi-sub">Registrati</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Target biglietti</div>
+          <div class="kpi-value">150–300</div>
+          <div class="kpi-sub">Venduti/mese</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Ricavo stimato</div>
+          <div class="kpi-value">€180–360</div>
+          <div class="kpi-sub">/mese (8% su €15 avg)</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Club attivi</div>
+          <div class="kpi-value">1–2</div>
+          <div class="kpi-sub">Padova</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FASE 2 -->
+  <div class="section">
+    <div class="section-label">Fase 2 — Mesi 3-6</div>
+    <div class="section-title">Crescita: consolidare Padova</div>
+    <div class="section-sub">Il prodotto funziona, i primi utenti sono soddisfatti. Ora si scala nella città.</div>
+
+    <div class="phase-card phase2">
+      <div class="phase-header">
+        <div>
+          <div class="phase-badge phase2">Crescita</div>
+          <div class="phase-title">5+ club, 2.000–5.000 utenti</div>
+          <div class="phase-period">Mesi 3–6 dal lancio</div>
+        </div>
+        <div class="phase-goal">
+          <strong>Obiettivo fase</strong>
+          Dominare Padova. Ogni giovane che esce la sera deve conoscere MyNox.
+        </div>
+      </div>
+
+      <div class="phase-grid">
+        <div class="phase-col">
+          <h4>🏪 Acquisizione club</h4>
+          <ul class="checklist">
+            <li><strong>Usate il caso studio</strong> — "Il Club X ha venduto 300 biglietti in 4 settimane senza pagare nulla." Questo vale più di qualsiasi pitch.</li>
+            <li><strong>Target: 3–5 club a Padova</strong> — cercate varietà: techno, commerciale, latin. Utenti diversi, più app utile per tutti.</li>
+            <li><strong>Commissione normale all'8%</strong> — finite il periodo 0% del primo club e applicate l'8% standard a tutti i nuovi.</li>
+            <li><strong>Referral club</strong> — se un club vi porta un altro club, offrite 1 mese a commissione ridotta (4%) a entrambi.</li>
+          </ul>
+        </div>
+        <div class="phase-col">
+          <h4>👥 Ambassador universitari</h4>
+          <ul class="checklist">
+            <li><strong>Reclutate 10–15 ambassador</strong> — uno per facoltà, meglio se già frequentatori di club.</li>
+            <li><strong>Compenso: biglietti gratuiti</strong> — 2 biglietti gratis al mese in cambio di promozione attiva nei loro gruppi.</li>
+            <li><strong>Obiettivo per ambassador</strong> — 10 nuovi utenti registrati tramite loro link/codice personale. Tracciabile.</li>
+            <li><strong>Non pagate in soldi</strong> — i biglietti costano nulla a voi (commissione) e valgono molto per loro.</li>
+          </ul>
+        </div>
+        <div class="phase-col">
+          <h4>📢 Marketing a pagamento</h4>
+          <ul class="checklist">
+            <li><strong>Instagram Ads: €10–20/giorno</strong> — target: 18–28 anni, Padova + 30km, interessi nightlife/musica/università.</li>
+            <li><strong>Creativo: video UGC</strong> — riprese reali delle serate con l'app in uso. Niente grafica finta.</li>
+            <li><strong>Retargeting</strong> — chi ha visitato l'app ma non si è registrato. Costo molto basso, conversione alta.</li>
+            <li><strong>Budget mensile consigliato</strong> — €300–600/mese in ads. Non di più finché il costo di acquisizione non è chiaro.</li>
+          </ul>
+        </div>
+        <div class="phase-col">
+          <h4>🔧 Prodotto</h4>
+          <ul class="checklist">
+            <li><strong>Fix dai feedback fase 1</strong> — implementate tutto quello che gli utenti hanno segnalato.</li>
+            <li><strong>Sistema recensioni eventi</strong> — gli utenti valutano le serate. I club migliori salgono. Crea competizione sana.</li>
+            <li><strong>Notifiche push eventi</strong> — "Stasera al Byblos: posti rimasti 20". Aumenta le vendite last-minute.</li>
+            <li><strong>Referral utenti</strong> — codice personale: chi porta 3 amici riceve un biglietto gratis.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Target utenti</div>
+          <div class="kpi-value">2.000–5.000</div>
+          <div class="kpi-sub">Registrati</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Target biglietti</div>
+          <div class="kpi-value">800–1.500</div>
+          <div class="kpi-sub">/mese</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Ricavo stimato</div>
+          <div class="kpi-value">€960–1.800</div>
+          <div class="kpi-sub">/mese (8%)</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Club attivi</div>
+          <div class="kpi-value">3–5</div>
+          <div class="kpi-sub">Padova</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FASE 3 -->
+  <div class="section">
+    <div class="section-label">Fase 3 — Mesi 7-24</div>
+    <div class="section-title">Espansione: fuori da Padova</div>
+    <div class="section-sub">Con Padova consolidata, si replica il modello nelle città vicine e poi nazionalmente.</div>
+
+    <div class="phase-card phase3">
+      <div class="phase-header">
+        <div>
+          <div class="phase-badge phase3">Espansione</div>
+          <div class="phase-title">Venezia → Verona → Milano</div>
+          <div class="phase-period">Mesi 7–24 dal lancio</div>
+        </div>
+        <div class="phase-goal">
+          <strong>Obiettivo fase</strong>
+          Primo marketplace nightlife del Nord-Est. 20.000+ utenti, 10+ città, ricavi ricorrenti.
+        </div>
+      </div>
+
+      <div class="phase-grid">
+        <div class="phase-col">
+          <h4>🗺️ Espansione geografica</h4>
+          <ul class="checklist">
+            <li><strong>Mese 7–8: Venezia</strong> — mercato piccolo ma premium. Turismo + universitari (Ca' Foscari, IUAV). Biglietti a prezzo più alto.</li>
+            <li><strong>Mese 9–10: Verona</strong> — città universitaria, forte tradizione clubbing. Simile a Padova.</li>
+            <li><strong>Mese 12+: Milano</strong> — mercato enorme, concorrenza alta, costi alti. Solo quando avete dimostrato il modello.</li>
+            <li><strong>Strategia di entrata</strong> — ogni città: prima 1 club pilota, poi espansione. Non entrate su 3 città contemporaneamente.</li>
+          </ul>
+        </div>
+        <div class="phase-col">
+          <h4>💼 Team e struttura</h4>
+          <ul class="checklist">
+            <li><strong>Mese 7–8: aprite la S.r.l.</strong> — quando siete a €2.000+/mese. Protegge il patrimonio personale.</li>
+            <li><strong>Prima assunzione: commerciale</strong> — una persona che acquisisce i club nelle nuove città. Stipendio base + commissione sul club portato.</li>
+            <li><strong>Customer support</strong> — un numero WhatsApp Business gestito a turno. Rispondete in meno di 2 ore.</li>
+            <li><strong>Contabilità</strong> — commercialista fisso da subito. Non fate da soli.</li>
+          </ul>
+        </div>
+        <div class="phase-col">
+          <h4>💰 Revenue diversificata</h4>
+          <ul class="checklist">
+            <li><strong>Commissione al 9–10%</strong> — alzatela solo dopo mese 6 e solo nelle nuove città. Padova resta all'8% per fidelizzare.</li>
+            <li><strong>Piano Premium club</strong> — €49/mese per analytics avanzati, posizionamento prioritario nell'app, badge verificato.</li>
+            <li><strong>Pubblicità in-app</strong> — banner o card sponsorizzate per eventi speciali. Solo da mese 12+.</li>
+            <li><strong>Tavoli e caparre</strong> — già gestiti nell'app. Spingete questa feature: margine più alto per transazione.</li>
+          </ul>
+        </div>
+        <div class="phase-col">
+          <h4>📈 Obiettivi 24 mesi</h4>
+          <ul class="checklist">
+            <li><strong>Utenti registrati: 30.000–50.000</strong></li>
+            <li><strong>Club partner: 30–50</strong> in 4–6 città</li>
+            <li><strong>Biglietti/mese: 8.000–15.000</strong></li>
+            <li><strong>Ricavo mensile: €12.000–22.000</strong> (10% su €15 avg)</li>
+            <li><strong>Breakeven operativo: mese 10–14</strong> se i costi restano bassi</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Utenti mese 12</div>
+          <div class="kpi-value">10.000–15.000</div>
+          <div class="kpi-sub">3 città</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Utenti mese 24</div>
+          <div class="kpi-value">30.000–50.000</div>
+          <div class="kpi-sub">5–6 città</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Ricavo mese 12</div>
+          <div class="kpi-value">~€5.400</div>
+          <div class="kpi-sub">9% su 4.000 biglietti</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Ricavo mese 24</div>
+          <div class="kpi-value">~€18.000</div>
+          <div class="kpi-sub">10% su 12.000 biglietti</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STRIPE CONNECT -->
+  <div class="section">
+    <div class="section-label">Modello di Pagamento</div>
+    <div class="section-title">Stripe Connect — il modello giusto</div>
+    <div class="section-sub">Non appena avete il primo club firmato, implementate Stripe Connect. Pagamenti automatici, nessun trasferimento manuale, massima trasparenza.</div>
+
+    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 36px; margin-bottom: 24px;">
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 32px;">
+
+        <div>
+          <div style="font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border);">❌ Modello attuale (da cambiare)</div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--muted);">1. Utente paga €21,60 → va tutto su conto MyNox</div>
+            <div style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--muted);">2. MyNox tiene €1,60 di commissione</div>
+            <div style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--muted);">3. MyNox <strong style="color:#f87171;">trasferisce manualmente €20 al club</strong> — lento, rischioso, non scalabile</div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border);">✅ Stripe Connect (da implementare al primo club)</div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--muted);">1. Utente paga €21,60</div>
+            <div style="background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--muted);">2. Stripe split automatico → <strong style="color:#86efac;">€20 diretto sul conto Stripe del club</strong></div>
+            <div style="background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--muted);">3. <strong style="color:#86efac;">€1,60 va direttamente a MyNox</strong> — automatico, istantaneo, scalabile</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="background: var(--surface2); border-radius: 14px; padding: 20px 24px; margin-bottom: 24px;">
+        <div style="font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px;">⚡ Come funziona per i club</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 13px; color: var(--muted);">
+          <div>Ogni club crea un <strong style="color:var(--text)">account Stripe gratuito</strong> (5 minuti). Voi li guidate nel setup — serve solo la P.IVA del club (che quasi tutti hanno già).</div>
+          <div>I pagamenti arrivano <strong style="color:var(--text)">direttamente sul loro conto bancario</strong> entro 2 giorni lavorativi. Zero intermediari, zero attese.</div>
+          <div>Voi non toccate mai i loro soldi. <strong style="color:var(--text)">Stripe gestisce tutto</strong> — split, tasse, rendiconti.</div>
+        </div>
+      </div>
+
+      <div style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); border-radius: 14px; padding: 16px 20px;">
+        <div style="font-size: 13px; color: #fcd34d; font-weight: 700; margin-bottom: 6px;">⚠️ Commissione minima: 2%</div>
+        <div style="font-size: 13px; color: var(--muted);">Stripe prende sempre <strong style="color:var(--text)">1,5% + €0,25 per transazione</strong> (carte europee), indipendentemente dalla vostra commissione. Con 0% di commissione MyNox, su un biglietto da €20 ci <strong style="color:#f87171)">perdete ~€0,55</strong>. La commissione minima sostenibile è <strong style="color:var(--text)">2%</strong> per coprire Stripe. L'8% che avete ora è già ampiamente sopra il minimo.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- COMMISSIONI -->
+  <div class="section">
+    <div class="section-label">Strategia Commissioni</div>
+    <div class="section-title">Come e quando alzare la commissione</div>
+    <div class="section-sub">La commissione sale solo quando avete potere contrattuale. Mai prima. Il buyer la paga, non il club.</div>
+
+    <div class="commission-timeline">
+      <div class="comm-bar-wrap">
+        <div class="comm-bar" style="height:60px; background: rgba(168,85,247,0.3); border: 2px dashed rgba(168,85,247,0.5); color: #c084fc;">0%</div>
+        <div class="comm-bar-label">Primo club</div>
+        <div class="comm-bar-period">Mese 1</div>
+      </div>
+      <div class="comm-bar-wrap">
+        <div class="comm-bar" style="height:100px; background: linear-gradient(180deg,#a855f7,#7c3aed);">8%</div>
+        <div class="comm-bar-label">Lancio</div>
+        <div class="comm-bar-period">Mesi 1–6</div>
+      </div>
+      <div class="comm-bar-wrap">
+        <div class="comm-bar" style="height:120px; background: linear-gradient(180deg,#8b5cf6,#6d28d9);">9%</div>
+        <div class="comm-bar-label">Crescita</div>
+        <div class="comm-bar-period">Mesi 7–12</div>
+      </div>
+      <div class="comm-bar-wrap">
+        <div class="comm-bar" style="height:140px; background: linear-gradient(180deg,#7c3aed,#5b21b6);">10%</div>
+        <div class="comm-bar-label">Espansione</div>
+        <div class="comm-bar-period">Anno 2</div>
+      </div>
+      <div class="comm-bar-wrap">
+        <div class="comm-bar" style="height:170px; background: linear-gradient(180deg,#6d28d9,#4c1d95);">12%</div>
+        <div class="comm-bar-label">Maturità</div>
+        <div class="comm-bar-period">Anno 3+</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fase</th>
+            <th>Commissione</th>
+            <th>Trigger per alzarla</th>
+            <th>Ricavo su biglietto €15</th>
+            <th>Confronto mercato</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Primo club (lancio)</td>
+            <td><strong>0%</strong></td>
+            <td>—</td>
+            <td>€0</td>
+            <td>Tattica acquisizione</td>
+          </tr>
+          <tr>
+            <td>Mesi 1–6</td>
+            <td><strong>8%</strong></td>
+            <td>Lancio app</td>
+            <td><strong>€1,20</strong></td>
+            <td>Ticketmaster: 20–30%</td>
+          </tr>
+          <tr>
+            <td>Mesi 7–12</td>
+            <td><strong>9%</strong></td>
+            <td>5+ club, 2.000+ utenti</td>
+            <td><strong>€1,35</strong></td>
+            <td>TicketOne: 10–15%</td>
+          </tr>
+          <tr>
+            <td>Anno 2</td>
+            <td><strong>10%</strong></td>
+            <td>3 città, 8.000+ utenti</td>
+            <td><strong>€1,50</strong></td>
+            <td>Voi sempre più economici</td>
+          </tr>
+          <tr>
+            <td>Anno 3+</td>
+            <td><strong>12%</strong></td>
+            <td>Posizione dominante</td>
+            <td><strong>€1,80</strong></td>
+            <td>Tetto massimo — mai sopra</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- REVENUE CHART -->
+  <div class="section">
+    <div class="section-label">Proiezioni Economiche</div>
+    <div class="section-title">Ricavi mensili stimati</div>
+    <div class="section-sub">Scenario conservativo. Biglietto medio €15, 0,3 biglietti/utente/mese. I picchi stagionali (ott–dic, feb–mag) possono raddoppiare questi numeri.</div>
+
+    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 36px; margin-bottom: 24px;">
+      <div class="revenue-chart">
+        <div class="rev-bar-wrap">
+          <div class="rev-amount">€145</div>
+          <div class="rev-bar" style="height: 3%;"></div>
+          <div class="rev-month">Mese 1</div>
+        </div>
+        <div class="rev-bar-wrap">
+          <div class="rev-amount">€290</div>
+          <div class="rev-bar" style="height: 6%;"></div>
+          <div class="rev-month">Mese 2</div>
+        </div>
+        <div class="rev-bar-wrap">
+          <div class="rev-amount">€540</div>
+          <div class="rev-bar" style="height: 12%;"></div>
+          <div class="rev-month">Mese 3</div>
+        </div>
+        <div class="rev-bar-wrap">
+          <div class="rev-amount">€860</div>
+          <div class="rev-bar" style="height: 19%;"></div>
+          <div class="rev-month">Mese 4</div>
+        </div>
+        <div class="rev-bar-wrap">
+          <div class="rev-amount">€1.150</div>
+          <div class="rev-bar" style="height: 26%;"></div>
+          <div class="rev-month">Mese 5</div>
+        </div>
+        <div class="rev-bar-wrap">
+          <div class="rev-amount">€1.440</div>
+          <div class="rev-bar" style="height: 33%;"></div>
+          <div class="rev-month">Mese 6</div>
+        </div>
+        <div class="rev-bar-wrap">
+          <div class="rev-amount">€2.430</div>
+          <div class="rev-bar" style="height: 55%;"></div>
+          <div class="rev-month">Mese 7</div>
+        </div>
+        <div class="rev-bar-wrap">
+          <div class="rev-amount">€3.240</div>
+          <div class="rev-bar" style="height: 74%;"></div>
+          <div class="rev-month">Mese 9</div>
+        </div>
+        <div class="rev-bar-wrap">
+          <div class="rev-amount">€5.400</div>
+          <div class="rev-bar highlight" style="height: 100%;"></div>
+          <div class="rev-month">Mese 12</div>
+        </div>
+      </div>
+
+      <div class="kpi-row" style="margin-top: 32px;">
+        <div class="kpi">
+          <div class="kpi-label">Breakeven operativo</div>
+          <div class="kpi-value">Mese 10–14</div>
+          <div class="kpi-sub">Se i costi restano bassi</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Ricavo mese 18</div>
+          <div class="kpi-value">~€8.640</div>
+          <div class="kpi-sub">9% × 6.400 biglietti</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Ricavo mese 24</div>
+          <div class="kpi-value">~€18.000</div>
+          <div class="kpi-sub">10% × 12.000 biglietti</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Stagionalità</div>
+          <div class="kpi-value">±40%</div>
+          <div class="kpi-sub">Picco ott–dic e feb–mag</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CRESCITA UTENTI -->
+  <div class="section">
+    <div class="section-label">Utenti</div>
+    <div class="section-title">Proiezione crescita utenti</div>
+    <div class="section-sub">Padova ha ~30.000 potenziali utenti attivi. L'obiettivo anno 1 è penetrare il 15–25% di questo mercato.</div>
+
+    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 36px;">
+      <div class="growth-track">
+        <div class="growth-node">
+          <div class="growth-circle">M1</div>
+          <div class="growth-value">400</div>
+          <div class="growth-label">Mese 1<br>Padova soft</div>
+        </div>
+        <div class="growth-node">
+          <div class="growth-circle">M3</div>
+          <div class="growth-value">1.500</div>
+          <div class="growth-label">Mese 3<br>Padova grow</div>
+        </div>
+        <div class="growth-node">
+          <div class="growth-circle">M6</div>
+          <div class="growth-value">4.000</div>
+          <div class="growth-label">Mese 6<br>Padova dom.</div>
+        </div>
+        <div class="growth-node">
+          <div class="growth-circle">M9</div>
+          <div class="growth-value">8.000</div>
+          <div class="growth-label">Mese 9<br>+ Venezia</div>
+        </div>
+        <div class="growth-node">
+          <div class="growth-circle">M12</div>
+          <div class="growth-value">15.000</div>
+          <div class="growth-label">Mese 12<br>+ Verona</div>
+        </div>
+        <div class="growth-node">
+          <div class="growth-circle">M24</div>
+          <div class="growth-value">40.000+</div>
+          <div class="growth-label">Mese 24<br>Nord-Est</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARKETING -->
+  <div class="section">
+    <div class="section-label">Marketing</div>
+    <div class="section-title">Strategia per ogni budget</div>
+    <div class="section-sub">Massimo impatto con budget limitato. Prima il gratuito, poi il pagato.</div>
+
+    <div class="strategy-grid">
+      <div class="strategy-card">
+        <div class="strategy-icon">🎓</div>
+        <h4>Ambassador universitari</h4>
+        <p>10–15 ragazzi, uno per facoltà. Promuovono nei loro gruppi in cambio di 2 biglietti gratuiti/mese. Tracciabile con codice referral personale.</p>
+        <span class="strategy-tag free">Costo zero</span>
+      </div>
+      <div class="strategy-card">
+        <div class="strategy-icon">📱</div>
+        <h4>TikTok & Instagram</h4>
+        <p>Video reali delle serate, lo scanner in azione, "come funziona in 30 secondi". Niente grafica professionale — l'autenticità batte tutto.</p>
+        <span class="strategy-tag free">Costo zero</span>
+      </div>
+      <div class="strategy-card">
+        <div class="strategy-icon">💬</div>
+        <h4>Community universitarie</h4>
+        <p>Telegram e WhatsApp di Unipd, ESU, Erasmus Padova, gruppi per facoltà. 60.000 studenti raggiungibili gratis in 48 ore.</p>
+        <span class="strategy-tag free">Costo zero</span>
+      </div>
+      <div class="strategy-card">
+        <div class="strategy-icon">🖨️</div>
+        <h4>Flyer fisici</h4>
+        <p>QR code → download app. Distribuiti all'ingresso dei club partner nelle prime serate. €50–100 di stampa, ritorno altissimo.</p>
+        <span class="strategy-tag" style="background:rgba(59,130,246,0.15);color:#93c5fd;">€50–100</span>
+      </div>
+      <div class="strategy-card">
+        <div class="strategy-icon">🎯</div>
+        <h4>Instagram Ads</h4>
+        <p>Da mese 3. Target: 18–28 anni, Padova +30km, interessi nightlife. €10–20/giorno. Video UGC reali, niente stock photos.</p>
+        <span class="strategy-tag paid">€300–600/mese</span>
+      </div>
+      <div class="strategy-card">
+        <div class="strategy-icon">🔁</div>
+        <h4>Referral utenti</h4>
+        <p>Porta 3 amici → ottieni 1 biglietto gratis. Costo reale per voi: €1,20 (la commissione che non incassate). Valore percepito: €15.</p>
+        <span class="strategy-tag free">Quasi zero</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRIORITÀ IMMEDIATE -->
+  <div class="section">
+    <div class="section-label">Azione immediata</div>
+    <div class="section-title">Le prossime 2 settimane</div>
+    <div class="section-sub">In ordine di priorità. Senza questi step, non si lancia.</div>
+
+    <div class="priority-list">
+      <div class="priority-item">
+        <div class="priority-num">1</div>
+        <div>
+          <h4>Attivate Stripe live con codice fiscale</h4>
+          <p>Dashboard Stripe → Activate your account. Caricate codice fiscale + documento identità. Nessuna P.IVA richiesta per iniziare. Approvazione in 2–5 giorni. Cambiate le chiavi nell'app da test a live.</p>
+        </div>
+        <div class="timing">Settimana 1</div>
+      </div>
+      <div class="priority-item">
+        <div class="priority-num">2</div>
+        <div>
+          <h4>Aprite la P.IVA (non urgente ma necessaria)</h4>
+          <p>Regime forfettario, €200–300 con commercialista. Non serve subito — apritela entro i primi 2–3 mesi dall'attivazione live o quando Stripe ve la chiede. È obbligatoria per legge per un'attività sistematica.</p>
+        </div>
+        <div class="timing">Mese 1–2</div>
+      </div>
+      <div class="priority-item">
+        <div class="priority-num">3</div>
+        <div>
+          <h4>Create gli account developer Apple e Google</h4>
+          <p>Apple Developer Program: appleid.apple.com → €99. Google Play Console: play.google.com/console → €25. Mandateli in parallelo subito.</p>
+        </div>
+        <div class="timing">Settimana 1</div>
+      </div>
+      <div class="priority-item">
+        <div class="priority-num">4</div>
+        <div>
+          <h4>Contattate il primo club con l'offerta lancio</h4>
+          <p>Prop: "Primo mese a 0% di commissione, installiamo tutto noi, demo dal vivo." Scegliete un club con eventi frequenti e titolare aperto. Non il più grande.</p>
+        </div>
+        <div class="timing">Settimana 1–2</div>
+      </div>
+      <div class="priority-item">
+        <div class="priority-num">5</div>
+        <div>
+          <h4>Submission app sugli store</h4>
+          <p>Preparate: screenshot su iPhone/Android, descrizione in italiano, icona 1024×1024, privacy policy URL. La review Apple può richiedere 1–3 giorni, mandatela subito.</p>
+        </div>
+        <div class="timing">Settimana 2</div>
+      </div>
+      <div class="priority-item">
+        <div class="priority-num">6</div>
+        <div>
+          <h4>Test end-to-end con Stripe live</h4>
+          <p>Un acquisto reale da €1 su un evento di test. Verificate: pagamento → QR generato → scanner valida → QR non riusabile. Solo dopo questo si lancia.</p>
+        </div>
+        <div class="timing">Settimana 2–3</div>
+      </div>
+      <div class="priority-item">
+        <div class="priority-num">7</div>
+        <div>
+          <h4>Implementate Stripe Connect al primo club firmato</h4>
+          <p>Appena avete un accordo con il primo club: configurate Stripe Connect. Il club crea il suo account Stripe gratuito, voi integrate lo split automatico nell'app. Da quel momento i pagamenti sono divisi automaticamente — €X al club, commissione a voi. Nessun trasferimento manuale.</p>
+        </div>
+        <div class="timing">Con primo club</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="height: 64px;"></div>
+<div style="background: var(--surface); border-top: 1px solid var(--border); padding: 24px 48px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+  <p style="font-size: 13px; color: var(--muted);">© 2026 <strong style="color: var(--accent);">MyNox</strong> — Documento confidenziale ad uso interno</p>
+  <p style="font-size: 12px; color: var(--muted);">Aggiornato: Maggio 2026 · Scenario conservativo · Revisione ogni 3 mesi</p>
+</div>
+
+</body>
+</html>
