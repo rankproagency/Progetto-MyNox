@@ -334,7 +334,7 @@
               <rect x="2" y="8" width="20" height="12" rx="2"/><path d="M6 8V6a2 2 0 012-2h8a2 2 0 012 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
             </svg>
           </div>
-          <h4 style="font-size:15px; font-weight:700; color:var(--white); margin-bottom:8px;">Biglietti non tracciabili</h4>
+          <h4 style="font-size:15px; font-weight:700; color:var(--white); margin-bottom:8px;">Ingressi senza tracciabilità</h4>
           <p style="font-size:13px; color:var(--slate); line-height:1.6;">Liste cartacee, contanti, link su WhatsApp. Nessun registro digitale, nessuna rendicontazione verificabile.</p>
         </div>
         <div style="display:flex; align-items:center; gap:8px; padding-top:14px; border-top:1px solid rgba(239,68,68,0.14);">
@@ -367,11 +367,11 @@
             </svg>
           </div>
           <h4 style="font-size:15px; font-weight:700; color:var(--white); margin-bottom:8px;">Nessuna analisi</h4>
-          <p style="font-size:13px; color:var(--slate); line-height:1.6;">Ogni serata riparte da zero. Senza dati storici non sai cosa funziona, quando si vende di più, chi torna.</p>
+          <p style="font-size:13px; color:var(--slate); line-height:1.6;">Ogni serata è a sé. Senza uno storico strutturato, è difficile capire quando si vende di più, quali serate funzionano e chi torna.</p>
         </div>
         <div style="display:flex; align-items:center; gap:8px; padding-top:14px; border-top:1px solid rgba(239,68,68,0.14);">
           <div style="width:5px; height:5px; border-radius:50%; background:#f87171; flex-shrink:0;"></div>
-          <span style="font-size:11px; color:#f87171; font-weight:600; letter-spacing:.4px; text-transform:uppercase;">Decisioni a intuito, non a dati</span>
+          <span style="font-size:11px; color:#f87171; font-weight:600; letter-spacing:.4px; text-transform:uppercase;">Nessuno storico misurabile</span>
         </div>
       </div>
 
@@ -1141,36 +1141,24 @@
       <!-- RIGHT: stack -->
       <div style="display:flex; flex-direction:column; gap:12px;">
 
-        <!-- 450k + 78% -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-          <div class="card" style="text-align:center; padding:18px 12px;">
-            <div style="font-size:36px; font-weight:900; color:#c084fc; line-height:1;">450k</div>
-            <div style="font-size:10px; color:#a855f7; font-weight:700; text-transform:uppercase; letter-spacing:.8px; margin:6px 0 4px;">Bacino metropolitano</div>
-            <div style="font-size:11px; color:var(--slate); line-height:1.5;">Comuni della provincia e zone vicine incluse</div>
-          </div>
-          <div class="card" style="text-align:center; padding:18px 12px;">
-            <div style="font-size:36px; font-weight:900; color:#c084fc; line-height:1;">78%</div>
-            <div style="font-size:10px; color:#a855f7; font-weight:700; text-transform:uppercase; letter-spacing:.8px; margin:6px 0 4px;">Preferisce acquistare online</div>
-            <div style="font-size:11px; color:var(--slate); line-height:1.5;">18–30enni: il comportamento digitale è già lì</div>
-          </div>
-        </div>
-
-        <!-- timing box -->
-        <div style="background:rgba(168,85,247,0.07); border:1px solid rgba(168,85,247,0.2); border-radius:14px; padding:20px 22px; flex:1; display:flex; flex-direction:column; gap:10px; justify-content:center;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <div style="font-size:10px; color:#a855f7; font-weight:700; text-transform:uppercase; letter-spacing:.8px;">Finestra temporale</div>
-          </div>
-          <div style="font-size:15px; font-weight:700; color:var(--white); line-height:1.4;">Nessun locale a Padova<br>lo ha ancora fatto.</div>
-          <div style="font-size:12px; color:var(--slate); line-height:1.6;">Il primo che adotta MyNox diventa il punto di riferimento digitale della nightlife cittadina. I clienti si abituano alla piattaforma — e tornano.</div>
-        </div>
-
-        <!-- urgency -->
-        <div style="background:rgba(34,197,94,0.06); border:1px solid rgba(34,197,94,0.15); border-radius:14px; padding:16px 20px; display:flex; align-items:center; gap:14px;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+        <!-- 78% full width -->
+        <div class="card" style="display:flex; align-items:center; gap:24px; padding:20px 24px;">
+          <div style="font-size:56px; font-weight:900; color:#c084fc; line-height:1; flex-shrink:0;">78%</div>
           <div>
-            <div style="font-size:12px; font-weight:700; color:var(--green); margin-bottom:3px;">Vantaggio reale — ma solo per chi entra ora.</div>
-            <div style="font-size:11px; color:var(--slate); line-height:1.5;">Quando gli altri si adegueranno, tu avrai già migliaia di clienti fidelizzati e mesi di storico sulle tue serate.</div>
+            <div style="font-size:10px; color:#a855f7; font-weight:700; text-transform:uppercase; letter-spacing:.8px; margin-bottom:5px;">Preferisce acquistare online</div>
+            <div style="font-size:12px; color:var(--slate); line-height:1.5;">I 18–30enni comprano già tutto digitale — Spotify, Netflix, Amazon. La nightlife è l'unica eccezione. Non per molto.</div>
+          </div>
+        </div>
+
+        <!-- urgency unified -->
+        <div style="background:rgba(34,197,94,0.06); border:1px solid rgba(34,197,94,0.18); border-radius:14px; padding:22px 24px; flex:1; display:flex; flex-direction:column; gap:14px; justify-content:center;">
+          <div>
+            <div style="font-size:10px; color:var(--green); font-weight:700; text-transform:uppercase; letter-spacing:.8px; margin-bottom:14px;">Finestra temporale</div>
+            <div style="font-size:20px; font-weight:800; color:var(--white); line-height:1.3; margin-bottom:12px;">Nessun tuo concorrente<br>lo usa ancora.</div>
+            <div style="font-size:12px; color:var(--slate); line-height:1.7;">Chi adotta MyNox per primo diventa il riferimento digitale della nightlife in città. I clienti si abituano alla piattaforma — e tornano.</div>
+          </div>
+          <div style="border-top:1px solid rgba(34,197,94,0.15); padding-top:12px; font-size:12px; color:var(--green); font-weight:600;">
+            Quando gli altri si adegueranno, tu avrai già migliaia di clienti fidelizzati e mesi di storico sulle tue serate.
           </div>
         </div>
 
