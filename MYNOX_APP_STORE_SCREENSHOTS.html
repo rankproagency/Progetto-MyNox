@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MyNox — App Store Screenshots</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0a;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 80px;
+      padding: 60px 40px 100px;
+    }
+    .label {
+      color: #444;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    /* ─── SLIDE ─── */
+    .slide {
+      width: 393px;
+      height: 852px;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: #07080f;
+    }
+
+    /* ─── LOGO ─── */
+    .logo {
+      position: absolute;
+      top: 22px;
+      right: 26px;
+      z-index: 20;
+    }
+    .logo img { height: 30px; width: auto; }
+
+    /* ─── COPY ─── */
+    .copy {
+      position: absolute;
+      z-index: 10;
+      top: 56px;
+      left: 30px;
+      right: 30px;
+    }
+    .copy.right { text-align: right; }
+    .headline {
+      font-size: 54px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 0.95;
+      letter-spacing: -2px;
+      text-transform: uppercase;
+    }
+    .headline span { display: block; }
+    .subtitle {
+      font-size: 14px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.45);
+      margin-top: 14px;
+      line-height: 1.55;
+      max-width: 250px;
+    }
+    .copy.right .subtitle { margin-left: auto; }
+
+    /* ─── MOCKUP IMG ─── */
+    .mockup {
+      position: absolute;
+      /* immagine PNG del telefono già con frame realistico */
+    }
+
+    /* ─── BACKGROUND GLOWS ─── */
+    .glow-purple-tl::before {
+      content: ''; position: absolute;
+      top: -120px; left: -80px;
+      width: 540px; height: 540px;
+      background: radial-gradient(ellipse, rgba(168,85,247,0.3) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .glow-red-tr::before {
+      content: ''; position: absolute;
+      top: -100px; right: -80px;
+      width: 500px; height: 500px;
+      background: radial-gradient(ellipse, rgba(200,55,30,0.22) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .glow-purple-center::before {
+      content: ''; position: absolute;
+      top: -80px; left: 50%; transform: translateX(-50%);
+      width: 620px; height: 560px;
+      background: radial-gradient(ellipse, rgba(168,85,247,0.24) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .glow-bottom::after {
+      content: ''; position: absolute;
+      bottom: -60px; left: 50%; transform: translateX(-50%);
+      width: 340px; height: 280px;
+      background: radial-gradient(ellipse, rgba(168,85,247,0.18) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    /* ══════════════════════════════════════
+       SLIDE 1 — home esce a destra →
+    ══════════════════════════════════════ */
+    .m1 {
+      width: 340px;
+      bottom: -60px;
+      right: -110px;
+      transform: rotate(-14deg);
+      filter: drop-shadow(-15px 20px 40px rgba(0,0,0,0.8));
+    }
+
+    /* ══════════════════════════════════════
+       SLIDE 2 — stessa home entra da sinistra ←
+    ══════════════════════════════════════ */
+    .m2 {
+      width: 340px;
+      bottom: -60px;
+      left: -110px;
+      transform: rotate(-14deg);
+      filter: drop-shadow(15px 20px 40px rgba(0,0,0,0.8));
+    }
+
+    /* ══════════════════════════════════════
+       SLIDE 3 — evento, tilted destra
+    ══════════════════════════════════════ */
+    .m3 {
+      width: 340px;
+      bottom: -60px;
+      right: -80px;
+      transform: rotate(-20deg);
+      filter: drop-shadow(-10px 20px 40px rgba(0,0,0,0.85));
+    }
+
+    /* ══════════════════════════════════════
+       SLIDE 4 — checkout, 3D perspective
+    ══════════════════════════════════════ */
+    .m4 {
+      width: 310px;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%) perspective(1000px) rotateY(-18deg) rotateX(4deg);
+      filter: drop-shadow(20px 30px 40px rgba(0,0,0,0.9));
+    }
+
+    /* ══════════════════════════════════════
+       SLIDE 5 — biglietto, due telefoni
+    ══════════════════════════════════════ */
+    .m5-back {
+      width: 280px;
+      bottom: -60px;
+      right: 0px;
+      transform: rotate(12deg);
+      filter: drop-shadow(0 20px 30px rgba(0,0,0,0.7));
+      opacity: 0.55;
+      z-index: 3;
+    }
+    .m5-front {
+      width: 310px;
+      bottom: -20px;
+      left: 10px;
+      transform: rotate(-8deg);
+      filter: drop-shadow(0 30px 50px rgba(0,0,0,0.9));
+      z-index: 4;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── SLIDE 1 ─── -->
+  <div>
+    <div class="label">Screenshot 1 / 5 — connessa con 2 →</div>
+    <div class="slide glow-purple-tl glow-bottom">
+      <div class="logo"><img src="assets/logo-cropped.png" alt="MyNox" /></div>
+      <div class="copy">
+        <div class="headline"><span>YOUR</span><span>NIGHT,</span></div>
+        <div class="subtitle">Discover the best clubs and events near you.</div>
+      </div>
+      <img class="mockup m1" src="assets/screenshots/mockup-home.png" alt="Home" />
+    </div>
+  </div>
+
+  <!-- ─── SLIDE 2 ─── -->
+  <div>
+    <div class="label">Screenshot 2 / 5 — ← connessa con 1</div>
+    <div class="slide glow-red-tr glow-bottom">
+      <div class="logo"><img src="assets/logo-cropped.png" alt="MyNox" /></div>
+      <div class="copy right">
+        <div class="headline"><span>YOUR</span><span>CITY.</span></div>
+        <div class="subtitle">All the best events in Padova, in one app.</div>
+      </div>
+      <img class="mockup m2" src="assets/screenshots/mockup-home.png" alt="Home" />
+    </div>
+  </div>
+
+  <!-- ─── SLIDE 3 ─── -->
+  <div>
+    <div class="label">Screenshot 3 / 5 — evento</div>
+    <div class="slide glow-red-tr glow-bottom">
+      <div class="logo"><img src="assets/logo-cropped.png" alt="MyNox" /></div>
+      <div class="copy">
+        <div class="headline"><span>SKIP THE</span><span>QUEUE.</span></div>
+        <div class="subtitle">Buy your ticket in seconds. Enter without waiting.</div>
+      </div>
+      <img class="mockup m3" src="assets/screenshots/mockup-event.png" alt="Event" />
+    </div>
+  </div>
+
+  <!-- ─── SLIDE 4 ─── -->
+  <div>
+    <div class="label">Screenshot 4 / 5 — checkout</div>
+    <div class="slide glow-purple-center glow-bottom">
+      <div class="logo"><img src="assets/logo-cropped.png" alt="MyNox" /></div>
+      <div class="copy">
+        <div class="headline"><span>BOOKED IN</span><span>SECONDS.</span></div>
+        <div class="subtitle">Instant checkout. Free drink included with every ticket.</div>
+      </div>
+      <img class="mockup m4" src="assets/screenshots/mockup-checkout.png" alt="Checkout" />
+    </div>
+  </div>
+
+  <!-- ─── SLIDE 5 ─── -->
+  <div>
+    <div class="label">Screenshot 5 / 5 — biglietto</div>
+    <div class="slide glow-purple-center glow-bottom">
+      <div class="logo"><img src="assets/logo-cropped.png" alt="MyNox" /></div>
+      <div class="copy">
+        <div class="headline"><span>YOUR TICKET,</span><span>ALWAYS READY.</span></div>
+        <div class="subtitle">Show the QR at the door. No printing needed.</div>
+      </div>
+      <img class="mockup m5-back" src="assets/screenshots/mockup-event.png" alt="Back" />
+      <img class="mockup m5-front" src="assets/screenshots/mockup-ticket.png" alt="Ticket" />
+    </div>
+  </div>
+
+  <!-- ─── PREVIEW AFFIANCATO 1+2 ─── -->
+  <div>
+    <div class="label" style="margin-bottom:16px;">↓ preview affiancato slides 1+2</div>
+    <div style="display:flex; overflow:hidden; width:393px; height:426px; border-radius:8px; background:#000;">
+      <div style="flex-shrink:0; transform:scale(0.5); transform-origin:top left; margin-right:calc(-393px * 0.5);">
+        <div class="slide glow-purple-tl glow-bottom" style="pointer-events:none;">
+          <div class="logo"><img src="assets/logo-cropped.png" /></div>
+          <div class="copy"><div class="headline"><span>YOUR</span><span>NIGHT,</span></div><div class="subtitle">Discover the best clubs and events near you.</div></div>
+          <img class="mockup m1" src="assets/screenshots/mockup-home.png" />
+        </div>
+      </div>
+      <div style="flex-shrink:0; transform:scale(0.5); transform-origin:top left; margin-right:calc(-393px * 0.5);">
+        <div class="slide glow-red-tr glow-bottom" style="pointer-events:none;">
+          <div class="logo"><img src="assets/logo-cropped.png" /></div>
+          <div class="copy right"><div class="headline"><span>YOUR</span><span>CITY.</span></div><div class="subtitle">All the best events in Padova, in one app.</div></div>
+          <img class="mockup m2" src="assets/screenshots/mockup-home.png" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
