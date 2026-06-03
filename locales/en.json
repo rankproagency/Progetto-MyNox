@@ -452,6 +452,16 @@
     "no_events": "No events scheduled"
   },
 
+  "table_map": {
+    "available": "Available",
+    "selected": "Selected",
+    "occupied": "Occupied",
+    "select_a_table": "Select a table",
+    "no_tables": "No tables",
+    "deposit": "deposit",
+    "seats": "seats"
+  },
+
   "language": {
     "title": "Language",
     "description": "Select the app language. Your choice is saved and overrides the device language.",

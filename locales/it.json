@@ -452,6 +452,16 @@
     "no_events": "Nessun evento in programma"
   },
 
+  "table_map": {
+    "available": "Disponibile",
+    "selected": "Selezionato",
+    "occupied": "Occupato",
+    "select_a_table": "Seleziona un tavolo",
+    "no_tables": "Nessun tavolo",
+    "deposit": "caparra",
+    "seats": "posti"
+  },
+
   "language": {
     "title": "Lingua",
     "description": "Seleziona la lingua dell'app. La scelta viene salvata e sovrascrive la lingua del dispositivo.",

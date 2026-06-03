@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getLocale } from '../lib/i18n';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useStripe } from '@stripe/stripe-react-native';
@@ -42,10 +43,7 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 1
 }
 
 function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
-  const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+  return new Date(dateStr).toLocaleDateString(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
 function dbRowToMockTicket(row: any): MockTicket {

@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react';
 import { Table } from '../types';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
+import { useTranslation } from 'react-i18next';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const MAP_WIDTH = SCREEN_WIDTH - 40;
@@ -26,6 +27,7 @@ interface Props {
 }
 
 export default function TableMap({ tables, selected, onSelect, floorPlanUrl }: Props) {
+  const { t } = useTranslation();
   const [mapHeight, setMapHeight] = useState(DEFAULT_MAP_HEIGHT);
 
   useEffect(() => {
@@ -152,9 +154,9 @@ export default function TableMap({ tables, selected, onSelect, floorPlanUrl }: P
 
       {/* Legenda */}
       <View style={styles.legend}>
-        <LegendDot color="rgba(34,197,94,0.12)" borderColor="rgba(34,197,94,0.55)" label="Disponibile" />
-        <LegendDot color={Colors.accent} borderColor={Colors.accent} label="Selezionato" />
-        <LegendDot color="rgba(239,68,68,0.08)" borderColor="rgba(239,68,68,0.45)" label="Occupato" />
+        <LegendDot color="rgba(34,197,94,0.12)" borderColor="rgba(34,197,94,0.55)" label={t('table_map.available')} />
+        <LegendDot color={Colors.accent} borderColor={Colors.accent} label={t('table_map.selected')} />
+        <LegendDot color="rgba(239,68,68,0.08)" borderColor="rgba(239,68,68,0.45)" label={t('table_map.occupied')} />
       </View>
 
       {/* Info tavolo selezionato */}
@@ -167,21 +169,21 @@ export default function TableMap({ tables, selected, onSelect, floorPlanUrl }: P
             <View>
               <Text style={styles.selectedLabel}>{selected.label}</Text>
               <Text style={styles.selectedSub}>
-                {selected.capacity} posti · {selected.section}
+                {selected.capacity} {t('table_map.seats')} · {selected.section}
                 {selected.section === 'VIP' ? ' ✦' : ''}
               </Text>
             </View>
           </View>
           <View style={styles.selectedRight}>
             <Text style={styles.selectedPrice}>€{selected.deposit}</Text>
-            <Text style={styles.selectedPriceSub}>caparra</Text>
+            <Text style={styles.selectedPriceSub}>{t('table_map.deposit')}</Text>
           </View>
         </View>
       )}
 
       {/* Lista completa di tutti i tavoli — sempre visibile */}
       <View style={styles.unmappedSection}>
-        <Text style={styles.unmappedTitle}>Seleziona un tavolo</Text>
+        <Text style={styles.unmappedTitle}>{t('table_map.select_a_table')}</Text>
         <TableList tables={tables} selected={selected} onSelect={onSelect} />
       </View>
     </View>
@@ -191,6 +193,7 @@ export default function TableMap({ tables, selected, onSelect, floorPlanUrl }: P
 // ─── Fallback: lista quando non ci sono posizioni ─────────────────────────────
 
 function TableList({ tables, selected, onSelect }: Props) {
+  const { t } = useTranslation();
   return (
     <View style={styles.listContainer}>
       <TouchableOpacity
@@ -202,7 +205,7 @@ function TableList({ tables, selected, onSelect }: Props) {
           <View style={[styles.radio, selected === null && styles.radioActive]}>
             {selected === null && <View style={styles.radioDot} />}
           </View>
-          <Text style={styles.listLabel}>Nessun tavolo</Text>
+          <Text style={styles.listLabel}>{t('table_map.no_tables')}</Text>
         </View>
       </TouchableOpacity>
       {tables.map((table) => (
@@ -224,14 +227,14 @@ function TableList({ tables, selected, onSelect }: Props) {
               <Text style={[styles.listLabel, !table.available && styles.listLabelMuted]}>
                 {table.label}
               </Text>
-              {!table.available && <Text style={styles.listSoldOut}>Esaurito</Text>}
+              {!table.available && <Text style={styles.listSoldOut}>{t('common.sold_out')}</Text>}
             </View>
           </View>
           <View style={styles.listRight}>
             <Text style={[styles.listPrice, !table.available && styles.listLabelMuted]}>
               €{table.deposit}
             </Text>
-            <Text style={styles.listPriceSub}>caparra</Text>
+            <Text style={styles.listPriceSub}>{t('table_map.deposit')}</Text>
           </View>
         </TouchableOpacity>
       ))}

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getLocale } from '../lib/i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -126,10 +127,7 @@ export default function EventCard({ event }: Props) {
 }
 
 function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
-  const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+  return new Date(dateStr).toLocaleDateString(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
 const styles = StyleSheet.create({
