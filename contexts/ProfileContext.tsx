@@ -15,34 +15,22 @@ const ProfileContext = createContext<ProfileCtx>({
   isLoading: true,
 });
 
-const EN_TO_IT: Record<string, string> = {
-  Jan: 'Gennaio', Feb: 'Febbraio', Mar: 'Marzo', Apr: 'Aprile',
-  May: 'Maggio', Jun: 'Giugno', Jul: 'Luglio', Aug: 'Agosto',
-  Sep: 'Settembre', Oct: 'Ottobre', Nov: 'Novembre', Dec: 'Dicembre',
-};
-
-const IT_MONTHS = [
-  'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
-  'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre',
-];
-
 function formatMemberSince(raw: string | null | undefined): string | null {
   if (!raw || typeof raw !== 'string') return null;
   try {
-    // Formato "Apr 2026" — già leggibile ma in inglese
+    const lang = require('../lib/i18n').default.language ?? 'it';
+    const locale = lang === 'en' ? 'en-GB' : 'it-IT';
+
     const shortMatch = raw.match(/^([A-Za-z]{3})\s+(\d{4})$/);
     if (shortMatch) {
-      const it = EN_TO_IT[shortMatch[1]];
-      return it ? `${it} ${shortMatch[2]}` : null;
+      const d = new Date(`${shortMatch[1]} 1 ${shortMatch[2]}`);
+      if (isNaN(d.getTime())) return null;
+      return d.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
     }
 
-    // Formato ISO "2026-04-12T..."
     const d = new Date(raw);
     if (isNaN(d.getTime())) return null;
-    const month = IT_MONTHS[d.getMonth()];
-    const year = d.getFullYear();
-    if (!month || isNaN(year)) return null;
-    return `${month} ${year}`;
+    return d.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
   } catch {
     return null;
   }

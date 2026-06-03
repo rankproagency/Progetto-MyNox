@@ -19,6 +19,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
+import { getLocale } from '../lib/i18n';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
@@ -36,6 +38,7 @@ function formatDOB(date: Date): string {
 export default function RegisterScreen() {
   const router = useRouter();
   const { register, loginWithGoogle, isLoading } = useAuth();
+  const { t } = useTranslation();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -51,29 +54,29 @@ export default function RegisterScreen() {
 
   async function handleRegister() {
     if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim() || !dateOfBirth) {
-      Alert.alert('Errore', 'Compila tutti i campi.');
+      Alert.alert(t('common.error'), t('register.error_fill_all'));
       return;
     }
     if (!privacyAccepted || !termsAccepted) {
-      Alert.alert('Errore', 'Devi accettare la Privacy Policy e i Termini e Condizioni per continuare.');
+      Alert.alert(t('common.error'), t('register.error_accept_policies'));
       return;
     }
     const minDate = new Date();
     minDate.setFullYear(minDate.getFullYear() - 14);
     if (dateOfBirth > minDate) {
-      Alert.alert('Errore', 'Devi avere almeno 14 anni per registrarti a MyNox.');
+      Alert.alert(t('common.error'), t('register.error_min_age'));
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
-      Alert.alert('Errore', 'Inserisci un indirizzo email valido.');
+      Alert.alert(t('common.error'), t('register.error_invalid_email'));
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Errore', 'La password deve essere di almeno 6 caratteri.');
+      Alert.alert(t('common.error'), t('register.error_password_too_short'));
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Errore', 'Le password non coincidono.');
+      Alert.alert(t('common.error'), t('register.error_password_mismatch'));
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -81,7 +84,7 @@ export default function RegisterScreen() {
       await register(name.trim(), email.trim(), password, dateOfBirth);
       // navigation handled by _layout.tsx: new users (isOnboarded=false) are redirected to onboarding
     } catch (e: any) {
-      Alert.alert('Registrazione fallita', e.message ?? 'Riprova più tardi.');
+      Alert.alert(t('register.error_registration_failed'), e.message ?? t('common.retry'));
     }
   }
 
@@ -119,35 +122,35 @@ export default function RegisterScreen() {
                 style={styles.logoImage}
                 resizeMode="contain"
               />
-              <Text style={styles.logoSub}>Crea il tuo account</Text>
+              <Text style={styles.logoSub}>{t('register.create_account')}</Text>
             </View>
 
             <View style={styles.form}>
               <InputField
-                label="Nome completo"
+                label={t('register.full_name_label')}
                 icon="person-outline"
                 value={name}
                 onChangeText={setName}
-                placeholder="nome e cognome"
+                placeholder={t('register.full_name_placeholder')}
               />
               <InputField
-                label="Email"
+                label={t('register.email_label')}
                 icon="mail-outline"
                 value={email}
                 onChangeText={setEmail}
-                placeholder="email@esempio.com"
+                placeholder={t('register.email_placeholder')}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Password</Text>
+                <Text style={styles.fieldLabel}>{t('register.password_label')}</Text>
                 <View style={styles.inputRow}>
                   <Ionicons name="lock-closed-outline" size={18} color={Colors.textMuted} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     value={password}
                     onChangeText={setPassword}
-                    placeholder="Minimo 6 caratteri"
+                    placeholder={t('register.password_placeholder')}
                     placeholderTextColor={Colors.textMuted}
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
@@ -161,7 +164,7 @@ export default function RegisterScreen() {
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Conferma password</Text>
+                <Text style={styles.fieldLabel}>{t('register.confirm_password_label')}</Text>
                 <View style={[
                   styles.inputRow,
                   confirmPassword.length > 0 && password !== confirmPassword && styles.inputRowError,
@@ -171,7 +174,7 @@ export default function RegisterScreen() {
                     style={styles.input}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
-                    placeholder="Ripeti la password"
+                    placeholder={t('register.confirm_password_placeholder')}
                     placeholderTextColor={Colors.textMuted}
                     secureTextEntry={!showConfirmPassword}
                     autoCapitalize="none"
@@ -183,13 +186,13 @@ export default function RegisterScreen() {
                   </TouchableOpacity>
                 </View>
                 {confirmPassword.length > 0 && password !== confirmPassword && (
-                  <Text style={styles.fieldError}>Le password non coincidono</Text>
+                  <Text style={styles.fieldError}>{t('register.password_mismatch')}</Text>
                 )}
               </View>
 
               {/* Data di nascita — picker nativo */}
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Data di nascita</Text>
+                <Text style={styles.fieldLabel}>{t('register.dob_label')}</Text>
                 <TouchableOpacity
                   style={[styles.inputRow, styles.dateRow]}
                   onPress={() => { Haptics.selectionAsync(); setShowPicker(true); }}
@@ -197,7 +200,7 @@ export default function RegisterScreen() {
                 >
                   <Ionicons name="calendar-outline" size={18} color={Colors.textMuted} style={styles.inputIcon} />
                   <Text style={[styles.dateText, !dateOfBirth && styles.datePlaceholder]}>
-                    {dateOfBirth ? formatDOB(dateOfBirth) : 'Seleziona la tua data di nascita'}
+                    {dateOfBirth ? formatDOB(dateOfBirth) : t('register.dob_placeholder')}
                   </Text>
                   <Ionicons name="chevron-down" size={16} color={Colors.textMuted} />
                 </TouchableOpacity>
@@ -213,9 +216,9 @@ export default function RegisterScreen() {
                 {privacyAccepted && <Ionicons name="checkmark" size={12} color={Colors.white} />}
               </View>
               <Text style={styles.checkboxLabel}>
-                Ho letto e accetto la{' '}
+                {t('register.privacy_accept')}
                 <Text style={styles.checkboxLink} onPress={() => router.push('/privacy')}>
-                  Privacy Policy
+                  {t('register.privacy_link')}
                 </Text>
               </Text>
             </TouchableOpacity>
@@ -229,9 +232,9 @@ export default function RegisterScreen() {
                 {termsAccepted && <Ionicons name="checkmark" size={12} color={Colors.white} />}
               </View>
               <Text style={styles.checkboxLabel}>
-                Ho letto e accetto i{' '}
+                {t('register.terms_accept')}
                 <Text style={styles.checkboxLink} onPress={() => router.push('/terms')}>
-                  Termini e Condizioni
+                  {t('register.terms_link')}
                 </Text>
               </Text>
             </TouchableOpacity>
@@ -245,13 +248,13 @@ export default function RegisterScreen() {
               {isLoading ? (
                 <ActivityIndicator color={Colors.white} />
               ) : (
-                <Text style={styles.ctaText}>Registrati</Text>
+                <Text style={styles.ctaText}>{t('register.sign_up_btn')}</Text>
               )}
             </TouchableOpacity>
 
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>oppure</Text>
+              <Text style={styles.dividerText}>{t('common.or')}</Text>
               <View style={styles.dividerLine} />
             </View>
 
@@ -265,7 +268,7 @@ export default function RegisterScreen() {
                   await loginWithGoogle();
                   // navigation handled by _layout.tsx once auth state updates
                 } catch (e: any) {
-                  Alert.alert('Errore', e.message ?? 'Accesso con Google fallito.');
+                  Alert.alert(t('common.error'), e.message ?? t('register.error_google_failed'));
                 } finally {
                   setGoogleLoading(false);
                 }
@@ -276,15 +279,15 @@ export default function RegisterScreen() {
               ) : (
                 <>
                   <Ionicons name="logo-google" size={19} color="#EA4335" />
-                  <Text style={styles.socialText}>Continua con Google</Text>
+                  <Text style={styles.socialText}>{t('register.continue_google')}</Text>
                 </>
               )}
             </TouchableOpacity>
 
             <View style={styles.loginRow}>
-              <Text style={styles.loginText}>Hai già un account? </Text>
+              <Text style={styles.loginText}>{t('register.already_account')}</Text>
               <TouchableOpacity onPress={() => router.back()}>
-                <Text style={styles.loginLink}>Accedi</Text>
+                <Text style={styles.loginLink}>{t('register.sign_in_link')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -300,11 +303,11 @@ export default function RegisterScreen() {
             <View style={styles.pickerHandle} />
             <View style={styles.pickerHeader}>
               <TouchableOpacity onPress={() => setShowPicker(false)}>
-                <Text style={styles.pickerCancel}>Annulla</Text>
+                <Text style={styles.pickerCancel}>{t('register.dob_modal_cancel')}</Text>
               </TouchableOpacity>
-              <Text style={styles.pickerTitle}>Data di nascita</Text>
+              <Text style={styles.pickerTitle}>{t('register.dob_modal_title')}</Text>
               <TouchableOpacity onPress={confirmDate}>
-                <Text style={styles.pickerConfirm}>Conferma</Text>
+                <Text style={styles.pickerConfirm}>{t('register.dob_modal_confirm')}</Text>
               </TouchableOpacity>
             </View>
             <DateTimePicker
@@ -315,7 +318,7 @@ export default function RegisterScreen() {
               minimumDate={new Date(1920, 0, 1)}
               onChange={handlePickerChange}
               textColor={Colors.textPrimary}
-              locale="it-IT"
+              locale={getLocale()}
               style={styles.picker}
             />
           </View>

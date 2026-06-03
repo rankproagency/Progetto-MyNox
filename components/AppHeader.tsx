@@ -1,7 +1,9 @@
 import { View, Image, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Colors } from '../constants/colors';
 
 export default function AppHeader() {
+  const { t } = useTranslation();
   return (
     <View style={styles.header}>
       <Image

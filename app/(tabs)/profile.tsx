@@ -24,6 +24,8 @@ import { useEvents } from '../../contexts/EventsContext';
 import AppHeader from '../../components/AppHeader';
 import { GENRE_CONFIG } from '../../constants/genres';
 import { Genre } from '../../types';
+import { useTranslation } from 'react-i18next';
+import { SUPPORTED_LANGUAGES } from '../../lib/i18n';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -32,6 +34,7 @@ export default function ProfileScreen() {
   const { user, logout, musicGenres } = useAuth();
   const { favoriteIds, favoriteClubs } = useFavorites();
   const { events } = useEvents();
+  const { t, i18n } = useTranslation();
 
   const displayName = user?.name ?? '—';
   const displayEmail = user?.email ?? '—';
@@ -73,12 +76,12 @@ export default function ProfileScreen() {
   function handleLogout() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Alert.alert(
-      'Esci dall\'account',
-      'Sei sicuro di voler uscire?',
+      t('profile.logout_title'),
+      t('profile.logout_confirm'),
       [
-        { text: 'Annulla', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Esci',
+          text: t('profile.logout_confirm_btn'),
           style: 'destructive',
           onPress: () => logout(),
         },
@@ -101,6 +104,7 @@ export default function ProfileScreen() {
   function handleNotifications() {
     Linking.openSettings();
   }
+
 
   return (
     <View style={styles.outerContainer}>
@@ -130,7 +134,7 @@ export default function ProfileScreen() {
             <Text style={styles.name}>{displayName}</Text>
             <Text style={styles.email}>{displayEmail}</Text>
             {profile.memberSince && (
-              <Text style={styles.since}>Membro da {profile.memberSince}</Text>
+              <Text style={styles.since}>{t('profile.member_since')}{profile.memberSince}</Text>
             )}
 
             {/* Stats inline */}
@@ -141,14 +145,14 @@ export default function ProfileScreen() {
                 onPress={() => router.push('/(tabs)/tickets')}
               >
                 <Text style={styles.statValue}>{eventsAttended}</Text>
-                <Text style={styles.statLabel}>Serate</Text>
+                <Text style={styles.statLabel}>{t('profile.stat_nights')}</Text>
               </TouchableOpacity>
 
               <View style={styles.statDivider} />
 
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{uniqueClubs}</Text>
-                <Text style={styles.statLabel}>Club visitati</Text>
+                <Text style={styles.statLabel}>{t('profile.stat_clubs_visited')}</Text>
               </View>
 
               <View style={styles.statDivider} />
@@ -159,7 +163,7 @@ export default function ProfileScreen() {
                 onPress={() => router.push('/(tabs)/tickets')}
               >
                 <Text style={styles.statValue}>{tickets.length}</Text>
-                <Text style={styles.statLabel}>Biglietti</Text>
+                <Text style={styles.statLabel}>{t('profile.stat_tickets')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -167,7 +171,7 @@ export default function ProfileScreen() {
           {/* Generi musicali */}
           {musicGenres.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>I tuoi generi</Text>
+              <Text style={styles.sectionTitle}>{t('profile.section_genres')}</Text>
               <View style={styles.genresList}>
                 {musicGenres.map((genre) => {
                   const cfg = GENRE_CONFIG[genre as Genre];
@@ -187,11 +191,11 @@ export default function ProfileScreen() {
           {/* Preferiti */}
           {(favoriteClubs.length > 0 || favoriteIds.length > 0) && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Preferiti</Text>
+              <Text style={styles.sectionTitle}>{t('profile.section_favorites')}</Text>
 
               {favoriteClubs.length > 0 && (
                 <>
-                  <Text style={styles.subSectionTitle}>Club</Text>
+                  <Text style={styles.subSectionTitle}>{t('profile.favorites_sub_clubs')}</Text>
                   <FlatList
                     data={favoriteClubs}
                     keyExtractor={(c) => c.id}
@@ -224,12 +228,12 @@ export default function ProfileScreen() {
 
               <>
                 <Text style={[styles.subSectionTitle, favoriteClubs.length > 0 && { marginTop: 16 }]}>
-                  Eventi
+                  {t('profile.favorites_sub_events')}
                 </Text>
                 {favoriteIds.length === 0 ? (
-                  <Text style={styles.favEventHint}>Salva gli eventi che ti interessano per ritrovarli qui prima di acquistare.</Text>
+                  <Text style={styles.favEventHint}>{t('profile.favorites_events_empty_hint')}</Text>
                 ) : favoriteEvents.length === 0 ? (
-                  <Text style={styles.favEventHint}>Gli eventi salvati sono già passati. Esplora i prossimi.</Text>
+                  <Text style={styles.favEventHint}>{t('profile.favorites_events_all_past')}</Text>
                 ) : (
                   favoriteEvents.map((event) => {
                     const isSoldOut = event.ticketTypes.length > 0 && event.ticketTypes.every((t) => t.available === 0);
@@ -250,7 +254,7 @@ export default function ProfileScreen() {
                           <Text style={styles.favEventMeta}>{event.club?.name} · {event.date}</Text>
                         </View>
                         {isSoldOut
-                          ? <View style={styles.soldOutBadge}><Text style={styles.soldOutText}>Esaurito</Text></View>
+                          ? <View style={styles.soldOutBadge}><Text style={styles.soldOutText}>{t('profile.sold_out_badge')}</Text></View>
                           : <Ionicons name="heart" size={14} color={Colors.accent} />
                         }
                       </TouchableOpacity>
@@ -288,7 +292,7 @@ export default function ProfileScreen() {
                     <View style={styles.memoryTop}>
                       <View style={styles.memoryBadge}>
                         <Ionicons name="time-outline" size={11} color={Colors.accent} />
-                        <Text style={styles.memoryBadgeText}>Storico</Text>
+                        <Text style={styles.memoryBadgeText}>{t('profile.history_badge')}</Text>
                       </View>
                       <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.5)" />
                     </View>
@@ -310,10 +314,10 @@ export default function ProfileScreen() {
 
                       <View style={styles.memoryStats}>
                         <Text style={styles.memoryCount}>
-                          {eventsAttended} {eventsAttended === 1 ? 'serata' : 'serate'}
+                          {eventsAttended} {eventsAttended === 1 ? t('profile.night_singular') : t('profile.night_plural')}
                         </Text>
                         <Text style={styles.memorySubCount}>
-                          in {uniqueClubs} {uniqueClubs === 1 ? 'club' : 'club diversi'}
+                          in {uniqueClubs} {uniqueClubs === 1 ? t('common.club_singular') : t('common.club_plural')}
                         </Text>
                       </View>
                     </View>
@@ -325,35 +329,41 @@ export default function ProfileScreen() {
 
           {/* Azioni account */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Account</Text>
+            <Text style={styles.sectionTitle}>{t('profile.section_account')}</Text>
             <AccountRow
               icon="person-outline"
-              label="Modifica profilo"
+              label={t('profile.account_edit_profile')}
               onPress={() => router.push('/edit-profile')}
             />
             <AccountRow
               icon="notifications-outline"
-              label="Notifiche"
+              label={t('profile.account_notifications')}
               onPress={handleNotifications}
             />
             <AccountRow
+              icon="language-outline"
+              label="Lingua"
+              value={SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language)?.label ?? 'Italiano'}
+              onPress={() => router.push('/language')}
+            />
+            <AccountRow
               icon="shield-outline"
-              label="Privacy e sicurezza"
+              label={t('profile.account_privacy')}
               onPress={handlePrivacy}
             />
             <AccountRow
               icon="document-text-outline"
-              label="Termini e Condizioni"
+              label={t('profile.account_terms')}
               onPress={handleTerms}
             />
             <AccountRow
               icon="help-circle-outline"
-              label="Assistenza"
+              label={t('profile.account_support')}
               onPress={handleSupport}
             />
             <AccountRow
               icon="log-out-outline"
-              label="Esci"
+              label={t('profile.account_logout')}
               danger
               onPress={handleLogout}
             />
@@ -369,18 +379,23 @@ function AccountRow({
   icon,
   label,
   danger,
+  value,
   onPress,
 }: {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   danger?: boolean;
+  value?: string;
   onPress?: () => void;
 }) {
   return (
     <TouchableOpacity style={styles.accountRow} activeOpacity={0.8} onPress={onPress}>
       <Ionicons name={icon} size={18} color={danger ? Colors.error : Colors.textSecondary} />
       <Text style={[styles.accountLabel, danger && styles.accountLabelDanger]}>{label}</Text>
-      <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+      <View style={styles.accountRowRight}>
+        {value && <Text style={styles.accountRowValue}>{value}</Text>}
+        <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+      </View>
     </TouchableOpacity>
   );
 }
@@ -617,4 +632,6 @@ const styles = StyleSheet.create({
   },
   accountLabel: { flex: 1, fontSize: 14, fontFamily: Font.medium, color: Colors.textPrimary },
   accountLabelDanger: { color: Colors.error },
+  accountRowRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  accountRowValue: { fontSize: 13, fontFamily: Font.medium, color: Colors.textMuted },
 });

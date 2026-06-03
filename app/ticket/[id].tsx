@@ -5,11 +5,13 @@ import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import { useState, useRef, useEffect } from 'react';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
 import { useTickets } from '../../contexts/TicketsContext';
 import { useCountdown } from '../../hooks/useCountdown';
 export default function TicketScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { tickets, markDrinkUsed, markTicketUsed } = useTickets();
@@ -51,7 +53,7 @@ export default function TicketScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.notFound}>
-          <Text style={styles.notFoundText}>Biglietto non trovato</Text>
+          <Text style={styles.notFoundText}>{t('ticket_detail.not_found')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -64,7 +66,7 @@ export default function TicketScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{ticket.type === 'table' ? 'La mia prenotazione' : 'Il mio biglietto'}</Text>
+        <Text style={styles.headerTitle}>{ticket.type === 'table' ? t('ticket_detail.header_title_booking') : t('ticket_detail.header_title_ticket')}</Text>
         <View style={{ width: 38 }} />
       </View>
 
@@ -91,7 +93,7 @@ export default function TicketScreen() {
                   style={{ marginRight: 4 }}
                 />
                 <Text style={[styles.ticketBadgeText, ticket.type === 'table' && { color: Colors.accent }]}>
-                  {ticket.type === 'table' ? `Tavolo ${ticket.ticketLabel}` : ticket.ticketLabel}
+                  {ticket.type === 'table' ? `${t('ticket_detail.table_sub_label')}${ticket.ticketLabel}` : ticket.ticketLabel}
                 </Text>
               </View>
               <CountdownInline rawDate={ticket.rawDate} startTime={ticket.startTime} />
@@ -115,7 +117,7 @@ export default function TicketScreen() {
                   color={activeQR === 'entry' ? Colors.white : Colors.textMuted}
                   style={{ marginRight: 4 }}
                 />
-                <Text style={[styles.toggleText, activeQR === 'entry' && styles.toggleTextActive]}>Ingresso</Text>
+                <Text style={[styles.toggleText, activeQR === 'entry' && styles.toggleTextActive]}>{t('ticket_detail.toggle_entry')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.toggleBtn, activeQR === 'drink' && styles.toggleActive]}
@@ -127,7 +129,7 @@ export default function TicketScreen() {
                   color={activeQR === 'drink' ? Colors.white : Colors.textMuted}
                   style={{ marginRight: 4 }}
                 />
-                <Text style={[styles.toggleText, activeQR === 'drink' && styles.toggleTextActive]}>Free drink</Text>
+                <Text style={[styles.toggleText, activeQR === 'drink' && styles.toggleTextActive]}>{t('ticket_detail.toggle_drink')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -143,17 +145,17 @@ export default function TicketScreen() {
                   <Text style={styles.tableCardTitle}>
                     {ticket.tableName ?? ticket.ticketLabel}
                   </Text>
-                  <Text style={styles.tableCardSub}>Tavolo {ticket.ticketLabel}</Text>
+                  <Text style={styles.tableCardSub}>{t('ticket_detail.table_sub_label')}{ticket.ticketLabel}</Text>
                   <View style={styles.bottleServiceRow}>
                     <Ionicons name="wine-outline" size={11} color={Colors.textMuted} />
-                    <Text style={styles.bottleServiceText}>Bottle service</Text>
+                    <Text style={styles.bottleServiceText}>{t('ticket_detail.table_bottle_service')}</Text>
                   </View>
                 </View>
               </View>
               {ticket.tableCapacity != null && (
                 <View style={styles.capacityBlock}>
                   <Text style={styles.capacityNumber}>{ticket.tableCapacity}</Text>
-                  <Text style={styles.capacityLabel}>posti</Text>
+                  <Text style={styles.capacityLabel}>{t('ticket_detail.capacity_label')}</Text>
                 </View>
               )}
             </View>
@@ -184,39 +186,39 @@ export default function TicketScreen() {
                   />
                   {ticket.status === 'used' && (
                     <View style={styles.usedOverlay}>
-                      <Text style={styles.usedText}>USATO</Text>
+                      <Text style={styles.usedText}>{t('ticket_detail.used_overlay')}</Text>
                     </View>
                   )}
                 </View>
                 {ticket.entryCode && ticket.status !== 'used' && (
                   <View style={styles.entryCodeBox}>
-                    <Text style={styles.entryCodeLabel}>Codice manuale</Text>
+                    <Text style={styles.entryCodeLabel}>{t('ticket_detail.manual_code_label')}</Text>
                     <Text style={styles.entryCodeText}>{ticket.entryCode}</Text>
-                    <Text style={styles.entryCodeHint}>Mostralo alla sicurezza se il QR non funziona</Text>
+                    <Text style={styles.entryCodeHint}>{t('ticket_detail.manual_code_hint')}</Text>
                   </View>
                 )}
                 <Text style={styles.qrLabel}>
                   {ticket.status === 'used'
-                    ? 'Biglietto già scansionato'
+                    ? t('ticket_detail.qr_already_scanned')
                     : ticket.type === 'table'
-                    ? 'Mostra questo QR alla sicurezza e al responsabile sala'
-                    : 'Mostra questo QR alla sicurezza'}
+                    ? t('ticket_detail.qr_label_entry_table')
+                    : t('ticket_detail.qr_label_entry')}
                 </Text>
                 {ticket.status === 'used' ? (
                   <View style={[styles.usedBadge, { marginBottom: 8 }]}>
                     <Ionicons name="close-circle" size={14} color={Colors.error} />
-                    <Text style={styles.usedBadgeText}> Ingresso effettuato</Text>
+                    <Text style={styles.usedBadgeText}>{t('ticket_detail.status_used')}</Text>
                   </View>
                 ) : isPast ? (
                   <View style={[styles.usedBadge, { marginBottom: 8 }]}>
                     <Ionicons name="time-outline" size={14} color={Colors.textMuted} />
-                    <Text style={[styles.usedBadgeText, { color: Colors.textMuted }]}> Evento concluso</Text>
+                    <Text style={[styles.usedBadgeText, { color: Colors.textMuted }]}>{t('ticket_detail.status_event_ended')}</Text>
                   </View>
                 ) : (
                   <>
                     <View style={[styles.validBadge, { marginBottom: 8 }]}>
                       <Ionicons name="checkmark-circle" size={14} color={Colors.success} />
-                      <Text style={styles.validText}> Valido</Text>
+                      <Text style={styles.validText}>{t('ticket_detail.status_valid')}</Text>
                     </View>
                     {isEventToday && !isPast && (
                       <>
@@ -225,33 +227,33 @@ export default function TicketScreen() {
                           onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                             Alert.alert(
-                              'Conferma ingresso',
-                              'Stai per segnare questo biglietto come usato. L\'operazione è irreversibile.',
+                              t('ticket_detail.bouncer_confirm_title'),
+                              t('ticket_detail.bouncer_confirm_body'),
                               [
                                 {
-                                  text: 'Conferma ingresso',
+                                  text: t('ticket_detail.bouncer_confirm_btn'),
                                   style: 'destructive',
                                   onPress: async () => {
                                     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                                     try {
                                       await markTicketUsed(ticket.id);
                                     } catch {
-                                      Alert.alert('Errore', 'Impossibile aggiornare il biglietto. Riprova.');
+                                      Alert.alert(t('common.error'), t('ticket_detail.bouncer_error'));
                                     }
                                   },
                                 },
-                                { text: 'Annulla', style: 'cancel' },
+                                { text: t('common.cancel'), style: 'cancel' },
                               ]
                             );
                           }}
                         >
                           <Ionicons name="shield-checkmark-outline" size={16} color={Colors.white} />
-                          <Text style={styles.bouncerBtnText}>Segna come usato (sicurezza)</Text>
+                          <Text style={styles.bouncerBtnText}>{t('ticket_detail.bouncer_mark_used')}</Text>
                         </TouchableOpacity>
                         <View style={styles.actionDisclaimer}>
                           <Ionicons name="warning-outline" size={12} color={Colors.warning} />
                           <Text style={styles.actionDisclaimerText}>
-                            Attenzione: una volta segnato come usato non è possibile riattivare il biglietto.
+                            {t('ticket_detail.bouncer_disclaimer')}
                           </Text>
                         </View>
                       </>
@@ -270,22 +272,22 @@ export default function TicketScreen() {
                   />
                   {ticket.drinkUsed && (
                     <View style={styles.usedOverlay}>
-                      <Text style={styles.usedText}>USATO</Text>
+                      <Text style={styles.usedText}>{t('ticket_detail.used_overlay')}</Text>
                     </View>
                   )}
                 </View>
                 <Text style={styles.qrLabel}>
-                  {ticket.drinkUsed ? 'Free drink già riscattato' : 'Mostra questo QR al barista'}
+                  {ticket.drinkUsed ? t('ticket_detail.qr_drink_already_used') : t('ticket_detail.qr_label_drink')}
                 </Text>
                 {ticket.drinkUsed ? (
                   <View style={[styles.usedBadge, { marginBottom: 8 }]}>
                     <Ionicons name="close-circle" size={14} color={Colors.error} />
-                    <Text style={styles.usedBadgeText}> Usato</Text>
+                    <Text style={styles.usedBadgeText}>{t('ticket_detail.status_drink_used')}</Text>
                   </View>
                 ) : (
                   <View style={[styles.validBadge, { marginBottom: 8 }]}>
                     <Ionicons name="checkmark-circle" size={14} color={Colors.success} />
-                    <Text style={styles.validText}> Disponibile</Text>
+                    <Text style={styles.validText}>{t('ticket_detail.status_drink_available')}</Text>
                   </View>
                 )}
                 {!ticket.drinkUsed && isEventToday && (
@@ -295,33 +297,33 @@ export default function TicketScreen() {
                       onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                         Alert.alert(
-                          'Conferma free drink',
-                          'Stai per segnare il free drink come riscattato. L\'operazione è irreversibile.',
+                          t('ticket_detail.barista_confirm_title'),
+                          t('ticket_detail.barista_confirm_body'),
                           [
                             {
-                              text: 'Conferma riscatto',
+                              text: t('ticket_detail.barista_confirm_btn'),
                               style: 'destructive',
                               onPress: async () => {
                                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                                 try {
                                   await markDrinkUsed(ticket.id);
                                 } catch {
-                                  Alert.alert('Errore', 'Impossibile registrare il riscatto. Riprova.');
+                                  Alert.alert(t('common.error'), t('ticket_detail.barista_error'));
                                 }
                               },
                             },
-                            { text: 'Annulla', style: 'cancel' },
+                            { text: t('common.cancel'), style: 'cancel' },
                           ]
                         );
                       }}
                     >
                       <Ionicons name="checkmark" size={16} color={Colors.white} />
-                      <Text style={styles.baristaText}>Segna come usato (barista)</Text>
+                      <Text style={styles.baristaText}>{t('ticket_detail.barista_mark_used')}</Text>
                     </TouchableOpacity>
                     <View style={styles.actionDisclaimer}>
                       <Ionicons name="warning-outline" size={12} color={Colors.warning} />
                       <Text style={styles.actionDisclaimerText}>
-                        Attenzione: una volta riscattato il drink non può essere riutilizzato.
+                        {t('ticket_detail.barista_disclaimer')}
                       </Text>
                     </View>
                   </>
@@ -335,7 +337,7 @@ export default function TicketScreen() {
         <View style={styles.disclaimer}>
           <Ionicons name="information-circle-outline" size={14} color={Colors.textMuted} />
           <Text style={styles.disclaimerText}>
-            La sicurezza può negare l'accesso per dress code o stato del cliente. Nessun rimborso previsto.
+            {t('ticket_detail.disclaimer_text')}
           </Text>
         </View>
 

@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { getLocale } from '../../lib/i18n';
 import {
   View, Text, StyleSheet, TouchableOpacity, Image,
   Animated, ActivityIndicator, ScrollView,
@@ -95,9 +97,9 @@ function isTonight(event: Event): boolean {
   return event.date === new Date().toISOString().split('T')[0];
 }
 
-function formatEventDate(dateStr: string): string {
-  if (dateStr === new Date().toISOString().split('T')[0]) return 'Stasera';
-  return new Date(dateStr).toLocaleDateString('it-IT', {
+function formatEventDate(dateStr: string, tonightLabel: string): string {
+  if (dateStr === new Date().toISOString().split('T')[0]) return tonightLabel;
+  return new Date(dateStr).toLocaleDateString(getLocale(), {
     weekday: 'short',
     day: '2-digit',
     month: 'short',
@@ -157,6 +159,7 @@ function ClubMarker({
 // ── PulsingBadge ─────────────────────────────────────────────────────────────
 
 function PulsingBadge() {
+  const { t } = useTranslation();
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -173,7 +176,7 @@ function PulsingBadge() {
   return (
     <Animated.View style={[styles.pinBadge, { transform: [{ scale: scaleAnim }] }]}>
       <View style={styles.pinBadgeDot} />
-      <Text style={styles.pinBadgeText}>Stasera</Text>
+      <Text style={styles.pinBadgeText}>{t('map.badge_tonight')}</Text>
     </Animated.View>
   );
 }
@@ -182,6 +185,7 @@ function PulsingBadge() {
 
 export default function MapScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { events } = useEvents();
   const { clubs, isLoading } = useClubs();
   const [locationGranted, setLocationGranted] = useState(false);
@@ -358,11 +362,11 @@ export default function MapScreen() {
         <View style={styles.emptyOverlay} pointerEvents="none">
           <View style={styles.emptyBox}>
             <Ionicons name="map-outline" size={32} color={Colors.textMuted} />
-            <Text style={styles.emptyTitle}>Nessun club sulla mappa</Text>
+            <Text style={styles.emptyTitle}>{t('map.no_clubs_on_map_title')}</Text>
             <Text style={styles.emptySub}>
               {showNoClubs
-                ? 'Non ci sono ancora club registrati.'
-                : 'I club devono salvare il proprio indirizzo dalla dashboard per apparire qui.'}
+                ? t('map.no_clubs_registered')
+                : t('map.no_clubs_address')}
             </Text>
           </View>
         </View>
@@ -398,7 +402,7 @@ export default function MapScreen() {
               color={tonightOnly ? Colors.white : Colors.textMuted}
             />
             <Text style={[styles.filterText, tonightOnly && styles.filterTextActive]}>
-              Stasera
+              {t('map.filter_tonight')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -407,7 +411,7 @@ export default function MapScreen() {
         {showNoTonightEvents && (
           <View style={styles.tonightBanner} pointerEvents="none">
             <Ionicons name="moon-outline" size={13} color={Colors.textMuted} />
-            <Text style={styles.tonightBannerText}>Nessun evento stasera</Text>
+            <Text style={styles.tonightBannerText}>{t('map.no_tonight_events')}</Text>
           </View>
         )}
       </SafeAreaView>
@@ -470,16 +474,16 @@ export default function MapScreen() {
                           style={[styles.chipEventText, tonight && { color: Colors.success }]}
                           numberOfLines={1}
                         >
-                          {formatEventDate(nextEvent.date)}
+                          {formatEventDate(nextEvent.date, t('map.badge_tonight'))}
                         </Text>
                       </View>
                     ) : (
-                      <Text style={styles.chipNoEvent}>Nessun evento</Text>
+                      <Text style={styles.chipNoEvent}>{t('map.no_event')}</Text>
                     )}
                     {minPrice !== null
-                      ? <Text style={styles.chipPrice}>da €{minPrice}</Text>
+                      ? <Text style={styles.chipPrice}>{t('common.from_price')}€{minPrice}</Text>
                       : nextEvent && nextEvent.ticketTypes.length === 0
-                        ? <Text style={[styles.chipPrice, { color: Colors.textMuted }]}>Ingresso libero</Text>
+                        ? <Text style={[styles.chipPrice, { color: Colors.textMuted }]}>{t('common.free_entry')}</Text>
                         : null
                     }
                   </View>
@@ -538,6 +542,7 @@ function ClubCard({
   onNavigate: () => void;
   swipePanHandlers: object;
 }) {
+  const { t } = useTranslation();
   const tonight = nextEvent !== null && isTonight(nextEvent);
   const minPrice = nextEvent ? getMinPrice(nextEvent) : null;
 
@@ -586,7 +591,7 @@ function ClubCard({
                   style={[styles.eventBadgeText, tonight && styles.eventBadgeTextTonight]}
                   numberOfLines={1}
                 >
-                  {formatEventDate(nextEvent.date)} · {nextEvent.name}
+                  {formatEventDate(nextEvent.date, t('map.badge_tonight'))} · {nextEvent.name}
                 </Text>
               </View>
               <View style={styles.eventMetaRow}>
@@ -595,15 +600,15 @@ function ClubCard({
                 </Text>
                 {minPrice !== null ? (
                   <View style={styles.priceBadge}>
-                    <Text style={styles.priceText}>da €{minPrice}</Text>
+                    <Text style={styles.priceText}>{t('common.from_price')}€{minPrice}</Text>
                   </View>
                 ) : nextEvent.ticketTypes.length === 0 ? (
-                  <Text style={[styles.priceText, { color: Colors.textMuted }]}>Ingresso libero</Text>
+                  <Text style={[styles.priceText, { color: Colors.textMuted }]}>{t('common.free_entry')}</Text>
                 ) : null}
               </View>
             </View>
           ) : (
-            <Text style={styles.noEventsText}>Nessun evento in programma</Text>
+            <Text style={styles.noEventsText}>{t('common.no_events_scheduled')}</Text>
           )}
         </View>
 
@@ -621,7 +626,7 @@ function ClubCard({
             activeOpacity={0.85}
           >
             <Ionicons name="navigate" size={15} color={Colors.accent} />
-            <Text style={styles.ctaSecondaryText}>Portami lì</Text>
+            <Text style={styles.ctaSecondaryText}>{t('map.navigate_to')}</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity
@@ -629,7 +634,7 @@ function ClubCard({
           onPress={onNavigate}
           activeOpacity={0.85}
         >
-          <Text style={styles.ctaPrimaryText}>Apri club</Text>
+          <Text style={styles.ctaPrimaryText}>{t('map.open_club')}</Text>
           <Ionicons name="chevron-forward" size={15} color={Colors.white} />
         </TouchableOpacity>
       </View>

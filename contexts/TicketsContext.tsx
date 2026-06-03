@@ -55,9 +55,9 @@ const TicketsContext = createContext<TicketsCtx>({
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
-  const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
-  const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+  const lang = require('../lib/i18n').default.language ?? 'it';
+  const locale = lang === 'en' ? 'en-GB' : 'it-IT';
+  return d.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
 function dbRowToMockTicket(row: any): MockTicket {

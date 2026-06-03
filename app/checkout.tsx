@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useStripe } from '@stripe/stripe-react-native';
@@ -85,6 +86,7 @@ function getUserAge(dateOfBirth?: string): number | null {
 type PromoResult = { type: 'percent' | 'flat'; value: number; label: string; promoId?: string };
 
 export default function CheckoutScreen() {
+  const { t } = useTranslation();
   const { eventId, ticketId, tableId, tableName, qty } = useLocalSearchParams<{
     eventId: string;
     ticketId: string;
@@ -126,11 +128,11 @@ export default function CheckoutScreen() {
   function confirmLeave() {
     if (paying || showSuccess) return;
     Alert.alert(
-      'Abbandonare il checkout?',
-      'Il tuo ordine non verrà completato.',
+      t('checkout.leave_title'),
+      t('checkout.leave_body'),
       [
-        { text: 'Rimani', style: 'cancel' },
-        { text: 'Esci', style: 'destructive', onPress: () => router.back() },
+        { text: t('checkout.leave_stay'), style: 'cancel' },
+        { text: t('checkout.leave_exit'), style: 'destructive', onPress: () => router.back() },
       ]
     );
   }
@@ -198,13 +200,13 @@ export default function CheckoutScreen() {
         setPromoError('');
       } else {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        setPromoError(json.error ?? 'Codice non valido o scaduto.');
+        setPromoError(json.error ?? t('checkout.promo_code_invalid'));
         setAppliedPromo(null);
         setAppliedPromoCode(null);
       }
     } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setPromoError('Impossibile verificare il codice. Riprova.');
+      setPromoError(t('checkout.promo_verify_error'));
       setAppliedPromo(null);
       setAppliedPromoCode(null);
     } finally {
@@ -219,7 +221,7 @@ export default function CheckoutScreen() {
     try {
       const userId = user?.id ?? '';
       if (!userId) {
-        Alert.alert('Errore', 'Devi essere autenticato per acquistare.');
+        Alert.alert(t('common.error'), t('checkout.auth_required'));
         return;
       }
 
@@ -247,7 +249,7 @@ export default function CheckoutScreen() {
         });
         const freeJson = await freeRes.json() as { tickets?: any[]; error?: string };
         if (!freeJson.tickets || freeJson.tickets.length === 0) {
-          Alert.alert('Errore', freeJson.error ?? 'Impossibile creare i biglietti.');
+          Alert.alert(t('common.error'), freeJson.error ?? t('checkout.free_ticket_error'));
           return;
         }
         createdTickets = freeJson.tickets;
@@ -276,7 +278,7 @@ export default function CheckoutScreen() {
         const fnJson = await fnRes.json() as { clientSecret?: string; paymentIntentId?: string; error?: string };
 
         if (!fnJson.clientSecret || !fnJson.paymentIntentId) {
-          Alert.alert('Errore pagamento', fnJson.error ?? 'Nessun client secret');
+          Alert.alert(t('checkout.payment_error'), fnJson.error ?? 'Nessun client secret');
           return;
         }
 
@@ -290,7 +292,7 @@ export default function CheckoutScreen() {
         });
 
         if (initError) {
-          Alert.alert('Errore', initError.message);
+          Alert.alert(t('common.error'), initError.message);
           return;
         }
 
@@ -298,7 +300,7 @@ export default function CheckoutScreen() {
 
         if (payError) {
           if (payError.code !== 'Canceled') {
-            Alert.alert('Pagamento fallito', payError.message);
+            Alert.alert(t('checkout.payment_error'), payError.message);
           }
           return;
         }
@@ -330,9 +332,9 @@ export default function CheckoutScreen() {
           // Pagamento addebitato ma biglietti non creati (es. esauriti in gara).
           // Il team MyNox vedrà il log e gestirà il rimborso manualmente.
           Alert.alert(
-            'Problema con i biglietti',
-            'Il pagamento è stato ricevuto ma i biglietti risultano esauriti. Contatta support@mynox.it per il rimborso.',
-            [{ text: 'OK' }]
+            t('checkout.tickets_issue_title'),
+            t('checkout.tickets_issue_body'),
+            [{ text: t('common.ok') }]
           );
           return;
         }
@@ -369,7 +371,7 @@ export default function CheckoutScreen() {
       setShowSuccess(true);
 
     } catch (err) {
-      Alert.alert('Errore imprevisto', String(err));
+      Alert.alert(t('common.error'), String(err));
     } finally {
       setPaying(false);
     }
@@ -394,7 +396,7 @@ export default function CheckoutScreen() {
               <Ionicons name={paymentPending ? 'time-outline' : 'checkmark'} size={38} color={Colors.white} />
             </View>
             <Text style={styles.successTitle}>
-              {paymentPending ? 'Pagamento ricevuto!' : 'Acquisto completato!'}
+              {paymentPending ? t('checkout.success_pending_title') : t('checkout.success_title')}
             </Text>
             <Text style={styles.successEventName}>{event!.name}</Text>
             <Text style={styles.successMeta}>{event!.club?.name} · {formatDate(event!.date)}</Text>
@@ -402,7 +404,7 @@ export default function CheckoutScreen() {
             {paymentPending ? (
               <View style={styles.successDetail}>
                 <Ionicons name="hourglass-outline" size={14} color={Colors.accent} />
-                <Text style={styles.successDetailText}>Il tuo biglietto è in arrivo — apparirà tra qualche secondo</Text>
+                <Text style={styles.successDetailText}>{t('checkout.success_pending_detail')}</Text>
               </View>
             ) : (
               <>
@@ -412,7 +414,7 @@ export default function CheckoutScreen() {
                 </View>
                 <View style={styles.successDetail}>
                   <Ionicons name="card-outline" size={14} color={Colors.accent} />
-                  <Text style={styles.successDetailText}>€{total} pagati</Text>
+                  <Text style={styles.successDetailText}>{t('checkout.success_paid', { total })}</Text>
                 </View>
               </>
             )}
@@ -424,7 +426,7 @@ export default function CheckoutScreen() {
                 router.replace('/(tabs)/tickets');
               }}
             >
-              <Text style={styles.successBtnText}>Vedi i miei biglietti</Text>
+              <Text style={styles.successBtnText}>{t('checkout.success_view_tickets')}</Text>
               <Ionicons name="arrow-forward" size={16} color={Colors.white} />
             </TouchableOpacity>
           </Animated.View>
@@ -442,7 +444,7 @@ export default function CheckoutScreen() {
         <TouchableOpacity onPress={confirmLeave} style={styles.backButton}>
           <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{isTableOnly ? 'Prenota tavolo' : 'Checkout'}</Text>
+        <Text style={styles.headerTitle}>{isTableOnly ? t('checkout.header_title_table') : t('checkout.header_title_checkout')}</Text>
         <View style={{ width: 38 }} />
       </View>
 
@@ -450,7 +452,7 @@ export default function CheckoutScreen() {
 
         {/* Riepilogo */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Riepilogo ordine</Text>
+          <Text style={styles.sectionTitle}>{t('checkout.section_order_summary')}</Text>
           <View style={styles.card}>
             <Text style={styles.eventName}>{event.name}</Text>
             <Text style={styles.clubName}>{event.club?.name} · {formatDate(event.date)}</Text>
@@ -459,18 +461,18 @@ export default function CheckoutScreen() {
             {ticket && (
               <>
                 {quantity > 1 ? (
-                  <Row label={`Biglietto ${ticket.label} × ${quantity}`} value={`€${ticketSubtotal}`} />
+                  <Row label={`${t('checkout.ticket_label_prefix')}${ticket.label} × ${quantity}`} value={`€${ticketSubtotal}`} />
                 ) : (
-                  <Row label={`Biglietto ${ticket.label}`} value={`€${ticket.price}`} />
+                  <Row label={`${t('checkout.ticket_label_prefix')}${ticket.label}`} value={`€${ticket.price}`} />
                 )}
                 {ticket.includesDrink && (
-                  <Row label={quantity > 1 ? `${quantity} free drink inclusi` : 'Free drink incluso'} value="✓" accent />
+                  <Row label={quantity > 1 ? `${quantity} ${t('checkout.free_drink_plural')}` : t('checkout.free_drink_single')} value="✓" accent />
                 )}
               </>
             )}
             {table && (
               <Row
-                label={tableName ? `${table.label} · "${tableName}" (caparra)` : `${table.label} (caparra)`}
+                label={tableName ? `${table.label} · "${tableName}"${t('checkout.deposit_label_suffix')}` : `${table.label}${t('checkout.deposit_label_suffix')}`}
                 value={`€${tableDeposit}`}
               />
             )}
@@ -478,25 +480,25 @@ export default function CheckoutScreen() {
             {appliedPromo && (
               <>
                 <View style={styles.divider} />
-                <Row label={`Codice promo (${appliedPromo.label})`} value={`-€${discount}`} success />
+                <Row label={`${t('checkout.promo_applied_prefix')}${appliedPromo.label}`} value={`-€${discount}`} success />
               </>
             )}
 
             <View style={styles.divider} />
-            <Row label="Commissione servizio (8%)" value={`€${commission}`} muted />
-            <Row label="Totale" value={`€${total}`} bold />
+            <Row label={t('checkout.service_fee')} value={`€${commission}`} muted />
+            <Row label={t('checkout.total')} value={`€${total}`} bold />
           </View>
         </View>
 
         {/* Codice promo — solo per biglietti */}
         {!isTableOnly && <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hai un codice promo?</Text>
+          <Text style={styles.sectionTitle}>{t('checkout.promo_code_section')}</Text>
           <View style={styles.promoRow}>
             <TextInput
               style={[styles.promoInput, appliedPromo && styles.promoInputSuccess]}
               value={promoInput}
               onChangeText={(v) => { setPromoInput(v); setPromoError(''); }}
-              placeholder="Inserisci il codice"
+              placeholder={t('checkout.promo_placeholder')}
               placeholderTextColor={Colors.textMuted}
               autoCapitalize="characters"
               autoCorrect={false}
@@ -519,7 +521,7 @@ export default function CheckoutScreen() {
                 {promoLoading ? (
                   <ActivityIndicator size="small" color={Colors.white} />
                 ) : (
-                  <Text style={styles.promoApplyText}>Applica</Text>
+                  <Text style={styles.promoApplyText}>{t('checkout.promo_apply_btn')}</Text>
                 )}
               </TouchableOpacity>
             )}
@@ -527,7 +529,7 @@ export default function CheckoutScreen() {
           {appliedPromo && (
             <View style={styles.promoSuccess}>
               <Ionicons name="checkmark-circle" size={14} color={Colors.success} />
-              <Text style={styles.promoSuccessText}>Codice applicato: {appliedPromo.label}</Text>
+              <Text style={styles.promoSuccessText}>{t('checkout.promo_applied_prefix')}{appliedPromo.label}</Text>
             </View>
           )}
           {promoError ? (
@@ -543,8 +545,7 @@ export default function CheckoutScreen() {
           <View style={styles.disclaimer}>
             <Ionicons name="warning-outline" size={16} color={Colors.textMuted} />
             <Text style={styles.disclaimerText}>
-              La sicurezza ha il diritto di negare l'accesso (dress code, stato del cliente).
-              In caso di diniego non è previsto alcun rimborso. Acquistando accetti questa policy.
+              {t('checkout.disclaimer_text')}
             </Text>
           </View>
         </View>
@@ -555,11 +556,11 @@ export default function CheckoutScreen() {
             <View style={styles.dobMissingBanner}>
               <Ionicons name="calendar-outline" size={18} color="#f59e0b" />
               <View style={{ flex: 1 }}>
-                <Text style={styles.dobMissingTitle}>Data di nascita mancante</Text>
+                <Text style={styles.dobMissingTitle}>{t('checkout.dob_missing_title')}</Text>
                 <Text style={styles.dobMissingText}>
-                  Per acquistare biglietti aggiungi la tua data di nascita in{' '}
+                  {t('checkout.dob_missing_text')}
                   <Text style={styles.dobMissingLink} onPress={() => router.push('/edit-profile')}>
-                    Profilo → Modifica profilo
+                    {t('checkout.dob_missing_link')}
                   </Text>
                 </Text>
               </View>
@@ -579,8 +580,8 @@ export default function CheckoutScreen() {
                 {ageConfirmed && <Ionicons name="checkmark" size={12} color={Colors.white} />}
               </View>
               <Text style={styles.ageCheckLabel}>
-                Confermo che chi acquista questo biglietto ha almeno{' '}
-                <Text style={styles.ageCheckBold}>18 anni</Text>
+                {t('checkout.age_confirm_label')}
+                <Text style={styles.ageCheckBold}>{t('checkout.age_confirm_bold')}</Text>
               </Text>
             </TouchableOpacity>
           </View>
@@ -588,10 +589,10 @@ export default function CheckoutScreen() {
 
         {/* Metodi di pagamento */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Paga con</Text>
-          <PayMethod icon="logo-apple" label="Apple Pay" active={selectedMethod === 'apple'} onPress={() => { Haptics.selectionAsync(); setSelectedMethod('apple'); }} />
-          <PayMethod icon="card-outline" label="Carta di credito / debito" active={selectedMethod === 'card'} onPress={() => { Haptics.selectionAsync(); setSelectedMethod('card'); }} />
-          <PayMethod icon="phone-portrait-outline" label="Google Pay" active={selectedMethod === 'google'} onPress={() => { Haptics.selectionAsync(); setSelectedMethod('google'); }} />
+          <Text style={styles.sectionTitle}>{t('checkout.pay_with')}</Text>
+          <PayMethod icon="logo-apple" label={t('checkout.pay_apple')} active={selectedMethod === 'apple'} onPress={() => { Haptics.selectionAsync(); setSelectedMethod('apple'); }} />
+          <PayMethod icon="card-outline" label={t('checkout.pay_card')} active={selectedMethod === 'card'} onPress={() => { Haptics.selectionAsync(); setSelectedMethod('card'); }} />
+          <PayMethod icon="phone-portrait-outline" label={t('checkout.pay_google')} active={selectedMethod === 'google'} onPress={() => { Haptics.selectionAsync(); setSelectedMethod('google'); }} />
         </View>
 
       </ScrollView>
@@ -613,7 +614,7 @@ export default function CheckoutScreen() {
                 color={Colors.white}
               />
               <Text style={styles.ctaText}>
-                {selectedMethod === 'apple' ? 'Paga con Apple Pay' : selectedMethod === 'google' ? 'Paga con Google Pay' : `Paga €${total}`}
+                {selectedMethod === 'apple' ? t('checkout.pay_btn_apple') : selectedMethod === 'google' ? t('checkout.pay_btn_google') : t('checkout.pay_btn_card', { total })}
               </Text>
             </>
           )}

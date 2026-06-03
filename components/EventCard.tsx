@@ -8,6 +8,7 @@ import {
   Animated,
 } from 'react-native';
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -27,6 +28,7 @@ interface Props {
 }
 
 export default function EventCard({ event }: Props) {
+  const { t } = useTranslation();
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
   const scale = useRef(new Animated.Value(1)).current;
@@ -95,12 +97,12 @@ export default function EventCard({ event }: Props) {
               </Text>
             </View>
             {isSoldOut ? (
-              <Text style={styles.soldOutText}>Esaurito</Text>
+              <Text style={styles.soldOutText}>{t('common.sold_out')}</Text>
             ) : !hasTickets ? (
-              <Text style={styles.freeText}>Ingresso libero</Text>
+              <Text style={styles.freeText}>{t('common.free_entry')}</Text>
             ) : (
               <View style={styles.priceRow}>
-                <Text style={styles.priceFrom}>da </Text>
+                <Text style={styles.priceFrom}>{t('common.from_price')}</Text>
                 <Text style={styles.priceValue}>€{minPrice}</Text>
               </View>
             )}

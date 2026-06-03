@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, Animated } from 'react-native';
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export default function EventListItem({ event }: Props) {
+  const { t } = useTranslation();
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
   const scale = useRef(new Animated.Value(1)).current;
@@ -68,11 +70,11 @@ export default function EventListItem({ event }: Props) {
       </View>
       <View style={styles.right}>
         {isSoldOut ? (
-          <Text style={styles.soldText}>Esaurito</Text>
+          <Text style={styles.soldText}>{t('common.sold_out')}</Text>
         ) : !hasTickets ? (
-          <Text style={styles.freeText}>Ingresso libero</Text>
+          <Text style={styles.freeText}>{t('common.free_entry')}</Text>
         ) : (
-          <Text style={styles.price}>da €{minPrice}</Text>
+          <Text style={styles.price}>{t('common.from_price')}€{minPrice}</Text>
         )}
         <TouchableOpacity onPress={onHeartPress} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
           <Animated.View style={{ transform: [{ scale: heartScale }] }}>

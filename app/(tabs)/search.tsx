@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
 import EventListItem from '../../components/EventListItem';
@@ -126,6 +127,7 @@ const swipeStyles = StyleSheet.create({
 
 export default function SearchScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [resetKey, setResetKey] = useState(0);
   const { recentIds, removeRecentlyViewed, clearRecentlyViewed } = useRecentlyViewed();
@@ -180,7 +182,7 @@ export default function SearchScreen() {
             <Ionicons name="search" size={16} color={Colors.textMuted} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Serate, discoteche, generi..."
+              placeholder={t('search.placeholder')}
               placeholderTextColor={Colors.textMuted}
               value={query}
               onChangeText={setQuery}
@@ -203,7 +205,7 @@ export default function SearchScreen() {
               {/* Clubs */}
               {filteredClubs && filteredClubs.length > 0 && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Discoteche</Text>
+                  <Text style={styles.sectionTitle}>{t('search.section_clubs')}</Text>
                   {filteredClubs.map((club) => (
                     <TouchableOpacity key={club.id} style={styles.clubRow} activeOpacity={0.8} onPress={() => router.push(`/club/${club.id}`)}>
                       <View style={styles.clubIcon}>
@@ -222,14 +224,14 @@ export default function SearchScreen() {
               {/* Events */}
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>
-                  {filtered.length} {filtered.length === 1 ? 'evento' : 'eventi'}
-                  {trimmed ? ` per "${query}"` : ''}
+                  {filtered.length} {filtered.length === 1 ? t('search.event_singular') : t('search.event_plural')}
+                  {trimmed ? ` ${t('search.results_for')} "${query}"` : ''}
                 </Text>
                 {filtered.length === 0 ? (
                   <View style={styles.empty}>
                     <Ionicons name="search-outline" size={40} color={Colors.textMuted} />
-                    <Text style={styles.emptyText}>Nessun risultato</Text>
-                    <Text style={styles.emptySub}>Prova con un altro termine</Text>
+                    <Text style={styles.emptyText}>{t('search.no_results')}</Text>
+                    <Text style={styles.emptySub}>{t('search.no_results_sub')}</Text>
                   </View>
                 ) : (
                   filtered.map((event) => <EventListItem key={event.id} event={event} />)
@@ -242,9 +244,9 @@ export default function SearchScreen() {
               {recentEvents.length > 0 && (
                 <View style={styles.section}>
                   <View style={styles.sectionRow}>
-                    <Text style={styles.sectionTitle}>Visualizzati di recente</Text>
+                    <Text style={styles.sectionTitle}>{t('search.section_recently_viewed')}</Text>
                     <TouchableOpacity onPress={clearRecentlyViewed} activeOpacity={0.7}>
-                      <Text style={styles.clearAll}>Cancella tutti</Text>
+                      <Text style={styles.clearAll}>{t('search.clear_all')}</Text>
                     </TouchableOpacity>
                   </View>
                   {recentEvents.map((event) => (
@@ -260,7 +262,7 @@ export default function SearchScreen() {
 
               {/* Browse all genres */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Esplora per genere</Text>
+                <Text style={styles.sectionTitle}>{t('search.section_browse_by_genre')}</Text>
                 <View style={styles.genreGrid}>
                   {[...ALL_GENRES].sort().map((genre) => {
                     const count = events.filter((e) => e.genres.includes(genre)).length;
@@ -279,7 +281,7 @@ export default function SearchScreen() {
                           style={StyleSheet.absoluteFill}
                         />
                         <Text style={styles.genreCardText}>{genre}</Text>
-                        <Text style={styles.genreCardCount}>{count} {count === 1 ? 'serata' : 'serate'}</Text>
+                        <Text style={styles.genreCardCount}>{count} {count === 1 ? t('search.night_singular') : t('search.night_plural')}</Text>
                       </TouchableOpacity>
                     );
                   })}

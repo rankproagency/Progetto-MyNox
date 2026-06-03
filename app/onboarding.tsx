@@ -18,6 +18,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
+import { getLocale } from '../lib/i18n';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
@@ -32,6 +34,7 @@ const TOTAL_STEPS = TOTAL_SLIDES + 1;
 // SLIDE 0 — Discover
 // ─────────────────────────────────────────────────────────────────────────────
 function SlideDiscover() {
+  const { t } = useTranslation();
   const cardY = useRef(new Animated.Value(0)).current;
   const fadeIn = useRef(new Animated.Value(0)).current;
 
@@ -43,11 +46,17 @@ function SlideDiscover() {
     ])).start();
   }, []);
 
+  const filterTags = [
+    t('onboarding.slide_discover_filter_genre'),
+    t('onboarding.slide_discover_filter_price'),
+    t('onboarding.slide_discover_filter_city'),
+  ];
+
   return (
     <View style={sdi.container}>
       <Animated.View style={[sdi.header, { opacity: fadeIn }]}>
-        <Text style={sdi.eyebrow}>SERATE</Text>
-        <Text style={sdi.title}>Le migliori serate,{'\n'}tutte in un posto.</Text>
+        <Text style={sdi.eyebrow}>{t('onboarding.slide_discover_eyebrow')}</Text>
+        <Text style={sdi.title}>{t('onboarding.slide_discover_title')}</Text>
       </Animated.View>
 
       <Animated.View style={[sdi.cardShadowWrap, { transform: [{ translateY: cardY }] }]}>
@@ -62,7 +71,7 @@ function SlideDiscover() {
           <Text style={sdi.cardVenue}>Discoteca Anima</Text>
           <View style={sdi.freeDrinkBadge}>
             <Text style={sdi.freeDrinkEmoji}>🥂</Text>
-            <Text style={sdi.freeDrinkText}>Free drink incluso</Text>
+            <Text style={sdi.freeDrinkText}>{t('onboarding.slide_discover_free_drink')}</Text>
           </View>
           <View style={sdi.cardFooter}>
             <View style={sdi.dateBadge}>
@@ -76,9 +85,9 @@ function SlideDiscover() {
       </Animated.View>
 
       <Animated.View style={[sdi.filters, { opacity: fadeIn }]}>
-        <Text style={sdi.filtersLabel}>Filtrabili per</Text>
+        <Text style={sdi.filtersLabel}>{t('onboarding.slide_discover_filters_label')}</Text>
         <View style={sdi.filterTags}>
-          {['🎵 Genere', '💶 Prezzo', '📍 Città'].map((f) => (
+          {filterTags.map((f) => (
             <View key={f} style={sdi.filterTag}>
               <Text style={sdi.filterTagText}>{f}</Text>
             </View>
@@ -144,6 +153,7 @@ const sdi = StyleSheet.create({
 // SLIDE 1 — Tavoli
 // ─────────────────────────────────────────────────────────────────────────────
 function SlideTavoli() {
+  const { t } = useTranslation();
   const cardY = useRef(new Animated.Value(0)).current;
   const vipGlow = useRef(new Animated.Value(0.4)).current;
   const vipPulse = useRef(new Animated.Value(1)).current;
@@ -168,8 +178,8 @@ function SlideTavoli() {
 
   return (
     <View style={stv.container}>
-      <Text style={stv.eyebrow}>TAVOLI</Text>
-      <Text style={stv.title}>Scegli il tavolo.{'\n'}Nessun intermediario.</Text>
+      <Text style={stv.eyebrow}>{t('onboarding.slide_tables_eyebrow')}</Text>
+      <Text style={stv.title}>{t('onboarding.slide_tables_title')}</Text>
 
       <Animated.View style={[stv.card, { transform: [{ translateY: cardY }] }]}>
         {/* Header */}
@@ -177,7 +187,7 @@ function SlideTavoli() {
           <Text style={stv.cardHeaderEvent}>SATURNO · Discoteca Anima</Text>
           <View style={stv.liveBadge}>
             <View style={stv.liveDot} />
-            <Text style={stv.liveText}>Live</Text>
+            <Text style={stv.liveText}>{t('onboarding.live_badge')}</Text>
           </View>
         </View>
 
@@ -208,11 +218,11 @@ function SlideTavoli() {
         {/* Selection bar */}
         <View style={stv.selBar}>
           <View>
-            <Text style={stv.selTitle}>Tavolo VIP · 6 persone</Text>
-            <Text style={stv.selSub}>Caparra 50€ · Resto in loco</Text>
+            <Text style={stv.selTitle}>{t('onboarding.slide_tables_table_label')}</Text>
+            <Text style={stv.selSub}>{t('onboarding.slide_tables_deposit_label')}</Text>
           </View>
           <View style={stv.prenotaBtn}>
-            <Text style={stv.prenotaText}>Prenota</Text>
+            <Text style={stv.prenotaText}>{t('onboarding.slide_tables_book_btn')}</Text>
             <Ionicons name="arrow-forward" size={11} color={Colors.white} />
           </View>
         </View>
@@ -220,9 +230,9 @@ function SlideTavoli() {
 
       <View style={stv.benefits}>
         {([
-          { icon: 'ban-outline', label: 'Nessun PR' },
-          { icon: 'chatbubble-ellipses-outline', label: 'Nessuna telefonata' },
-          { icon: 'flash-outline', label: 'Prenota in 30s' },
+          { icon: 'ban-outline', label: t('onboarding.slide_tables_benefit_no_pr') },
+          { icon: 'chatbubble-ellipses-outline', label: t('onboarding.slide_tables_benefit_no_calls') },
+          { icon: 'flash-outline', label: t('onboarding.slide_tables_benefit_fast') },
         ] as { icon: 'ban-outline' | 'chatbubble-ellipses-outline' | 'flash-outline'; label: string }[]).map(({ icon, label }) => (
           <View key={label} style={stv.benefit}>
             <Ionicons name={icon} size={14} color={Colors.accent} />
@@ -327,6 +337,7 @@ const QR_GRID = [
 ];
 
 function SlideTicket() {
+  const { t } = useTranslation();
   const cardY = useRef(new Animated.Value(0)).current;
   const glowOpacity = useRef(new Animated.Value(0.5)).current;
 
@@ -343,8 +354,8 @@ function SlideTicket() {
 
   return (
     <View style={st.container}>
-      <Text style={st.eyebrow}>INGRESSO</Text>
-      <Text style={st.title}>Il tuo biglietto.{'\n'}Sempre con te.</Text>
+      <Text style={st.eyebrow}>{t('onboarding.slide_ticket_eyebrow')}</Text>
+      <Text style={st.title}>{t('onboarding.slide_ticket_title')}</Text>
 
       <View style={st.ticketOuter}>
         <Animated.View style={[st.ticketGlow, { opacity: glowOpacity }]} />
@@ -361,7 +372,7 @@ function SlideTicket() {
                 </View>
                 <View style={st.verifiedBadge}>
                   <Ionicons name="checkmark-circle" size={22} color={Colors.success} />
-                  <Text style={st.verifiedText}>Valido</Text>
+                  <Text style={st.verifiedText}>{t('onboarding.slide_ticket_valid')}</Text>
                 </View>
               </View>
             </LinearGradient>
@@ -389,20 +400,20 @@ function SlideTicket() {
                 <View style={st.ticketSideInfo}>
                   <View style={st.drinkHighlight}>
                     <Text style={st.drinkBigEmoji}>🥂</Text>
-                    <Text style={st.drinkHighlightLabel}>Free drink</Text>
-                    <Text style={st.drinkHighlightSub}>incluso nel biglietto</Text>
+                    <Text style={st.drinkHighlightLabel}>{t('onboarding.slide_ticket_free_drink_label')}</Text>
+                    <Text style={st.drinkHighlightSub}>{t('onboarding.slide_ticket_free_drink_sub')}</Text>
                   </View>
                   <View style={st.sideFeature}>
                     <Ionicons name="flash-outline" size={13} color={Colors.accent} />
-                    <Text style={st.sideFeatureText}>Istantaneo</Text>
+                    <Text style={st.sideFeatureText}>{t('onboarding.slide_ticket_instant')}</Text>
                   </View>
                   <View style={st.sideFeature}>
                     <Ionicons name="shield-checkmark-outline" size={13} color={Colors.accent} />
-                    <Text style={st.sideFeatureText}>QR sicuro</Text>
+                    <Text style={st.sideFeatureText}>{t('onboarding.slide_ticket_secure_qr')}</Text>
                   </View>
                 </View>
               </View>
-              <Text style={st.scanLabel}>Scansiona per entrare</Text>
+              <Text style={st.scanLabel}>{t('onboarding.slide_ticket_scan_label')}</Text>
             </View>
           </View>
         </Animated.View>
@@ -410,11 +421,11 @@ function SlideTicket() {
 
       <View style={st.featureRow}>
         <Ionicons name="people-outline" size={14} color={Colors.accent} />
-        <Text style={st.featureRowText}>Zero code all'ingresso</Text>
+        <Text style={st.featureRowText}>{t('onboarding.slide_ticket_no_queue')}</Text>
       </View>
       <View style={st.paymentBadge}>
         <Ionicons name="lock-closed" size={11} color={Colors.textMuted} />
-        <Text style={st.paymentBadgeText}>Pagamenti protetti e crittografati</Text>
+        <Text style={st.paymentBadgeText}>{t('onboarding.slide_ticket_secure_payments')}</Text>
       </View>
     </View>
   );
@@ -489,6 +500,7 @@ const st = StyleSheet.create({
 // ─────────────────────────────────────────────────────────────────────────────
 export default function OnboardingScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { completeOnboarding, setMusicGenres, updateDateOfBirth, user } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
@@ -584,10 +596,10 @@ export default function OnboardingScreen() {
   const gradientIndex = Math.min(currentIndex, SLIDE_GRADIENTS.length - 1);
 
   const ctaLabel = isGenreStep
-    ? 'Inizia ora'
+    ? t('onboarding.cta_start')
     : currentIndex === TOTAL_SLIDES - 1
-    ? 'Scegli i tuoi generi'
-    : 'Avanti';
+    ? t('onboarding.cta_choose_genres')
+    : t('onboarding.cta_next');
 
   return (
     <View style={styles.container}>
@@ -596,9 +608,9 @@ export default function OnboardingScreen() {
         <View style={styles.dobOverlay}>
           <View style={styles.dobSheet}>
             <View style={styles.dobHandle} />
-            <Text style={styles.dobTitle}>Un'ultima cosa</Text>
+            <Text style={styles.dobTitle}>{t('onboarding.dob_modal_title')}</Text>
             <Text style={styles.dobSubtitle}>
-              Inserisci la tua data di nascita per verificare l'età agli eventi.
+              {t('onboarding.dob_modal_subtitle')}
             </Text>
             <DateTimePicker
               value={dobTempDate}
@@ -608,7 +620,7 @@ export default function OnboardingScreen() {
               minimumDate={new Date(1920, 0, 1)}
               onChange={(_, date) => { if (date) setDobTempDate(date); }}
               textColor={Colors.textPrimary}
-              locale="it-IT"
+              locale={getLocale()}
               style={styles.dobPicker}
             />
             <TouchableOpacity
@@ -619,7 +631,7 @@ export default function OnboardingScreen() {
             >
               {dobSaving
                 ? <ActivityIndicator size="small" color="#fff" />
-                : <Text style={styles.dobConfirmText}>Conferma e inizia</Text>
+                : <Text style={styles.dobConfirmText}>{t('onboarding.dob_modal_confirm')}</Text>
               }
             </TouchableOpacity>
           </View>
@@ -667,9 +679,9 @@ export default function OnboardingScreen() {
         </ScrollView>
       ) : (
         <View style={styles.genreStep}>
-          <Text style={styles.genreTitle}>Che musica ti piace?</Text>
+          <Text style={styles.genreTitle}>{t('onboarding.genre_step_title')}</Text>
           <Text style={styles.genreSubtitle}>
-            Seleziona i generi che ami — ti mostriamo gli eventi giusti per te.
+            {t('onboarding.genre_step_subtitle')}
           </Text>
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.genreScroll}>
             <View style={styles.genreGrid}>
@@ -690,7 +702,7 @@ export default function OnboardingScreen() {
               })}
             </View>
             {selectedGenres.length > 0 && (
-              <Text style={styles.genreCount}>{selectedGenres.length} selezionati ✦</Text>
+              <Text style={styles.genreCount}>{selectedGenres.length} {t('onboarding.genre_selected_count')}</Text>
             )}
           </ScrollView>
         </View>
@@ -722,7 +734,7 @@ export default function OnboardingScreen() {
         {(!isGenreStep || selectedGenres.length === 0) && (
           <TouchableOpacity style={styles.skipButton} onPress={handleStart} activeOpacity={0.7}>
             <Text style={styles.skipText}>
-              {isGenreStep ? 'Salta per ora' : 'Salta intro'}
+              {isGenreStep ? t('onboarding.skip_for_now') : t('onboarding.skip_intro')}
             </Text>
           </TouchableOpacity>
         )}

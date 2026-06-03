@@ -11,6 +11,8 @@ import { useTickets, MockTicket } from '../../contexts/TicketsContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCountdown } from '../../hooks/useCountdown';
 import AppHeader from '../../components/AppHeader';
+import { useTranslation } from 'react-i18next';
+import { getLocale } from '../../lib/i18n';
 
 type Tab = 'future' | 'past';
 
@@ -55,23 +57,24 @@ function categorize(ticket: MockTicket): Tab {
   return 'future';
 }
 
-const TAB_CONFIG: { key: Tab; label: string }[] = [
-  { key: 'future', label: 'Futuri' },
-  { key: 'past', label: 'Passati' },
-];
-
 export default function TicketsScreen() {
   const router = useRouter();
-  const { tab: tabParam, t } = useLocalSearchParams<{ tab?: string; t?: string }>();
+  const { t } = useTranslation();
+  const { tab: tabParam, t: tParam } = useLocalSearchParams<{ tab?: string; t?: string }>();
+
+  const TAB_CONFIG: { key: Tab; label: string }[] = [
+    { key: 'future', label: t('tickets.tab_future') },
+    { key: 'past', label: t('tickets.tab_past') },
+  ];
   const { tickets, removeTicket, markTicketGifted, markTicketReclaimed, refreshTickets } = useTickets();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('future');
 
   useEffect(() => {
-    if (!t) return;
+    if (!tParam) return;
     if (tabParam === 'past') setActiveTab('past');
     else if (tabParam === 'future') setActiveTab('future');
-  }, [t]);
+  }, [tParam]);
   const [claimModalOpen, setClaimModalOpen] = useState(false);
   const [claimCode, setClaimCode] = useState('');
   const [claimLoading, setClaimLoading] = useState(false);
@@ -86,12 +89,12 @@ export default function TicketsScreen() {
   function buildGiftMessage(ticket: MockTicket, code: string): string {
     return (
       `MYNOX ✦\n\n` +
-      `Ti mando un posto per questa serata.\n\n` +
+      `${t('tickets.gift_message_intro')}\n\n` +
       `${ticket.eventName.toUpperCase()}\n` +
       `📍 ${ticket.clubName}  ·  ${ticket.date}  ·  ${ticket.startTime}\n\n` +
-      `Il tuo codice:\n` +
+      `${t('tickets.gift_message_code_label')}\n` +
       `[ ${code} ]\n\n` +
-      `Scarica MyNox → Biglietti → Riscatta regalo.`
+      `${t('tickets.gift_message_cta')}`
     );
   }
 
@@ -106,12 +109,12 @@ export default function TicketsScreen() {
   async function handleReclaim(ticket: MockTicket) {
     if (!user?.id) return;
     Alert.alert(
-      'Riprendi biglietto',
-      'Sei sicuro? Il codice regalo verrà annullato e il biglietto tornerà a te. Funziona solo se il destinatario non lo ha ancora riscattato.',
+      t('tickets.reclaim_alert_title'),
+      t('tickets.reclaim_alert_body'),
       [
-        { text: 'Annulla', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Riprendi',
+          text: t('tickets.reclaim_confirm_btn'),
           onPress: async () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             try {
@@ -122,13 +125,13 @@ export default function TicketsScreen() {
               });
               const json = await res.json() as { success?: boolean; error?: string };
               if (!json.success) {
-                Alert.alert('Errore', json.error ?? 'Impossibile riprendere il biglietto. Potrebbe essere già stato riscattato.');
+                Alert.alert(t('common.error'), json.error ?? t('tickets.reclaim_error_generic'));
                 return;
               }
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               await markTicketReclaimed(ticket.id);
             } catch {
-              Alert.alert('Errore', 'Impossibile completare l\'operazione');
+              Alert.alert(t('common.error'), t('tickets.reclaim_error_generic'));
             }
           },
         },
@@ -137,15 +140,15 @@ export default function TicketsScreen() {
   }
 
   async function handleGift(ticket: MockTicket) {
-    if (!user?.id) { Alert.alert('Accedi per regalare un biglietto'); return; }
+    if (!user?.id) { Alert.alert(t('tickets.gift_login_required')); return; }
 
     Alert.alert(
-      'Regala biglietto',
-      `Attenzione: se regali questo biglietto non potrai più usarlo tu. Il biglietto verrà trasferito alla persona che inserisce il codice.\n\nVuoi continuare?`,
+      t('tickets.gift_alert_title'),
+      t('tickets.gift_alert_body'),
       [
-        { text: 'Annulla', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Sì, regala',
+          text: t('tickets.gift_confirm_btn'),
           style: 'destructive',
           onPress: async () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -156,7 +159,7 @@ export default function TicketsScreen() {
                 body: JSON.stringify({ ticket_id: ticket.id, gifter_id: user.id }),
               });
               const json = await res.json() as { code?: string; expires_at?: string; error?: string };
-              if (!json.code) { Alert.alert('Errore', json.error ?? 'Impossibile creare il codice regalo'); return; }
+              if (!json.code) { Alert.alert(t('common.error'), json.error ?? t('tickets.gift_error_code')); return; }
 
               await markTicketGifted(ticket.id, json.code, json.expires_at);
 
@@ -165,7 +168,7 @@ export default function TicketsScreen() {
                 title: `Biglietto per ${ticket.eventName}`,
               });
             } catch {
-              Alert.alert('Errore', 'Impossibile creare il codice regalo');
+              Alert.alert(t('common.error'), t('tickets.gift_error_code'));
             }
           },
         },
@@ -174,7 +177,7 @@ export default function TicketsScreen() {
   }
 
   async function handleClaim() {
-    if (!user?.id) { Alert.alert('Accedi per riscattare un regalo'); return; }
+    if (!user?.id) { Alert.alert(t('tickets.claim_login_required')); return; }
     if (!claimCode.trim()) return;
     setClaimLoading(true);
     try {
@@ -185,15 +188,15 @@ export default function TicketsScreen() {
       });
       const json = await res.json() as { success?: boolean; error?: string };
       setClaimLoading(false);
-      if (!json.success) { Alert.alert('Errore', json.error ?? 'Codice non valido'); return; }
+      if (!json.success) { Alert.alert(t('common.error'), json.error ?? t('tickets.claim_error_invalid')); return; }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setClaimModalOpen(false);
       setClaimCode('');
       await refreshTickets();
-      Alert.alert('🎁 Biglietto ricevuto!', 'Il biglietto è stato aggiunto ai tuoi biglietti.');
+      Alert.alert(t('tickets.claim_success_title'), t('tickets.claim_success_body'));
     } catch {
       setClaimLoading(false);
-      Alert.alert('Errore', 'Impossibile riscattare il codice');
+      Alert.alert(t('common.error'), t('tickets.claim_error_generic'));
     }
   }
 
@@ -260,7 +263,7 @@ export default function TicketsScreen() {
       {/* Riscatta regalo — ancorato sopra la tab bar */}
       <TouchableOpacity style={styles.claimBanner} onPress={() => setClaimModalOpen(true)} activeOpacity={0.8}>
         <Ionicons name="gift-outline" size={15} color={Colors.accent} />
-        <Text style={styles.claimBannerText}>Hai un codice regalo? <Text style={{ color: Colors.accent, fontFamily: Font.semiBold }}>Riscatta qui</Text></Text>
+        <Text style={styles.claimBannerText}>{t('tickets.claim_banner_text')}<Text style={{ color: Colors.accent, fontFamily: Font.semiBold }}>{t('tickets.claim_banner_link')}</Text></Text>
         <Ionicons name="chevron-forward" size={13} color={Colors.accent} />
       </TouchableOpacity>
 
@@ -268,13 +271,13 @@ export default function TicketsScreen() {
       <Modal visible={claimModalOpen} transparent animationType="fade" onRequestClose={() => setClaimModalOpen(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Riscatta regalo</Text>
-            <Text style={styles.modalSub}>Inserisci il codice che hai ricevuto</Text>
+            <Text style={styles.modalTitle}>{t('tickets.claim_modal_title')}</Text>
+            <Text style={styles.modalSub}>{t('tickets.claim_modal_sub')}</Text>
             <TextInput
               style={styles.codeInput}
               value={claimCode}
-              onChangeText={(t) => setClaimCode(t.toUpperCase())}
-              placeholder="Es. AB12CD34"
+              onChangeText={(v) => setClaimCode(v.toUpperCase())}
+              placeholder={t('tickets.claim_code_placeholder')}
               placeholderTextColor="#475569"
               autoCapitalize="characters"
               autoCorrect={false}
@@ -288,11 +291,11 @@ export default function TicketsScreen() {
             >
               {claimLoading
                 ? <ActivityIndicator color="#fff" size="small" />
-                : <Text style={styles.claimBtnText}>Riscatta biglietto</Text>
+                : <Text style={styles.claimBtnText}>{t('tickets.claim_btn')}</Text>
               }
             </TouchableOpacity>
             <TouchableOpacity onPress={() => { setClaimModalOpen(false); setClaimCode(''); }} style={{ marginTop: 12 }}>
-              <Text style={{ color: '#64748b', fontSize: 14, textAlign: 'center' }}>Annulla</Text>
+              <Text style={{ color: '#64748b', fontSize: 14, textAlign: 'center' }}>{t('common.cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -312,6 +315,7 @@ function TicketCard({
   onReshare: () => void;
   onReclaim: () => void;
 }) {
+  const { t } = useTranslation();
   const isPast = tab === 'past';
   const isPending = ticket.status === 'pending';
   const isGifted = ticket.status === 'gifted';
@@ -359,13 +363,13 @@ function TicketCard({
             {isPending && (
               <View style={styles.pendingRow}>
                 <Ionicons name="time-outline" size={12} color={Colors.warning} />
-                <Text style={styles.pendingText}>Pagamento in elaborazione</Text>
+                <Text style={styles.pendingText}>{t('tickets.payment_processing')}</Text>
               </View>
             )}
             {isGifted && (
               <View style={styles.pendingRow}>
                 <Ionicons name="gift-outline" size={12} color={Colors.accent} />
-                <Text style={styles.giftedText}>In attesa di riscatto</Text>
+                <Text style={styles.giftedText}>{t('tickets.gift_pending')}</Text>
               </View>
             )}
           </View>
@@ -373,9 +377,9 @@ function TicketCard({
         <View style={styles.ticketRight}>
           <View style={[styles.typeBadge, isPending && styles.typeBadgePending, isGifted && styles.typeBadgeGifted, ticket.type === 'table' && styles.typeBadgeTable]}>
             {ticket.type === 'table' && !isGifted ? (
-              <Text style={[styles.typeBadgeText, { color: Colors.accent }]}>Tavolo</Text>
+              <Text style={[styles.typeBadgeText, { color: Colors.accent }]}>{t('tickets.table_label')}</Text>
             ) : (
-              <Text style={styles.typeBadgeText}>{isGifted ? 'Regalo' : ticket.ticketLabel}</Text>
+              <Text style={styles.typeBadgeText}>{isGifted ? t('tickets.gift_label') : ticket.ticketLabel}</Text>
             )}
           </View>
           {!isPending && !isGifted && ticket.type !== 'table' && (
@@ -386,7 +390,7 @@ function TicketCard({
                 color={ticket.drinkUsed ? Colors.textMuted : Colors.success}
               />
               <Text style={[styles.drinkText, ticket.drinkUsed && styles.drinkUsedText]}>
-                {ticket.drinkUsed ? 'Usato' : 'Drink'}
+                {ticket.drinkUsed ? t('tickets.drink_used') : t('tickets.drink_available')}
               </Text>
             </View>
           )}
@@ -401,23 +405,23 @@ function TicketCard({
           {ticket.giftCode && (
             <View style={styles.giftCodeRow}>
               <View style={styles.giftCodeBox}>
-                <Text style={styles.giftCodeLabel}>Codice regalo</Text>
+                <Text style={styles.giftCodeLabel}>{t('tickets.gift_code_label')}</Text>
                 <Text style={styles.giftCodeValue}>{ticket.giftCode}</Text>
                 {ticket.giftCodeExpiresAt && (
                   <Text style={styles.giftCodeExpiry}>
-                    Scade il {new Date(ticket.giftCodeExpiresAt).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}
+                    {t('tickets.gift_code_expires')}{new Date(ticket.giftCodeExpiresAt).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' })}
                   </Text>
                 )}
               </View>
               <TouchableOpacity style={styles.reshareBtn} activeOpacity={0.8} onPress={onReshare}>
                 <Ionicons name="share-outline" size={15} color={Colors.accent} />
-                <Text style={styles.reshareText}>Condividi</Text>
+                <Text style={styles.reshareText}>{t('tickets.gift_share_btn')}</Text>
               </TouchableOpacity>
             </View>
           )}
           <TouchableOpacity style={styles.reclaimButton} activeOpacity={0.8} onPress={onReclaim}>
             <Ionicons name="arrow-undo-outline" size={14} color={Colors.textMuted} />
-            <Text style={styles.reclaimText}>Riprendi biglietto</Text>
+            <Text style={styles.reclaimText}>{t('tickets.reclaim_ticket_btn')}</Text>
           </TouchableOpacity>
         </>
       )}
@@ -425,7 +429,7 @@ function TicketCard({
       {!isPast && !isPending && !isGifted && (
         <TouchableOpacity style={styles.giftButton} activeOpacity={0.8} onPress={onGift}>
           <Ionicons name="gift-outline" size={14} color={Colors.accent} />
-          <Text style={styles.giftText}>Regala questo biglietto</Text>
+          <Text style={styles.giftText}>{t('tickets.gift_ticket_btn')}</Text>
         </TouchableOpacity>
       )}
     </Animated.View>
@@ -433,16 +437,17 @@ function TicketCard({
 }
 
 function EmptyState({ tab, onExplore }: { tab: Tab; onExplore: () => void }) {
+  const { t } = useTranslation();
   const config = {
     future: {
       icon: 'ticket-outline' as const,
-      title: 'Nessun biglietto futuro',
-      sub: 'I tuoi prossimi eventi appariranno qui',
+      title: t('tickets.empty_future_title'),
+      sub: t('tickets.empty_future_sub'),
     },
-past: {
+    past: {
       icon: 'calendar-outline' as const,
-      title: 'Nessuna serata passata',
-      sub: 'Il tuo storico eventi sarà visibile qui',
+      title: t('tickets.empty_past_title'),
+      sub: t('tickets.empty_past_sub'),
     },
   }[tab];
 
@@ -453,7 +458,7 @@ past: {
       <Text style={styles.emptySubtitle}>{config.sub}</Text>
       {tab === 'future' && (
         <TouchableOpacity style={styles.exploreBtn} onPress={onExplore}>
-          <Text style={styles.exploreBtnText}>Esplora gli eventi</Text>
+          <Text style={styles.exploreBtnText}>{t('tickets.explore_events_btn')}</Text>
         </TouchableOpacity>
       )}
     </View>

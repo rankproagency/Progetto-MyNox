@@ -22,6 +22,8 @@ import {
   DMSans_900Black,
 } from '@expo-google-fonts/dm-sans';
 import * as SplashScreen from 'expo-splash-screen';
+import { initI18n } from '../lib/i18n';
+import '../lib/i18n';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -34,14 +36,19 @@ export default function RootLayout() {
     DMSans_800ExtraBold,
     DMSans_900Black,
   });
+  const [i18nReady, setI18nReady] = useState(false);
 
   useEffect(() => {
-    if (fontsLoaded) {
+    initI18n().then(() => setI18nReady(true));
+  }, []);
+
+  useEffect(() => {
+    if (fontsLoaded && i18nReady) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, i18nReady]);
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded || !i18nReady) return null;
 
   return (
     <StripeProvider publishableKey="pk_test_51TLomNPanZbf0jho10XcgrBg8Zr3qozUnM3BALBYB8ocQOQlG1GWqsemiMV3EtX8iLwkhrBiY5Qrq3lj4NvJBsE400s1LwLnXN">

@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
@@ -24,6 +25,7 @@ import { useAuth } from '../contexts/AuthContext';
 export default function LoginScreen() {
   const router = useRouter(); // used for push('/register') and push('forgot-password')
   const { login, loginWithGoogle, resetPassword, isLoading } = useAuth();
+  const { t } = useTranslation();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,7 +35,7 @@ export default function LoginScreen() {
   async function handleLogin() {
     setLoginError('');
     if (!email.trim() || !password.trim()) {
-      setLoginError('Inserisci email e password.');
+      setLoginError(t('login.error_empty_fields'));
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -42,7 +44,7 @@ export default function LoginScreen() {
       // navigation handled by _layout.tsx once auth state updates
     } catch (e: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setLoginError(e.message ?? 'Credenziali non valide.');
+      setLoginError(e.message ?? t('login.error_invalid_credentials'));
     }
   }
 
@@ -67,20 +69,20 @@ export default function LoginScreen() {
                 style={styles.logoImage}
                 resizeMode="contain"
               />
-              <Text style={styles.logoSub}>Bentornato</Text>
+              <Text style={styles.logoSub}>{t('login.welcome_back')}</Text>
             </View>
 
             {/* Form */}
             <View style={styles.form}>
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Email</Text>
+                <Text style={styles.fieldLabel}>{t('login.email_label')}</Text>
                 <View style={styles.inputRow}>
                   <Ionicons name="mail-outline" size={18} color={Colors.textMuted} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     value={email}
                     onChangeText={setEmail}
-                    placeholder="email@esempio.com"
+                    placeholder={t('login.email_placeholder')}
                     placeholderTextColor={Colors.textMuted}
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -90,14 +92,14 @@ export default function LoginScreen() {
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Password</Text>
+                <Text style={styles.fieldLabel}>{t('login.password_label')}</Text>
                 <View style={styles.inputRow}>
                   <Ionicons name="lock-closed-outline" size={18} color={Colors.textMuted} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     value={password}
                     onChangeText={setPassword}
-                    placeholder="La tua password"
+                    placeholder={t('login.password_placeholder')}
                     placeholderTextColor={Colors.textMuted}
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
@@ -117,22 +119,22 @@ export default function LoginScreen() {
                 onPress={() => {
                   const target = email.trim();
                   if (!target) {
-                    Alert.alert('Password dimenticata', 'Inserisci prima la tua email nel campo qui sopra.');
+                    Alert.alert(t('login.forgot_password_title'), t('login.forgot_password_prompt'));
                     return;
                   }
                   Alert.alert(
-                    'Reset password',
-                    `Inviamo un\'email di reset a ${target}?`,
+                    t('login.reset_password_title'),
+                    t('login.reset_password_confirm', { email: target }),
                     [
-                      { text: 'Annulla', style: 'cancel' },
+                      { text: t('common.cancel'), style: 'cancel' },
                       {
-                        text: 'Invia email',
+                        text: t('login.reset_send_email'),
                         onPress: async () => {
                           try {
                             await resetPassword(target);
-                            Alert.alert('Email inviata', `Controlla la casella di ${target} per il link di reset.`);
+                            Alert.alert(t('login.reset_email_sent_title'), t('login.reset_email_sent_body', { email: target }));
                           } catch (e: any) {
-                            Alert.alert('Errore', e.message ?? 'Impossibile inviare l\'email di reset.');
+                            Alert.alert(t('common.error'), e.message ?? t('login.reset_error'));
                           }
                         },
                       },
@@ -140,7 +142,7 @@ export default function LoginScreen() {
                   );
                 }}
               >
-                <Text style={styles.forgotText}>Password dimenticata?</Text>
+                <Text style={styles.forgotText}>{t('login.forgot_password')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -162,13 +164,13 @@ export default function LoginScreen() {
               {isLoading ? (
                 <ActivityIndicator color={Colors.white} />
               ) : (
-                <Text style={styles.ctaText}>Accedi</Text>
+                <Text style={styles.ctaText}>{t('login.sign_in_btn')}</Text>
               )}
             </TouchableOpacity>
 
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>oppure</Text>
+              <Text style={styles.dividerText}>{t('common.or')}</Text>
               <View style={styles.dividerLine} />
             </View>
 
@@ -183,7 +185,7 @@ export default function LoginScreen() {
                   await loginWithGoogle();
                   // navigation handled by _layout.tsx once auth state updates
                 } catch (e: any) {
-                  Alert.alert('Errore', e.message ?? 'Accesso con Google fallito.');
+                  Alert.alert(t('common.error'), e.message ?? t('login.error_google_failed'));
                 } finally {
                   setGoogleLoading(false);
                 }
@@ -194,7 +196,7 @@ export default function LoginScreen() {
               ) : (
                 <>
                   <Ionicons name="logo-google" size={19} color="#EA4335" />
-                  <Text style={styles.socialText}>Continua con Google</Text>
+                  <Text style={styles.socialText}>{t('login.continue_google')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -203,17 +205,17 @@ export default function LoginScreen() {
             <TouchableOpacity
               style={styles.socialButton}
               activeOpacity={0.8}
-              onPress={() => Alert.alert('Apple Sign In', 'Disponibile prossimamente.')}
+              onPress={() => Alert.alert(t('login.continue_apple'), t('login.apple_coming_soon'))}
             >
               <Ionicons name="logo-apple" size={20} color={Colors.textPrimary} />
-              <Text style={styles.socialText}>Continua con Apple</Text>
+              <Text style={styles.socialText}>{t('login.continue_apple')}</Text>
             </TouchableOpacity>
 
             {/* Register link */}
             <View style={styles.registerRow}>
-              <Text style={styles.registerText}>Nuovo su MyNox? </Text>
+              <Text style={styles.registerText}>{t('login.no_account')}</Text>
               <TouchableOpacity onPress={() => router.push('/register')}>
-                <Text style={styles.registerLink}>Registrati</Text>
+                <Text style={styles.registerLink}>{t('login.sign_up_link')}</Text>
               </TouchableOpacity>
             </View>
 

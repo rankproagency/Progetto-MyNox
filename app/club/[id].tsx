@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
 import { supabase } from '../../lib/supabase';
@@ -15,6 +16,7 @@ import { useFavorites } from '../../contexts/FavoritesContext';
 const { width } = Dimensions.get('window');
 
 export default function ClubScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { isFavoriteClub, toggleFavoriteClub } = useFavorites();
@@ -113,7 +115,7 @@ export default function ClubScreen() {
   if (!club) {
     return (
       <View style={styles.notFound}>
-        <Text style={styles.notFoundText}>Club non trovato</Text>
+        <Text style={styles.notFoundText}>{t('club.not_found')}</Text>
       </View>
     );
   }
@@ -167,7 +169,7 @@ export default function ClubScreen() {
         {/* Social & Contatti */}
         {(club.instagram || club.tiktok || club.email || club.phone) && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Contatti</Text>
+            <Text style={styles.sectionTitle}>{t('club.section_contacts')}</Text>
             <View style={styles.contactCard}>
               {(club.instagram || club.tiktok) && (
                 <View style={styles.socialRow}>
@@ -221,11 +223,11 @@ export default function ClubScreen() {
 
         {/* Prossimi eventi */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Prossimi eventi</Text>
+          <Text style={styles.sectionTitle}>{t('club.section_upcoming')}</Text>
           {events.length === 0 ? (
             <View style={styles.empty}>
               <Ionicons name="calendar-outline" size={36} color={Colors.textMuted} />
-              <Text style={styles.emptyText}>Nessun evento in programma</Text>
+              <Text style={styles.emptyText}>{t('club.no_events')}</Text>
             </View>
           ) : (
             events.map((event) => <EventListItem key={event.id} event={event} />)

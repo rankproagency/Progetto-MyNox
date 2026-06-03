@@ -18,6 +18,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { getLocale } from '../../lib/i18n';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
@@ -41,15 +43,11 @@ const CITIES = [
   { id: 'roma', name: 'Roma', available: false },
 ];
 
-const MONTH_NAMES = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
-const DAY_LABELS = ['L','M','M','G','V','S','D'];
+const DAY_LABELS_IT = ['L','M','M','G','V','S','D'];
+const DAY_LABELS_EN = ['M','T','W','T','F','S','S'];
 
-const MAX_PRICE_OPTIONS = [
-  { label: 'Tutti', value: null },
-  { label: '≤ €10', value: 10 },
-  { label: '≤ €15', value: 15 },
-  { label: '≤ €20', value: 20 },
-];
+const MAX_PRICE_OPTIONS_VALUES = [null, 10, 15, 20];
+const MAX_PRICE_OPTION_LABELS = ['≤ €10', '≤ €15', '≤ €20'];
 
 function toDateKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -107,13 +105,12 @@ function getEventsByDayFromList(events: ReturnType<typeof useEvents>['events']) 
     if (!groups[event.date]) groups[event.date] = [];
     groups[event.date].push(event);
   }
-  const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
-  const MONTH_NAMES = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+  const locale = getLocale();
   return Object.entries(groups)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, evs]) => {
       const d = new Date(date);
-      const label = `${DAY_NAMES[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
+      const label = d.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' });
       return { day: date, label, events: evs };
     });
 }
@@ -150,6 +147,9 @@ function AnimatedListItem({ children, index }: { children: React.ReactNode; inde
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { t, i18n } = useTranslation();
+  const locale = getLocale();
+  const DAY_LABELS = i18n.language === 'en' ? DAY_LABELS_EN : DAY_LABELS_IT;
   const { musicGenres } = useAuth();
   const { events, isLoading: eventsLoading, hasError: eventsError, reload } = useEvents();
 
@@ -243,7 +243,7 @@ export default function HomeScreen() {
   const selectedDateLabel = selectedDate
     ? (() => {
         const d = new Date(selectedDate + 'T12:00:00');
-        return `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
+        return d.toLocaleDateString(locale, { day: 'numeric', month: 'long' });
       })()
     : null;
 
@@ -262,7 +262,7 @@ export default function HomeScreen() {
           <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setCityModalOpen(false)}>
             <View style={styles.modalSheet}>
               <View style={styles.modalHandle} />
-              <Text style={styles.modalTitle}>Scegli la città</Text>
+              <Text style={styles.modalTitle}>{t('home.city_modal_title')}</Text>
               {CITIES.map((city) => (
                 <TouchableOpacity
                   key={city.id}
@@ -279,7 +279,7 @@ export default function HomeScreen() {
                     <Text style={[styles.cityName, !city.available && styles.cityNameMuted]}>{city.name}</Text>
                     {!city.available && (
                       <View style={styles.comingSoonBadge}>
-                        <Text style={styles.comingSoonText}>Presto</Text>
+                        <Text style={styles.comingSoonText}>{t('common.coming_soon')}</Text>
                       </View>
                     )}
                   </View>
@@ -305,7 +305,7 @@ export default function HomeScreen() {
                     <Ionicons name="chevron-back" size={20} color={isCurrentMonth ? Colors.border : Colors.textPrimary} />
                   </TouchableOpacity>
                   <Text style={styles.calMonthLabel}>
-                    {MONTH_NAMES[calendarMonth.month]} {calendarMonth.year}
+                    {new Date(calendarMonth.year, calendarMonth.month).toLocaleDateString(locale, { month: 'long', year: 'numeric' })}
                   </Text>
                   <TouchableOpacity onPress={nextMonth} style={styles.calNavBtn}>
                     <Ionicons name="chevron-forward" size={20} color={Colors.textPrimary} />
@@ -361,7 +361,7 @@ export default function HomeScreen() {
                     onPress={() => { setSelectedDate(null); setCalendarOpen(false); }}
                   >
                     <Ionicons name="close-circle-outline" size={16} color={Colors.accent} />
-                    <Text style={styles.calClearText}>Rimuovi filtro data</Text>
+                    <Text style={styles.calClearText}>{t('home.calendar_clear_date')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -378,7 +378,7 @@ export default function HomeScreen() {
                   <View style={styles.modalHandle} />
                 </View>
                 <View style={styles.filterTitleRow}>
-                  <Text style={styles.filterTitle}>Filtra eventi</Text>
+                  <Text style={styles.filterTitle}>{t('home.filter_title')}</Text>
                   {(draftMaxPrice !== null || draftOnlyAvailable || draftSelectedGenres.length > 0 || draftAgeFilter !== 'all') && (
                     <TouchableOpacity onPress={() => {
                       setDraftMaxPrice(null);
@@ -386,33 +386,36 @@ export default function HomeScreen() {
                       setDraftSelectedGenres([]);
                       setDraftAgeFilter('all');
                     }}>
-                      <Text style={styles.filterReset}>Azzera</Text>
+                      <Text style={styles.filterReset}>{t('home.filter_reset')}</Text>
                     </TouchableOpacity>
                   )}
                 </View>
 
                 {/* Prezzo massimo */}
-                <Text style={styles.filterLabel}>Prezzo massimo</Text>
+                <Text style={styles.filterLabel}>{t('home.filter_max_price')}</Text>
                 <View style={styles.priceRow}>
-                  {MAX_PRICE_OPTIONS.map((opt) => (
-                    <TouchableOpacity
-                      key={String(opt.value)}
-                      style={[styles.priceChip, draftMaxPrice === opt.value && styles.priceChipActive]}
-                      onPress={() => { Haptics.selectionAsync(); setDraftMaxPrice(opt.value); }}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={[styles.priceChipText, draftMaxPrice === opt.value && styles.priceChipTextActive]}>
-                        {opt.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                  {MAX_PRICE_OPTIONS_VALUES.map((val, idx) => {
+                    const label = val === null ? t('home.filter_price_all') : MAX_PRICE_OPTION_LABELS[idx - 1];
+                    return (
+                      <TouchableOpacity
+                        key={String(val)}
+                        style={[styles.priceChip, draftMaxPrice === val && styles.priceChipActive]}
+                        onPress={() => { Haptics.selectionAsync(); setDraftMaxPrice(val); }}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={[styles.priceChipText, draftMaxPrice === val && styles.priceChipTextActive]}>
+                          {label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
 
                 {/* Solo disponibili */}
                 <View style={styles.toggleRow}>
                   <View>
-                    <Text style={styles.toggleLabel}>Solo disponibili</Text>
-                    <Text style={styles.toggleSub}>Nasconde eventi esauriti</Text>
+                    <Text style={styles.toggleLabel}>{t('home.filter_only_available')}</Text>
+                    <Text style={styles.toggleSub}>{t('home.filter_only_available_sub')}</Text>
                   </View>
                   <Switch
                     value={draftOnlyAvailable}
@@ -423,12 +426,12 @@ export default function HomeScreen() {
                 </View>
 
                 {/* Età */}
-                <Text style={[styles.filterLabel, { marginTop: 16 }]}>Età</Text>
+                <Text style={[styles.filterLabel, { marginTop: 16 }]}>{t('home.filter_age')}</Text>
                 <View style={styles.priceRow}>
                   {([
-                    { label: 'Tutti', value: 'all' },
-                    { label: '18+', value: 'adult' },
-                    { label: 'Under 18', value: 'minor' },
+                    { label: t('home.filter_age_all'), value: 'all' },
+                    { label: t('home.filter_age_adult'), value: 'adult' },
+                    { label: t('home.filter_age_minor'), value: 'minor' },
                   ] as { label: string; value: AgeFilter }[]).map((opt) => (
                     <TouchableOpacity
                       key={opt.value}
@@ -444,7 +447,7 @@ export default function HomeScreen() {
                 </View>
 
                 {/* Generi */}
-                <Text style={[styles.filterLabel, { marginTop: 16 }]}>Generi</Text>
+                <Text style={[styles.filterLabel, { marginTop: 16 }]}>{t('home.filter_genres')}</Text>
                 <View style={styles.genreGrid}>
                   {ALL_GENRES.map((genre) => (
                     <TouchableOpacity
@@ -471,7 +474,7 @@ export default function HomeScreen() {
                   }}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.filterApplyText}>Applica filtri</Text>
+                  <Text style={styles.filterApplyText}>{t('home.filter_apply')}</Text>
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>
@@ -549,7 +552,7 @@ export default function HomeScreen() {
             {hasActiveFilters && (
               <View style={[styles.dateChip, { marginLeft: 8 }]}>
                 <Ionicons name="options" size={12} color={Colors.accent} />
-                <Text style={styles.dateChipText}>Filtri attivi</Text>
+                <Text style={styles.dateChipText}>{t('home.active_filters')}</Text>
               </View>
             )}
           </View>
@@ -567,23 +570,23 @@ export default function HomeScreen() {
           ) : eventsError ? (
             <View style={styles.errorState}>
               <Ionicons name="cloud-offline-outline" size={48} color={Colors.textMuted} />
-              <Text style={styles.errorTitle}>Nessuna connessione</Text>
-              <Text style={styles.errorSub}>Controlla la rete e riprova.</Text>
+              <Text style={styles.errorTitle}>{t('home.error_no_connection')}</Text>
+              <Text style={styles.errorSub}>{t('home.error_no_connection_sub')}</Text>
               <TouchableOpacity style={styles.errorBtn} onPress={onRefresh} activeOpacity={0.8}>
                 <Ionicons name="refresh" size={15} color={Colors.white} />
-                <Text style={styles.errorBtnText}>Riprova</Text>
+                <Text style={styles.errorBtnText}>{t('common.retry')}</Text>
               </TouchableOpacity>
             </View>
           ) : eventsForSelectedDate !== null ? (
             <View>
               <Text style={styles.sectionTitle}>
-                {eventsForSelectedDate.length} {eventsForSelectedDate.length === 1 ? 'evento' : 'eventi'} — {selectedDateLabel}
+                {eventsForSelectedDate.length} {eventsForSelectedDate.length === 1 ? t('home.events_count_on_date') : t('home.events_count_on_date_plural')} — {selectedDateLabel}
               </Text>
               {eventsForSelectedDate.length === 0 ? (
                 <View style={styles.noResults}>
                   <Ionicons name="calendar-outline" size={40} color={Colors.textMuted} />
-                  <Text style={styles.noResultsText}>Nessun evento trovato</Text>
-                  <Text style={styles.noResultsSub}>Prova a cambiare i filtri o la data</Text>
+                  <Text style={styles.noResultsText}>{t('home.no_events_found')}</Text>
+                  <Text style={styles.noResultsSub}>{t('home.no_events_change_filters_or_date')}</Text>
                 </View>
               ) : (
                 eventsForSelectedDate.map((event) => <EventListItem key={event.id} event={event} />)
@@ -594,7 +597,7 @@ export default function HomeScreen() {
               {/* Stasera */}
               {tonightEvent && (
                 <>
-                  <Text style={styles.sectionTitle}>Stasera</Text>
+                  <Text style={styles.sectionTitle}>{t('home.section_tonight')}</Text>
                   <TonightHero event={tonightEvent} />
                 </>
               )}
@@ -603,7 +606,7 @@ export default function HomeScreen() {
               {recommended.length > 0 ? (
                 <>
                   <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitleInline}>Per te</Text>
+                    <Text style={styles.sectionTitleInline}>{t('home.section_for_you')}</Text>
                     <View style={styles.forYouBadge}>
                       <Ionicons name="sparkles" size={12} color={Colors.accent} />
                       <Text style={styles.forYouText}>
@@ -624,7 +627,7 @@ export default function HomeScreen() {
                 </>
               ) : (
                 <>
-                  <Text style={styles.sectionTitle}>In evidenza</Text>
+                  <Text style={styles.sectionTitle}>{t('home.section_featured')}</Text>
                   <FlatList
                     data={filteredEvents.slice(0, 5)}
                     keyExtractor={(item) => item.id}
@@ -639,12 +642,12 @@ export default function HomeScreen() {
               )}
 
               {/* Prossimi eventi */}
-              <Text style={[styles.sectionTitle, styles.sectionSpacing, { marginTop: 28 }]}>Prossimi eventi</Text>
+              <Text style={[styles.sectionTitle, styles.sectionSpacing, { marginTop: 28 }]}>{t('home.section_upcoming')}</Text>
               {filteredEventsByDay.length === 0 ? (
                 <View style={styles.noResults}>
                   <Ionicons name="search-outline" size={40} color={Colors.textMuted} />
-                  <Text style={styles.noResultsText}>Nessun evento trovato</Text>
-                  <Text style={styles.noResultsSub}>Prova a cambiare i filtri</Text>
+                  <Text style={styles.noResultsText}>{t('home.no_events_found')}</Text>
+                  <Text style={styles.noResultsSub}>{t('home.no_events_change_filters')}</Text>
                 </View>
               ) : (() => {
                 const listKey = `${maxPrice}|${onlyAvailable}|${selectedGenres.join(',')}|${ageFilter}`;

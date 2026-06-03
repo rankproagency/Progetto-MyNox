@@ -21,6 +21,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect, useRef } from 'react';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
+import { getLocale } from '../../lib/i18n';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
 import { GENRE_CONFIG } from '../../constants/genres';
@@ -37,6 +39,7 @@ import { scheduleFavoriteReminder, cancelFavoriteReminder } from '../../hooks/us
 const { width } = Dimensions.get('window');
 
 export default function EventScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -88,7 +91,7 @@ export default function EventScreen() {
   if (isLoading) {
     return (
       <View style={styles.notFound}>
-        <Text style={styles.notFoundText}>Caricamento...</Text>
+        <Text style={styles.notFoundText}>{t('event.loading')}</Text>
       </View>
     );
   }
@@ -96,9 +99,9 @@ export default function EventScreen() {
   if (hasError) {
     return (
       <View style={styles.notFound}>
-        <Text style={styles.notFoundText}>Errore di caricamento</Text>
+        <Text style={styles.notFoundText}>{t('event.load_error')}</Text>
         <TouchableOpacity onPress={reload} style={styles.retryBtn}>
-          <Text style={styles.retryText}>Riprova</Text>
+          <Text style={styles.retryText}>{t('event.retry_btn')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -107,7 +110,7 @@ export default function EventScreen() {
   if (!event) {
     return (
       <View style={styles.notFound}>
-        <Text style={styles.notFoundText}>Evento non trovato</Text>
+        <Text style={styles.notFoundText}>{t('event.not_found')}</Text>
       </View>
     );
   }
@@ -140,14 +143,14 @@ export default function EventScreen() {
   async function handleShare() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const e = event!;
-    const dateStr = new Date(e.date).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+    const dateStr = new Date(e.date).toLocaleDateString(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
     await Share.share({
       message:
         `MYNOX ✦\n\n` +
-        `Vieni con me a questa serata.\n\n` +
+        `${t('event.share_invite')}\n\n` +
         `${e.name.toUpperCase()}\n` +
         `📍 ${e.club?.name}  ·  ${dateStr}  ·  ${e.startTime}\n\n` +
-        `Compra il biglietto su MyNox.`,
+        `${t('event.share_buy_cta')}`,
       title: e.name,
     });
   }
@@ -171,7 +174,7 @@ export default function EventScreen() {
           <View style={[styles.floorModalHeader, { paddingTop: insets.top }]}>
             <View style={styles.floorModalHeaderInner}>
               <View>
-                <Text style={styles.floorModalTitle}>Seleziona il tuo tavolo</Text>
+                <Text style={styles.floorModalTitle}>{t('event.floor_plan_modal_title')}</Text>
                 <Text style={styles.floorModalSub}>{event.club?.name}</Text>
               </View>
               <TouchableOpacity style={styles.floorModalClose} onPress={() => setFloorPlanModalVisible(false)} activeOpacity={0.8}>
@@ -328,7 +331,7 @@ export default function EventScreen() {
             {event.lineup.length > 0 && (
               <>
                 {!!event.description && <View style={styles.divider} />}
-                <Text style={styles.blockLabel}>Lineup</Text>
+                <Text style={styles.blockLabel}>{t('event.lineup_label')}</Text>
                 {event.lineup.map((artist, i) => (
                   <View key={artist.name} style={[styles.lineupRow, i > 0 && styles.lineupRowBorder]}>
                     <View style={styles.lineupDot} />
@@ -369,17 +372,17 @@ export default function EventScreen() {
           {isEventPast ? (
             <View style={styles.soldOutBox}>
               <Ionicons name="time-outline" size={20} color={Colors.textMuted} />
-              <Text style={[styles.soldOutText, { color: Colors.textMuted }]}>Evento concluso</Text>
+              <Text style={[styles.soldOutText, { color: Colors.textMuted }]}>{t('event.event_ended')}</Text>
             </View>
           ) : !hasTickets && !hasTables ? (
             <View style={styles.soldOutBox}>
               <Ionicons name="checkmark-circle" size={20} color={Colors.accent} />
-              <Text style={[styles.soldOutText, { color: Colors.accent }]}>Ingresso libero — nessuna prevendita</Text>
+              <Text style={[styles.soldOutText, { color: Colors.accent }]}>{t('event.free_entry_no_tickets')}</Text>
             </View>
           ) : isSoldOut ? (
             <View style={styles.soldOutBox}>
               <Ionicons name="close-circle" size={20} color={Colors.error} />
-              <Text style={styles.soldOutText}>Evento esaurito</Text>
+              <Text style={styles.soldOutText}>{t('event.event_sold_out')}</Text>
             </View>
           ) : (
             <>
@@ -393,7 +396,7 @@ export default function EventScreen() {
                   >
                     <Ionicons name="ticket-outline" size={15} color={bookingMode === 'ticket' ? Colors.white : Colors.textMuted} />
                     <Text style={[styles.bookingToggleText, bookingMode === 'ticket' && styles.bookingToggleTextActive]}>
-                      Prevendita
+                      {t('event.booking_mode_ticket')}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -403,7 +406,7 @@ export default function EventScreen() {
                   >
                     <Ionicons name="grid-outline" size={15} color={bookingMode === 'table' ? Colors.white : Colors.textMuted} />
                     <Text style={[styles.bookingToggleText, bookingMode === 'table' && styles.bookingToggleTextActive]}>
-                      Tavolo
+                      {t('event.booking_mode_table')}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -419,9 +422,9 @@ export default function EventScreen() {
                           <Ionicons name="flame" size={15} color={isLowStock ? '#ef4444' : '#f59e0b'} />
                           <Text style={styles.soldText}>
                             {isLowStock ? (
-                              <><Text style={[styles.soldCount, { color: '#ef4444' }]}>Solo {remaining}</Text>{' posti rimasti!'}</>
+                              <><Text style={[styles.soldCount, { color: '#ef4444' }]}>{t('event.scarcity_low_stock_prefix')}{remaining}</Text>{t('event.scarcity_low_stock_suffix')}</>
                             ) : (
-                              'Poca disponibilità — affrettati'
+                              t('event.scarcity_medium_stock')
                             )}
                           </Text>
                         </View>
@@ -438,7 +441,7 @@ export default function EventScreen() {
                   ) : (
                     <View style={styles.soldLeft}>
                       <Ionicons name="checkmark-circle-outline" size={15} color={Colors.success} />
-                      <Text style={styles.scarcityNeutralText}>Acquista ora, entra senza fila</Text>
+                      <Text style={styles.scarcityNeutralText}>{t('event.scarcity_ok')}</Text>
                     </View>
                   )}
                 </View>
@@ -447,11 +450,11 @@ export default function EventScreen() {
               {/* Prevendita */}
               {bookingMode === 'ticket' && (
                 <>
-                  {!hasTables && <Text style={styles.bookingLabel}>Biglietti</Text>}
-                  {hasTickets && event.ticketTypes.every((t) => t.includesDrink) && (
+                  {!hasTables && <Text style={styles.bookingLabel}>{t('event.tickets_label')}</Text>}
+                  {hasTickets && event.ticketTypes.every((tk) => tk.includesDrink) && (
                     <View style={styles.drinkBadge}>
                       <Ionicons name="wine-outline" size={13} color={Colors.accent} />
-                      <Text style={styles.drinkBadgeText}>Ogni biglietto include 1 free drink</Text>
+                      <Text style={styles.drinkBadgeText}>{t('event.every_ticket_includes_drink')}</Text>
                     </View>
                   )}
                   {event.ticketTypes.map((ticket) => (
@@ -479,14 +482,14 @@ export default function EventScreen() {
                       <View style={styles.ticketRight}>
                         <Text style={styles.ticketPrice}>€{ticket.price}</Text>
                         {ticket.includesDrink && (
-                          <Text style={styles.ticketDrink}>+ drink</Text>
+                          <Text style={styles.ticketDrink}>{t('event.ticket_drink_extra')}</Text>
                         )}
                       </View>
                     </TouchableOpacity>
                   ))}
                   {selectedTicket && (
                     <View style={styles.qtyRow}>
-                      <Text style={styles.qtyLabel}>Quanti biglietti?</Text>
+                      <Text style={styles.qtyLabel}>{t('event.how_many_tickets')}</Text>
                       <View style={styles.qtyStepper}>
                         <TouchableOpacity
                           style={[styles.qtyBtn, ticketQty <= 1 && styles.qtyBtnDisabled]}
@@ -513,14 +516,14 @@ export default function EventScreen() {
               {bookingMode === 'table' && (
                 <>
                   <View style={styles.tableSectionHeader}>
-                    <Text style={styles.sectionSubtitle}>Solo caparra · il resto si paga in loco</Text>
+                    <Text style={styles.sectionSubtitle}>{t('event.table_deposit_only')}</Text>
                     <TouchableOpacity
                       style={styles.expandMapBtn}
                       onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setFloorPlanModalVisible(true); }}
                       activeOpacity={0.8}
                     >
                       <Ionicons name="expand-outline" size={15} color={Colors.accent} />
-                      <Text style={styles.expandMapBtnText}>Apri mappa</Text>
+                      <Text style={styles.expandMapBtnText}>{t('event.table_open_map')}</Text>
                     </TouchableOpacity>
                   </View>
                   <TableMap
@@ -543,7 +546,7 @@ export default function EventScreen() {
         {isEventPast ? (
           <View style={[styles.ctaButton, styles.ctaDisabled]}>
             <Ionicons name="time-outline" size={16} color={Colors.textMuted} />
-            <Text style={[styles.ctaText, { color: Colors.textMuted }]}>Evento concluso</Text>
+            <Text style={[styles.ctaText, { color: Colors.textMuted }]}>{t('event.event_ended')}</Text>
           </View>
         ) : !hasTickets && !hasTables ? null : isSoldOut ? (
           <TouchableOpacity
@@ -564,7 +567,7 @@ export default function EventScreen() {
               color={Colors.white}
             />
             <Text style={styles.ctaText}>
-              {onWaitlist ? 'Sei in lista d\'attesa' : 'Avvisami se si libera un posto'}
+              {onWaitlist ? t('event.waitlist_active') : t('event.waitlist_join')}
             </Text>
           </TouchableOpacity>
         ) : (!hasTickets && bookingMode === 'ticket') ? null : (
@@ -576,7 +579,7 @@ export default function EventScreen() {
                   style={styles.tableNameInput}
                   value={tableName}
                   onChangeText={setTableName}
-                  placeholder="Nome tavolo (es. Compleanno Marco)"
+                  placeholder={t('event.table_name_placeholder')}
                   placeholderTextColor={Colors.textMuted}
                   autoCorrect={false}
                   returnKeyType="done"
@@ -588,15 +591,15 @@ export default function EventScreen() {
               {selectedTicket || selectedTable ? (
                 <>
                   <Text style={styles.ctaLabel}>
-                    {selectedTable ? selectedTable.label : ticketQty > 1 ? `${ticketQty} biglietti` : 'Totale'}
+                    {selectedTable ? selectedTable.label : ticketQty > 1 ? `${ticketQty}${t('event.tickets_count_label')}` : t('event.total_label')}
                   </Text>
                   <Text style={styles.ctaTotal}>€{total}</Text>
                 </>
               ) : (
                 <Text style={styles.ctaHint}>
                   {bookingMode === 'ticket'
-                    ? 'Seleziona un biglietto'
-                    : 'Seleziona un tavolo'}
+                    ? t('event.select_ticket_hint')
+                    : t('event.select_table_hint')}
                 </Text>
               )}
             </View>
@@ -608,11 +611,11 @@ export default function EventScreen() {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 if (!user) {
                   Alert.alert(
-                    'Accedi per continuare',
-                    'Devi essere autenticato per acquistare un biglietto.',
+                    t('event.auth_required_title'),
+                    t('event.auth_required_body'),
                     [
-                      { text: 'Annulla', style: 'cancel' },
-                      { text: 'Accedi', onPress: () => router.push('/login') },
+                      { text: t('common.cancel'), style: 'cancel' },
+                      { text: t('event.auth_sign_in_btn'), onPress: () => router.push('/login') },
                     ]
                   );
                   return;
@@ -629,7 +632,7 @@ export default function EventScreen() {
                 });
               }}
             >
-              <Text style={styles.ctaText}>Compra ora</Text>
+              <Text style={styles.ctaText}>{t('event.buy_now_btn')}</Text>
               <Ionicons name="arrow-forward" size={16} color={Colors.white} />
             </TouchableOpacity>
             </View>

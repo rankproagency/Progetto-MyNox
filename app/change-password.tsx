@@ -19,9 +19,11 @@ import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from 'react-i18next';
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
@@ -33,15 +35,15 @@ export default function ChangePasswordScreen() {
 
   async function handleSave() {
     if (!current.trim() || !next.trim() || !confirm.trim()) {
-      Alert.alert('Errore', 'Compila tutti i campi.');
+      Alert.alert(t('common.error'), t('change_password.error_fill_all'));
       return;
     }
     if (next.length < 8) {
-      Alert.alert('Errore', 'La nuova password deve avere almeno 8 caratteri.');
+      Alert.alert(t('common.error'), t('change_password.error_min_length'));
       return;
     }
     if (next !== confirm) {
-      Alert.alert('Errore', 'Le password non coincidono.');
+      Alert.alert(t('common.error'), t('change_password.error_mismatch'));
       return;
     }
 
@@ -55,7 +57,7 @@ export default function ChangePasswordScreen() {
 
     if (signInErr) {
       setLoading(false);
-      Alert.alert('Errore', 'La password attuale non è corretta.');
+      Alert.alert(t('common.error'), t('change_password.error_wrong_current'));
       return;
     }
 
@@ -64,13 +66,13 @@ export default function ChangePasswordScreen() {
     setLoading(false);
 
     if (updateErr) {
-      Alert.alert('Errore', updateErr.message);
+      Alert.alert(t('common.error'), updateErr.message);
       return;
     }
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert('Password aggiornata', 'La tua password è stata cambiata con successo.', [
-      { text: 'OK', onPress: () => router.back() },
+    Alert.alert(t('change_password.success_title'), t('change_password.success_body'), [
+      { text: t('common.ok'), onPress: () => router.back() },
     ]);
   }
 
@@ -80,7 +82,7 @@ export default function ChangePasswordScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Cambia password</Text>
+        <Text style={styles.headerTitle}>{t('change_password.header_title')}</Text>
         <View style={{ width: 38 }} />
       </View>
 
@@ -88,37 +90,37 @@ export default function ChangePasswordScreen() {
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
           <PasswordField
-            label="Password attuale"
+            label={t('change_password.current_password_label')}
             value={current}
             onChangeText={setCurrent}
             show={showCurrent}
             onToggle={() => setShowCurrent((v) => !v)}
-            placeholder="Inserisci la password attuale"
+            placeholder={t('change_password.current_password_placeholder')}
           />
 
           <PasswordField
-            label="Nuova password"
+            label={t('change_password.new_password_label')}
             value={next}
             onChangeText={setNext}
             show={showNext}
             onToggle={() => setShowNext((v) => !v)}
-            placeholder="Minimo 8 caratteri"
+            placeholder={t('change_password.new_password_placeholder')}
           />
 
           <PasswordField
-            label="Conferma nuova password"
+            label={t('change_password.confirm_password_label')}
             value={confirm}
             onChangeText={setConfirm}
             show={showConfirm}
             onToggle={() => setShowConfirm((v) => !v)}
-            placeholder="Ripeti la nuova password"
+            placeholder={t('change_password.confirm_password_placeholder')}
           />
 
           {next.length > 0 && (
             <View style={styles.strength}>
               <View style={[styles.strengthBar, { backgroundColor: strengthColor(next) }]} />
               <Text style={[styles.strengthLabel, { color: strengthColor(next) }]}>
-                {strengthLabel(next)}
+                {next.length < 8 ? t('change_password.strength_too_short') : next.length < 12 ? t('change_password.strength_fair') : t('change_password.strength_strong')}
               </Text>
             </View>
           )}
@@ -134,7 +136,7 @@ export default function ChangePasswordScreen() {
           >
             {loading
               ? <ActivityIndicator color="#fff" size="small" />
-              : <Text style={styles.ctaText}>Salva password</Text>
+              : <Text style={styles.ctaText}>{t('change_password.save_btn')}</Text>
             }
           </TouchableOpacity>
         </View>
@@ -181,11 +183,6 @@ function strengthColor(pwd: string): string {
   return '#22c55e';
 }
 
-function strengthLabel(pwd: string): string {
-  if (pwd.length < 8) return 'Troppo corta';
-  if (pwd.length < 12) return 'Discreta';
-  return 'Sicura';
-}
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },

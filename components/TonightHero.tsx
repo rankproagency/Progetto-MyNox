@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function TonightHero({ event }: Props) {
+  const { t } = useTranslation();
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
   const hasTickets = event.ticketTypes.length > 0;
@@ -39,7 +41,7 @@ export default function TonightHero({ event }: Props) {
       <View style={styles.topRow}>
         <View style={styles.tonightBadge}>
           <View style={styles.liveDot} />
-          <Text style={styles.tonightText}>STASERA</Text>
+          <Text style={styles.tonightText}>{t('home.section_tonight').toUpperCase()}</Text>
         </View>
         <TouchableOpacity
           style={styles.heartButton}
@@ -99,16 +101,16 @@ export default function TonightHero({ event }: Props) {
           </View>
           {isSoldOut ? (
             <View style={styles.soldOutBtn}>
-              <Text style={styles.soldOutBtnText}>Esaurito</Text>
+              <Text style={styles.soldOutBtnText}>{t('common.sold_out')}</Text>
             </View>
           ) : !hasTickets ? (
             <View style={styles.priceButton}>
-              <Text style={styles.priceText}>Ingresso libero</Text>
+              <Text style={styles.priceText}>{t('common.free_entry')}</Text>
               <Ionicons name="arrow-forward" size={13} color={Colors.white} />
             </View>
           ) : (
             <View style={styles.priceButton}>
-              <Text style={styles.priceText}>da €{minPrice}</Text>
+              <Text style={styles.priceText}>{t('common.from_price')}€{minPrice}</Text>
               <Ionicons name="arrow-forward" size={13} color={Colors.white} />
             </View>
           )}

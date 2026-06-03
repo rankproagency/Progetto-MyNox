@@ -22,6 +22,8 @@ import { Font } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 import { ALL_GENRES, GENRE_CONFIG } from '../constants/genres';
 import { Genre } from '../types';
+import { useTranslation } from 'react-i18next';
+import { getLocale } from '../lib/i18n';
 
 function formatDOB(date: Date): string {
   const d = String(date.getDate()).padStart(2, '0');
@@ -33,6 +35,7 @@ function formatDOB(date: Date): string {
 
 export default function EditProfileScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { user, updateUser, updateDateOfBirth, deleteAccount, musicGenres, setMusicGenres } = useAuth();
   const [name, setName] = useState(user?.name ?? '');
   const [selectedGenres, setSelectedGenres] = useState<string[]>(musicGenres);
@@ -63,7 +66,7 @@ export default function EditProfileScreen() {
 
   function handleSave() {
     if (!name.trim()) {
-      Alert.alert('Errore', 'Il nome non può essere vuoto.');
+      Alert.alert(t('common.error'), t('edit_profile.error_name_empty'));
       return;
     }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -75,12 +78,12 @@ export default function EditProfileScreen() {
   function handleDeleteAccount() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     Alert.alert(
-      'Elimina account',
-      'Questa azione è irreversibile. Tutti i tuoi dati, biglietti e preferiti verranno eliminati definitivamente.',
+      t('edit_profile.delete_alert_title'),
+      t('edit_profile.delete_alert_body'),
       [
-        { text: 'Annulla', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Elimina definitivamente',
+          text: t('edit_profile.delete_confirm_btn'),
           style: 'destructive',
           onPress: async () => {
             setDeletingAccount(true);
@@ -88,7 +91,7 @@ export default function EditProfileScreen() {
               await deleteAccount();
             } catch (e: any) {
               setDeletingAccount(false);
-              Alert.alert('Errore', e.message ?? 'Impossibile eliminare l\'account. Riprova.');
+              Alert.alert(t('common.error'), e.message ?? t('edit_profile.error_delete_failed'));
             }
           },
         },
@@ -103,7 +106,7 @@ export default function EditProfileScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Modifica profilo</Text>
+        <Text style={styles.headerTitle}>{t('edit_profile.header_title')}</Text>
         <View style={{ width: 38 }} />
       </View>
 
@@ -122,19 +125,19 @@ export default function EditProfileScreen() {
 
           {/* Campi */}
           <View style={styles.section}>
-            <Text style={styles.fieldLabel}>Nome completo</Text>
+            <Text style={styles.fieldLabel}>{t('edit_profile.full_name_label')}</Text>
             <TextInput
               style={styles.input}
               value={name}
               onChangeText={setName}
-              placeholder="Il tuo nome"
+              placeholder={t('edit_profile.full_name_placeholder')}
               placeholderTextColor={Colors.textMuted}
               autoCorrect={false}
             />
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.fieldLabel}>Email</Text>
+            <Text style={styles.fieldLabel}>{t('edit_profile.email_label')}</Text>
             <View style={styles.readonlyRow}>
               <Ionicons name="mail-outline" size={16} color={Colors.textSecondary} />
               <Text style={styles.readonlyText}>{user?.email ?? '—'}</Text>
@@ -143,7 +146,7 @@ export default function EditProfileScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.fieldLabel}>Generi musicali</Text>
+            <Text style={styles.fieldLabel}>{t('edit_profile.genres_label')}</Text>
             <View style={styles.genresList}>
               {ALL_GENRES.map((genre) => {
                 const active = selectedGenres.includes(genre);
@@ -173,7 +176,7 @@ export default function EditProfileScreen() {
 
           {/* Data di nascita */}
           <View style={styles.section}>
-            <Text style={styles.fieldLabel}>Data di nascita</Text>
+            <Text style={styles.fieldLabel}>{t('edit_profile.dob_label')}</Text>
             {user?.dateOfBirth ? (
               <View style={styles.readonlyRow}>
                 <Ionicons name="calendar-outline" size={16} color={Colors.textSecondary} />
@@ -183,7 +186,7 @@ export default function EditProfileScreen() {
             ) : (
               <TouchableOpacity style={styles.dobEditRow} onPress={() => setShowDobPicker(true)} activeOpacity={0.8}>
                 <Ionicons name="calendar-outline" size={16} color="#f59e0b" />
-                <Text style={styles.dobEditText}>Imposta data di nascita</Text>
+                <Text style={styles.dobEditText}>{t('edit_profile.dob_set_btn')}</Text>
                 <Ionicons name="chevron-forward" size={14} color="#f59e0b" />
               </TouchableOpacity>
             )}
@@ -197,13 +200,13 @@ export default function EditProfileScreen() {
                 <View style={styles.pickerHandle} />
                 <View style={styles.pickerHeader}>
                   <TouchableOpacity onPress={() => setShowDobPicker(false)}>
-                    <Text style={styles.pickerCancel}>Annulla</Text>
+                    <Text style={styles.pickerCancel}>{t('edit_profile.dob_modal_cancel')}</Text>
                   </TouchableOpacity>
-                  <Text style={styles.pickerTitle}>Data di nascita</Text>
+                  <Text style={styles.pickerTitle}>{t('edit_profile.dob_modal_title')}</Text>
                   <TouchableOpacity onPress={handleDobConfirm} disabled={savingDob}>
                     {savingDob
                       ? <ActivityIndicator size="small" color={Colors.accent} />
-                      : <Text style={styles.pickerConfirm}>Salva</Text>
+                      : <Text style={styles.pickerConfirm}>{t('edit_profile.dob_modal_save')}</Text>
                     }
                   </TouchableOpacity>
                 </View>
@@ -215,7 +218,7 @@ export default function EditProfileScreen() {
                   minimumDate={new Date(1920, 0, 1)}
                   onChange={(_, date) => { if (date) setDobTempDate(date); }}
                   textColor={Colors.textPrimary}
-                  locale="it-IT"
+                  locale={getLocale()}
                   style={styles.picker}
                 />
               </View>
@@ -223,21 +226,21 @@ export default function EditProfileScreen() {
           )}
 
           <View style={styles.section}>
-            <Text style={styles.fieldLabel}>Password</Text>
+            <Text style={styles.fieldLabel}>{t('edit_profile.password_label')}</Text>
             <TouchableOpacity
               style={styles.changePasswordBtn}
               activeOpacity={0.8}
               onPress={() => router.push('/change-password')}
             >
               <Ionicons name="lock-closed-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.changePasswordText}>Cambia password</Text>
+              <Text style={styles.changePasswordText}>{t('edit_profile.change_password_btn')}</Text>
               <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
             </TouchableOpacity>
           </View>
 
           {/* Elimina account */}
           <View style={[styles.section, styles.dangerZone]}>
-            <Text style={styles.dangerLabel}>Zona pericolosa</Text>
+            <Text style={styles.dangerLabel}>{t('edit_profile.danger_zone_label')}</Text>
             <TouchableOpacity
               style={styles.deleteBtn}
               activeOpacity={0.8}
@@ -246,7 +249,7 @@ export default function EditProfileScreen() {
             >
               <Ionicons name="trash-outline" size={16} color={Colors.error} />
               <Text style={styles.deleteBtnText}>
-                {deletingAccount ? 'Eliminazione in corso...' : 'Elimina account'}
+                {deletingAccount ? t('edit_profile.deleting_account') : t('edit_profile.delete_account_btn')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -256,7 +259,7 @@ export default function EditProfileScreen() {
         {/* CTA */}
         <View style={styles.ctaContainer}>
           <TouchableOpacity style={styles.ctaButton} activeOpacity={0.85} onPress={handleSave}>
-            <Text style={styles.ctaText}>Salva modifiche</Text>
+            <Text style={styles.ctaText}>{t('edit_profile.save_btn')}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +15,7 @@ type Tab = 'serate' | 'discoteche';
 
 export default function FavoritesScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>('serate');
   const { favoriteIds, favoriteClubs } = useFavorites();
   const { events } = useEvents();
@@ -51,7 +53,7 @@ export default function FavoritesScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Salvati</Text>
+          <Text style={styles.headerTitle}>{t('favorites.header_title')}</Text>
           <View style={{ width: 38 }} />
         </View>
 
@@ -63,7 +65,7 @@ export default function FavoritesScreen() {
             activeOpacity={0.8}
           >
             <Text style={[styles.tabText, activeTab === 'serate' && styles.tabTextActive]}>
-              Serate
+              {t('favorites.tab_nights')}
             </Text>
             {allFavoriteEvents.length > 0 && (
               <View style={[styles.badge, activeTab === 'serate' && styles.badgeActive]}>
@@ -77,7 +79,7 @@ export default function FavoritesScreen() {
             activeOpacity={0.8}
           >
             <Text style={[styles.tabText, activeTab === 'discoteche' && styles.tabTextActive]}>
-              Discoteche
+              {t('favorites.tab_clubs')}
             </Text>
             {favoriteClubs.length > 0 && (
               <View style={[styles.badge, activeTab === 'discoteche' && styles.badgeActive]}>
@@ -92,15 +94,15 @@ export default function FavoritesScreen() {
           favoriteEvents.length === 0 ? (
             <EmptyState
               icon="bookmark-outline"
-              title={allPast ? 'Le serate salvate sono passate' : 'Nessuna serata salvata'}
-              sub={allPast ? 'Esplora i prossimi eventi e salvane di nuovi.' : 'Salva le serate che ti interessano per ritrovarle qui prima di acquistare il biglietto.'}
-              btnLabel="Esplora gli eventi"
+              title={allPast ? t('favorites.empty_nights_past_title') : t('favorites.empty_nights_title')}
+              sub={allPast ? t('favorites.empty_nights_past_sub') : t('favorites.empty_nights_sub')}
+              btnLabel={t('favorites.explore_events_btn')}
               onPress={() => router.push('/(tabs)')}
             />
           ) : (
             <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
               <Text style={styles.count}>
-                {favoriteEvents.length} {favoriteEvents.length === 1 ? 'serata salvata' : 'serate salvate'}
+                {favoriteEvents.length} {favoriteEvents.length === 1 ? t('favorites.night_count_singular') : t('favorites.night_count_plural')}
               </Text>
               {favoriteEvents.map((event) => {
                 const isSoldOut = event.ticketTypes.length > 0 && event.ticketTypes.every((t) => t.available === 0);
@@ -109,7 +111,7 @@ export default function FavoritesScreen() {
                     <EventListItem event={event} />
                     {isSoldOut && (
                       <View style={styles.soldOutOverlay}>
-                        <Text style={styles.soldOutText}>Esaurito</Text>
+                        <Text style={styles.soldOutText}>{t('favorites.sold_out')}</Text>
                       </View>
                     )}
                   </View>
@@ -121,15 +123,15 @@ export default function FavoritesScreen() {
           favoriteClubs.length === 0 ? (
             <EmptyState
               icon="business-outline"
-              title="Nessuna discoteca seguita"
-              sub="Apri la pagina di una discoteca e tocca il cuore per seguirla"
-              btnLabel="Esplora le discoteche"
+              title={t('favorites.empty_clubs_title')}
+              sub={t('favorites.empty_clubs_sub')}
+              btnLabel={t('favorites.explore_clubs_btn')}
               onPress={() => router.push('/(tabs)')}
             />
           ) : (
             <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
               <Text style={styles.count}>
-                {favoriteClubs.length} {favoriteClubs.length === 1 ? 'discoteca seguita' : 'discoteche seguite'}
+                {favoriteClubs.length} {favoriteClubs.length === 1 ? t('favorites.club_count_singular') : t('favorites.club_count_plural')}
               </Text>
               {favoriteClubs.map((club) => {
                 const clubEvents = events.filter((e) => e.clubId === club.id);
@@ -152,10 +154,10 @@ export default function FavoritesScreen() {
                       </View>
                       {clubEvents.length > 0 ? (
                         <Text style={styles.clubEvents}>
-                          {clubEvents.length} {clubEvents.length === 1 ? 'evento in programma' : 'eventi in programma'}
+                          {clubEvents.length} {clubEvents.length === 1 ? t('favorites.club_event_count_singular') : t('favorites.club_event_count_plural')}
                         </Text>
                       ) : (
-                        <Text style={styles.clubEventsNone}>Nessun evento in programma</Text>
+                        <Text style={styles.clubEventsNone}>{t('favorites.club_no_events')}</Text>
                       )}
                     </View>
                     <View style={styles.clubArrow}>

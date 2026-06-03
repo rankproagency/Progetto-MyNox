@@ -4,10 +4,12 @@ import { BlurView } from 'expo-blur';
 import { StyleSheet } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
+import { useTranslation } from 'react-i18next';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
 export default function TabsLayout() {
+  const { t } = useTranslation();
   return (
     <Tabs
       screenOptions={{
@@ -47,28 +49,28 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="search"
         options={{
-          title: 'Cerca',
+          title: t('tabs.search'),
           tabBarIcon: ({ color }) => <Ionicons name="search" size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="tickets"
         options={{
-          title: 'Biglietti',
+          title: t('tabs.tickets'),
           tabBarIcon: ({ color }) => <Ionicons name="ticket" size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="map"
         options={{
-          title: 'Mappa',
+          title: t('tabs.map'),
           tabBarIcon: ({ color }) => <Ionicons name="map-outline" size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profilo',
+          title: t('tabs.profile'),
           tabBarIcon: ({ color }) => <Ionicons name="person" size={22} color={color} />,
         }}
       />

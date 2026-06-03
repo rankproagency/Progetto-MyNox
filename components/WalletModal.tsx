@@ -7,6 +7,7 @@ import {
   Share,
   Alert,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import * as Haptics from 'expo-haptics';
@@ -27,6 +28,8 @@ interface Props {
 }
 
 export default function WalletModal({ visible, onClose, ticket }: Props) {
+  const { t } = useTranslation();
+
   async function handleWallet(platform: 'apple' | 'google') {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
@@ -60,8 +63,8 @@ export default function WalletModal({ visible, onClose, ticket }: Props) {
         <View style={styles.handle} />
 
         {/* Title */}
-        <Text style={styles.title}>Aggiungi al Wallet</Text>
-        <Text style={styles.subtitle}>Tieni il biglietto sempre a portata di mano</Text>
+        <Text style={styles.title}>{t('wallet_modal.title')}</Text>
+        <Text style={styles.subtitle}>{t('wallet_modal.subtitle')}</Text>
 
         {/* Ticket card preview */}
         <View style={styles.card}>
@@ -88,7 +91,7 @@ export default function WalletModal({ visible, onClose, ticket }: Props) {
           onPress={() => handleWallet('apple')}
         >
           <Ionicons name="logo-apple" size={20} color="#000" />
-          <Text style={styles.appleBtnText}>Aggiungi ad Apple Wallet</Text>
+          <Text style={styles.appleBtnText}>{t('wallet_modal.add_apple_wallet')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -97,15 +100,13 @@ export default function WalletModal({ visible, onClose, ticket }: Props) {
           onPress={() => handleWallet('google')}
         >
           <Ionicons name="card-outline" size={20} color={Colors.textPrimary} />
-          <Text style={styles.googleBtnText}>Aggiungi a Google Wallet</Text>
+          <Text style={styles.googleBtnText}>{t('wallet_modal.add_google_wallet')}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.note}>
-          L'integrazione nativa con Apple e Google Wallet sarà disponibile nella versione finale con backend attivo.
-        </Text>
+        <Text style={styles.note}>{t('wallet_modal.note')}</Text>
 
         <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
-          <Text style={styles.closeBtnText}>Chiudi</Text>
+          <Text style={styles.closeBtnText}>{t('wallet_modal.close_btn')}</Text>
         </TouchableOpacity>
 
       </View>
