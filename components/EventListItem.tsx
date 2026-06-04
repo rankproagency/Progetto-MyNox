@@ -96,10 +96,7 @@ export default function EventListItem({ event }: Props) {
 }
 
 function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
-  const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+  return new Date(dateStr).toLocaleDateString(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
 const styles = StyleSheet.create({
