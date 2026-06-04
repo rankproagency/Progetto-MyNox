@@ -86,12 +86,12 @@
       background: radial-gradient(ellipse, rgba(168,85,247,0.28) 0%, transparent 65%);
       pointer-events: none;
     }
-    .glow-red-tr::before {
+    .glow-purple-tr::before {
       content: '';
       position: absolute;
-      top: -100px; right: -80px;
-      width: 500px; height: 500px;
-      background: radial-gradient(ellipse, rgba(200,55,30,0.22) 0%, transparent 65%);
+      top: -120px; right: -80px;
+      width: 540px; height: 540px;
+      background: radial-gradient(ellipse, rgba(168,85,247,0.28) 0%, transparent 65%);
       pointer-events: none;
     }
     .glow-purple-center::before {
@@ -129,18 +129,18 @@
       width: 310px;
       bottom: -30px; left: -100px;
       transform: rotate(-13deg);
-      filter: drop-shadow(15px 20px 50px rgba(0,0,0,0.85)) drop-shadow(0 0 40px rgba(200,55,30,0.15));
+      filter: drop-shadow(15px 20px 50px rgba(0,0,0,0.85)) drop-shadow(0 0 40px rgba(168,85,247,0.2));
       z-index: 5;
     }
 
     /* ══════════════════════════════════════
-       SLIDE 3 — evento, phone tilted destra
+       SLIDE 3 — evento, centrato e dominante
     ══════════════════════════════════════ */
     .p3 {
-      width: 310px;
-      bottom: -40px; right: -70px;
-      transform: rotate(-18deg);
-      filter: drop-shadow(-10px 20px 50px rgba(0,0,0,0.85)) drop-shadow(0 0 40px rgba(200,55,30,0.18));
+      width: 320px;
+      bottom: -20px;
+      left: 50%; transform: translateX(-50%) rotate(-3deg);
+      filter: drop-shadow(0 30px 70px rgba(0,0,0,0.95)) drop-shadow(0 0 50px rgba(168,85,247,0.22));
       z-index: 5;
     }
 
@@ -193,7 +193,7 @@
   <!-- ─── SLIDE 2 ─── -->
   <div>
     <div class="label">Screenshot 2 / 5 — ← connessa con 1 (stesso telefono)</div>
-    <div class="slide glow-red-tr glow-bottom" style="background:#07080f;">
+    <div class="slide glow-purple-tr glow-bottom" style="background:#07080f;">
       <div class="logo"><img src="assets/logo-cropped.png" alt="MyNox" /></div>
       <div class="copy right">
         <div class="headline"><span>YOUR</span><span>CITY.</span></div>
@@ -206,7 +206,7 @@
   <!-- ─── SLIDE 3 ─── -->
   <div>
     <div class="label">Screenshot 3 / 5 — evento</div>
-    <div class="slide glow-red-tr glow-bottom" style="background:#07080f;">
+    <div class="slide glow-purple-tr glow-bottom" style="background:#07080f;">
       <div class="logo"><img src="assets/logo-cropped.png" alt="MyNox" /></div>
       <div class="copy">
         <div class="headline"><span>SKIP THE</span><span>QUEUE.</span></div>
@@ -222,7 +222,7 @@
     <div class="slide glow-purple-center glow-bottom" style="background:#07080f;">
       <div class="logo"><img src="assets/logo-cropped.png" alt="MyNox" /></div>
       <div class="copy">
-        <div class="headline"><span>BOOKED IN</span><span>SECONDS.</span></div>
+        <div class="headline"><span>DONE IN</span><span>3 TAPS.</span></div>
         <div class="subtitle">Instant checkout. Free drink included with every ticket.</div>
       </div>
       <img class="phone p4" src="assets/screenshots/mockup-checkout.png" alt="Checkout" />
@@ -235,7 +235,7 @@
     <div class="slide glow-purple-center glow-bottom" style="background:#07080f;">
       <div class="logo"><img src="assets/logo-cropped.png" alt="MyNox" /></div>
       <div class="copy">
-        <div class="headline"><span>YOUR TICKET,</span><span>ALWAYS READY.</span></div>
+        <div class="headline"><span>SCAN</span><span>IN.</span></div>
         <div class="subtitle">Show the QR at the door. No printing needed.</div>
       </div>
       <img class="phone p5-back" src="assets/screenshots/mockup-event.png" alt="Event back" />
@@ -255,7 +255,7 @@
         </div>
       </div>
       <div style="flex-shrink:0; transform:scale(0.5); transform-origin:top left; margin-right:calc(-393px * 0.5);">
-        <div class="slide glow-red-tr glow-bottom" style="background:#07080f; pointer-events:none;">
+        <div class="slide glow-purple-tr glow-bottom" style="background:#07080f; pointer-events:none;">
           <div class="logo"><img src="assets/logo-cropped.png" /></div>
           <div class="copy right"><div class="headline"><span>YOUR</span><span>CITY.</span></div><div class="subtitle">All the best events in Padova, in one app.</div></div>
           <img class="phone p2" src="assets/screenshots/mockup-home.png" />
