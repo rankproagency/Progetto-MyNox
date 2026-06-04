@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Share, Image, Modal, TextInput, Alert, ActivityIndicator, RefreshControl, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Share, Modal, TextInput, Alert, ActivityIndicator, RefreshControl, Animated } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -329,7 +330,7 @@ function TicketCard({
         <View style={styles.ticketLeft}>
           {ticket.eventImageUrl ? (
             <View style={styles.thumbnailWrapper}>
-              <Image source={{ uri: ticket.eventImageUrl }} style={styles.thumbnail} resizeMode="cover" />
+              <Image source={{ uri: ticket.eventImageUrl }} style={styles.thumbnail} contentFit="cover" cachePolicy="memory-disk" />
               <View style={[
                 styles.statusDotOnThumb,
                 isPast && styles.statusDotUsed,

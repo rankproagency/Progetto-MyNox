@@ -3,7 +3,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   TouchableOpacity,
   Modal,
   Dimensions,
@@ -15,6 +14,8 @@ import {
   Alert,
   Keyboard,
 } from 'react-native';
+import { Image } from 'expo-image';
+import { versionedImageUrl } from '../../lib/imageUrl';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -161,7 +162,7 @@ export default function EventScreen() {
       <Modal visible={imageModalVisible} transparent animationType="fade" statusBarTranslucent>
         <View style={styles.imageModal}>
           <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={() => setImageModalVisible(false)} />
-          <Image source={{ uri: event.imageUrl }} style={styles.imageModalImg} resizeMode="contain" />
+          <Image source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }} style={styles.imageModalImg} contentFit="contain" cachePolicy="memory-disk" />
           <TouchableOpacity style={styles.imageModalClose} onPress={() => setImageModalVisible(false)} activeOpacity={0.8}>
             <Ionicons name="close" size={22} color={Colors.white} />
           </TouchableOpacity>
@@ -252,7 +253,7 @@ export default function EventScreen() {
 
         {/* Hero */}
         <View style={styles.hero}>
-          <Image source={{ uri: event.imageUrl }} style={styles.heroImage} resizeMode="cover" />
+          <Image source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }} style={styles.heroImage} contentFit="cover" cachePolicy="memory-disk" />
           <LinearGradient
             colors={['rgba(7,8,15,0.1)', 'transparent', 'rgba(7,8,15,0.6)', 'rgba(7,8,15,0.97)']}
             locations={[0, 0.3, 0.65, 1]}

@@ -3,6 +3,7 @@ export interface Club {
   name: string;
   city: string;
   imageUrl: string;
+  updatedAt?: string;
   address: string;
   instagram?: string;
   tiktok?: string;

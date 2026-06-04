@@ -2,10 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getLocale } from '../../lib/i18n';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Image,
+  View, Text, StyleSheet, TouchableOpacity,
   Animated, ActivityIndicator, ScrollView,
   PanResponder, Linking, Platform,
 } from 'react-native';
+import { Image } from 'expo-image';
+import { versionedImageUrl } from '../../lib/imageUrl';
 import { LinearGradient } from 'expo-linear-gradient';
 import MapView, { Marker, Region, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -140,8 +142,10 @@ function ClubMarker({
         <View style={[styles.pinOuter, isSelected && styles.pinOuterSelected]}>
           {club.imageUrl ? (
             <Image
-              source={{ uri: club.imageUrl }}
+              source={{ uri: versionedImageUrl(club.imageUrl, club.updatedAt) }}
               style={styles.pinImage}
+              contentFit="cover"
+              cachePolicy="memory-disk"
               onLoad={() => setImageLoaded(true)}
             />
           ) : (
@@ -455,7 +459,7 @@ export default function MapScreen() {
                   activeOpacity={0.85}
                 >
                   {club.imageUrl ? (
-                    <Image source={{ uri: club.imageUrl }} style={styles.chipImage} />
+                    <Image source={{ uri: versionedImageUrl(club.imageUrl, club.updatedAt) }} style={styles.chipImage} contentFit="cover" cachePolicy="memory-disk" />
                   ) : (
                     <View style={[styles.chipImage, styles.chipImageFallback]}>
                       <Ionicons name="musical-notes" size={16} color={Colors.accent} />
@@ -559,7 +563,7 @@ function ClubCard({
 
       <View style={styles.cardContent}>
         {club.imageUrl ? (
-          <Image source={{ uri: club.imageUrl }} style={styles.cardImage} />
+          <Image source={{ uri: versionedImageUrl(club.imageUrl, club.updatedAt) }} style={styles.cardImage} contentFit="cover" cachePolicy="memory-disk" />
         ) : (
           <View style={[styles.cardImage, styles.cardImageFallback]}>
             <Ionicons name="musical-notes" size={28} color={Colors.accent} />

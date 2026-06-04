@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Image, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Animated } from 'react-native';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -75,7 +76,7 @@ export default function TicketScreen() {
         {/* Info evento — centrata sopra la card */}
         <View style={styles.eventInfo}>
           {ticket.eventImageUrl ? (
-            <Image source={{ uri: ticket.eventImageUrl }} style={styles.eventThumbnail} resizeMode="cover" />
+            <Image source={{ uri: ticket.eventImageUrl }} style={styles.eventThumbnail} contentFit="cover" cachePolicy="memory-disk" />
           ) : (
             <View style={styles.eventThumbnailFallback}>
               <Ionicons name="business-outline" size={22} color={Colors.textMuted} />

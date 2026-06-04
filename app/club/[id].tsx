@@ -1,4 +1,6 @@
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, Linking, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Linking, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
+import { versionedImageUrl } from '../../lib/imageUrl';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -126,7 +128,7 @@ export default function ClubScreen() {
 
         {/* Hero */}
         <View style={styles.hero}>
-          <Image source={{ uri: club.imageUrl }} style={styles.heroImage} resizeMode="cover" />
+          <Image source={{ uri: versionedImageUrl(club.imageUrl, club.updatedAt) }} style={styles.heroImage} contentFit="cover" cachePolicy="memory-disk" />
           <LinearGradient
             colors={['rgba(7,8,15,0.35)', 'transparent', 'rgba(7,8,15,0.97)']}
             style={StyleSheet.absoluteFill}

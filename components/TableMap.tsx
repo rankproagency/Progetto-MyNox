@@ -4,8 +4,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  Image,
+  Image as RNImage,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useState, useEffect } from 'react';
@@ -32,7 +33,7 @@ export default function TableMap({ tables, selected, onSelect, floorPlanUrl }: P
 
   useEffect(() => {
     if (floorPlanUrl) {
-      Image.getSize(
+      RNImage.getSize(
         floorPlanUrl,
         (w, h) => setMapHeight(MAP_WIDTH * (h / w)),
         () => setMapHeight(DEFAULT_MAP_HEIGHT),
@@ -68,7 +69,8 @@ export default function TableMap({ tables, selected, onSelect, floorPlanUrl }: P
           <Image
             source={{ uri: floorPlanUrl }}
             style={StyleSheet.absoluteFill}
-            resizeMode="cover"
+            contentFit="cover"
+            cachePolicy="memory-disk"
           />
         ) : (
           <>

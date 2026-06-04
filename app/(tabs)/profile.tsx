@@ -6,9 +6,10 @@ import {
   TouchableOpacity,
   Alert,
   Linking,
-  Image,
   FlatList,
 } from 'react-native';
+import { Image } from 'expo-image';
+import { versionedImageUrl } from '../../lib/imageUrl';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -209,9 +210,10 @@ export default function ProfileScreen() {
                         onPress={() => router.push(`/club/${club.id}`)}
                       >
                         <Image
-                          source={{ uri: club.imageUrl }}
+                          source={{ uri: versionedImageUrl(club.imageUrl, club.updatedAt) }}
                           style={styles.favClubImage}
-                          resizeMode="cover"
+                          contentFit="cover"
+                          cachePolicy="memory-disk"
                         />
                         <LinearGradient
                           colors={['transparent', 'rgba(7,8,15,0.85)']}
@@ -245,9 +247,10 @@ export default function ProfileScreen() {
                         onPress={() => router.push(`/event/${event.id}`)}
                       >
                         <Image
-                          source={{ uri: event.imageUrl }}
+                          source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }}
                           style={[styles.favEventThumb, isSoldOut && { opacity: 0.5 }]}
-                          resizeMode="cover"
+                          contentFit="cover"
+                          cachePolicy="memory-disk"
                         />
                         <View style={styles.favEventInfo}>
                           <Text style={styles.favEventName} numberOfLines={1}>{event.name}</Text>
@@ -280,7 +283,7 @@ export default function ProfileScreen() {
                 >
                   {/* Sfondo — ultimo evento */}
                   {bgImage && (
-                    <Image source={{ uri: bgImage }} style={styles.memoryBg} resizeMode="cover" />
+                    <Image source={{ uri: bgImage }} style={styles.memoryBg} contentFit="cover" cachePolicy="memory-disk" />
                   )}
                   <LinearGradient
                     colors={['rgba(7,8,15,0.3)', 'rgba(7,8,15,0.92)']}
@@ -306,7 +309,8 @@ export default function ProfileScreen() {
                               key={t.id}
                               source={{ uri: t.eventImageUrl }}
                               style={[styles.thumbStackItem, { marginLeft: i === 0 ? 0 : -10, zIndex: thumbs.length - i }]}
-                              resizeMode="cover"
+                              contentFit="cover"
+                              cachePolicy="memory-disk"
                             />
                           ))}
                         </View>

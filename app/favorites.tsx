@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
+import { versionedImageUrl } from '../lib/imageUrl';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -143,8 +145,10 @@ export default function FavoritesScreen() {
                     onPress={() => router.push(`/club/${club.id}`)}
                   >
                     <Image
-                      source={{ uri: club.imageUrl }}
+                      source={{ uri: versionedImageUrl(club.imageUrl, club.updatedAt) }}
                       style={styles.clubThumb}
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
                     />
                     <View style={styles.clubInfo}>
                       <Text style={styles.clubName} numberOfLines={1}>{club.name}</Text>
