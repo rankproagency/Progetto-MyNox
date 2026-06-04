@@ -1,19 +1,11 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { UserPlus, Trash2, ShieldCheck, LayoutGrid, BarChart3, Users, Sliders, ScanLine, Check, AlertTriangle } from 'lucide-react';
+import { UserPlus, Trash2, LayoutGrid, BarChart3, Users, Sliders, ScanLine, Check, AlertTriangle } from 'lucide-react';
 import type { ClubStaff, StaffPermissions } from '@/types';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 type PermKey = keyof Pick<ClubStaff, 'can_manage_events' | 'can_manage_tables' | 'can_view_analytics' | 'can_view_participants' | 'can_scan_tickets' | 'can_manage_promos'>;
-
-const PERMISSION_LABELS: { key: PermKey; label: string }[] = [
-  { key: 'can_manage_events', label: 'Gestione eventi' },
-  { key: 'can_manage_tables', label: 'Tavoli & piantina' },
-  { key: 'can_view_analytics', label: 'Analytics (incassi)' },
-  { key: 'can_view_participants', label: 'Lista partecipanti' },
-  { key: 'can_scan_tickets', label: 'Scanner biglietti' },
-  { key: 'can_manage_promos', label: 'Codici promo' },
-];
 
 interface Preset {
   id: string;
@@ -23,49 +15,60 @@ interface Preset {
   permissions: Pick<StaffPermissions, PermKey>;
 }
 
-const PRESETS: Preset[] = [
-  {
-    id: 'buttafuori',
-    label: 'Sicurezza',
-    description: 'Solo scanner',
-    icon: ScanLine,
-    permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false, can_view_participants: false, can_scan_tickets: true, can_manage_promos: false },
-  },
-  {
-    id: 'responsabile_sala',
-    label: 'Responsabile sala',
-    description: 'Gestione tavoli',
-    icon: LayoutGrid,
-    permissions: { can_manage_events: false, can_manage_tables: true, can_view_analytics: false, can_view_participants: true, can_scan_tickets: true, can_manage_promos: false },
-  },
-  {
-    id: 'gestore_eventi',
-    label: 'Gestore eventi',
-    description: 'Crea eventi + analytics',
-    icon: BarChart3,
-    permissions: { can_manage_events: true, can_manage_tables: false, can_view_analytics: true, can_view_participants: true, can_scan_tickets: false, can_manage_promos: true },
-  },
-  {
-    id: 'full',
-    label: 'Accesso completo',
-    description: 'Tutti i permessi',
-    icon: Users,
-    permissions: { can_manage_events: true, can_manage_tables: true, can_view_analytics: true, can_view_participants: true, can_scan_tickets: true, can_manage_promos: true },
-  },
-  {
-    id: 'custom',
-    label: 'Custom',
-    description: 'Configura manualmente',
-    icon: Sliders,
-    permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false, can_view_participants: false, can_scan_tickets: false, can_manage_promos: false },
-  },
-];
-
 interface Props {
   initialStaff: ClubStaff[];
 }
 
 export default function StaffManager({ initialStaff }: Props) {
+  const { t } = useLanguage();
+
+  const PERMISSION_LABELS: { key: PermKey; label: string }[] = [
+    { key: 'can_manage_events', label: t.staffManager.manageEvents },
+    { key: 'can_manage_tables', label: t.staffManager.tablesVenue },
+    { key: 'can_view_analytics', label: t.staffManager.analyticsRevenue },
+    { key: 'can_view_participants', label: t.staffManager.participantsList },
+    { key: 'can_scan_tickets', label: t.staffManager.scanTickets },
+    { key: 'can_manage_promos', label: t.staffManager.promoCodes },
+  ];
+
+  const PRESETS: Preset[] = [
+    {
+      id: 'buttafuori',
+      label: t.staffManager.security,
+      description: t.staffManager.scannerOnly,
+      icon: ScanLine,
+      permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false, can_view_participants: false, can_scan_tickets: true, can_manage_promos: false },
+    },
+    {
+      id: 'responsabile_sala',
+      label: t.staffManager.roomManager,
+      description: t.staffManager.tableManager,
+      icon: LayoutGrid,
+      permissions: { can_manage_events: false, can_manage_tables: true, can_view_analytics: false, can_view_participants: true, can_scan_tickets: true, can_manage_promos: false },
+    },
+    {
+      id: 'gestore_eventi',
+      label: t.staffManager.eventManager,
+      description: t.staffManager.manageEvents,
+      icon: BarChart3,
+      permissions: { can_manage_events: true, can_manage_tables: false, can_view_analytics: true, can_view_participants: true, can_scan_tickets: false, can_manage_promos: true },
+    },
+    {
+      id: 'full',
+      label: t.staffManager.fullAccess,
+      description: t.staffManager.allPermissions,
+      icon: Users,
+      permissions: { can_manage_events: true, can_manage_tables: true, can_view_analytics: true, can_view_participants: true, can_scan_tickets: true, can_manage_promos: true },
+    },
+    {
+      id: 'custom',
+      label: t.staffManager.custom,
+      description: t.staffManager.configureManual,
+      icon: Sliders,
+      permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false, can_view_participants: false, can_scan_tickets: false, can_manage_promos: false },
+    },
+  ];
+
   const [staff, setStaff] = useState<ClubStaff[]>(initialStaff);
   const [email, setEmail] = useState('');
   const [selectedPreset, setSelectedPreset] = useState<Preset>(PRESETS[0]);
@@ -103,14 +106,14 @@ export default function StaffManager({ initialStaff }: Props) {
       });
       const json = await res.json();
       if (!res.ok) {
-        setInviteError(json.error ?? "Errore durante l'invito");
+        setInviteError(json.error ?? t.staffManager.inviteError);
       } else {
-        setInviteSuccess(`Invito inviato a ${email}`);
+        setInviteSuccess(t.staffManager.inviteSent.replace('{email}', email));
         setEmail('');
         setSelectedPreset(PRESETS[0]);
       }
     } catch {
-      setInviteError('Errore di rete');
+      setInviteError(t.staffManager.networkError);
     } finally {
       setInviting(false);
     }
@@ -186,7 +189,7 @@ export default function StaffManager({ initialStaff }: Props) {
                 onClick={() => setMemberToRemove(null)}
                 className="flex-1 px-4 py-2 rounded-lg border border-white/10 text-sm text-slate-300 hover:border-white/20 hover:text-white transition-colors"
               >
-                Annulla
+                {t.common.cancel}
               </button>
               <button
                 onClick={confirmRemove}
@@ -304,7 +307,7 @@ export default function StaffManager({ initialStaff }: Props) {
                       <p className="text-slate-500 text-xs mt-0.5">{member.profiles?.email ?? ''}</p>
                       {savedMemberId === member.id && (
                         <span className="inline-flex items-center gap-1 mt-1 text-xs text-green-400">
-                          <Check size={11} /> Salvato
+                          <Check size={11} /> {t.venueForm.saved}
                         </span>
                       )}
                     </div>
@@ -378,7 +381,7 @@ export default function StaffManager({ initialStaff }: Props) {
                         <p className="text-slate-500 text-xs">{member.profiles?.email ?? ''}</p>
                         {savedMemberId === member.id && (
                           <span className="inline-flex items-center gap-1 mt-1 text-xs text-green-400">
-                            <Check size={11} /> Salvato
+                            <Check size={11} /> {t.venueForm.saved}
                           </span>
                         )}
                       </td>

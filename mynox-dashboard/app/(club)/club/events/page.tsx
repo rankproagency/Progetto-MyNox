@@ -4,10 +4,12 @@ import { getProfile, getStaffPermissions } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Plus } from 'lucide-react';
 import ClubEventsTable from './ClubEventsTable';
+import { getT } from '@/lib/i18n-server';
 
 export default async function ClubEventsPage() {
+  const t = await getT();
   const profile = await getProfile();
-  if (!profile?.club_id) return <p className="text-slate-400">Club non configurato. Contatta l&apos;amministratore.</p>;
+  if (!profile?.club_id) return <p className="text-slate-400">{t.common.notConfigured}</p>;
 
   if (profile.role === 'club_staff') {
     const perms = await getStaffPermissions(profile.id, profile.club_id);
@@ -76,15 +78,15 @@ export default async function ClubEventsPage() {
     <div>
       <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">I miei eventi</h1>
-          <p className="text-slate-400 mt-1">Gestisci gli eventi della tua discoteca.</p>
+          <h1 className="text-2xl font-bold text-white">{t.clubEvents.title}</h1>
+          <p className="text-slate-400 mt-1">{t.clubEvents.subtitle}</p>
         </div>
         <Link
           href="/club/events/new"
           className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors w-full md:w-auto"
         >
           <Plus size={16} />
-          Nuovo evento
+          {t.clubEvents.newEvent}
         </Link>
       </div>
 

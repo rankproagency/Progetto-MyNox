@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Map, Check } from 'lucide-react';
 import FloorPlanEditor, { TableMarker } from './FloorPlanEditor';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 interface Props {
   clubId: string;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function ClubVenueForm({ clubId, initialFloorPlanUrl, initialTables }: Props) {
+  const { t } = useLanguage();
   const [floorPlanUrl, setFloorPlanUrl] = useState(initialFloorPlanUrl ?? '');
   const [tables, setTables] = useState<TableMarker[]>(initialTables);
   const [uploading, setUploading] = useState(false);
@@ -31,7 +33,7 @@ export default function ClubVenueForm({ clubId, initialFloorPlanUrl, initialTabl
       .from('event-assets')
       .upload(path, file, { upsert: true });
     if (uploadError) {
-      setError('Errore upload: ' + uploadError.message);
+      setError(t.venueForm.uploadError + ' ' + uploadError.message);
       setUploading(false);
       return;
     }
@@ -53,7 +55,7 @@ export default function ClubVenueForm({ clubId, initialFloorPlanUrl, initialTabl
       .eq('id', clubId);
 
     if (clubError) {
-      setError('Errore salvataggio: ' + clubError.message);
+      setError(t.venueForm.saveError + ' ' + clubError.message);
       setSaving(false);
       return;
     }
@@ -73,7 +75,7 @@ export default function ClubVenueForm({ clubId, initialFloorPlanUrl, initialTabl
         }))
       );
       if (tablesError) {
-        setError('Errore salvataggio tavoli: ' + tablesError.message);
+        setError(t.venueForm.saveTablesError + ' ' + tablesError.message);
         setSaving(false);
         return;
       }
@@ -90,16 +92,16 @@ export default function ClubVenueForm({ clubId, initialFloorPlanUrl, initialTabl
       {/* Upload piantina */}
       <div className="space-y-4">
         <div>
-          <h2 className="text-base font-semibold text-white mb-1">Piantina del locale</h2>
+          <h2 className="text-base font-semibold text-white mb-1">{t.venueForm.floorPlanTitle}</h2>
           <p className="text-xs text-slate-500">
-            Carica un&apos;immagine della pianta del locale (PNG, JPG). Sarà usata come sfondo per il posizionamento dei tavoli.
+            {t.venueForm.floorPlanDesc}
           </p>
         </div>
 
         <label className={`flex items-center gap-3 cursor-pointer px-4 py-3 rounded-xl border border-dashed border-white/20 hover:border-purple-500/50 transition-colors w-full ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
           <Map size={18} className="text-slate-400 shrink-0" />
           <span className="text-sm text-slate-400">
-            {uploading ? 'Caricamento...' : floorPlanUrl ? 'Cambia piantina' : 'Carica la piantina del locale'}
+            {uploading ? t.venueForm.loading : floorPlanUrl ? t.venueForm.changePlan : t.venueForm.uploadPlan}
           </span>
           <input
             type="file"
@@ -115,9 +117,9 @@ export default function ClubVenueForm({ clubId, initialFloorPlanUrl, initialTabl
       {floorPlanUrl ? (
         <div className="space-y-3">
           <div>
-            <h2 className="text-base font-semibold text-white mb-1">Posiziona i tavoli</h2>
+            <h2 className="text-base font-semibold text-white mb-1">{t.venueForm.placeTables}</h2>
             <p className="text-xs text-slate-500">
-              Clicca sulla piantina per aggiungere un tavolo. Le posizioni rimarranno le stesse per tutti gli eventi — potrai solo modificare il prezzo per ogni evento.
+              {t.venueForm.placeTablesDesc}
             </p>
           </div>
           <FloorPlanEditor
@@ -129,7 +131,7 @@ export default function ClubVenueForm({ clubId, initialFloorPlanUrl, initialTabl
       ) : (
         <div className="bg-[#111118] border border-white/8 rounded-xl p-8 text-center">
           <Map size={32} className="text-slate-600 mx-auto mb-3" />
-          <p className="text-sm text-slate-500">Carica prima la piantina per posizionare i tavoli.</p>
+          <p className="text-sm text-slate-500">{t.venueForm.uploadFirst}</p>
         </div>
       )}
 
@@ -145,12 +147,12 @@ export default function ClubVenueForm({ clubId, initialFloorPlanUrl, initialTabl
         {saved ? (
           <>
             <Check size={15} />
-            Salvato
+            {t.venueForm.saved}
           </>
         ) : saving ? (
-          'Salvataggio...'
+          t.common.saving
         ) : (
-          'Salva configurazione'
+          t.common.save
         )}
       </button>
 

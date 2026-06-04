@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { updateUserRole } from '@/app/(admin)/admin/users/actions';
 import { Check, X } from 'lucide-react';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 interface Club { id: string; name: string }
 
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function UserRoleEditor({ userId, currentRole, currentClubId, clubs }: Props) {
+  const { t } = useLanguage();
   const [editing, setEditing] = useState(false);
   const [role, setRole] = useState(currentRole);
   const [clubId, setClubId] = useState(currentClubId ?? '');
@@ -36,16 +38,21 @@ export default function UserRoleEditor({ userId, currentRole, currentClubId, clu
     club_staff: 'bg-teal-500/10 text-teal-400 border-teal-500/20',
     customer:   'bg-slate-500/10 text-slate-400 border-slate-500/20',
   };
-  const ROLE_LABELS: Record<string, string> = { admin: 'Admin', club_admin: 'Discoteca', club_staff: 'Staff', customer: 'Cliente' };
+  const ROLE_LABELS: Record<string, string> = {
+    admin: t.usersTable.admin,
+    club_admin: t.usersTable.club,
+    club_staff: t.usersTable.staff,
+    customer: t.usersTable.customer,
+  };
 
   if (!editing) {
     return (
       <button
         onClick={() => setEditing(true)}
         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border transition-opacity hover:opacity-70 cursor-pointer ${ROLE_STYLES[role] ?? ROLE_STYLES.customer}`}
-        title="Clicca per modificare ruolo"
+        title={t.common.edit}
       >
-        {saved ? '✓ Salvato' : (ROLE_LABELS[role] ?? role)}
+        {saved ? `✓ ${t.common.save}` : (ROLE_LABELS[role] ?? role)}
       </button>
     );
   }
@@ -57,9 +64,9 @@ export default function UserRoleEditor({ userId, currentRole, currentClubId, clu
         onChange={(e) => setRole(e.target.value)}
         className="text-xs bg-[#0d0d14] border border-white/20 rounded-md px-2 py-1 text-white focus:outline-none focus:border-purple-500/60"
       >
-        <option value="customer">Cliente</option>
-        <option value="club_admin">Discoteca</option>
-        <option value="admin">Admin</option>
+        <option value="customer">{t.usersTable.customer}</option>
+        <option value="club_admin">{t.usersTable.club}</option>
+        <option value="admin">{t.usersTable.admin}</option>
       </select>
       {role === 'club_admin' && (
         <select
@@ -67,7 +74,7 @@ export default function UserRoleEditor({ userId, currentRole, currentClubId, clu
           onChange={(e) => setClubId(e.target.value)}
           className="text-xs bg-[#0d0d14] border border-white/20 rounded-md px-2 py-1 text-white focus:outline-none focus:border-purple-500/60"
         >
-          <option value="">— nessun club —</option>
+          <option value="">—</option>
           {clubs.map((c) => (
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}

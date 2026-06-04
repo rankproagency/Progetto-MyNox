@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getProfile } from '@/lib/auth';
+import { getT } from '@/lib/i18n-server';
 
 export const dynamic = 'force-dynamic';
 import Link from 'next/link';
@@ -150,8 +151,9 @@ async function getDashboardData(clubId: string) {
 }
 
 export default async function ClubDashboardPage() {
+  const t = await getT();
   const profile = await getProfile();
-  if (!profile?.club_id) return <p className="text-slate-400">Club non configurato. Contatta l&apos;amministratore.</p>;
+  if (!profile?.club_id) return <p className="text-slate-400">{t.common.notConfigured}</p>;
 
   const isOwner = profile.role === 'club_admin';
   let permissions = { can_manage_events: true, can_manage_tables: true, can_view_analytics: true, can_view_participants: true };
@@ -169,8 +171,8 @@ export default async function ClubDashboardPage() {
 
   const now = new Date();
   const greeting =
-    now.getHours() < 12 ? 'Buongiorno' :
-    now.getHours() < 18 ? 'Buon pomeriggio' : 'Buonasera';
+    now.getHours() < 12 ? t.greeting.morning :
+    now.getHours() < 18 ? t.greeting.afternoon : t.greeting.evening;
 
   return (
     <div>
@@ -183,10 +185,10 @@ export default async function ClubDashboardPage() {
       {/* Checklist setup — visibile solo se incompleto e solo a chi può gestire eventi */}
       {!isProfileComplete && permissions.can_manage_events && (
         <div className="mb-8 bg-amber-500/5 border border-amber-500/20 rounded-xl px-5 py-4">
-          <p className="text-sm font-semibold text-amber-400 mb-3">Completa il tuo profilo per essere visibile sull&apos;app</p>
+          <p className="text-sm font-semibold text-amber-400 mb-3">{t.clubDashboard.completeProfile}</p>
           <div className="space-y-2">
-            <CheckItem done={checklist.hasImage} label="Carica un'immagine copertina" href="/club/settings" />
-            <CheckItem done={checklist.hasPublishedEvent} label="Pubblica il tuo primo evento" href="/club/events/new" />
+            <CheckItem done={checklist.hasImage} label={t.clubDashboard.uploadCover} href="/club/settings" />
+            <CheckItem done={checklist.hasPublishedEvent} label={t.clubDashboard.publishFirst} href="/club/events/new" />
           </div>
         </div>
       )}
@@ -199,7 +201,7 @@ export default async function ClubDashboardPage() {
             <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
               <Plus size={16} className="text-white" />
             </div>
-            <span className="text-sm font-semibold text-white">Nuovo evento</span>
+            <span className="text-sm font-semibold text-white">{t.clubDashboard.newEvent}</span>
           </Link>
         )}
         {permissions.can_manage_events && (
@@ -208,7 +210,7 @@ export default async function ClubDashboardPage() {
             <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
               <CalendarDays size={16} className="text-slate-400" />
             </div>
-            <span className="text-sm font-medium text-slate-300">I miei eventi</span>
+            <span className="text-sm font-medium text-slate-300">{t.clubDashboard.myEvents}</span>
           </Link>
         )}
         {permissions.can_view_analytics && (
@@ -217,7 +219,7 @@ export default async function ClubDashboardPage() {
             <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
               <BarChart2 size={16} className="text-slate-400" />
             </div>
-            <span className="text-sm font-medium text-slate-300">Analytics</span>
+            <span className="text-sm font-medium text-slate-300">{t.clubDashboard.analytics}</span>
           </Link>
         )}
         {isOwner && (
@@ -226,7 +228,7 @@ export default async function ClubDashboardPage() {
             <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
               <Settings size={16} className="text-slate-400" />
             </div>
-            <span className="text-sm font-medium text-slate-300">Profilo club</span>
+            <span className="text-sm font-medium text-slate-300">{t.clubDashboard.clubProfile}</span>
           </Link>
         )}
       </div>
@@ -240,19 +242,19 @@ export default async function ClubDashboardPage() {
         {/* Prossimi 7 giorni */}
         <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">Prossimi 7 giorni</h2>
+            <h2 className="text-sm font-semibold text-white">{t.clubDashboard.next7days}</h2>
             <Link href="/club/events" className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors">
-              Vedi tutti <ChevronRight size={12} />
+              {t.clubDashboard.viewAll} <ChevronRight size={12} />
             </Link>
           </div>
 
           {upcomingEvents.length === 0 ? (
             <div className="px-5 py-10 text-center">
               <CalendarDays size={32} className="text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-500 text-sm">Nessun evento nei prossimi 7 giorni</p>
+              <p className="text-slate-500 text-sm">{t.clubDashboard.noUpcoming}</p>
               {permissions.can_manage_events && (
                 <Link href="/club/events/new" className="inline-flex items-center gap-1.5 mt-3 text-xs text-purple-400 hover:text-purple-300 transition-colors">
-                  <Plus size={12} /> Crea un evento
+                  <Plus size={12} /> {t.clubDashboard.createEvent}
                 </Link>
               )}
             </div>
@@ -281,15 +283,15 @@ export default async function ClubDashboardPage() {
                         <span className="text-xs text-slate-500">{event.start_time}</span>
                         {!event.is_published && (
                           <span className="text-xs text-amber-400 bg-amber-400/10 border border-amber-400/20 px-1.5 py-0.5 rounded-full">
-                            Bozza
+                            {t.common.draft}
                           </span>
                         )}
                       </div>
                       {remaining !== null && (
                         <div className="mt-2">
                           <div className="flex justify-between text-xs text-slate-500 mb-1">
-                            <span>{soldQty} venduti</span>
-                            <span>{remaining} rimasti</span>
+                            <span>{soldQty} {t.clubDashboard.sold}</span>
+                            <span>{remaining} {t.clubDashboard.remaining}</span>
                           </div>
                           <div className="h-1 bg-white/8 rounded-full overflow-hidden">
                             <div
@@ -311,14 +313,14 @@ export default async function ClubDashboardPage() {
         {/* Biglietti recenti */}
         <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">Ultimi biglietti venduti</h2>
+            <h2 className="text-sm font-semibold text-white">{t.clubDashboard.lastTickets}</h2>
             <Ticket size={14} className="text-slate-500" />
           </div>
 
           {recentTickets.length === 0 ? (
             <div className="px-5 py-10 text-center">
               <Ticket size={32} className="text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-500 text-sm">Nessun biglietto venduto ancora</p>
+              <p className="text-slate-500 text-sm">{t.clubDashboard.noTickets}</p>
             </div>
           ) : (
             <div className="divide-y divide-white/5">
@@ -335,7 +337,7 @@ export default async function ClubDashboardPage() {
                           <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400">PROMO</span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-500 mt-0.5">{ticket.ticket_types?.label ?? (ticket.table_name ? `Tavolo – ${ticket.table_name}` : '—')}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{ticket.ticket_types?.label ?? (ticket.table_name ? `${t.clubDashboard.table} – ${ticket.table_name}` : '—')}</p>
                     </div>
                     <div className="text-right shrink-0 ml-4">
                       {canViewRevenue && (

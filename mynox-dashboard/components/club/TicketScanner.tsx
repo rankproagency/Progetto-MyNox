@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Scan, Search, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 type ScanState = 'idle' | 'success' | 'error';
 type Tab = 'scan' | 'search';
@@ -26,6 +27,7 @@ interface Props {
 }
 
 export default function TicketScanner({ events, defaultEventId }: Props) {
+  const { t } = useLanguage();
   const [tab, setTab] = useState<Tab>('scan');
   const [selectedEventId, setSelectedEventId] = useState(defaultEventId);
   const [scanState, setScanState] = useState<ScanState>('idle');
@@ -131,7 +133,7 @@ export default function TicketScanner({ events, defaultEventId }: Props) {
             scanState === 'idle' ? 'bg-green-400 animate-pulse' :
             scanState === 'success' ? 'bg-green-400' : 'bg-red-400'
           }`} />
-          <span className="text-white text-sm font-semibold">Scanner ingresso</span>
+          <span className="text-white text-sm font-semibold">{t.clubScan.title}</span>
         </div>
         {events.length > 1 ? (
           <select

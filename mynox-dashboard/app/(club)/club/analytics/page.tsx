@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getProfile, getStaffPermissions } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getT } from '@/lib/i18n-server';
 
 export const dynamic = 'force-dynamic';
 import AnalyticsCharts from '@/components/club/AnalyticsCharts';
@@ -134,8 +135,9 @@ async function getAnalyticsData(clubId: string) {
 }
 
 export default async function ClubAnalyticsPage() {
+  const t = await getT();
   const profile = await getProfile();
-  if (!profile?.club_id) return <p className="text-slate-400">Club non configurato. Contatta l&apos;amministratore.</p>;
+  if (!profile?.club_id) return <p className="text-slate-400">{t.common.notConfigured}</p>;
 
   const isOwner = profile.role === 'club_admin';
   let canViewRevenue = isOwner;
@@ -151,13 +153,13 @@ export default async function ClubAnalyticsPage() {
     <div>
       <div className="mb-8 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Analytics</h1>
-          <p className="text-slate-400 mt-1">Performance storica dei tuoi eventi.</p>
+          <h1 className="text-2xl font-bold text-white">{t.clubAnalytics.title}</h1>
+          <p className="text-slate-400 mt-1">{t.clubAnalytics.subtitle}</p>
         </div>
         {!canViewRevenue && (
           <div className="flex items-center gap-2 bg-amber-500/5 border border-amber-500/20 rounded-lg px-3 py-2">
             <Lock size={13} className="text-amber-400 shrink-0" />
-            <p className="text-xs text-amber-400">Dati economici nascosti — contatta il proprietario</p>
+            <p className="text-xs text-amber-400">{t.clubAnalytics.hiddenData}</p>
           </div>
         )}
       </div>
@@ -165,29 +167,29 @@ export default async function ClubAnalyticsPage() {
       {/* KPI base — visibili a tutti */}
       <div className={`grid gap-5 mb-8 ${canViewRevenue ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2'}`}>
         <KpiCard
-          label="Biglietti venduti"
+          label={t.clubAnalytics.ticketsSold}
           value={data.totalTickets.toLocaleString('it-IT')}
-          sub={`${data.currentTickets} questo mese`}
+          sub={`${data.currentTickets} ${t.clubAnalytics.thisMonth}`}
           trend={data.ticketsPct}
         />
         <KpiCard
-          label="Tasso di riempimento"
+          label={t.clubAnalytics.fillRate}
           value={`${data.fillRate}%`}
-          sub="Media su tutti gli eventi"
+          sub={t.clubAnalytics.fillRateAvg}
           trend={null}
         />
         {canViewRevenue && (
           <>
             <KpiCard
-              label="Ricavi totali"
+              label={t.clubAnalytics.totalRevenue}
               value={`€${data.totalRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-              sub={`Biglietti e tavoli · €${data.currentRevenue.toFixed(2)} questo mese`}
+              sub={`${t.clubAnalytics.revenueDesc} · €${data.currentRevenue.toFixed(2)} ${t.clubAnalytics.thisMonth}`}
               trend={data.revenuePct}
             />
             <KpiCard
-              label="Prezzo medio biglietto"
+              label={t.clubAnalytics.avgTicket}
               value={`€${data.avgTicketPrice.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-              sub="Su tutti gli eventi"
+              sub={t.clubAnalytics.avgTicketDesc}
               trend={null}
             />
           </>
@@ -197,10 +199,10 @@ export default async function ClubAnalyticsPage() {
       {/* KPI Tavoli */}
       {data.tablesByEvent.length > 0 && (
         <div className="mb-8">
-          <p className="text-xs text-slate-500 uppercase tracking-widest font-medium mb-4">Tavoli</p>
+          <p className="text-xs text-slate-500 uppercase tracking-widest font-medium mb-4">{t.clubAnalytics.tables}</p>
           <div className={`grid gap-5 ${canViewRevenue ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-1 max-w-xs'}`}>
             <KpiCard
-              label="Media tavoli per serata"
+              label={t.clubAnalytics.avgTablesNight}
               value={Math.round(data.avgTablesPerEvent).toLocaleString('it-IT')}
               sub={null}
               trend={null}
@@ -208,13 +210,13 @@ export default async function ClubAnalyticsPage() {
             {canViewRevenue && (
               <>
                 <KpiCard
-                  label="Ricavi totali tavoli"
+                  label={t.clubAnalytics.totalTableRevenue}
                   value={`€${data.totalTableRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   sub={null}
                   trend={null}
                 />
                 <KpiCard
-                  label="Media ricavi tavoli per serata"
+                  label={t.clubAnalytics.avgTableRevenue}
                   value={`€${data.avgTableRevenuePerEvent.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   sub={null}
                   trend={null}

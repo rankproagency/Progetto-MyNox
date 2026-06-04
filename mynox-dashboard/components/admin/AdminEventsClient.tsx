@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Event } from '@/types';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 interface EventWithClub extends Event {
   clubs?: { name: string };
 }
 
 export default function AdminEventsClient({ events: initial }: { events: EventWithClub[] }) {
+  const { t } = useLanguage();
   const [events, setEvents] = useState(initial);
   const [toggling, setToggling] = useState<string | null>(null);
 
@@ -28,11 +30,11 @@ export default function AdminEventsClient({ events: initial }: { events: EventWi
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-white/8">
-            <th className="text-left px-5 py-3 text-slate-400 font-medium">Nome</th>
-            <th className="text-left px-5 py-3 text-slate-400 font-medium">Discoteca</th>
-            <th className="text-left px-5 py-3 text-slate-400 font-medium">Data</th>
-            <th className="text-left px-5 py-3 text-slate-400 font-medium">Biglietti venduti</th>
-            <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
+            <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.adminDashboard.colEvent}</th>
+            <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.adminDashboard.colVenue}</th>
+            <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.adminDashboard.colDate}</th>
+            <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.adminDashboard.colTickets}</th>
+            <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.usersTable.colStatus}</th>
             <th className="px-5 py-3" />
           </tr>
         </thead>
@@ -57,9 +59,9 @@ export default function AdminEventsClient({ events: initial }: { events: EventWi
                         ? 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20'
                         : 'bg-slate-500/10 text-slate-400 border-slate-500/20 hover:bg-green-500/10 hover:text-green-400 hover:border-green-500/20'
                     } ${toggling === event.id ? 'opacity-50' : ''}`}
-                    title={event.is_published ? 'Clicca per mettere in bozza' : 'Clicca per pubblicare'}
+                    title={event.is_published ? t.common.draft : t.common.published}
                   >
-                    {toggling === event.id ? '...' : event.is_published ? 'Pubblicato' : 'Bozza'}
+                    {toggling === event.id ? '...' : event.is_published ? t.common.published : t.common.draft}
                   </button>
                 </td>
                 <td className="px-5 py-4 text-right text-xs text-slate-500 font-mono select-all">
@@ -70,7 +72,7 @@ export default function AdminEventsClient({ events: initial }: { events: EventWi
           ) : (
             <tr>
               <td colSpan={6} className="px-5 py-12 text-center text-slate-500">
-                Nessun evento trovato.
+                {t.adminDashboard.noEvents}
               </td>
             </tr>
           )}

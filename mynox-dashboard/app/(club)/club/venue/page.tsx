@@ -2,11 +2,13 @@ import { redirect } from 'next/navigation';
 import { getProfile, getStaffPermissions } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import ClubVenueForm from '@/components/club/ClubVenueForm';
+import { getT } from '@/lib/i18n-server';
 
 export default async function VenuePage() {
+  const t = await getT();
   const profile = await getProfile();
   if (!profile?.club_id) {
-    return <p className="text-slate-400">Club non configurato. Contatta l&apos;amministratore.</p>;
+    return <p className="text-slate-400">{t.common.notConfigured}</p>;
   }
 
   if (profile.role === 'club_staff') {
@@ -23,10 +25,8 @@ export default async function VenuePage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Piantina & Tavoli</h1>
-        <p className="text-slate-400 mt-1">
-          Configura la piantina del locale e posiziona i tavoli. Questa configurazione si applica a tutti gli eventi.
-        </p>
+        <h1 className="text-2xl font-bold text-white">{t.clubVenue.title}</h1>
+        <p className="text-slate-400 mt-1">{t.clubVenue.subtitle}</p>
       </div>
       <ClubVenueForm
         clubId={profile.club_id}

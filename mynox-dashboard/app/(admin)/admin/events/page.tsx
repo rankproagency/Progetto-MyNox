@@ -1,8 +1,10 @@
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getT } from '@/lib/i18n-server';
 import { CalendarDays, FileEdit, Clock } from 'lucide-react';
 import EventsTable from './EventsTable';
 
 export default async function AdminEventsPage() {
+  const t = await getT();
   const supabase = createAdminClient();
 
   const [{ data: events }, { data: ticketRevenue }, { data: ticketTypesData }] = await Promise.all([
@@ -60,31 +62,31 @@ export default async function AdminEventsPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Eventi</h1>
-        <p className="text-slate-400 mt-1">Supervisione di tutti gli eventi sulla piattaforma.</p>
+        <h1 className="text-2xl font-bold text-white">{t.adminEvents.title}</h1>
+        <p className="text-slate-400 mt-1">{t.adminEvents.subtitle}</p>
       </div>
 
       {/* KPI operativi */}
       <div className="grid grid-cols-3 md:grid-cols-3 gap-3 md:gap-4 mb-8">
         <StatCard
           icon={<CalendarDays size={16} className="text-green-400" />}
-          label="Pubblicati"
+          label={t.adminEvents.published}
           value={publishedCount}
-          sub="eventi futuri visibili nell'app"
+          sub={t.adminEvents.publishedDesc}
           color="text-green-400"
         />
         <StatCard
           icon={<FileEdit size={16} className="text-amber-400" />}
-          label="In bozza"
+          label={t.adminEvents.draft}
           value={draftCount}
-          sub="futuri, non ancora pubblicati"
+          sub={t.adminEvents.draftDesc}
           color="text-amber-400"
         />
         <StatCard
           icon={<Clock size={16} className="text-slate-400" />}
-          label="Passati"
+          label={t.adminEvents.past}
           value={pastEvents.length}
-          sub="eventi conclusi"
+          sub={t.adminEvents.pastDesc}
           color="text-slate-400"
         />
       </div>

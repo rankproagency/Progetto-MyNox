@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Plus, Tag, Trash2, ToggleLeft, ToggleRight, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 interface PromoCode {
   id: string;
@@ -41,6 +42,7 @@ const EMPTY_FORM = {
 };
 
 export default function PromoManager({ initialCodes, events, clubId }: Props) {
+  const { t } = useLanguage();
   const supabase = createClient();
   const router = useRouter();
   const [codes, setCodes] = useState<PromoCode[]>(initialCodes);
@@ -74,9 +76,9 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
   async function handleCreate() {
     setError('');
     const normalized = form.code.trim().toUpperCase();
-    if (!normalized) { setError('Inserisci un codice.'); return; }
-    if (!form.discount_value || Number(form.discount_value) <= 0) { setError('Inserisci un valore sconto valido.'); return; }
-    if (form.discount_type === 'percentage' && Number(form.discount_value) > 100) { setError('La percentuale non può superare 100.'); return; }
+    if (!normalized) { setError(t.promoManager.insertCode); return; }
+    if (!form.discount_value || Number(form.discount_value) <= 0) { setError(t.promoManager.insertDiscount); return; }
+    if (form.discount_type === 'percentage' && Number(form.discount_value) > 100) { setError(t.promoManager.maxPercent); return; }
 
     setSaving(true);
     const { data, error: err } = await supabase
@@ -107,7 +109,7 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Eliminare questo codice promo?')) return;
+    if (!confirm(t.promoManager.deleteConfirm)) return;
     setCodes((prev) => prev.filter((c) => c.id !== id));
     await supabase.from('promo_codes').delete().eq('id', id);
   }
@@ -120,9 +122,9 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Codici totali', value: codes.length },
-          { label: 'Attivi ora', value: active },
-          { label: 'Utilizzi totali', value: totalUses },
+          { label: t.promoManager.totalCodes, value: codes.length },
+          { label: t.promoManager.activeNow, value: active },
+          { label: t.promoManager.totalUses, value: totalUses },
         ].map(({ label, value }) => (
           <div key={label} className="bg-[#111118] border border-white/8 rounded-xl p-4">
             <div className="text-2xl font-bold text-white">{value}</div>
@@ -133,13 +135,13 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
 
       {/* Header + crea */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-white">Tutti i codici</h2>
+        <h2 className="text-lg font-semibold text-white">{t.promoManager.allCodes}</h2>
         <button
           onClick={() => { setShowModal(true); setError(''); setForm(EMPTY_FORM); }}
           className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold rounded-lg transition-colors"
         >
           <Plus size={15} />
-          Crea codice
+          {t.promoManager.createCode}
         </button>
       </div>
 
@@ -147,7 +149,7 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
       {codes.length === 0 ? (
         <div className="bg-[#111118] border border-white/8 rounded-xl p-12 flex flex-col items-center gap-3 text-slate-500">
           <Tag size={36} />
-          <p className="text-sm">Nessun codice promo ancora. Creane uno!</p>
+          <p className="text-sm">{t.promoManager.noCodes}</p>
         </div>
       ) : (
         <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
@@ -343,14 +345,14 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
                 onClick={() => setShowModal(false)}
                 className="flex-1 py-2.5 rounded-lg border border-white/10 text-slate-400 hover:text-white text-sm font-medium transition-colors"
               >
-                Annulla
+                {t.common.cancel}
               </button>
               <button
                 onClick={handleCreate}
                 disabled={saving}
                 className="flex-1 py-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-sm font-bold transition-colors"
               >
-                {saving ? 'Salvataggio...' : 'Crea codice'}
+                {saving ? t.common.saving : t.promoManager.createCode}
               </button>
             </div>
           </div>

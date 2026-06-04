@@ -2,15 +2,17 @@ import { getProfile, getStaffPermissions, FULL_PERMISSIONS } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Pencil, ArrowLeft, Users, CircleCheck, Circle } from 'lucide-react';
+import { getT } from '@/lib/i18n-server';
 
 export default async function ClubEventDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const t = await getT();
   const { id } = await params;
   const profile = await getProfile();
-  if (!profile?.club_id) return <p className="text-slate-400">Club non configurato.</p>;
+  if (!profile?.club_id) return <p className="text-slate-400">{t.common.notConfigured}</p>;
 
   const permissions = profile.role === 'club_admin'
     ? FULL_PERMISSIONS
@@ -52,7 +54,7 @@ export default async function ClubEventDetailPage({
       .eq('club_id', profile.club_id),
   ]);
 
-  if (!event) return <p className="text-slate-400">Evento non trovato.</p>;
+  if (!event) return <p className="text-slate-400">{t.clubEvents.notFound}</p>;
 
   const totalTables = tables?.length ?? 0;
   const reservedTables = tables?.filter((t) => !t.is_available).length ?? 0;
@@ -120,7 +122,7 @@ export default async function ClubEventDetailPage({
             className="flex items-center justify-center gap-2 text-sm text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-lg transition-colors w-full md:w-auto"
           >
             <Pencil size={14} />
-            Modifica evento
+            {t.clubEvents.editTitle}
           </Link>
         )}
       </div>
@@ -128,38 +130,38 @@ export default async function ClubEventDetailPage({
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-[#111118] border border-white/8 rounded-xl p-4">
-          <p className="text-slate-400 text-xs mb-1">Biglietti venduti</p>
+          <p className="text-slate-400 text-xs mb-1">{t.clubEvents.ticketsSold}</p>
           <p className="text-2xl font-bold text-white">{event.tickets_sold ?? 0}</p>
-          <p className="text-slate-500 text-xs mt-1">su {totalTicketsCapacity > 0 ? totalTicketsCapacity : (event.capacity ?? '—')} posti</p>
+          <p className="text-slate-500 text-xs mt-1">{t.clubEvents.onTotal.replace('{total}', String(totalTicketsCapacity > 0 ? totalTicketsCapacity : (event.capacity ?? '—')))}</p>
         </div>
         <div className="bg-[#111118] border border-white/8 rounded-xl p-4">
-          <p className="text-slate-400 text-xs mb-1">Tavoli prenotati</p>
+          <p className="text-slate-400 text-xs mb-1">{t.clubEvents.tablesBooked}</p>
           <p className="text-2xl font-bold text-white">{reservedTables}/{totalTables}</p>
-          <p className="text-slate-500 text-xs mt-1">{totalTables - reservedTables} ancora disponibili</p>
+          <p className="text-slate-500 text-xs mt-1">{totalTables - reservedTables} {t.clubEvents.stillAvailable}</p>
         </div>
         <div className="bg-[#111118] border border-white/8 rounded-xl p-4">
-          <p className="text-slate-400 text-xs mb-1">Ricavi caparre tavoli</p>
+          <p className="text-slate-400 text-xs mb-1">{t.clubEvents.depositRevenue}</p>
           <p className="text-2xl font-bold text-purple-400">
             €{totalTableRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
-          <p className="text-slate-500 text-xs mt-1">da {reservedTables} prenotazioni</p>
+          <p className="text-slate-500 text-xs mt-1">{t.clubEvents.fromBookings.replace('{num}', String(reservedTables))}</p>
         </div>
       </div>
 
       {/* Biglietti per tipo */}
       {(ticketTypes ?? []).length > 0 && (
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-white mb-4">Biglietti per tipo</h2>
+          <h2 className="text-lg font-semibold text-white mb-4">{t.clubEvents.ticketsByType}</h2>
           <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/8">
-                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Tipo</th>
-                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Prezzo</th>
-                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Venduti</th>
-                  <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Disponibili</th>
-                  <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Ricavi</th>
-                  <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Avanzamento</th>
+                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{t.clubEvents.colType}</th>
+                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{t.clubEvents.colPrice}</th>
+                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{t.clubEvents.colSold}</th>
+                  <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.clubEvents.colAvailable}</th>
+                  <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.clubEvents.colRevenue}</th>
+                  <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.clubEvents.colProgress}</th>
                 </tr>
               </thead>
               <tbody>
@@ -196,7 +198,7 @@ export default async function ClubEventDetailPage({
               </tbody>
               <tfoot>
                 <tr className="border-t border-white/8 bg-white/3">
-                  <td className="px-3 md:px-5 py-3 text-slate-400 font-medium" colSpan={2}>Totale ricavi biglietti</td>
+                  <td className="px-3 md:px-5 py-3 text-slate-400 font-medium" colSpan={2}>{t.clubEvents.totalRevenue}</td>
                   <td className="px-3 md:px-5 py-3 text-purple-400 font-bold" colSpan={2}>
                     €{totalRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
@@ -211,7 +213,7 @@ export default async function ClubEventDetailPage({
       {/* Mappa piantina */}
       {showMap && (
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-white mb-4">Mappa tavoli</h2>
+          <h2 className="text-lg font-semibold text-white mb-4">{t.clubEvents.tableMap}</h2>
           <div className="bg-[#111118] border border-white/8 rounded-xl p-4">
             <div className="flex justify-center">
               <div className="relative select-none w-full" style={{ maxWidth: '560px' }}>
@@ -219,7 +221,7 @@ export default async function ClubEventDetailPage({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={floorPlanUrl}
-                    alt="Piantina"
+                    alt={t.clubEvents.floorPlan}
                     className="w-full object-contain block"
                     draggable={false}
                   />
@@ -265,11 +267,11 @@ export default async function ClubEventDetailPage({
                         <div className="bg-[#0d0e1a] border border-white/20 rounded-lg px-3 py-2 text-xs text-white shadow-xl whitespace-nowrap">
                           <p className="font-semibold">{table.label}</p>
                           <p className="text-slate-400 mt-0.5">
-                            {table.capacity} posti · €{Number(table.deposit).toFixed(0)} caparra
+                            {table.capacity} {t.clubEvents.seatsDeposit.replace('{deposit}', Number(table.deposit).toFixed(0))}
                           </p>
                           {isReserved && (
                             <p className="text-red-400 mt-0.5">
-                              {table.reserved_by ? `"${table.reserved_by}"` : 'Prenotato'}
+                              {table.reserved_by ? `"${table.reserved_by}"` : t.clubEvents.tableBooked}
                             </p>
                           )}
                         </div>
@@ -283,13 +285,13 @@ export default async function ClubEventDetailPage({
             <div className="flex items-center gap-6 mt-3">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-green-500/20 border-2 border-green-400" />
-                <span className="text-xs text-slate-400">Disponibile</span>
+                <span className="text-xs text-slate-400">{t.clubEvents.tableAvailable}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-red-500/20 border-2 border-red-400" />
-                <span className="text-xs text-slate-400">Prenotato</span>
+                <span className="text-xs text-slate-400">{t.clubEvents.tableBooked}</span>
               </div>
-              <span className="text-xs text-slate-600 ml-auto">Passa il mouse su un tavolo per i dettagli</span>
+              <span className="text-xs text-slate-600 ml-auto">{t.clubEvents.tableHint}</span>
             </div>
           </div>
         </div>
@@ -298,16 +300,16 @@ export default async function ClubEventDetailPage({
       {/* Prenotazioni tavoli */}
       {totalTables > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-white mb-4">Prenotazioni tavoli</h2>
+          <h2 className="text-lg font-semibold text-white mb-4">{t.clubEvents.tableBookings}</h2>
           <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/8">
-                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Tavolo</th>
-                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Posti</th>
-                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Caparra</th>
-                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Nome tavolo</th>
-                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Stato</th>
+                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{t.clubEvents.colTable}</th>
+                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.clubEvents.colSeats}</th>
+                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.clubEvents.colDeposit}</th>
+                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{t.clubEvents.colTableName}</th>
+                  <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{t.clubEvents.colStatus}</th>
                 </tr>
               </thead>
               <tbody>
@@ -327,12 +329,12 @@ export default async function ClubEventDetailPage({
                       {table.is_available ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border bg-green-500/10 text-green-400 border-green-500/20">
                           <Circle size={8} fill="currentColor" />
-                          Disponibile
+                          {t.clubEvents.tableAvailable}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border bg-red-500/10 text-red-400 border-red-500/20">
                           <CircleCheck size={10} />
-                          Prenotato
+                          {t.clubEvents.tableBooked}
                         </span>
                       )}
                     </td>

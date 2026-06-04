@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import { getT } from '@/lib/i18n-server';
 import UsersTable from '@/components/admin/UsersTable';
 
 const PER_PAGE = 25;
@@ -9,6 +10,7 @@ export default async function AdminUsersPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const t = await getT();
   const sp = await searchParams;
   const page = Math.max(1, parseInt((sp.page as string) ?? '1', 10));
   const q = ((sp.q as string) ?? '').trim();
@@ -53,13 +55,13 @@ export default async function AdminUsersPage({
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Utenti</h1>
-        <p className="text-slate-400 mt-1">{totalCount} utenti registrati sulla piattaforma.</p>
+        <h1 className="text-2xl font-bold text-white">{t.adminUsers.title}</h1>
+        <p className="text-slate-400 mt-1">{totalCount} {t.adminUsers.subtitle}</p>
       </div>
 
       {error ? (
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 text-red-400 text-sm">
-          <p className="font-semibold mb-1">Funzioni SQL mancanti</p>
+          <p className="font-semibold mb-1">{t.adminUsers.missingFunctions}</p>
           <p>Esegui <code className="bg-white/10 px-1 rounded">migration_admin_users_pagination.sql</code> su Supabase SQL Editor.</p>
           <p className="mt-2 text-red-500/70 text-xs">{(error as any)?.message}</p>
         </div>

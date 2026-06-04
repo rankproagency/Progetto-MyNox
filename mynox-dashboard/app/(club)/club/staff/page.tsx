@@ -4,11 +4,13 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import StaffManager from '@/components/club/StaffManager';
 import type { ClubStaff } from '@/types';
+import { getT } from '@/lib/i18n-server';
 
 export default async function StaffPage() {
+  const t = await getT();
   const profile = await getProfile();
   if (!profile || profile.role !== 'club_admin') redirect('/club/dashboard');
-  if (!profile.club_id) return <p className="text-slate-400">Club non configurato.</p>;
+  if (!profile.club_id) return <p className="text-slate-400">{t.common.notConfigured}</p>;
 
   const supabase = await createClient();
 
@@ -40,8 +42,8 @@ export default async function StaffPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Gestione Staff</h1>
-        <p className="text-slate-400 mt-1">Invita membri e gestisci i loro permessi.</p>
+        <h1 className="text-2xl font-bold text-white">{t.clubStaff.title}</h1>
+        <p className="text-slate-400 mt-1">{t.clubStaff.subtitle}</p>
       </div>
       <StaffManager initialStaff={staff} />
     </div>

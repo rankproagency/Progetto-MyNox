@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Camera, Globe, Mail, Phone, MapPin, Building2, Loader2, CheckCircle, AlertCircle, Lock } from 'lucide-react';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 interface Club {
   id: string;
@@ -34,6 +35,7 @@ async function geocodeAddress(address: string, city: string): Promise<{ lat: num
 }
 
 export default function ClubSettingsForm({ club }: { club: Club }) {
+  const { t } = useLanguage();
   const [form, setForm] = useState({
     name: club.name,
     city: club.city,
@@ -56,11 +58,11 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setError('Carica un file immagine (JPG, PNG, WebP).');
+      setError(t.settingsForm.imageTypeError);
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setError("L'immagine non può superare 5MB.");
+      setError(t.settingsForm.imageSizeError);
       return;
     }
 
@@ -75,7 +77,7 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
       .upload(path, file, { upsert: true });
 
     if (uploadError) {
-      setError('Errore nel caricamento immagine: ' + uploadError.message);
+      setError(t.settingsForm.imageUploadError + ' ' + uploadError.message);
       setUploadingImage(false);
       return;
     }
@@ -308,7 +310,7 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
           className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-60 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors"
         >
           {loading && <Loader2 size={14} className="animate-spin" />}
-          {loading ? 'Salvataggio...' : 'Salva modifiche'}
+          {loading ? t.common.saving : t.common.save}
         </button>
         <p className="text-xs text-slate-500">Le modifiche sono visibili nell&apos;app MyNox in tempo reale.</p>
       </div>

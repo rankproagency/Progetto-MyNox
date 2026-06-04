@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
+import { getT } from '@/lib/i18n-server';
 import ClubRowActions from '@/components/admin/ClubRowActions';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 
 export default async function AdminClubsPage() {
+  const t = await getT();
   const supabase = await createClient();
 
   const [{ data: clubs }, { data: ticketRevenue }, { data: eventCounts }, { data: staffCounts }] = await Promise.all([
@@ -46,23 +48,23 @@ export default async function AdminClubsPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Discoteche</h1>
-          <p className="text-slate-400 mt-1">Gestisci le discoteche registrate sulla piattaforma.</p>
+          <h1 className="text-2xl font-bold text-white">{t.adminClubs.title}</h1>
+          <p className="text-slate-400 mt-1">{t.adminClubs.subtitle}</p>
         </div>
         <Link
           href="/admin/clubs/new"
           className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
         >
           <Plus size={16} />
-          Nuova discoteca
+          {t.adminClubs.newClub}
         </Link>
       </div>
 
       {/* KPI */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-        <KpiCard label="Discoteche totali" value={String(clubs?.length ?? 0)} />
-        <KpiCard label="Attive" value={String(activeClubs)} accent />
-        <KpiCard label="Ricavi totali" value={`€${totalRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
+        <KpiCard label={t.adminClubs.totalClubs} value={String(clubs?.length ?? 0)} />
+        <KpiCard label={t.adminClubs.active} value={String(activeClubs)} accent />
+        <KpiCard label={t.adminClubs.totalRevenue} value={`€${totalRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
       </div>
 
       {/* Tabella */}
@@ -70,14 +72,14 @@ export default async function AdminClubsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/8">
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Nome</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Città</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Eventi</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Staff</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Ricavi</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Registrata</th>
-              <th className="text-right px-5 py-3 text-slate-400 font-medium">Azioni</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.adminClubs.colName}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.adminClubs.colCity}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.adminClubs.colStatus}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.adminClubs.colEvents}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.adminClubs.colStaff}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.adminClubs.colRevenue}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.adminClubs.colRegistered}</th>
+              <th className="text-right px-5 py-3 text-slate-400 font-medium">{t.adminClubs.colActions}</th>
             </tr>
           </thead>
           <tbody>
@@ -89,11 +91,11 @@ export default async function AdminClubsPage() {
 
                 let statusBadge;
                 if (isActive) {
-                  statusBadge = <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-green-500/10 text-green-400 border-green-500/20">Attiva</span>;
+                  statusBadge = <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-green-500/10 text-green-400 border-green-500/20">{t.adminClubs.statusActive}</span>;
                 } else if (isPending) {
-                  statusBadge = <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-amber-500/10 text-amber-400 border-amber-500/20">In configurazione</span>;
+                  statusBadge = <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-amber-500/10 text-amber-400 border-amber-500/20">{t.adminClubs.statusConfiguring}</span>;
                 } else {
-                  statusBadge = <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-slate-500/10 text-slate-400 border-slate-500/20">Sospesa</span>;
+                  statusBadge = <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-slate-500/10 text-slate-400 border-slate-500/20">{t.adminClubs.statusSuspended}</span>;
                 }
 
                 return (
@@ -133,7 +135,7 @@ export default async function AdminClubsPage() {
             ) : (
               <tr>
                 <td colSpan={8} className="px-5 py-12 text-center text-slate-500">
-                  Nessuna discoteca registrata.
+                  {t.adminClubs.noClubs}
                 </td>
               </tr>
             )}

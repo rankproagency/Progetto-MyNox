@@ -9,11 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 import { CheckCircle, ArrowLeft } from 'lucide-react';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isUnauthorized = searchParams.get('error') === 'unauthorized';
+  const { t } = useLanguage();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,7 +47,7 @@ function LoginForm() {
     const supabase = createClient();
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
     if (authError) {
-      setError('Email o password non corretti.');
+      setError(t.auth.wrongCredentials);
       setLoading(false);
       return;
     }
@@ -59,7 +61,7 @@ function LoginForm() {
 
     if (!profile || !['admin', 'club_admin', 'club_staff'].includes(profile.role)) {
       await supabase.auth.signOut();
-      setError('Account non autorizzato. Contatta l\'amministratore di MyNox.');
+      setError(t.auth.notAuthorized);
       setLoading(false);
       return;
     }
@@ -76,7 +78,7 @@ function LoginForm() {
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     if (authError) {
-      setError('Accesso con Google fallito.');
+      setError(t.auth.googleFailed);
       setGoogleLoading(false);
     }
   }
@@ -99,7 +101,7 @@ function LoginForm() {
     setResetLoading(false);
 
     if (!res.ok) {
-      setResetError(json.error ?? 'Errore durante l\'invio.');
+      setResetError(json.error ?? t.auth.sendError);
       return;
     }
     setResetSent(true);
@@ -110,22 +112,21 @@ function LoginForm() {
       <CardHeader className="text-center pb-6">
         <div className="flex flex-col items-center gap-2 mb-4">
           <Image src="/logo.png" alt="MyNox" width={120} height={44} className="object-contain" />
-          <p className="text-xs text-purple-400 tracking-widest uppercase">Il futuro della nightlife</p>
+          <p className="text-xs text-purple-400 tracking-widest uppercase">{t.auth.tagline}</p>
         </div>
         <CardTitle className="text-lg font-semibold text-white">
-          {showReset ? 'Recupera password' : 'Dashboard'}
+          {showReset ? t.auth.recoverTitle : t.auth.dashboard}
         </CardTitle>
         <CardDescription className="text-slate-400">
-          {showReset ? 'Inserisci la tua email per ricevere il link di reset.' : 'Accedi con il tuo account'}
+          {showReset ? t.auth.recoverDesc : t.auth.signInDesc}
         </CardDescription>
       </CardHeader>
 
       {isUnauthorized && !showReset && (
         <div className="mx-6 mb-0 -mt-2 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3">
-          <p className="text-sm font-medium text-red-400">Accesso non autorizzato</p>
+          <p className="text-sm font-medium text-red-400">{t.auth.unauthorized}</p>
           <p className="text-xs text-red-400/70 mt-0.5">
-            Il tuo account non ha i permessi per accedere a questa dashboard.
-            Contatta l&apos;amministratore di MyNox.
+            {t.auth.unauthorizedDesc}
           </p>
         </div>
       )}
@@ -137,15 +138,15 @@ function LoginForm() {
             {resetSent ? (
               <div className="flex flex-col items-center gap-3 py-4 text-center">
                 <CheckCircle size={32} className="text-green-400" />
-                <p className="text-white text-sm font-medium">Email inviata</p>
+                <p className="text-white text-sm font-medium">{t.auth.emailSent}</p>
                 <p className="text-xs text-slate-400">
-                  Controlla la casella <span className="text-white">{resetEmail}</span> e clicca il link per impostare una nuova password.
+                  {t.auth.checkEmail.replace('{email}', resetEmail)}
                 </p>
               </div>
             ) : (
               <form onSubmit={handleResetPassword} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="reset-email" className="text-slate-300 text-sm">Email</Label>
+                  <Label htmlFor="reset-email" className="text-slate-300 text-sm">{t.auth.email}</Label>
                   <Input
                     id="reset-email"
                     type="email"
@@ -162,7 +163,7 @@ function LoginForm() {
                   disabled={resetLoading}
                   className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
                 >
-                  {resetLoading ? 'Invio...' : 'Invia link di reset'}
+                  {resetLoading ? t.auth.sending : t.auth.sendReset}
                 </Button>
               </form>
             )}
@@ -171,7 +172,7 @@ function LoginForm() {
               onClick={() => { setShowReset(false); setResetSent(false); setResetEmail(''); setResetError(''); }}
               className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors mx-auto"
             >
-              <ArrowLeft size={12} /> Torna al login
+              <ArrowLeft size={12} /> {t.auth.backToLogin}
             </button>
           </div>
         ) : (
@@ -179,7 +180,7 @@ function LoginForm() {
           <>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-300 text-sm">Email</Label>
+                <Label htmlFor="email" className="text-slate-300 text-sm">{t.auth.email}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -192,13 +193,13 @@ function LoginForm() {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-slate-300 text-sm">Password</Label>
+                  <Label htmlFor="password" className="text-slate-300 text-sm">{t.auth.password}</Label>
                   <button
                     type="button"
                     onClick={() => setShowReset(true)}
                     className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
                   >
-                    Password dimenticata?
+                    {t.auth.forgotPassword}
                   </button>
                 </div>
                 <Input
@@ -217,13 +218,13 @@ function LoginForm() {
                 disabled={loading}
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
               >
-                {loading ? 'Accesso...' : 'Accedi'}
+                {loading ? t.auth.signingIn : t.auth.signIn}
               </Button>
             </form>
 
             <div className="flex items-center gap-3 my-4">
               <div className="flex-1 h-px bg-white/8" />
-              <span className="text-xs text-slate-500">oppure</span>
+              <span className="text-xs text-slate-500">{t.auth.or}</span>
               <div className="flex-1 h-px bg-white/8" />
             </div>
 
@@ -240,7 +241,7 @@ function LoginForm() {
                 <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
                 <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
               </svg>
-              {googleLoading ? 'Reindirizzamento...' : 'Continua con Google'}
+              {googleLoading ? t.auth.signingIn : t.auth.continueGoogle}
             </Button>
           </>
         )}

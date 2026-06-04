@@ -2,12 +2,14 @@ import { notFound, redirect } from 'next/navigation';
 import { getProfile, getStaffPermissions } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import EventForm from '@/components/club/EventForm';
+import { getT } from '@/lib/i18n-server';
 
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
+  const t = await getT();
   const { id } = await params;
   const profile = await getProfile();
   if (!profile?.club_id) {
-    return <p className="text-slate-400">Club non configurato. Contatta l&apos;amministratore.</p>;
+    return <p className="text-slate-400">{t.common.notConfigured}</p>;
   }
 
   if (profile.role === 'club_staff') {
@@ -65,13 +67,13 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
     <div>
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-1">
-          <h1 className="text-2xl font-bold text-white">Modifica evento</h1>
+          <h1 className="text-2xl font-bold text-white">{t.clubEvents.editTitle}</h1>
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
             event.is_published
               ? 'bg-green-500/10 text-green-400 border-green-500/20'
               : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
           }`}>
-            {event.is_published ? 'Pubblicato' : 'Bozza'}
+            {event.is_published ? t.common.published : t.common.draft}
           </span>
         </div>
         <p className="text-slate-400">{event.name}</p>

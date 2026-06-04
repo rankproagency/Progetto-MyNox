@@ -4,6 +4,7 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 interface Props {
   revenueByMonth: { mese: string; ricavi: number; commissioni: number }[];
@@ -22,14 +23,15 @@ const tooltipStyle = {
 const COLORS = ['#a855f7', '#818cf8', '#38bdf8', '#34d399', '#fb923c', '#f472b6'];
 
 export default function AdminAnalyticsCharts({ revenueByMonth, ticketsByClub, topEvents }: Props) {
+  const { t } = useLanguage();
   return (
     <div className="space-y-6">
       {/* Ricavi e commissioni mensili */}
       <div className="bg-[#111118] border border-white/8 rounded-xl p-6">
-        <h2 className="text-sm font-semibold text-white mb-1">Ricavi piattaforma — ultimi 6 mesi</h2>
-        <p className="text-xs text-slate-500 mb-6">Ricavi lordi e commissioni MyNox (8%)</p>
+        <h2 className="text-sm font-semibold text-white mb-1">{t.adminCharts.revenueTitle}</h2>
+        <p className="text-xs text-slate-500 mb-6">{t.adminCharts.revenueSubtitle}</p>
         {revenueByMonth.every((d) => d.ricavi === 0) ? (
-          <EmptyChart />
+          <EmptyChart noDataText={t.adminCharts.noDataYet} />
         ) : (
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={revenueByMonth} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -45,7 +47,7 @@ export default function AdminAnalyticsCharts({ revenueByMonth, ticketsByClub, to
                 contentStyle={tooltipStyle}
                 formatter={(value, name) => [
                   `€${Number(value).toFixed(2)}`,
-                  name === 'ricavi' ? 'Ricavi lordi' : 'Commissioni MyNox',
+                  name === 'ricavi' ? t.adminCharts.grossRevenue : t.adminCharts.commissions,
                 ]}
               />
               <Line
@@ -71,9 +73,9 @@ export default function AdminAnalyticsCharts({ revenueByMonth, ticketsByClub, to
 
       {/* Biglietti per discoteca */}
       <div className="bg-[#111118] border border-white/8 rounded-xl p-6">
-        <h2 className="text-sm font-semibold text-white mb-6">Biglietti venduti per discoteca</h2>
+        <h2 className="text-sm font-semibold text-white mb-6">{t.adminCharts.ticketsByClub}</h2>
         {ticketsByClub.length === 0 ? (
-          <EmptyChart />
+          <EmptyChart noDataText={t.adminCharts.noDataYet} />
         ) : (
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={ticketsByClub} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -84,7 +86,7 @@ export default function AdminAnalyticsCharts({ revenueByMonth, ticketsByClub, to
                 contentStyle={tooltipStyle}
                 formatter={(value, name) => [
                   name === 'biglietti' ? value : `€${Number(value).toFixed(2)}`,
-                  name === 'biglietti' ? 'Biglietti' : 'Ricavi',
+                  name === 'biglietti' ? t.adminCharts.tickets : t.adminCharts.revenue,
                 ]}
               />
               <Bar dataKey="biglietti" radius={[4, 4, 0, 0]}>
@@ -100,23 +102,23 @@ export default function AdminAnalyticsCharts({ revenueByMonth, ticketsByClub, to
       {/* Top 5 eventi */}
       <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-white/8">
-          <h2 className="text-sm font-semibold text-white">Top eventi per ricavi</h2>
+          <h2 className="text-sm font-semibold text-white">{t.adminCharts.topEvents}</h2>
         </div>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/8">
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">#</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Evento</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Discoteca</th>
-              <th className="text-right px-5 py-3 text-slate-400 font-medium">Biglietti</th>
-              <th className="text-right px-5 py-3 text-slate-400 font-medium">Ricavi</th>
-              <th className="text-right px-5 py-3 text-slate-400 font-medium">Commissione</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.adminCharts.colRank}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.adminCharts.colEvent}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.adminCharts.colClub}</th>
+              <th className="text-right px-5 py-3 text-slate-400 font-medium">{t.adminCharts.tickets}</th>
+              <th className="text-right px-5 py-3 text-slate-400 font-medium">{t.adminCharts.revenue}</th>
+              <th className="text-right px-5 py-3 text-slate-400 font-medium">{t.adminCharts.colCommission}</th>
             </tr>
           </thead>
           <tbody>
             {topEvents.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-5 py-10 text-center text-slate-500">Nessun dato disponibile.</td>
+                <td colSpan={6} className="px-5 py-10 text-center text-slate-500">{t.adminCharts.noData}</td>
               </tr>
             ) : topEvents.map((ev, i) => (
               <tr key={i} className="border-b border-white/5 hover:bg-white/3 transition-colors">
@@ -139,10 +141,10 @@ export default function AdminAnalyticsCharts({ revenueByMonth, ticketsByClub, to
   );
 }
 
-function EmptyChart() {
+function EmptyChart({ noDataText }: { noDataText: string }) {
   return (
     <div className="h-[240px] flex items-center justify-center text-slate-500 text-sm">
-      Nessun dato disponibile ancora.
+      {noDataText}
     </div>
   );
 }

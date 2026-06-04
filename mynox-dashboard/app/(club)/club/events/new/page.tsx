@@ -2,11 +2,13 @@ import { redirect } from 'next/navigation';
 import { getProfile, getStaffPermissions } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import EventForm from '@/components/club/EventForm';
+import { getT } from '@/lib/i18n-server';
 
 export default async function NewEventPage() {
+  const t = await getT();
   const profile = await getProfile();
   if (!profile?.club_id) {
-    return <p className="text-slate-400">Club non configurato. Contatta l&apos;amministratore.</p>;
+    return <p className="text-slate-400">{t.common.notConfigured}</p>;
   }
 
   if (profile.role === 'club_staff') {
@@ -23,8 +25,8 @@ export default async function NewEventPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Nuovo evento</h1>
-        <p className="text-slate-400 mt-1">Compila i dettagli per creare un nuovo evento.</p>
+        <h1 className="text-2xl font-bold text-white">{t.clubEvents.newTitle}</h1>
+        <p className="text-slate-400 mt-1">{t.clubEvents.newSubtitle}</p>
       </div>
       <EventForm
         clubId={profile.club_id}

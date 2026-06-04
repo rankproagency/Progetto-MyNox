@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getT } from '@/lib/i18n-server';
 import Link from 'next/link';
 import { Building2, Users, CalendarDays, ChevronRight, Ticket, Clock } from 'lucide-react';
 
@@ -66,45 +67,46 @@ async function getDashboardData() {
 }
 
 export default async function AdminDashboardPage() {
+  const t = await getT();
   const data = await getDashboardData();
 
   const now = new Date();
   const greeting =
-    now.getHours() < 12 ? 'Buongiorno' :
-    now.getHours() < 18 ? 'Buon pomeriggio' : 'Buonasera';
+    now.getHours() < 12 ? t.greeting.morning :
+    now.getHours() < 18 ? t.greeting.afternoon : t.greeting.evening;
 
   return (
     <div>
       <div className="mb-8">
         <p className="text-slate-400 text-sm mb-1">{greeting}</p>
-        <h1 className="text-2xl font-bold text-white">Panoramica MyNox</h1>
+        <h1 className="text-2xl font-bold text-white">{t.adminDashboard.title}</h1>
       </div>
 
       {/* KPI rapidi */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
         <Link href="/admin/users" className="bg-[#111118] border border-white/8 hover:border-purple-500/30 rounded-xl px-5 py-4 transition-colors group">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-slate-400 uppercase tracking-wider">Utenti registrati</p>
+            <p className="text-xs text-slate-400 uppercase tracking-wider">{t.adminDashboard.registeredUsers}</p>
             <Users size={14} className="text-slate-600 group-hover:text-purple-400 transition-colors" />
           </div>
           <p className="text-2xl font-bold text-white">{data.totalUsers.toLocaleString('it-IT')}</p>
-          <p className="text-xs text-slate-500 mt-1">{data.recentUsers.length} nuovi questa settimana</p>
+          <p className="text-xs text-slate-500 mt-1">{data.recentUsers.length} {t.adminDashboard.newThisWeek}</p>
         </Link>
         <Link href="/admin/clubs" className="bg-[#111118] border border-white/8 hover:border-purple-500/30 rounded-xl px-5 py-4 transition-colors group">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-slate-400 uppercase tracking-wider">Discoteche</p>
+            <p className="text-xs text-slate-400 uppercase tracking-wider">{t.adminDashboard.venues}</p>
             <Building2 size={14} className="text-slate-600 group-hover:text-purple-400 transition-colors" />
           </div>
           <p className="text-2xl font-bold text-white">{data.totalClubs.toLocaleString('it-IT')}</p>
-          <p className="text-xs text-slate-500 mt-1">Sulla piattaforma</p>
+          <p className="text-xs text-slate-500 mt-1">{t.adminDashboard.onPlatform}</p>
         </Link>
         <Link href="/admin/analytics" className="bg-[#111118] border border-white/8 hover:border-purple-500/30 rounded-xl px-5 py-4 transition-colors group">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-slate-400 uppercase tracking-wider">Biglietti venduti</p>
+            <p className="text-xs text-slate-400 uppercase tracking-wider">{t.adminDashboard.ticketsSold}</p>
             <Ticket size={14} className="text-slate-600 group-hover:text-purple-400 transition-colors" />
           </div>
           <p className="text-2xl font-bold text-white">{data.totalTickets.toLocaleString('it-IT')}</p>
-          <p className="text-xs text-slate-500 mt-1">Vedi analytics →</p>
+          <p className="text-xs text-slate-500 mt-1">{t.adminDashboard.viewAnalytics}</p>
         </Link>
       </div>
 
@@ -112,13 +114,13 @@ export default async function AdminDashboardPage() {
         {/* Nuovi utenti questa settimana */}
         <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">Nuovi utenti — 7 giorni</h2>
+            <h2 className="text-sm font-semibold text-white">{t.adminDashboard.newUsers7days}</h2>
             <Link href="/admin/users" className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors">
-              Tutti <ChevronRight size={12} />
+              {t.adminDashboard.all} <ChevronRight size={12} />
             </Link>
           </div>
           {data.recentUsers.length === 0 ? (
-            <div className="px-5 py-10 text-center text-slate-500 text-sm">Nessun nuovo utente.</div>
+            <div className="px-5 py-10 text-center text-slate-500 text-sm">{t.adminDashboard.noNewUsers}</div>
           ) : (
             <div className="divide-y divide-white/5">
               {data.recentUsers.map((u: any) => (
@@ -146,13 +148,13 @@ export default async function AdminDashboardPage() {
         {/* Ultimi biglietti venduti */}
         <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">Ultimi biglietti venduti</h2>
+            <h2 className="text-sm font-semibold text-white">{t.adminDashboard.lastTickets}</h2>
             <Link href="/admin/analytics" className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors">
-              Analytics <ChevronRight size={12} />
+              {t.nav.analytics} <ChevronRight size={12} />
             </Link>
           </div>
           {data.recentTickets.length === 0 ? (
-            <div className="px-5 py-10 text-center text-slate-500 text-sm">Nessun biglietto ancora.</div>
+            <div className="px-5 py-10 text-center text-slate-500 text-sm">{t.adminDashboard.noTickets}</div>
           ) : (
             <div className="divide-y divide-white/5">
               {data.recentTickets.map((t: any) => {
@@ -194,22 +196,22 @@ export default async function AdminDashboardPage() {
       {/* Prossimi eventi in piattaforma */}
       <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-white">Prossimi eventi in piattaforma</h2>
+          <h2 className="text-sm font-semibold text-white">{t.adminDashboard.upcomingEvents}</h2>
           <Link href="/admin/events" className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors">
-            Vedi tutti <ChevronRight size={12} />
+            {t.adminDashboard.viewAll} <ChevronRight size={12} />
           </Link>
         </div>
         {data.upcomingEvents.length === 0 ? (
-          <div className="px-5 py-10 text-center text-slate-500 text-sm">Nessun evento in programma.</div>
+          <div className="px-5 py-10 text-center text-slate-500 text-sm">{t.adminDashboard.noEvents}</div>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/8">
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Evento</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Discoteca</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Data</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Orario</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Biglietti</th>
+                <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.adminDashboard.colEvent}</th>
+                <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.adminDashboard.colVenue}</th>
+                <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.adminDashboard.colDate}</th>
+                <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.adminDashboard.colTime}</th>
+                <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.adminDashboard.colTickets}</th>
               </tr>
             </thead>
             <tbody>

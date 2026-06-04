@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getT } from '@/lib/i18n-server';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import AdminAnalyticsCharts from '@/components/admin/AdminAnalyticsCharts';
 
@@ -100,36 +101,37 @@ async function getAnalyticsData() {
 }
 
 export default async function AdminAnalyticsPage() {
+  const t = await getT();
   const data = await getAnalyticsData();
 
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Analytics</h1>
-        <p className="text-slate-400 mt-1">Performance storica della piattaforma MyNox.</p>
+        <h1 className="text-2xl font-bold text-white">{t.adminAnalytics.title}</h1>
+        <p className="text-slate-400 mt-1">{t.adminAnalytics.subtitle}</p>
       </div>
 
       {/* KPI con trend */}
       <div className="grid grid-cols-2 gap-4 mb-8">
         <div className="bg-[#111118] border border-white/8 rounded-xl p-5">
-          <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Ricavi piattaforma</p>
+          <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">{t.adminAnalytics.platformRevenue}</p>
           <p className="text-3xl font-bold text-white mb-2">
             €{data.totalRevenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
           <div className="flex items-center gap-2 flex-wrap">
             <TrendBadge pct={data.revPct} />
-            <p className="text-xs text-slate-500">€{data.currRev.toFixed(2)} questo mese vs €{data.prevRev.toFixed(2)} il mese scorso</p>
+            <p className="text-xs text-slate-500">€{data.currRev.toFixed(2)} / €{data.prevRev.toFixed(2)} — {t.adminAnalytics.vsLastMonth}</p>
           </div>
         </div>
 
         <div className="bg-[#111118] border border-white/8 rounded-xl p-5 border-l-2 border-l-green-500/40">
-          <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Commissioni MyNox (8%)</p>
+          <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">{t.adminAnalytics.commissions}</p>
           <p className="text-3xl font-bold text-green-400 mb-2">
             €{data.totalCommission.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
           <div className="flex items-center gap-2 flex-wrap">
             <TrendBadge pct={data.revPct} />
-            <p className="text-xs text-slate-500">€{(data.currRev * 0.08).toFixed(2)} questo mese</p>
+            <p className="text-xs text-slate-500">€{(data.currRev * 0.08).toFixed(2)} {t.adminAnalytics.thisMonth}</p>
           </div>
         </div>
       </div>

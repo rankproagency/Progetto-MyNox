@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import UserRoleEditor from './UserRoleEditor';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 interface Club { id: string; name: string }
 
@@ -36,6 +37,7 @@ export default function UsersTable({
   currentPage, currentQ, currentRole, currentStatus,
 }: Props) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [localQuery, setLocalQuery] = useState(currentQ);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -86,7 +88,7 @@ export default function UsersTable({
           <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
           <input
             type="text"
-            placeholder="Cerca per nome o email…"
+            placeholder={t.usersTable.search}
             value={localQuery}
             onChange={(e) => handleQueryChange(e.target.value)}
             className="w-full bg-[#111118] border border-white/8 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/50 transition-colors"
@@ -97,20 +99,20 @@ export default function UsersTable({
           onChange={(e) => navigate({ role: e.target.value })}
           className="bg-[#111118] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50 transition-colors appearance-none cursor-pointer min-w-36"
         >
-          <option value="">Tutti i ruoli</option>
-          <option value="customer">Cliente</option>
-          <option value="club_admin">Discoteca</option>
-          <option value="club_staff">Staff</option>
-          <option value="admin">Admin</option>
+          <option value="">{t.usersTable.allRoles}</option>
+          <option value="customer">{t.usersTable.customer}</option>
+          <option value="club_admin">{t.usersTable.club}</option>
+          <option value="club_staff">{t.usersTable.staff}</option>
+          <option value="admin">{t.usersTable.admin}</option>
         </select>
         <select
           value={currentStatus}
           onChange={(e) => navigate({ status: e.target.value })}
           className="bg-[#111118] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50 transition-colors appearance-none cursor-pointer min-w-36"
         >
-          <option value="">Tutti gli stati</option>
-          <option value="confirmed">Confermati</option>
-          <option value="pending">In attesa</option>
+          <option value="">{t.usersTable.allStatuses}</option>
+          <option value="confirmed">{t.usersTable.confirmed}</option>
+          <option value="pending">{t.usersTable.pending}</option>
         </select>
       </div>
 
@@ -119,12 +121,12 @@ export default function UsersTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/8">
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Nome</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Email</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Ruolo</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Registrato il</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Ultimo accesso</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.usersTable.colName}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.usersTable.colEmail}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.usersTable.colRole}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.usersTable.colRegistered}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.usersTable.colLastAccess}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.usersTable.colStatus}</th>
             </tr>
           </thead>
           <tbody>
@@ -132,8 +134,8 @@ export default function UsersTable({
               <tr>
                 <td colSpan={6} className="px-5 py-12 text-center text-slate-500">
                   {currentQ || currentRole || currentStatus
-                    ? 'Nessun utente corrisponde ai filtri.'
-                    : 'Nessun utente trovato.'}
+                    ? t.usersTable.noUsersFilter
+                    : t.usersTable.noUsers}
                 </td>
               </tr>
             ) : (
@@ -164,11 +166,11 @@ export default function UsersTable({
                   <td className="px-5 py-4">
                     {user.confirmed ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-green-500/10 text-green-400 border-green-500/20">
-                        Confermato
+                        {t.usersTable.confirmed}
                       </span>
                     ) : (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-amber-500/10 text-amber-400 border-amber-500/20">
-                        In attesa
+                        {t.usersTable.pending}
                       </span>
                     )}
                   </td>
@@ -182,7 +184,7 @@ export default function UsersTable({
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-5 py-3 border-t border-white/8">
             <p className="text-xs text-slate-500">
-              {offset + 1}–{Math.min(offset + perPage, total)} di {total} utenti
+              {offset + 1}–{Math.min(offset + perPage, total)} / {total}
             </p>
             <div className="flex items-center gap-1">
               <button

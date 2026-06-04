@@ -2,12 +2,14 @@ import { redirect } from 'next/navigation';
 import { getProfile, getStaffPermissions } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import TicketScanner from '@/components/club/TicketScanner';
+import { getT } from '@/lib/i18n-server';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ScanPage() {
+  const t = await getT();
   const profile = await getProfile();
-  if (!profile?.club_id) return <p className="text-slate-400">Club non configurato.</p>;
+  if (!profile?.club_id) return <p className="text-slate-400">{t.common.notConfigured}</p>;
 
   const isOwner = profile.role === 'club_admin';
   let canScan = isOwner;
@@ -30,10 +32,8 @@ export default async function ScanPage() {
   if (!events || events.length === 0) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-center">
-        <p className="text-slate-300 font-semibold mb-1">Nessuna serata in programma oggi</p>
-        <p className="text-slate-500 text-sm">
-          Pubblica un evento con la data di oggi per abilitare lo scanner.
-        </p>
+        <p className="text-slate-300 font-semibold mb-1">{t.clubScan.noEventToday}</p>
+        <p className="text-slate-500 text-sm">{t.clubScan.noEventDesc}</p>
       </div>
     );
   }
