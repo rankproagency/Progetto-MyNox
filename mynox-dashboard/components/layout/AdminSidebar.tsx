@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useState } from 'react';
+import { useLanguage } from '@/components/providers/I18nProvider';
 import {
   Home,
   Building2,
@@ -14,19 +15,27 @@ import {
   LogOut,
   Menu,
   X,
+  Globe,
 } from 'lucide-react';
+import type { LangCode } from '@/lib/i18n';
 
-const NAV_ITEMS = [
-  { href: '/admin/dashboard', label: 'Home', icon: Home },
-  { href: '/admin/analytics', label: 'Analytics', icon: BarChart2 },
-  { href: '/admin/clubs', label: 'Discoteche', icon: Building2 },
-  { href: '/admin/events', label: 'Eventi', icon: CalendarDays },
-  { href: '/admin/users', label: 'Utenti', icon: Users },
+const LANGS: { code: LangCode; label: string }[] = [
+  { code: 'it', label: 'IT' },
+  { code: 'en', label: 'EN' },
 ];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { lang, t, setLang } = useLanguage();
+
+  const NAV_ITEMS = [
+    { href: '/admin/dashboard', label: t.nav.home, icon: Home },
+    { href: '/admin/analytics', label: t.nav.analytics, icon: BarChart2 },
+    { href: '/admin/clubs', label: t.nav.clubs, icon: Building2 },
+    { href: '/admin/events', label: t.nav.allEvents, icon: CalendarDays },
+    { href: '/admin/users', label: t.nav.users, icon: Users },
+  ];
 
   async function handleLogout() {
     const supabase = createClient();
@@ -89,14 +98,36 @@ export default function AdminSidebar() {
           })}
         </nav>
 
-        {/* Logout */}
-        <div className="px-3 py-4 border-t border-white/8">
+        {/* Bottom */}
+        <div className="px-3 py-4 border-t border-white/8 space-y-1">
+          {/* Language switcher */}
+          <div className="flex items-center gap-2 px-3 py-2">
+            <Globe size={14} className="text-slate-500 shrink-0" />
+            <span className="text-xs text-slate-500">{t.language.label}</span>
+            <div className="flex items-center gap-1 ml-auto">
+              {LANGS.map(({ code, label }) => (
+                <button
+                  key={code}
+                  onClick={() => setLang(code)}
+                  className={`text-xs font-semibold px-1.5 py-0.5 rounded transition-colors ${
+                    lang === code
+                      ? 'text-purple-400 bg-purple-500/10'
+                      : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Logout */}
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-400/5 w-full transition-colors"
           >
             <LogOut size={16} />
-            Esci
+            {t.common.logout}
           </button>
         </div>
       </aside>

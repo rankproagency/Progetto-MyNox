@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useState } from 'react';
+import { useLanguage } from '@/components/providers/I18nProvider';
 import {
   Home,
   CalendarDays,
@@ -17,12 +18,14 @@ import {
   Tag,
   Menu,
   X,
+  Globe,
 } from 'lucide-react';
 import type { StaffPermissions } from '@/types';
+import type { LangCode } from '@/lib/i18n';
 
 interface NavItem {
   href: string;
-  label: string;
+  labelKey: keyof ReturnType<typeof useLanguage>['t']['nav'];
   icon: React.ElementType;
   ownerOnly?: boolean;
   staffOnly?: boolean;
@@ -30,14 +33,19 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/club/dashboard', label: 'Home', icon: Home },
-  { href: '/club/events', label: 'I miei eventi', icon: CalendarDays, permission: 'can_manage_events' },
-  { href: '/club/venue', label: 'Piantina & Tavoli', icon: Map, permission: 'can_manage_tables' },
-  { href: '/club/analytics', label: 'Analytics', icon: BarChart3, permission: 'can_view_analytics' },
-  { href: '/club/scan', label: 'Scanner', icon: ScanLine, permission: 'can_scan_tickets', staffOnly: true },
-  { href: '/club/promo', label: 'Codici Promo', icon: Tag, permission: 'can_manage_promos' },
-  { href: '/club/staff', label: 'Staff', icon: Users, ownerOnly: true },
-  { href: '/club/settings', label: 'Profilo club', icon: Settings, ownerOnly: true },
+  { href: '/club/dashboard', labelKey: 'home', icon: Home },
+  { href: '/club/events', labelKey: 'myEvents', icon: CalendarDays, permission: 'can_manage_events' },
+  { href: '/club/venue', labelKey: 'venue', icon: Map, permission: 'can_manage_tables' },
+  { href: '/club/analytics', labelKey: 'analytics', icon: BarChart3, permission: 'can_view_analytics' },
+  { href: '/club/scan', labelKey: 'scanner', icon: ScanLine, permission: 'can_scan_tickets', staffOnly: true },
+  { href: '/club/promo', labelKey: 'promo', icon: Tag, permission: 'can_manage_promos' },
+  { href: '/club/staff', labelKey: 'staff', icon: Users, ownerOnly: true },
+  { href: '/club/settings', labelKey: 'settings', icon: Settings, ownerOnly: true },
+];
+
+const LANGS: { code: LangCode; label: string }[] = [
+  { code: 'it', label: 'IT' },
+  { code: 'en', label: 'EN' },
 ];
 
 interface ClubSidebarProps {
@@ -49,6 +57,7 @@ interface ClubSidebarProps {
 export default function ClubSidebar({ clubName, isOwner, permissions }: ClubSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { lang, t, setLang } = useLanguage();
 
   const visibleItems = NAV_ITEMS.filter((item) => {
     if (item.ownerOnly && !isOwner) return false;
@@ -98,7 +107,7 @@ export default function ClubSidebar({ clubName, isOwner, permissions }: ClubSide
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {visibleItems.map(({ href, label, icon: Icon }) => {
+          {visibleItems.map(({ href, labelKey, icon: Icon }) => {
             const active = pathname.startsWith(href);
             return (
               <Link
@@ -112,20 +121,42 @@ export default function ClubSidebar({ clubName, isOwner, permissions }: ClubSide
                 }`}
               >
                 <Icon size={16} />
-                {label}
+                {t.nav[labelKey]}
               </Link>
             );
           })}
         </nav>
 
-        {/* Logout */}
-        <div className="px-3 py-4 border-t border-white/8">
+        {/* Bottom */}
+        <div className="px-3 py-4 border-t border-white/8 space-y-1">
+          {/* Language switcher */}
+          <div className="flex items-center gap-2 px-3 py-2">
+            <Globe size={14} className="text-slate-500 shrink-0" />
+            <span className="text-xs text-slate-500">{t.language.label}</span>
+            <div className="flex items-center gap-1 ml-auto">
+              {LANGS.map(({ code, label }) => (
+                <button
+                  key={code}
+                  onClick={() => setLang(code)}
+                  className={`text-xs font-semibold px-1.5 py-0.5 rounded transition-colors ${
+                    lang === code
+                      ? 'text-purple-400 bg-purple-500/10'
+                      : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Logout */}
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-400/5 w-full transition-colors"
           >
             <LogOut size={16} />
-            Esci
+            {t.common.logout}
           </button>
         </div>
       </aside>
