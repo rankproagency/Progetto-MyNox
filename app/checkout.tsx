@@ -137,6 +137,13 @@ export default function CheckoutScreen() {
 
   // Android hardware back
   useEffect(() => {
+    // Render.com free tier si spegne dopo inattività: lo svegliamo in background
+    // mentre l'utente legge il checkout, così "Paga" trova il server già caldo.
+    fetch(`${PROXY_URL}/health`, { method: 'GET', signal: AbortSignal.timeout(50000) })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       if (showSuccess) return false;
       confirmLeave();
@@ -271,7 +278,7 @@ export default function CheckoutScreen() {
             club_id: event?.clubId,
             metadata,
           }),
-        });
+        }, 30000);
 
         const fnJson = await fnRes.json() as { clientSecret?: string; paymentIntentId?: string; error?: string };
 
