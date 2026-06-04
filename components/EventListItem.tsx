@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { Image } from 'expo-image';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getLocale } from '../lib/i18n';
@@ -45,7 +46,7 @@ export default function EventListItem({ event }: Props) {
     >
     <Animated.View style={[styles.container, { transform: [{ scale }] }]}>
       <View style={styles.imageWrapper}>
-        <Image source={{ uri: event.imageUrl }} style={styles.image} resizeMode="cover" />
+        <Image source={{ uri: event.imageUrl }} style={styles.image} contentFit="cover" cachePolicy="memory-disk" />
         {isSoldOut && (
           <View style={styles.soldOverlay}>
             <Text style={styles.soldOverlayText}>SOLD</Text>

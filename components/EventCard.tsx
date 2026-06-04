@@ -2,11 +2,11 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   TouchableOpacity,
   Dimensions,
   Animated,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getLocale } from '../lib/i18n';
@@ -59,7 +59,7 @@ export default function EventCard({ event }: Props) {
     >
       <View style={styles.cardWrapper}>
       <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
-        <Image source={{ uri: event.imageUrl }} style={styles.image} resizeMode="cover" />
+        <Image source={{ uri: event.imageUrl }} style={styles.image} contentFit="cover" cachePolicy="memory-disk" />
         <LinearGradient
           colors={['transparent', 'transparent', 'rgba(7,8,15,0.7)', 'rgba(7,8,15,0.98)']}
           locations={[0, 0.45, 0.72, 1]}

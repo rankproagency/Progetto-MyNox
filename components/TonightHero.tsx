@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,7 +32,7 @@ export default function TonightHero({ event }: Props) {
       activeOpacity={0.92}
       onPress={() => router.push(`/event/${event.id}`)}
     >
-      <Image source={{ uri: event.imageUrl }} style={styles.image} resizeMode="cover" />
+      <Image source={{ uri: event.imageUrl }} style={styles.image} contentFit="cover" cachePolicy="memory-disk" />
       <LinearGradient
         colors={['rgba(7,8,15,0.1)', 'rgba(7,8,15,0.45)', 'rgba(7,8,15,0.97)']}
         style={StyleSheet.absoluteFill}
