@@ -320,7 +320,7 @@ export default function CheckoutScreen() {
             }
             // 4xx = errore non recuperabile, non ha senso ritentare
             if (confirmRes.status >= 400 && confirmRes.status < 500) {
-              fatalError = confirmJson.error ?? 'Errore sconosciuto';
+              fatalError = confirmJson.error ?? t('checkout.unknown_error');
               break;
             }
           } catch (_) {}

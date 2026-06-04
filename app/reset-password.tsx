@@ -16,12 +16,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import * as Linking from 'expo-linking';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { supabase } from '../lib/supabase';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [ready, setReady] = useState(false);
   const [tokenError, setTokenError] = useState(false);
   const [password, setPassword] = useState('');
@@ -75,11 +77,11 @@ export default function ResetPasswordScreen() {
 
   async function handleSave() {
     if (password !== confirm) {
-      setError('Le password non coincidono.');
+      setError(t('reset_password.error_mismatch'));
       return;
     }
     if (password.length < 8) {
-      setError('La password deve avere almeno 8 caratteri.');
+      setError(t('reset_password.error_min_length'));
       return;
     }
     setLoading(true);
@@ -90,10 +92,10 @@ export default function ResetPasswordScreen() {
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     Alert.alert(
-      'Password aggiornata',
-      'La tua password è stata cambiata con successo. Accedi con la nuova password.',
+      t('reset_password.success_title'),
+      t('reset_password.success_body'),
       [{
-        text: 'Accedi',
+        text: t('reset_password.success_btn'),
         onPress: async () => {
           await supabase.auth.signOut();
           router.replace('/login');
@@ -108,7 +110,7 @@ export default function ResetPasswordScreen() {
         <TouchableOpacity onPress={() => router.replace('/login')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Nuova password</Text>
+        <Text style={styles.headerTitle}>{t('reset_password.header_title')}</Text>
         <View style={{ width: 38 }} />
       </View>
 
@@ -118,48 +120,44 @@ export default function ResetPasswordScreen() {
           {tokenError ? (
             <View style={styles.errorState}>
               <Ionicons name="alert-circle-outline" size={48} color={Colors.error} />
-              <Text style={styles.errorStateTitle}>Link non valido</Text>
-              <Text style={styles.errorStateText}>
-                Il link di reset è scaduto o non valido. Richiedi un nuovo link dalla schermata di login.
-              </Text>
+              <Text style={styles.errorStateTitle}>{t('reset_password.invalid_link_title')}</Text>
+              <Text style={styles.errorStateText}>{t('reset_password.invalid_link_text')}</Text>
               <TouchableOpacity style={styles.errorStateBtn} onPress={() => router.replace('/login')}>
-                <Text style={styles.errorStateBtnText}>Torna al login</Text>
+                <Text style={styles.errorStateBtnText}>{t('reset_password.back_to_login_btn')}</Text>
               </TouchableOpacity>
             </View>
           ) : !ready ? (
             <View style={styles.loadingState}>
               <ActivityIndicator size="large" color={Colors.accent} />
-              <Text style={styles.loadingText}>Verifica del link in corso...</Text>
+              <Text style={styles.loadingText}>{t('reset_password.verifying')}</Text>
             </View>
           ) : (
             <>
-              <Text style={styles.subtitle}>
-                Scegli una nuova password di almeno 8 caratteri.
-              </Text>
+              <Text style={styles.subtitle}>{t('reset_password.subtitle')}</Text>
 
               <PasswordField
-                label="Nuova password"
+                label={t('reset_password.new_password_label')}
                 value={password}
                 onChangeText={setPassword}
                 show={showPassword}
                 onToggle={() => setShowPassword((v) => !v)}
-                placeholder="Minimo 8 caratteri"
+                placeholder={t('reset_password.new_password_placeholder')}
               />
 
               <PasswordField
-                label="Conferma nuova password"
+                label={t('reset_password.confirm_password_label')}
                 value={confirm}
                 onChangeText={setConfirm}
                 show={showConfirm}
                 onToggle={() => setShowConfirm((v) => !v)}
-                placeholder="Ripeti la nuova password"
+                placeholder={t('reset_password.confirm_password_placeholder')}
               />
 
               {password.length > 0 && (
                 <View style={styles.strength}>
                   <View style={[styles.strengthBar, { backgroundColor: strengthColor(password) }]} />
                   <Text style={[styles.strengthLabel, { color: strengthColor(password) }]}>
-                    {strengthLabel(password)}
+                    {strengthLabel(password, t)}
                   </Text>
                 </View>
               )}
@@ -185,7 +183,7 @@ export default function ResetPasswordScreen() {
             >
               {loading
                 ? <ActivityIndicator color="#fff" size="small" />
-                : <Text style={styles.ctaText}>Imposta nuova password</Text>
+                : <Text style={styles.ctaText}>{t('reset_password.cta_btn')}</Text>
               }
             </TouchableOpacity>
           </View>
@@ -233,10 +231,10 @@ function strengthColor(pwd: string): string {
   return '#22c55e';
 }
 
-function strengthLabel(pwd: string): string {
-  if (pwd.length < 8) return 'Troppo corta';
-  if (pwd.length < 12) return 'Discreta';
-  return 'Sicura';
+function strengthLabel(pwd: string, t: (key: string) => string): string {
+  if (pwd.length < 8) return t('change_password.strength_too_short');
+  if (pwd.length < 12) return t('change_password.strength_fair');
+  return t('change_password.strength_strong');
 }
 
 const styles = StyleSheet.create({

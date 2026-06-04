@@ -302,7 +302,8 @@
     "success_pending_detail": "Il tuo biglietto è in arrivo — apparirà tra qualche secondo",
     "success_paid": "€{{total}} pagati",
     "success_view_tickets": "Vedi i miei biglietti",
-    "server_timeout": "Il server non risponde. Riprova tra qualche secondo."
+    "server_timeout": "Il server non risponde. Riprova tra qualche secondo.",
+    "unknown_error": "Errore sconosciuto"
   },
 
   "event": {
@@ -466,6 +467,25 @@
     "title": "Lingua",
     "description": "Seleziona la lingua dell'app. La scelta viene salvata e sovrascrive la lingua del dispositivo.",
     "hint": "Se non selezioni una lingua, l'app usa automaticamente la lingua impostata sul tuo dispositivo."
+  },
+
+  "reset_password": {
+    "header_title": "Nuova password",
+    "subtitle": "Scegli una nuova password di almeno 8 caratteri.",
+    "new_password_label": "Nuova password",
+    "new_password_placeholder": "Minimo 8 caratteri",
+    "confirm_password_label": "Conferma nuova password",
+    "confirm_password_placeholder": "Ripeti la nuova password",
+    "cta_btn": "Imposta nuova password",
+    "invalid_link_title": "Link non valido",
+    "invalid_link_text": "Il link di reset è scaduto o non valido. Richiedi un nuovo link dalla schermata di login.",
+    "back_to_login_btn": "Torna al login",
+    "verifying": "Verifica del link in corso...",
+    "error_mismatch": "Le password non coincidono.",
+    "error_min_length": "La password deve avere almeno 8 caratteri.",
+    "success_title": "Password aggiornata",
+    "success_body": "La tua password è stata cambiata con successo. Accedi con la nuova password.",
+    "success_btn": "Accedi"
   },
 
   "wallet_modal": {

@@ -302,7 +302,8 @@
     "success_pending_detail": "Your ticket is on its way — it'll appear in a few seconds",
     "success_paid": "€{{total}} paid",
     "success_view_tickets": "View my tickets",
-    "server_timeout": "The server is not responding. Please try again in a moment."
+    "server_timeout": "The server is not responding. Please try again in a moment.",
+    "unknown_error": "Unknown error"
   },
 
   "event": {
@@ -466,6 +467,25 @@
     "title": "Language",
     "description": "Select the app language. Your choice is saved and overrides the device language.",
     "hint": "If no language is selected, the app automatically uses your device's language."
+  },
+
+  "reset_password": {
+    "header_title": "New password",
+    "subtitle": "Choose a new password of at least 8 characters.",
+    "new_password_label": "New password",
+    "new_password_placeholder": "At least 8 characters",
+    "confirm_password_label": "Confirm new password",
+    "confirm_password_placeholder": "Repeat new password",
+    "cta_btn": "Set new password",
+    "invalid_link_title": "Invalid link",
+    "invalid_link_text": "The reset link has expired or is invalid. Request a new link from the login screen.",
+    "back_to_login_btn": "Back to login",
+    "verifying": "Verifying link...",
+    "error_mismatch": "Passwords don't match.",
+    "error_min_length": "Password must be at least 8 characters.",
+    "success_title": "Password updated",
+    "success_body": "Your password has been changed successfully. Sign in with your new password.",
+    "success_btn": "Sign in"
   },
 
   "wallet_modal": {
