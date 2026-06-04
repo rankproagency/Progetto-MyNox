@@ -42,11 +42,35 @@
     }
     .logo img { height: 30px; width: auto; }
 
-    /* ─── PHONE MOCKUP (immagine reale iPhone 15 Pro Black Titanium) ─── */
+    /* ─── PHONE FRAME (bezel CSS + Dynamic Island) ─── */
     .phone {
       position: absolute;
-      height: auto;
-      object-fit: contain;
+      background: #1a1a1e;
+      border-radius: 52px;
+      padding: 14px;
+      border: 1.5px solid rgba(255,255,255,0.12);
+      aspect-ratio: 421 / 880;
+    }
+    .phone-inner {
+      width: 100%; height: 100%;
+      border-radius: 38px;
+      overflow: hidden;
+      position: relative;
+      background: #000;
+    }
+    .phone-inner::before {
+      content: '';
+      position: absolute;
+      top: 10px; left: 50%; transform: translateX(-50%);
+      width: 82px; height: 25px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 10;
+    }
+    .phone img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: top;
+      display: block;
     }
 
     /* ─── COPY ─── */
@@ -118,7 +142,7 @@
       width: 310px;
       bottom: -30px; right: -100px;
       transform: rotate(-13deg);
-      filter: drop-shadow(-15px 20px 50px rgba(0,0,0,0.85)) drop-shadow(0 0 40px rgba(168,85,247,0.2));
+      box-shadow: -15px 20px 80px rgba(0,0,0,0.85), 0 0 40px rgba(168,85,247,0.2);
       z-index: 5;
     }
 
@@ -129,7 +153,7 @@
       width: 310px;
       bottom: -30px; left: -100px;
       transform: rotate(-13deg);
-      filter: drop-shadow(15px 20px 50px rgba(0,0,0,0.85)) drop-shadow(0 0 40px rgba(168,85,247,0.2));
+      box-shadow: 15px 20px 80px rgba(0,0,0,0.85), 0 0 40px rgba(168,85,247,0.2);
       z-index: 5;
     }
 
@@ -140,7 +164,7 @@
       width: 320px;
       bottom: -20px;
       left: 50%; transform: translateX(-50%) rotate(-3deg);
-      filter: drop-shadow(0 30px 70px rgba(0,0,0,0.95)) drop-shadow(0 0 50px rgba(168,85,247,0.22));
+      box-shadow: 0 30px 100px rgba(0,0,0,0.95), 0 0 50px rgba(168,85,247,0.22);
       z-index: 5;
     }
 
@@ -151,7 +175,7 @@
       width: 286px;
       bottom: -15px;
       left: 50%; transform: translateX(-50%) perspective(900px) rotateY(-17deg) rotateX(3deg);
-      filter: drop-shadow(28px 30px 50px rgba(0,0,0,0.9)) drop-shadow(-10px 0 30px rgba(168,85,247,0.22));
+      box-shadow: 28px 30px 80px rgba(0,0,0,0.9), -10px 0 40px rgba(168,85,247,0.22);
       z-index: 5;
     }
 
@@ -162,7 +186,7 @@
       width: 254px;
       bottom: -40px; right: 8px;
       transform: rotate(11deg);
-      filter: drop-shadow(0 20px 40px rgba(0,0,0,0.7));
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7);
       opacity: 0.55;
       z-index: 3;
     }
@@ -170,7 +194,7 @@
       width: 286px;
       bottom: -15px; left: 18px;
       transform: rotate(-7deg);
-      filter: drop-shadow(0 30px 60px rgba(0,0,0,0.9)) drop-shadow(0 0 40px rgba(168,85,247,0.25));
+      box-shadow: 0 30px 80px rgba(0,0,0,0.9), 0 0 40px rgba(168,85,247,0.25);
       z-index: 4;
     }
   </style>
@@ -186,7 +210,7 @@
         <div class="headline"><span>YOUR</span><span>NIGHT,</span></div>
         <div class="subtitle">Discover the best clubs and events near you.</div>
       </div>
-      <img class="phone p1" src="assets/screenshots/mockup-home.png" alt="Home" />
+      <div class="phone p1"><div class="phone-inner"><img src="assets/screenshots/en-home.png" alt="Home" /></div></div>
     </div>
   </div>
 
@@ -199,7 +223,7 @@
         <div class="headline"><span>YOUR</span><span>CITY.</span></div>
         <div class="subtitle">All the best events in Padova, in one app.</div>
       </div>
-      <img class="phone p2" src="assets/screenshots/mockup-home.png" alt="Home" />
+      <div class="phone p2"><div class="phone-inner"><img src="assets/screenshots/en-home.png" alt="Home" /></div></div>
     </div>
   </div>
 
@@ -212,7 +236,7 @@
         <div class="headline"><span>SKIP THE</span><span>QUEUE.</span></div>
         <div class="subtitle">Buy your ticket in seconds. Enter without waiting.</div>
       </div>
-      <img class="phone p3" src="assets/screenshots/mockup-event.png" alt="Event" />
+      <div class="phone p3"><div class="phone-inner"><img src="assets/screenshots/en-event.png" alt="Event" /></div></div>
     </div>
   </div>
 
@@ -225,7 +249,7 @@
         <div class="headline"><span>DONE IN</span><span>3 TAPS.</span></div>
         <div class="subtitle">Instant checkout. Free drink included with every ticket.</div>
       </div>
-      <img class="phone p4" src="assets/screenshots/mockup-checkout.png" alt="Checkout" />
+      <div class="phone p4"><div class="phone-inner"><img src="assets/screenshots/en-checkout.png" alt="Checkout" /></div></div>
     </div>
   </div>
 
@@ -238,8 +262,8 @@
         <div class="headline"><span>SCAN</span><span>IN.</span></div>
         <div class="subtitle">Show the QR at the door. No printing needed.</div>
       </div>
-      <img class="phone p5-back" src="assets/screenshots/mockup-event.png" alt="Event back" />
-      <img class="phone p5-front" src="assets/screenshots/mockup-ticket.png" alt="Ticket" />
+      <div class="phone p5-back"><div class="phone-inner"><img src="assets/screenshots/en-event.png" alt="Event back" /></div></div>
+      <div class="phone p5-front"><div class="phone-inner"><img src="assets/screenshots/en-ticket.png" alt="Ticket" /></div></div>
     </div>
   </div>
 
@@ -251,14 +275,14 @@
         <div class="slide glow-purple-tl glow-bottom" style="background:#07080f; pointer-events:none;">
           <div class="logo"><img src="assets/logo-cropped.png" /></div>
           <div class="copy"><div class="headline"><span>YOUR</span><span>NIGHT,</span></div><div class="subtitle">Discover the best clubs and events near you.</div></div>
-          <img class="phone p1" src="assets/screenshots/mockup-home.png" />
+          <div class="phone p1"><div class="phone-inner"><img src="assets/screenshots/en-home.png" /></div></div>
         </div>
       </div>
       <div style="flex-shrink:0; transform:scale(0.5); transform-origin:top left; margin-right:calc(-393px * 0.5);">
         <div class="slide glow-purple-tr glow-bottom" style="background:#07080f; pointer-events:none;">
           <div class="logo"><img src="assets/logo-cropped.png" /></div>
           <div class="copy right"><div class="headline"><span>YOUR</span><span>CITY.</span></div><div class="subtitle">All the best events in Padova, in one app.</div></div>
-          <img class="phone p2" src="assets/screenshots/mockup-home.png" />
+          <div class="phone p2"><div class="phone-inner"><img src="assets/screenshots/en-home.png" /></div></div>
         </div>
       </div>
     </div>
