@@ -10,6 +10,7 @@ import { Event } from '../types';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useFavorites } from '../contexts/FavoritesContext';
+import { versionedImageUrl } from '../lib/imageUrl';
 
 interface Props {
   event: Event;
@@ -46,7 +47,7 @@ export default function EventListItem({ event }: Props) {
     >
     <Animated.View style={[styles.container, { transform: [{ scale }] }]}>
       <View style={styles.imageWrapper}>
-        <Image source={{ uri: event.imageUrl }} style={styles.image} contentFit="cover" cachePolicy="memory-disk" />
+        <Image source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }} style={styles.image} contentFit="cover" cachePolicy="memory-disk" />
         {isSoldOut && (
           <View style={styles.soldOverlay}>
             <Text style={styles.soldOverlayText}>SOLD</Text>

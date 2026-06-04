@@ -19,6 +19,7 @@ import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { GENRE_CONFIG } from '../constants/genres';
+import { versionedImageUrl } from '../lib/imageUrl';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.70;
@@ -59,7 +60,7 @@ export default function EventCard({ event }: Props) {
     >
       <View style={styles.cardWrapper}>
       <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
-        <Image source={{ uri: event.imageUrl }} style={styles.image} contentFit="cover" cachePolicy="memory-disk" />
+        <Image source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }} style={styles.image} contentFit="cover" cachePolicy="memory-disk" />
         <LinearGradient
           colors={['transparent', 'transparent', 'rgba(7,8,15,0.7)', 'rgba(7,8,15,0.98)']}
           locations={[0, 0.45, 0.72, 1]}

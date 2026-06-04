@@ -41,6 +41,7 @@ export interface Event {
   startTime: string;
   endTime?: string;
   imageUrl: string;
+  updatedAt?: string;
   floorPlanUrl?: string;
   minAge: number;
   dressCode: string;

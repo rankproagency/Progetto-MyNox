@@ -10,6 +10,7 @@ import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { GENRE_CONFIG } from '../constants/genres';
+import { versionedImageUrl } from '../lib/imageUrl';
 
 const { width } = Dimensions.get('window');
 
@@ -32,7 +33,7 @@ export default function TonightHero({ event }: Props) {
       activeOpacity={0.92}
       onPress={() => router.push(`/event/${event.id}`)}
     >
-      <Image source={{ uri: event.imageUrl }} style={styles.image} contentFit="cover" cachePolicy="memory-disk" />
+      <Image source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }} style={styles.image} contentFit="cover" cachePolicy="memory-disk" />
       <LinearGradient
         colors={['rgba(7,8,15,0.1)', 'rgba(7,8,15,0.45)', 'rgba(7,8,15,0.97)']}
         style={StyleSheet.absoluteFill}
