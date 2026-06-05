@@ -560,7 +560,7 @@ export default function EventScreen() {
           event.doorEntryAvailable ? (
             <View style={[styles.ctaButton, { backgroundColor: Colors.accent }]}>
               <Ionicons name="location-outline" size={16} color={Colors.white} />
-              <Text style={styles.ctaText}>{t('event.event_door_entry_hint')}</Text>
+              <Text style={styles.ctaText}>{t('event.door_entry_cta')}</Text>
             </View>
           ) : (
             <TouchableOpacity
