@@ -146,13 +146,13 @@ export default function ClubEventsTable({
                     </Link>
                   </td>
                   <td className={`px-3 md:px-5 py-4 whitespace-nowrap ${isPast ? 'text-slate-400' : 'text-slate-300'}`}>
-                    {new Date(event.date).toLocaleDateString('it-IT')} · {event.start_time}
+                    {new Date(event.date).toLocaleDateString()} · {event.start_time}
                   </td>
                   <td className={`px-5 py-4 hidden md:table-cell ${isPast ? 'text-slate-400' : 'text-slate-300'}`}>
                     {event.tickets_sold}{event.capacity != null ? ` / ${event.capacity}` : ''}
                   </td>
                   <td className={`px-5 py-4 font-semibold hidden md:table-cell ${isPast ? 'text-purple-400/70' : 'text-purple-400'}`}>
-                    €{event.revenue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    €{event.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-3 md:px-5 py-4">
                     {isPast ? (

@@ -1,13 +1,13 @@
 import { redirect } from 'next/navigation';
 import { getProfile, getStaffPermissions } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { getT } from '@/lib/i18n-server';
+import { getT, getLocale } from '@/lib/i18n-server';
 
 export const dynamic = 'force-dynamic';
 import AnalyticsCharts from '@/components/club/AnalyticsCharts';
 import { TrendingUp, TrendingDown, Minus, Lock } from 'lucide-react';
 
-async function getAnalyticsData(clubId: string) {
+async function getAnalyticsData(clubId: string, locale = 'it-IT') {
   const supabase = createAdminClient();
 
   const { data: events } = await supabase
@@ -51,13 +51,13 @@ async function getAnalyticsData(clubId: string) {
   const ticketsByMonth: Record<string, number> = {};
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const key = d.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
+    const key = d.toLocaleDateString(locale, { month: 'short', year: '2-digit' });
     revenueByMonth[key] = 0;
     ticketsByMonth[key] = 0;
   }
   tickets.forEach((t: any) => {
     const d = new Date(t.created_at);
-    const key = d.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
+    const key = d.toLocaleDateString(locale, { month: 'short', year: '2-digit' });
     if (key in revenueByMonth) {
       revenueByMonth[key] += (t.price_paid ?? 0) / 1.08;
       if (t.ticket_types !== null) ticketsByMonth[key] = (ticketsByMonth[key] ?? 0) + 1;
@@ -135,7 +135,7 @@ async function getAnalyticsData(clubId: string) {
 }
 
 export default async function ClubAnalyticsPage() {
-  const t = await getT();
+  const [t, locale] = await Promise.all([getT(), getLocale()]);
   const profile = await getProfile();
   if (!profile?.club_id) return <p className="text-slate-400">{t.common.notConfigured}</p>;
 
@@ -147,7 +147,7 @@ export default async function ClubAnalyticsPage() {
     if (!canViewRevenue) redirect('/club/dashboard');
   }
 
-  const data = await getAnalyticsData(profile.club_id);
+  const data = await getAnalyticsData(profile.club_id, locale);
 
   return (
     <div>

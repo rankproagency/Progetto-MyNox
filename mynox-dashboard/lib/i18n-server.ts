@@ -6,3 +6,8 @@ export async function getT() {
   const lang = cookieStore.get('mynox-dashboard-lang')?.value === 'en' ? 'en' : 'it';
   return translations[lang as LangCode];
 }
+
+export async function getLocale(): Promise<string> {
+  const cookieStore = await cookies();
+  return cookieStore.get('mynox-dashboard-lang')?.value === 'en' ? 'en-GB' : 'it-IT';
+}

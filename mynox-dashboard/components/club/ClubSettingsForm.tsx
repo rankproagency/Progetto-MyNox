@@ -312,14 +312,14 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
           {loading && <Loader2 size={14} className="animate-spin" />}
           {loading ? t.common.saving : t.common.save}
         </button>
-        <p className="text-xs text-slate-500">Le modifiche sono visibili nell&apos;app MyNox in tempo reale.</p>
+        <p className="text-xs text-slate-500">{t.settingsForm.visibleInApp}</p>
       </div>
     </form>
 
     {/* Sezione sicurezza — separata dal form principale */}
     <div className="max-w-2xl mt-10 space-y-6">
       <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider pb-2 border-b border-white/8 flex items-center gap-2">
-        <Lock size={13} /> Sicurezza account
+        <Lock size={13} /> {t.settingsForm.sectionSecurity}
       </h2>
       <EmailChangeForm />
       <PasswordChangeForm />
@@ -344,6 +344,7 @@ const inputClass =
   'w-full bg-[#0d0d14] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors';
 
 function EmailChangeForm() {
+  const { t } = useLanguage();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -379,10 +380,10 @@ function EmailChangeForm() {
   return (
     <form onSubmit={handleSubmit} className="bg-[#0d0d14] border border-white/8 rounded-xl p-5 space-y-4">
       <div>
-        <p className="text-sm font-medium text-white">Cambia email</p>
-        <p className="text-xs text-slate-500 mt-0.5">Riceverai un link di conferma al nuovo indirizzo prima che il cambio diventi effettivo.</p>
+        <p className="text-sm font-medium text-white">{t.settingsForm.changeEmailTitle}</p>
+        <p className="text-xs text-slate-500 mt-0.5">{t.settingsForm.changeEmailDesc}</p>
       </div>
-      <Field label="Password attuale">
+      <Field label={t.settingsForm.currentPassword}>
         <input
           required
           type="password"
@@ -392,32 +393,33 @@ function EmailChangeForm() {
           className={inputClass}
         />
       </Field>
-      <Field label="Nuova email">
+      <Field label={t.settingsForm.newEmail}>
         <input
           required
           type="email"
           value={newEmail}
           onChange={(e) => setNewEmail(e.target.value)}
-          placeholder="nuova@email.it"
+          placeholder={t.settingsForm.emailPlaceholder}
           className={inputClass}
         />
       </Field>
       {error && <p className="text-sm text-red-400">{error}</p>}
       {success && (
         <div className="flex items-center gap-2 text-green-400 text-sm">
-          <CheckCircle size={14} /> Controlla la tua nuova email per confermare il cambio.
+          <CheckCircle size={14} /> {t.settingsForm.emailUpdateSuccess}
         </div>
       )}
       <button type="submit" disabled={loading}
         className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 disabled:opacity-60 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
         {loading && <Loader2 size={13} className="animate-spin" />}
-        {loading ? 'Invio...' : 'Aggiorna email'}
+        {loading ? t.settingsForm.sending : t.settingsForm.updateEmail}
       </button>
     </form>
   );
 }
 
 function PasswordChangeForm() {
+  const { t } = useLanguage();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -428,7 +430,7 @@ function PasswordChangeForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      setError('Le password non coincidono.');
+      setError(t.settingsForm.passwordMismatch);
       return;
     }
     setLoading(true);
@@ -442,7 +444,7 @@ function PasswordChangeForm() {
       password: currentPassword,
     });
     if (signInErr) {
-      setError('Password attuale non corretta.');
+      setError(t.settingsForm.wrongPassword);
       setLoading(false);
       return;
     }
@@ -459,10 +461,10 @@ function PasswordChangeForm() {
   return (
     <form onSubmit={handleSubmit} className="bg-[#0d0d14] border border-white/8 rounded-xl p-5 space-y-4">
       <div>
-        <p className="text-sm font-medium text-white">Cambia password</p>
-        <p className="text-xs text-slate-500 mt-0.5">Inserisci la password attuale per confermare la tua identità.</p>
+        <p className="text-sm font-medium text-white">{t.settingsForm.changePasswordTitle}</p>
+        <p className="text-xs text-slate-500 mt-0.5">{t.settingsForm.changePasswordDesc}</p>
       </div>
-      <Field label="Password attuale">
+      <Field label={t.settingsForm.currentPassword}>
         <input
           required
           type="password"
@@ -472,38 +474,38 @@ function PasswordChangeForm() {
           className={inputClass}
         />
       </Field>
-      <Field label="Nuova password">
+      <Field label={t.settingsForm.newPassword}>
         <input
           required
           type="password"
           minLength={6}
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
-          placeholder="Minimo 6 caratteri"
+          placeholder={t.settingsForm.minSixChars}
           className={inputClass}
         />
       </Field>
-      <Field label="Conferma nuova password">
+      <Field label={t.settingsForm.confirmNewPassword}>
         <input
           required
           type="password"
           minLength={6}
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Ripeti la nuova password"
+          placeholder={t.settingsForm.repeatPassword}
           className={inputClass}
         />
       </Field>
       {error && <p className="text-sm text-red-400">{error}</p>}
       {success && (
         <div className="flex items-center gap-2 text-green-400 text-sm">
-          <CheckCircle size={14} /> Password aggiornata con successo.
+          <CheckCircle size={14} /> {t.settingsForm.passwordUpdated}
         </div>
       )}
       <button type="submit" disabled={loading}
         className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 disabled:opacity-60 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
         {loading && <Loader2 size={13} className="animate-spin" />}
-        {loading ? 'Aggiornamento...' : 'Aggiorna password'}
+        {loading ? t.settingsForm.updating : t.settingsForm.updatePassword}
       </button>
     </form>
   );
