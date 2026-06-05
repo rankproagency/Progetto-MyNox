@@ -10,7 +10,7 @@ interface PerformerRow {
   role: 'dj' | 'vocalist';
 }
 
-const GENRES = ['Techno', 'House', 'Hip-Hop', 'Trap', 'Pop', 'R&B', 'Reggaeton', 'Commercial'];
+const GENRES = ['Techno', 'House', 'Deep House', 'Latin', 'Hip-Hop', 'Pop', 'R&B', 'Reggaeton', 'Commercial'];
 
 interface TicketTypeRow {
   id?: string;
@@ -18,7 +18,6 @@ interface TicketTypeRow {
   price: string;
   total_quantity: string;
   includes_drink: boolean;
-  sold_quantity?: number;
 }
 
 interface ClubTableData {
@@ -31,7 +30,6 @@ interface ClubTableData {
 }
 
 interface EventTableRow {
-  id?: string;
   clubTableId: string;
   label: string;
   capacity: number;
@@ -52,12 +50,12 @@ interface EventFormProps {
     start_time: string;
     end_time: string | null;
     dress_code: string | null;
-    min_age: number | null;
     capacity: number;
     genres: string[];
     performers: PerformerRow[];
     is_published: boolean;
     image_url: string | null;
+    door_entry_available: boolean;
   };
   initialTicketTypes?: TicketTypeRow[];
   initialEventTables?: EventTableRow[];
@@ -74,11 +72,11 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
     start_time: event?.start_time ?? '',
     end_time: event?.end_time ?? '',
     dress_code: event?.dress_code ?? '',
-    min_age: event?.min_age?.toString() ?? '18',
     capacity: event?.capacity?.toString() ?? '',
     image_url: event?.image_url ?? '',
     genres: event?.genres ?? [] as string[],
     is_published: event?.is_published ?? false,
+    door_entry_available: event?.door_entry_available ?? false,
   });
 
   const [performers, setPerformers] = useState<PerformerRow[]>(
@@ -165,12 +163,6 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
   }
 
   async function handleSubmit(publish: boolean) {
-    if (!form.name.trim()) { setError('Il nome evento è obbligatorio.'); return; }
-    if (!form.date) { setError('La data è obbligatoria.'); return; }
-    if (!form.start_time) { setError("L'orario di inizio è obbligatorio."); return; }
-    const incompleteTicket = ticketTypes.find((t) => (t.label.trim() || t.price) && !t.total_quantity);
-    if (incompleteTicket) { setError('La quantità disponibile è obbligatoria per ogni tipo di biglietto.'); return; }
-
     setLoading(true);
     setError('');
 
@@ -183,12 +175,12 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
       start_time: form.start_time,
       end_time: form.end_time || null,
       dress_code: form.dress_code || null,
-      min_age: parseInt(form.min_age) || 18,
       capacity: form.capacity ? parseInt(form.capacity) : null,
       image_url: form.image_url || null,
       genres: form.genres,
       performers: performers.filter((p) => p.name.trim()),
       is_published: publish,
+      door_entry_available: form.door_entry_available,
     };
 
     let eventId = event?.id;
@@ -202,93 +194,31 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
       eventId = data.id;
     }
 
-    // Salva tipi biglietto
+    // Salva tipi biglietto: elimina i vecchi e reinserisci
     const validTickets = ticketTypes.filter((t) => t.label.trim() && t.price);
-    if (eventId) {
-      if (isEdit) {
-        // Elimina solo i biglietti rimossi dall'utente (per id specifico)
-        const originalIds = (initialTicketTypes ?? []).map((t) => t.id).filter(Boolean) as string[];
-        const keptIds = validTickets.filter((t) => t.id).map((t) => t.id) as string[];
-        const removedIds = originalIds.filter((id) => !keptIds.includes(id));
-        if (removedIds.length > 0) {
-          const { count: soldCount } = await supabase
-            .from('tickets')
-            .select('id', { count: 'exact', head: true })
-            .in('ticket_type_id', removedIds)
-            .in('status', ['valid', 'used', 'gifted']);
-          if (soldCount === null) {
-            setError('Impossibile verificare i biglietti venduti. Riprova.');
-            setLoading(false);
-            return;
-          }
-          if (soldCount > 0) {
-            setError(`Impossibile rimuovere ${removedIds.length > 1 ? 'alcune tipologie' : 'questa tipologia'}: ci sono ${soldCount} bigliett${soldCount === 1 ? 'o venduto' : 'i venduti'} associati. Puoi modificare etichetta o prezzo, ma non eliminarla.`);
-            setLoading(false);
-            return;
-          }
-          const { error: delErr } = await supabase.from('ticket_types').delete().in('id', removedIds);
-          if (delErr) { setError('Errore eliminazione biglietti rimossi: ' + delErr.message); setLoading(false); return; }
-        }
-        // Valida che la nuova quantità non sia inferiore ai biglietti già venduti
-        for (const t of validTickets.filter((t) => t.id)) {
-          if (t.total_quantity && t.sold_quantity !== undefined && t.sold_quantity > 0) {
-            const newQty = parseInt(t.total_quantity);
-            if (newQty < t.sold_quantity) {
-              setError(`La quantità di "${t.label}" non può essere inferiore ai biglietti già venduti (${t.sold_quantity}).`);
-              setLoading(false);
-              return;
-            }
-          }
-        }
-
-        // Aggiorna i biglietti esistenti (preserva sold_quantity)
-        for (const t of validTickets.filter((t) => t.id)) {
-          const { error: updErr } = await supabase.from('ticket_types').update({
-            label: t.label.trim(),
-            price: parseFloat(t.price),
-            total_quantity: t.total_quantity ? parseInt(t.total_quantity) : null,
-            includes_drink: t.includes_drink,
-          }).eq('id', t.id!);
-          if (updErr) { setError('Errore aggiornamento biglietto: ' + updErr.message); setLoading(false); return; }
-        }
-        // Inserisce i nuovi biglietti aggiunti
-        const newTickets = validTickets.filter((t) => !t.id);
-        if (newTickets.length > 0) {
-          const { error: insErr } = await supabase.from('ticket_types').insert(
-            newTickets.map((t) => ({
-              event_id: eventId,
-              label: t.label.trim(),
-              price: parseFloat(t.price),
-              total_quantity: t.total_quantity ? parseInt(t.total_quantity) : null,
-              sold_quantity: 0,
-              includes_drink: t.includes_drink,
-            }))
-          );
-          if (insErr) { setError('Errore inserimento nuovi biglietti: ' + insErr.message); setLoading(false); return; }
-        }
-      } else if (validTickets.length > 0) {
-        // Nuovo evento: inserisci tutti
-        const { error: ticketError } = await supabase.from('ticket_types').insert(
-          validTickets.map((t) => ({
-            event_id: eventId,
-            label: t.label.trim(),
-            price: parseFloat(t.price),
-            total_quantity: t.total_quantity ? parseInt(t.total_quantity) : null,
-            sold_quantity: 0,
-            includes_drink: t.includes_drink,
-          }))
-        );
-        if (ticketError) { setError('Evento salvato ma errore nei biglietti: ' + ticketError.message); setLoading(false); return; }
-      }
+    if (validTickets.length > 0 && eventId) {
+      await supabase.from('ticket_types').delete().eq('event_id', eventId);
+      const { error: ticketError } = await supabase.from('ticket_types').insert(
+        validTickets.map((t) => ({
+          event_id: eventId,
+          label: t.label.trim(),
+          price: parseFloat(t.price),
+          total_quantity: t.total_quantity ? parseInt(t.total_quantity) : null,
+          sold_quantity: 0,
+          includes_drink: t.includes_drink,
+        }))
+      );
+      if (ticketError) { setError('Evento salvato ma errore nei biglietti: ' + ticketError.message); setLoading(false); return; }
     }
 
-    // Salva tavoli evento
+    // Salva tavoli evento (con prezzi specifici per questo evento)
     if (eventId && eventTables.length > 0) {
-      if (isEdit) {
-        // Aggiorna i tavoli esistenti (hanno un id), inserisce quelli nuovi
-        for (const t of eventTables) {
+      await supabase.from('tables').delete().eq('event_id', eventId);
+      const { error: tablesError } = await supabase.from('tables').insert(
+        eventTables.map((t) => {
           const clubTable = clubTables?.find((ct) => ct.id === t.clubTableId);
-          const tableData = {
+          return {
+            event_id: eventId,
             club_table_id: t.clubTableId,
             label: t.label,
             capacity: t.capacity,
@@ -297,36 +227,9 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
             pos_x: clubTable?.posX ?? null,
             pos_y: clubTable?.posY ?? null,
           };
-          if (t.id) {
-            const { error: updErr } = await supabase.from('tables').update(tableData).eq('id', t.id);
-            if (updErr) { setError('Errore aggiornamento tavolo: ' + updErr.message); setLoading(false); return; }
-          } else {
-            const { error: insErr } = await supabase.from('tables').insert({
-              ...tableData,
-              event_id: eventId,
-            });
-            if (insErr) { setError('Errore inserimento tavolo: ' + insErr.message); setLoading(false); return; }
-          }
-        }
-      } else {
-        // Nuovo evento: inserisci tutti
-        const { error: tablesError } = await supabase.from('tables').insert(
-          eventTables.map((t) => {
-            const clubTable = clubTables?.find((ct) => ct.id === t.clubTableId);
-            return {
-              event_id: eventId,
-              club_table_id: t.clubTableId,
-              label: t.label,
-              capacity: t.capacity,
-              deposit: t.deposit ? parseFloat(t.deposit) : 0,
-              is_available: t.isAvailable,
-              pos_x: clubTable?.posX ?? null,
-              pos_y: clubTable?.posY ?? null,
-            };
-          })
-        );
-        if (tablesError) { setError('Evento salvato ma errore nei tavoli: ' + tablesError.message); setLoading(false); return; }
-      }
+        })
+      );
+      if (tablesError) { setError('Evento salvato ma errore nei tavoli: ' + tablesError.message); setLoading(false); return; }
     }
 
     setLoading(false);
@@ -335,38 +238,10 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
   }
 
   async function handleDelete() {
-    if (!event) return;
+    if (!event || !confirm('Sei sicuro di voler eliminare questo evento?')) return;
     setLoading(true);
     const supabase = createClient();
-
-    // Controlla se esistono biglietti venduti per questo evento
-    const { count } = await supabase
-      .from('tickets')
-      .select('id', { count: 'exact', head: true })
-      .eq('event_id', event.id)
-      .in('status', ['valid', 'used', 'gifted']);
-
-    if (count === null) {
-      alert('Impossibile verificare i biglietti venduti. Riprova tra qualche secondo.');
-      setLoading(false);
-      return;
-    }
-    if (count > 0) {
-      alert(`Impossibile eliminare: ci sono ${count} bigliett${count === 1 ? 'o venduto' : 'i venduti'} per questo evento. Annulla o attendi che l'evento sia concluso.`);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(false);
-    if (!confirm('Sei sicuro di voler eliminare questo evento? L\'operazione è irreversibile.')) return;
-
-    setLoading(true);
-    const { error } = await supabase.from('events').delete().eq('id', event.id);
-    if (error) {
-      alert('Errore durante l\'eliminazione: ' + error.message);
-      setLoading(false);
-      return;
-    }
+    await supabase.from('events').delete().eq('id', event.id);
     router.push('/club/events');
     router.refresh();
   }
@@ -426,8 +301,8 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
         </Field>
       </div>
 
-      {/* Capienza, età minima e dress code */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* Capienza e dress code */}
+      <div className="grid grid-cols-2 gap-4">
         <Field label="Capienza massima">
           <input
             type="number"
@@ -437,18 +312,6 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
             placeholder="es. 500"
             className={inputClass}
           />
-        </Field>
-        <Field label="Età minima">
-          <select
-            value={form.min_age}
-            onChange={(e) => setForm({ ...form, min_age: e.target.value })}
-            className={inputClass}
-          >
-            <option value="14">14+</option>
-            <option value="16">16+</option>
-            <option value="18">18+</option>
-            <option value="21">21+</option>
-          </select>
         </Field>
         <Field label="Dress code">
           <input
@@ -468,9 +331,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
             <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
           </label>
           {form.image_url && (
-            <div className="relative w-full aspect-[3/4] max-h-96 rounded-lg overflow-hidden border border-white/10">
-              <img src={form.image_url} alt="Anteprima" className="w-full h-full object-contain bg-black/40" />
-            </div>
+            <img src={form.image_url} alt="Anteprima" className="w-full h-40 object-cover rounded-lg border border-white/10" />
           )}
         </div>
       </Field>
@@ -688,12 +549,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
       {/* Tipi di biglietto */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <div>
-            <label className="block text-xs font-medium text-slate-400 uppercase tracking-wide">Tipi di biglietto</label>
-            {ticketTypes.every((t) => !t.label.trim()) && (
-              <p className="text-xs text-slate-600 mt-0.5">Se non aggiungi biglietti, l&apos;evento sarà a ingresso libero</p>
-            )}
-          </div>
+          <label className="block text-xs font-medium text-slate-400 uppercase tracking-wide">Tipi di biglietto</label>
           <button
             type="button"
             onClick={addTicketType}
@@ -729,18 +585,15 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-500 mb-1">Quantità disponibile <span className="text-red-400">*</span></label>
+                <label className="block text-xs text-slate-500 mb-1">Quantità disponibile</label>
                 <input
                   type="number"
-                  min={ticket.sold_quantity && ticket.sold_quantity > 0 ? ticket.sold_quantity : 1}
+                  min="0"
                   value={ticket.total_quantity}
                   onChange={(e) => updateTicketType(index, 'total_quantity', e.target.value)}
                   placeholder="es. 200"
                   className={inputClass}
                 />
-                {ticket.sold_quantity !== undefined && ticket.sold_quantity > 0 && (
-                  <p className="text-xs text-slate-500 mt-1">{ticket.sold_quantity} già venduti</p>
-                )}
               </div>
             </div>
             <div className="flex items-center justify-between">
@@ -765,6 +618,39 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Biglietteria fisica */}
+      <div className="bg-[#111118] border border-white/8 rounded-xl p-5 space-y-3">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-white">Ingresso in biglietteria</p>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              Se attivo, quando i biglietti sull&apos;app sono esauriti gli utenti vedranno
+              <span className="text-slate-300"> &quot;Esaurito sull&apos;app — ti aspettiamo in biglietteria!&quot;</span> invece
+              di &quot;Esaurito&quot;. Utile se accetti ancora ingressi alla cassa in serata.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setForm((prev) => ({ ...prev, door_entry_available: !prev.door_entry_available }))}
+            className={`relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${
+              form.door_entry_available ? 'bg-purple-600' : 'bg-white/10'
+            }`}
+          >
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+              form.door_entry_available ? 'translate-x-5' : 'translate-x-0'
+            }`} />
+          </button>
+        </div>
+        {form.door_entry_available && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-purple-500/8 border border-purple-500/20 rounded-lg">
+            <span className="text-purple-400 text-xs">✓</span>
+            <p className="text-xs text-purple-300">
+              Gli utenti potranno ancora presentarsi in discoteca anche quando i biglietti digitali sono esauriti.
+            </p>
+          </div>
+        )}
       </div>
 
       {error && (
