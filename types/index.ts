@@ -44,6 +44,7 @@ export interface Event {
   imageUrl: string;
   updatedAt?: string;
   floorPlanUrl?: string;
+  doorEntryAvailable?: boolean;
   minAge: number;
   dressCode: string;
   capacity: number;

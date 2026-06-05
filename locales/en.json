@@ -334,6 +334,8 @@
     "waitlist_active": "You're on the waitlist",
     "event_ended": "Event ended",
     "event_sold_out": "Sold out",
+    "event_sold_out_app_only": "Sold out on the app",
+    "event_door_entry_hint": "You can still get tickets at the venue box office",
     "free_entry_no_tickets": "Free entry — no advance tickets",
     "table_name_placeholder": "Table name (e.g. Marco's birthday)",
     "auth_required_title": "Sign in to continue",

@@ -334,6 +334,8 @@
     "waitlist_active": "Sei in lista d'attesa",
     "event_ended": "Evento concluso",
     "event_sold_out": "Evento esaurito",
+    "event_sold_out_app_only": "Esaurito sull'app",
+    "event_door_entry_hint": "Puoi presentarti in biglietteria in discoteca",
     "free_entry_no_tickets": "Ingresso libero — nessuna prevendita",
     "table_name_placeholder": "Nome tavolo (es. Compleanno Marco)",
     "auth_required_title": "Accedi per continuare",

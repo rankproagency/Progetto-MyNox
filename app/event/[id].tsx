@@ -382,8 +382,15 @@ export default function EventScreen() {
             </View>
           ) : isSoldOut ? (
             <View style={styles.soldOutBox}>
-              <Ionicons name="close-circle" size={20} color={Colors.error} />
-              <Text style={styles.soldOutText}>{t('event.event_sold_out')}</Text>
+              <Ionicons name="close-circle" size={20} color={event.doorEntryAvailable ? Colors.accent : Colors.error} />
+              <View>
+                <Text style={[styles.soldOutText, event.doorEntryAvailable && { color: Colors.accent }]}>
+                  {event.doorEntryAvailable ? t('event.event_sold_out_app_only') : t('event.event_sold_out')}
+                </Text>
+                {event.doorEntryAvailable && (
+                  <Text style={styles.doorEntryHint}>{t('event.event_door_entry_hint')}</Text>
+                )}
+              </View>
             </View>
           ) : (
             <>
@@ -550,27 +557,34 @@ export default function EventScreen() {
             <Text style={[styles.ctaText, { color: Colors.textMuted }]}>{t('event.event_ended')}</Text>
           </View>
         ) : !hasTickets && !hasTables ? null : isSoldOut ? (
-          <TouchableOpacity
-            style={[styles.ctaButton, onWaitlist && styles.ctaWaitlistActive]}
-            activeOpacity={0.85}
-            onPress={async () => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              if (onWaitlist) {
-                removeFromWaitlist(event.id);
-              } else {
-                await addToWaitlist(event.id, event.name);
-              }
-            }}
-          >
-            <Ionicons
-              name={onWaitlist ? 'notifications' : 'notifications-outline'}
-              size={16}
-              color={Colors.white}
-            />
-            <Text style={styles.ctaText}>
-              {onWaitlist ? t('event.waitlist_active') : t('event.waitlist_join')}
-            </Text>
-          </TouchableOpacity>
+          event.doorEntryAvailable ? (
+            <View style={[styles.ctaButton, { backgroundColor: Colors.accent }]}>
+              <Ionicons name="location-outline" size={16} color={Colors.white} />
+              <Text style={styles.ctaText}>{t('event.event_door_entry_hint')}</Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[styles.ctaButton, onWaitlist && styles.ctaWaitlistActive]}
+              activeOpacity={0.85}
+              onPress={async () => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                if (onWaitlist) {
+                  removeFromWaitlist(event.id);
+                } else {
+                  await addToWaitlist(event.id, event.name);
+                }
+              }}
+            >
+              <Ionicons
+                name={onWaitlist ? 'notifications' : 'notifications-outline'}
+                size={16}
+                color={Colors.white}
+              />
+              <Text style={styles.ctaText}>
+                {onWaitlist ? t('event.waitlist_active') : t('event.waitlist_join')}
+              </Text>
+            </TouchableOpacity>
+          )
         ) : (!hasTickets && bookingMode === 'ticket') ? null : (
           <>
             {selectedTable && (
@@ -1072,4 +1086,5 @@ const styles = StyleSheet.create({
     padding: 14, marginBottom: 4,
   },
   soldOutText: { fontSize: 15, fontFamily: Font.bold, color: Colors.error },
+  doorEntryHint: { fontSize: 12, color: Colors.accent, marginTop: 3, opacity: 0.85 },
 });
