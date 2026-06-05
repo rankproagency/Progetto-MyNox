@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Plus, Trash2, Mic2, Music } from 'lucide-react';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 interface PerformerRow {
   name: string;
@@ -64,6 +65,8 @@ interface EventFormProps {
 export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event, initialTicketTypes, initialEventTables }: EventFormProps) {
   const router = useRouter();
   const isEdit = !!event;
+  const { t } = useLanguage();
+  const ef = t.eventForm;
 
   const [form, setForm] = useState({
     name: event?.name ?? '',
@@ -87,12 +90,12 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
     initialTicketTypes ?? [{ label: '', price: '', total_quantity: '', includes_drink: true }]
   );
 
-  const defaultEventTables = (clubTables ?? []).map((t) => ({
-    clubTableId: t.id,
-    label: t.label,
-    capacity: t.capacity,
-    deposit: String(t.defaultDeposit),
-    defaultDeposit: t.defaultDeposit,
+  const defaultEventTables = (clubTables ?? []).map((ct) => ({
+    clubTableId: ct.id,
+    label: ct.label,
+    capacity: ct.capacity,
+    deposit: String(ct.defaultDeposit),
+    defaultDeposit: ct.defaultDeposit,
     isAvailable: true,
   }));
 
@@ -100,8 +103,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
     initialEventTables ?? defaultEventTables
   );
   const [customizeTables, setCustomizeTables] = useState(
-    // Se c'è già una personalizzazione, parte in modalità modifica
-    !!initialEventTables && initialEventTables.some((t) => t.deposit !== String(t.defaultDeposit))
+    !!initialEventTables && initialEventTables.some((et) => et.deposit !== String(et.defaultDeposit))
   );
 
   const [loading, setLoading] = useState(false);
@@ -120,7 +122,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
       .from('event-images')
       .upload(path, file, { upsert: true });
     if (uploadError) {
-      setError('Errore upload immagine: ' + uploadError.message);
+      setError(ef.imageError + ' ' + uploadError.message);
       setUploading(false);
       return;
     }
@@ -159,10 +161,16 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
   }
 
   function updateTicketType(index: number, field: keyof TicketTypeRow, value: string | boolean) {
-    setTicketTypes((prev) => prev.map((t, i) => i === index ? { ...t, [field]: value } : t));
+    setTicketTypes((prev) => prev.map((tk, i) => i === index ? { ...tk, [field]: value } : tk));
   }
 
   async function handleSubmit(publish: boolean) {
+    if (!form.name.trim()) { setError(ef.nameRequired); return; }
+    if (!form.date) { setError(ef.dateRequired); return; }
+    if (!form.start_time) { setError(ef.startTimeRequired); return; }
+    const incompleteTicket = ticketTypes.find((tk) => (tk.label.trim() || tk.price) && !tk.total_quantity);
+    if (incompleteTicket) { setError(ef.availableRequired); return; }
+
     setLoading(true);
     setError('');
 
@@ -190,46 +198,46 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
       if (updateError) { setError(updateError.message); setLoading(false); return; }
     } else {
       const { data, error: insertError } = await supabase.from('events').insert(payload).select('id').single();
-      if (insertError || !data) { setError(insertError?.message ?? 'Errore creazione evento'); setLoading(false); return; }
+      if (insertError || !data) { setError(insertError?.message ?? ef.createError); setLoading(false); return; }
       eventId = data.id;
     }
 
     // Salva tipi biglietto: elimina i vecchi e reinserisci
-    const validTickets = ticketTypes.filter((t) => t.label.trim() && t.price);
+    const validTickets = ticketTypes.filter((tk) => tk.label.trim() && tk.price);
     if (validTickets.length > 0 && eventId) {
       await supabase.from('ticket_types').delete().eq('event_id', eventId);
       const { error: ticketError } = await supabase.from('ticket_types').insert(
-        validTickets.map((t) => ({
+        validTickets.map((tk) => ({
           event_id: eventId,
-          label: t.label.trim(),
-          price: parseFloat(t.price),
-          total_quantity: t.total_quantity ? parseInt(t.total_quantity) : null,
+          label: tk.label.trim(),
+          price: parseFloat(tk.price),
+          total_quantity: tk.total_quantity ? parseInt(tk.total_quantity) : null,
           sold_quantity: 0,
-          includes_drink: t.includes_drink,
+          includes_drink: tk.includes_drink,
         }))
       );
-      if (ticketError) { setError('Evento salvato ma errore nei biglietti: ' + ticketError.message); setLoading(false); return; }
+      if (ticketError) { setError(ef.saveTicketsError + ' ' + ticketError.message); setLoading(false); return; }
     }
 
     // Salva tavoli evento (con prezzi specifici per questo evento)
     if (eventId && eventTables.length > 0) {
       await supabase.from('tables').delete().eq('event_id', eventId);
       const { error: tablesError } = await supabase.from('tables').insert(
-        eventTables.map((t) => {
-          const clubTable = clubTables?.find((ct) => ct.id === t.clubTableId);
+        eventTables.map((et) => {
+          const clubTable = clubTables?.find((ct) => ct.id === et.clubTableId);
           return {
             event_id: eventId,
-            club_table_id: t.clubTableId,
-            label: t.label,
-            capacity: t.capacity,
-            deposit: t.deposit ? parseFloat(t.deposit) : 0,
-            is_available: t.isAvailable,
+            club_table_id: et.clubTableId,
+            label: et.label,
+            capacity: et.capacity,
+            deposit: et.deposit ? parseFloat(et.deposit) : 0,
+            is_available: et.isAvailable,
             pos_x: clubTable?.posX ?? null,
             pos_y: clubTable?.posY ?? null,
           };
         })
       );
-      if (tablesError) { setError('Evento salvato ma errore nei tavoli: ' + tablesError.message); setLoading(false); return; }
+      if (tablesError) { setError(ef.saveTablesError + ' ' + tablesError.message); setLoading(false); return; }
     }
 
     setLoading(false);
@@ -238,10 +246,11 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
   }
 
   async function handleDelete() {
-    if (!event || !confirm('Sei sicuro di voler eliminare questo evento?')) return;
+    if (!event || !confirm(ef.deleteConfirm)) return;
     setLoading(true);
     const supabase = createClient();
-    await supabase.from('events').delete().eq('id', event.id);
+    const { error: delError } = await supabase.from('events').delete().eq('id', event.id);
+    if (delError) { alert(ef.deleteError + ' ' + delError.message); }
     router.push('/club/events');
     router.refresh();
   }
@@ -250,7 +259,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
     <form onSubmit={(e) => e.preventDefault()} className="space-y-6 max-w-2xl">
 
       {/* Nome */}
-      <Field label="Nome evento *">
+      <Field label={ef.fieldName}>
         <input
           required
           value={form.name}
@@ -261,11 +270,11 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
       </Field>
 
       {/* Descrizione */}
-      <Field label="Descrizione">
+      <Field label={ef.fieldDescription}>
         <textarea
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
-          placeholder="Descrivi l'evento..."
+          placeholder="..."
           rows={3}
           className={inputClass}
         />
@@ -273,7 +282,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
 
       {/* Data e orari */}
       <div className="grid grid-cols-3 gap-4">
-        <Field label="Data *">
+        <Field label={ef.fieldDate}>
           <input
             required
             type="date"
@@ -282,7 +291,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
             className={inputClass}
           />
         </Field>
-        <Field label="Orario inizio *">
+        <Field label={ef.fieldStartTime}>
           <input
             required
             type="time"
@@ -291,7 +300,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
             className={inputClass}
           />
         </Field>
-        <Field label="Orario fine">
+        <Field label={ef.fieldEndTime}>
           <input
             type="time"
             value={form.end_time}
@@ -303,7 +312,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
 
       {/* Capienza e dress code */}
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Capienza massima">
+        <Field label={ef.fieldCapacity}>
           <input
             type="number"
             min="1"
@@ -313,7 +322,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
             className={inputClass}
           />
         </Field>
-        <Field label="Dress code">
+        <Field label={ef.fieldDressCode}>
           <input
             value={form.dress_code}
             onChange={(e) => setForm({ ...form, dress_code: e.target.value })}
@@ -324,14 +333,14 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
       </div>
 
       {/* Immagine copertina */}
-      <Field label="Immagine copertina">
+      <Field label={ef.fieldCoverImage}>
         <div className="space-y-3">
           <label className={`flex items-center gap-3 cursor-pointer px-3 py-2.5 rounded-lg border border-dashed border-white/20 hover:border-purple-500/50 transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
-            <span className="text-sm text-slate-400">{uploading ? 'Caricamento...' : 'Scegli file dal computer'}</span>
+            <span className="text-sm text-slate-400">{uploading ? t.common.loading : ef.chooseFile}</span>
             <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
           </label>
           {form.image_url && (
-            <img src={form.image_url} alt="Anteprima" className="w-full h-40 object-cover rounded-lg border border-white/10" />
+            <img src={form.image_url} alt={ef.preview} className="w-full h-40 object-cover rounded-lg border border-white/10" />
           )}
         </div>
       </Field>
@@ -340,39 +349,36 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
       {eventTables.length > 0 ? (
         <div className="space-y-4">
           <label className="block text-xs font-medium text-slate-400 uppercase tracking-wide">
-            Tavoli
+            {ef.fieldTables}
           </label>
 
-          {/* Piantina — solo estetica */}
           {clubFloorPlanUrl && clubTables && clubTables.length > 0 && (
             <div className="relative select-none">
-              {/* Immagine con clip separato */}
               <div className="overflow-hidden rounded-xl border border-white/10 pointer-events-none">
                 <img
                   src={clubFloorPlanUrl}
-                  alt="Piantina"
+                  alt={ef.fieldTables}
                   className="w-full object-contain block"
                 />
               </div>
 
-              {/* Marker — fuori dal clip così i tooltip non vengono tagliati */}
-              {clubTables.map((t) => {
-                const isAvailable = eventTables.find(et => et.clubTableId === t.id)?.isAvailable !== false;
-                const showBelow = t.posY < 0.28;
+              {clubTables.map((ct) => {
+                const isAvailable = eventTables.find(et => et.clubTableId === ct.id)?.isAvailable !== false;
+                const showBelow = ct.posY < 0.28;
                 const tooltipAlign =
-                  t.posX < 0.22
+                  ct.posX < 0.22
                     ? 'left-0'
-                    : t.posX > 0.78
+                    : ct.posX > 0.78
                     ? 'right-0'
                     : 'left-1/2 -translate-x-1/2';
 
                 return (
                   <div
-                    key={t.id}
+                    key={ct.id}
                     className="group absolute"
                     style={{
-                      left: `${t.posX * 100}%`,
-                      top: `${t.posY * 100}%`,
+                      left: `${ct.posX * 100}%`,
+                      top: `${ct.posY * 100}%`,
                       transform: 'translate(-50%, -50%)',
                       zIndex: 10,
                     }}
@@ -380,12 +386,12 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
                     <div className={`w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold shadow-lg ${
                       isAvailable ? 'bg-purple-600' : 'bg-slate-600 opacity-50'
                     }`}>
-                      {t.capacity}
+                      {ct.capacity}
                     </div>
                     <div className={`absolute ${tooltipAlign} ${showBelow ? 'top-full mt-1' : 'bottom-full mb-1'} hidden group-hover:block z-20 pointer-events-none`}>
                       <div className="whitespace-nowrap bg-[#0d0e1a] border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-white shadow-xl">
-                        <span className="font-semibold">{t.label}</span>
-                        <span className="text-slate-400"> · {t.capacity} posti</span>
+                        <span className="font-semibold">{ct.label}</span>
+                        <span className="text-slate-400"> · {ct.capacity} {ef.seats}</span>
                       </div>
                     </div>
                   </div>
@@ -397,13 +403,12 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
           {/* Header prezzi + toggle */}
           <div className="flex items-center justify-between">
             <p className="text-xs text-slate-500">
-              {customizeTables ? 'Modifica caparra e disponibilità per questo evento' : 'Prezzi di default — uguali per ogni evento'}
+              {customizeTables ? ef.editPriceForEvent : ef.defaultPrices}
             </p>
             <button
               type="button"
               onClick={() => {
                 if (customizeTables) {
-                  // Ripristina defaults mantenendo lo stato di prenotazione
                   setEventTables(defaultEventTables.map((dt) => ({
                     ...dt,
                     isAvailable: eventTables.find((et) => et.clubTableId === dt.clubTableId)?.isAvailable ?? true,
@@ -417,19 +422,19 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
                   : 'border-white/10 text-slate-400 hover:text-slate-200 hover:border-white/20'
               }`}
             >
-              {customizeTables ? '✕ Ripristina default' : 'Modifica per questo evento'}
+              {customizeTables ? ef.resetDefault : ef.editForEvent}
             </button>
           </div>
 
           {/* Lista tavoli */}
           <div className="space-y-2">
-            {eventTables.map((t, i) => (
-              <div key={t.clubTableId} className={`flex items-center gap-3 bg-[#111118] border rounded-lg px-4 py-3 transition-colors ${
-                !t.isAvailable ? 'opacity-50 border-white/5' : 'border-white/8'
+            {eventTables.map((et, i) => (
+              <div key={et.clubTableId} className={`flex items-center gap-3 bg-[#111118] border rounded-lg px-4 py-3 transition-colors ${
+                !et.isAvailable ? 'opacity-50 border-white/5' : 'border-white/8'
               }`}>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{t.label}</p>
-                  <p className="text-xs text-slate-500">{t.capacity} posti</p>
+                  <p className="text-sm font-medium text-white truncate">{et.label}</p>
+                  <p className="text-xs text-slate-500">{et.capacity} {ef.seats}</p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <span className="text-xs text-slate-500">€</span>
@@ -437,7 +442,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
                     type="number"
                     min="0"
                     step="1"
-                    value={customizeTables ? t.deposit : t.defaultDeposit}
+                    value={customizeTables ? et.deposit : et.defaultDeposit}
                     disabled={!customizeTables}
                     onChange={(e) => setEventTables((prev) =>
                       prev.map((row, idx) => idx === i ? { ...row, deposit: e.target.value } : row)
@@ -448,14 +453,14 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
                 <label className={`flex items-center gap-1.5 shrink-0 ${customizeTables ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}>
                   <input
                     type="checkbox"
-                    checked={t.isAvailable}
+                    checked={et.isAvailable}
                     disabled={!customizeTables}
                     onChange={(e) => setEventTables((prev) =>
                       prev.map((row, idx) => idx === i ? { ...row, isAvailable: e.target.checked } : row)
                     )}
                     className="w-3.5 h-3.5 rounded accent-purple-500"
                   />
-                  <span className="text-xs text-slate-500">Attivo</span>
+                  <span className="text-xs text-slate-500">{ef.active}</span>
                 </label>
               </div>
             ))}
@@ -463,15 +468,15 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
         </div>
       ) : (
         <div className="bg-[#111118] border border-white/8 rounded-xl p-5 text-center">
-          <p className="text-sm text-slate-500">Nessun tavolo configurato per questo locale.</p>
+          <p className="text-sm text-slate-500">{ef.noTables}</p>
           <a href="/club/venue" className="text-xs text-purple-400 hover:text-purple-300 mt-1 inline-block">
-            Vai a Piantina & Tavoli →
+            {ef.goToVenue}
           </a>
         </div>
       )}
 
       {/* Generi musicali */}
-      <Field label="Generi musicali">
+      <Field label={ef.fieldGenres}>
         <div className="flex flex-wrap gap-2 mt-1">
           {GENRES.map((genre) => (
             <button
@@ -493,7 +498,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
       {/* Lineup — DJ e Vocalist */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <label className="block text-xs font-medium text-slate-400 uppercase tracking-wide">Lineup</label>
+          <label className="block text-xs font-medium text-slate-400 uppercase tracking-wide">{ef.fieldLineup}</label>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -516,7 +521,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
         </div>
 
         {performers.length === 0 && (
-          <p className="text-xs text-slate-600 italic">Nessun artista aggiunto. Usa i pulsanti sopra per aggiungere DJ o vocalist.</p>
+          <p className="text-xs text-slate-600 italic">{ef.noArtists}</p>
         )}
 
         {performers.map((performer, index) => (
@@ -549,14 +554,19 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
       {/* Tipi di biglietto */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <label className="block text-xs font-medium text-slate-400 uppercase tracking-wide">Tipi di biglietto</label>
+          <div>
+            <label className="block text-xs font-medium text-slate-400 uppercase tracking-wide">{ef.ticketTypes}</label>
+            {ticketTypes.every((tk) => !tk.label.trim()) && (
+              <p className="text-xs text-slate-600 mt-0.5">{ef.noTicketsHint}</p>
+            )}
+          </div>
           <button
             type="button"
             onClick={addTicketType}
             className="flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 transition-colors"
           >
             <Plus size={13} />
-            Aggiungi
+            {t.common.add}
           </button>
         </div>
 
@@ -564,7 +574,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
           <div key={index} className="bg-[#111118] border border-white/8 rounded-lg p-4 space-y-3">
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-1">
-                <label className="block text-xs text-slate-500 mb-1">Nome biglietto</label>
+                <label className="block text-xs text-slate-500 mb-1">{ef.colTicketName}</label>
                 <input
                   value={ticket.label}
                   onChange={(e) => updateTicketType(index, 'label', e.target.value)}
@@ -573,7 +583,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-500 mb-1">Prezzo (€)</label>
+                <label className="block text-xs text-slate-500 mb-1">{ef.colTicketPrice}</label>
                 <input
                   type="number"
                   min="0"
@@ -585,7 +595,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-500 mb-1">Quantità disponibile</label>
+                <label className="block text-xs text-slate-500 mb-1">{ef.colTicketQty}</label>
                 <input
                   type="number"
                   min="0"
@@ -604,7 +614,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
                   onChange={(e) => updateTicketType(index, 'includes_drink', e.target.checked)}
                   className="w-4 h-4 rounded accent-purple-500"
                 />
-                <span className="text-sm text-slate-400">Include free drink</span>
+                <span className="text-sm text-slate-400">{ef.freeDrink}</span>
               </label>
               {ticketTypes.length > 1 && (
                 <button
@@ -667,7 +677,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
               onClick={() => handleSubmit(true)}
               className="bg-purple-600 hover:bg-purple-500 disabled:opacity-60 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors"
             >
-              {loading ? 'Salvataggio...' : 'Salva modifiche'}
+              {loading ? t.common.saving : ef.saveChanges}
             </button>
             <button
               type="button"
@@ -675,7 +685,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
               onClick={() => handleSubmit(false)}
               className="bg-white/8 hover:bg-white/12 disabled:opacity-60 text-slate-300 text-sm font-semibold px-6 py-2.5 rounded-lg border border-white/10 transition-colors"
             >
-              {loading ? 'Salvataggio...' : 'Metti in bozza'}
+              {loading ? t.common.saving : ef.setDraft}
             </button>
           </>
         ) : (
@@ -686,7 +696,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
               onClick={() => handleSubmit(false)}
               className="bg-white/8 hover:bg-white/12 disabled:opacity-60 text-slate-300 text-sm font-semibold px-6 py-2.5 rounded-lg border border-white/10 transition-colors"
             >
-              {loading ? 'Salvataggio...' : 'Salva come bozza'}
+              {loading ? t.common.saving : ef.saveDraft}
             </button>
             <button
               type="button"
@@ -694,7 +704,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
               onClick={() => handleSubmit(true)}
               className="bg-purple-600 hover:bg-purple-500 disabled:opacity-60 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors"
             >
-              {loading ? 'Salvataggio...' : 'Pubblica evento'}
+              {loading ? t.common.saving : ef.publishEvent}
             </button>
           </>
         )}
@@ -703,21 +713,21 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
           onClick={() => router.back()}
           className="text-slate-400 hover:text-slate-200 text-sm font-medium px-4 py-2.5 transition-colors"
         >
-          Annulla
+          {t.common.cancel}
         </button>
       </div>
 
       {/* Zona pericolosa */}
       {isEdit && (
         <div className="pt-6 mt-6 border-t border-white/8">
-          <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-3">Zona pericolosa</p>
+          <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-3">{ef.dangerZone}</p>
           <button
             type="button"
             onClick={handleDelete}
             disabled={loading}
             className="text-sm font-medium text-red-400 hover:text-white hover:bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
           >
-            Elimina evento definitivamente
+            {ef.deleteEvent}
           </button>
         </div>
       )}

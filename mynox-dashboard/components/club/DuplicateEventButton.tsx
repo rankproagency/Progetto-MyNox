@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Copy } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 interface Props {
   eventId: string;
@@ -12,9 +13,10 @@ interface Props {
 export default function DuplicateEventButton({ eventId }: Props) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { t } = useLanguage();
 
   async function handleDuplicate() {
-    if (!confirm('Duplicare questo evento? Verrà creata una bozza con gli stessi dati.')) return;
+    if (!confirm(t.duplicateEvent.confirm)) return;
     setLoading(true);
     const supabase = createClient();
 
@@ -33,7 +35,7 @@ export default function DuplicateEventButton({ eventId }: Props) {
       .from('events')
       .insert({
         club_id: event.club_id,
-        name: `${event.name} (copia)`,
+        name: `${event.name} ${t.duplicateEvent.copySuffix}`,
         description: event.description,
         date: event.date,
         start_time: event.start_time,
@@ -92,10 +94,10 @@ export default function DuplicateEventButton({ eventId }: Props) {
       onClick={handleDuplicate}
       disabled={loading}
       className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-      title="Duplica evento"
+      title={t.duplicateEvent.btn}
     >
       <Copy size={12} />
-      {loading ? '...' : 'Duplica'}
+      {loading ? '...' : t.duplicateEvent.btn}
     </button>
   );
 }

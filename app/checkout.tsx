@@ -139,8 +139,11 @@ export default function CheckoutScreen() {
   useEffect(() => {
     // Render.com free tier si spegne dopo inattività: lo svegliamo in background
     // mentre l'utente legge il checkout, così "Paga" trova il server già caldo.
-    fetch(`${PROXY_URL}/health`, { method: 'GET', signal: AbortSignal.timeout(50000) })
-      .catch(() => {});
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 50000);
+    fetch(`${PROXY_URL}/health`, { method: 'GET', signal: controller.signal })
+      .catch(() => {})
+      .finally(() => clearTimeout(timer));
   }, []);
 
   useEffect(() => {

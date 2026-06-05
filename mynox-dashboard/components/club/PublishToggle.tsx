@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 interface Props {
   eventId: string;
@@ -11,6 +12,7 @@ interface Props {
 export default function PublishToggle({ eventId, isPublished: initial }: Props) {
   const [published, setPublished] = useState(initial);
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguage();
 
   async function toggle() {
     setLoading(true);
@@ -30,9 +32,9 @@ export default function PublishToggle({ eventId, isPublished: initial }: Props) 
           ? 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20'
           : 'bg-slate-500/10 text-slate-400 border-slate-500/20 hover:bg-green-500/10 hover:text-green-400 hover:border-green-500/20'
       } ${loading ? 'opacity-50' : ''}`}
-      title={published ? 'Clicca per mettere in bozza' : 'Clicca per pubblicare'}
+      title={published ? t.publishToggle.clickToDraft : t.publishToggle.clickToPublish}
     >
-      {loading ? '...' : published ? 'Pubblicato' : 'Bozza'}
+      {loading ? '...' : published ? t.publishToggle.published : t.publishToggle.draft}
     </button>
   );
 }

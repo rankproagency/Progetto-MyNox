@@ -1,6 +1,7 @@
 'use client';
 
 import { Download } from 'lucide-react';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 interface Participant {
   id: string;
@@ -14,16 +15,19 @@ interface Participant {
 }
 
 export default function ParticipantsTable({ participants, eventName }: { participants: Participant[]; eventName: string }) {
+  const { t } = useLanguage();
+  const pt = t.participantsTable;
+
   function exportCSV() {
-    const header = ['Nome', 'Email', 'Tipo biglietto', 'Prezzo', 'Stato', 'Drink usato', 'Acquistato il'];
+    const header = [pt.colName, pt.colEmail, pt.colTicketType, pt.colPrice, pt.colStatus, pt.colDrink, pt.colPurchased];
     const rows = participants.map((p) => [
       p.name,
       p.email,
       p.ticketLabel,
       `€${p.price.toFixed(2)}`,
-      p.status === 'valid' ? 'Valido' : p.status === 'used' ? 'Usato' : p.status === 'denied' ? 'Negato' : p.status,
-      p.drinkUsed ? 'Sì' : 'No',
-      new Date(p.createdAt).toLocaleDateString('it-IT'),
+      p.status === 'valid' ? pt.valid : p.status === 'used' ? pt.used : p.status === 'denied' ? pt.denied : p.status,
+      p.drinkUsed ? pt.yes : pt.no,
+      new Date(p.createdAt).toLocaleDateString(),
     ]);
     const csv = [header, ...rows].map((r) => r.map((v) => `"${v}"`).join(',')).join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -42,14 +46,14 @@ export default function ParticipantsTable({ participants, eventName }: { partici
     pending:'bg-amber-500/10 text-amber-400 border-amber-500/20',
   };
   const statusLabel: Record<string, string> = {
-    valid: 'Valido', used: 'Usato', denied: 'Negato', pending: 'In attesa',
+    valid: pt.valid, used: pt.used, denied: pt.denied, pending: 'pending',
   };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-white">
-          Partecipanti <span className="text-slate-500 font-normal text-base">({participants.length})</span>
+          {pt.title} <span className="text-slate-500 font-normal text-base">({participants.length})</span>
         </h2>
         {participants.length > 0 && (
           <button
@@ -57,27 +61,27 @@ export default function ParticipantsTable({ participants, eventName }: { partici
             className="flex items-center gap-2 text-sm text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-lg transition-colors"
           >
             <Download size={14} />
-            Esporta CSV
+            {pt.exportCSV}
           </button>
         )}
       </div>
 
       {participants.length === 0 ? (
         <div className="bg-[#111118] border border-white/8 rounded-xl p-10 text-center text-slate-500 text-sm">
-          Nessun biglietto venduto ancora.
+          {pt.noTickets}
         </div>
       ) : (
         <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/8">
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Nome</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Email</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Biglietto</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Prezzo</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Stato</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Drink</th>
-                <th className="text-left px-5 py-3 text-slate-400 font-medium">Acquistato</th>
+                <th className="text-left px-5 py-3 text-slate-400 font-medium">{pt.colName}</th>
+                <th className="text-left px-5 py-3 text-slate-400 font-medium">{pt.colEmail}</th>
+                <th className="text-left px-5 py-3 text-slate-400 font-medium">{pt.colTicketType}</th>
+                <th className="text-left px-5 py-3 text-slate-400 font-medium">{pt.colPrice}</th>
+                <th className="text-left px-5 py-3 text-slate-400 font-medium">{pt.colStatus}</th>
+                <th className="text-left px-5 py-3 text-slate-400 font-medium">{pt.colDrink}</th>
+                <th className="text-left px-5 py-3 text-slate-400 font-medium">{pt.colPurchased}</th>
               </tr>
             </thead>
             <tbody>
@@ -92,9 +96,9 @@ export default function ParticipantsTable({ participants, eventName }: { partici
                       {statusLabel[p.status] ?? p.status}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-slate-400 text-xs">{p.drinkUsed ? '✓ Usato' : '—'}</td>
+                  <td className="px-5 py-3.5 text-slate-400 text-xs">{p.drinkUsed ? pt.drinkUsed : '—'}</td>
                   <td className="px-5 py-3.5 text-slate-500 text-xs">
-                    {new Date(p.createdAt).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}
+                    {new Date(p.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
                   </td>
                 </tr>
               ))}

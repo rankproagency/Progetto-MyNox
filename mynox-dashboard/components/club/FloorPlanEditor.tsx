@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Trash2, Pencil } from 'lucide-react';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 export interface TableMarker {
   tempId: string;
@@ -28,6 +29,8 @@ export default function FloorPlanEditor({ floorPlanUrl, tables, onChange }: Prop
   const [label, setLabel] = useState('');
   const [capacity, setCapacity] = useState('4');
   const [deposit, setDeposit] = useState('');
+  const { t } = useLanguage();
+  const fp = t.floorPlanEditor;
 
   function openAdd(x: number, y: number) {
     setFormMode({ type: 'add', x, y });
@@ -92,7 +95,7 @@ export default function FloorPlanEditor({ floorPlanUrl, tables, onChange }: Prop
   return (
     <div className="space-y-3">
       <p className="text-xs text-slate-500">
-        Clicca sulla piantina per aggiungere un tavolo. Clicca su un marker esistente per modificarlo.
+        {fp.hint}
       </p>
 
       {/* Piantina interattiva */}
@@ -106,7 +109,7 @@ export default function FloorPlanEditor({ floorPlanUrl, tables, onChange }: Prop
         <div className="overflow-hidden rounded-xl border border-white/10 pointer-events-none">
           <img
             src={floorPlanUrl}
-            alt="Piantina"
+            alt={fp.floorPlan}
             className="w-full object-contain block"
             draggable={false}
           />
@@ -153,7 +156,7 @@ export default function FloorPlanEditor({ floorPlanUrl, tables, onChange }: Prop
                   className={`absolute ${tooltipAlign} ${showBelow ? 'top-full mt-2' : 'bottom-full mb-2'} hidden group-hover:flex items-center gap-2 whitespace-nowrap bg-[#0d0e1a] border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-white shadow-xl z-30 pointer-events-auto`}
                 >
                   <span className="font-semibold">{table.label}</span>
-                  <span className="text-slate-400">· {table.capacity} posti · €{table.deposit}</span>
+                  <span className="text-slate-400">· {table.capacity} {fp.fieldSeats} · €{table.deposit}</span>
                   <button
                     data-marker="true"
                     type="button"
@@ -195,27 +198,29 @@ export default function FloorPlanEditor({ floorPlanUrl, tables, onChange }: Prop
       {/* Form aggiunta */}
       {formMode?.type === 'add' && (
         <TableForm
-          title="Nuovo tavolo"
+          title={fp.newTable}
           label={label} setLabel={setLabel}
           capacity={capacity} setCapacity={setCapacity}
           deposit={deposit} setDeposit={setDeposit}
           onConfirm={confirmAdd}
           onCancel={() => setFormMode(null)}
-          confirmLabel="Aggiungi tavolo"
+          confirmLabel={fp.addTable}
+          fp={fp}
         />
       )}
 
       {/* Form modifica */}
       {formMode?.type === 'edit' && (
         <TableForm
-          title={`Modifica — ${tables.find(t => t.tempId === editingId)?.label ?? ''}`}
+          title={`${fp.editTable}${tables.find(t => t.tempId === editingId)?.label ?? ''}`}
           label={label} setLabel={setLabel}
           capacity={capacity} setCapacity={setCapacity}
           deposit={deposit} setDeposit={setDeposit}
           onConfirm={confirmEdit}
           onCancel={() => setFormMode(null)}
-          confirmLabel="Salva modifiche"
+          confirmLabel={fp.saveChanges}
           onDelete={() => removeTable(editingId!)}
+          fp={fp}
         />
       )}
 
@@ -234,7 +239,7 @@ export default function FloorPlanEditor({ floorPlanUrl, tables, onChange }: Prop
               }`}
             >
               <Pencil size={9} />
-              {t.label} · {t.capacity} posti · €{t.deposit}
+              {t.label} · {t.capacity} {fp.fieldSeats} · €{t.deposit}
             </button>
           ))}
         </div>
@@ -245,7 +250,7 @@ export default function FloorPlanEditor({ floorPlanUrl, tables, onChange }: Prop
 
 function TableForm({
   title, label, setLabel, capacity, setCapacity, deposit, setDeposit,
-  onConfirm, onCancel, confirmLabel, onDelete,
+  onConfirm, onCancel, confirmLabel, onDelete, fp,
 }: {
   title: string;
   label: string; setLabel: (v: string) => void;
@@ -255,24 +260,25 @@ function TableForm({
   onCancel: () => void;
   confirmLabel: string;
   onDelete?: () => void;
+  fp: { fieldTableName: string; fieldSeats: string; fieldDeposit: string; tableNamePlaceholder: string; cancel: string; delete: string };
 }) {
   return (
     <div data-form="true" className="bg-[#111118] border border-purple-500/30 rounded-xl p-4 space-y-3">
       <p className="text-sm font-semibold text-white">{title}</p>
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="block text-xs text-slate-500 mb-1">Nome tavolo</label>
+          <label className="block text-xs text-slate-500 mb-1">{fp.fieldTableName}</label>
           <input
             autoFocus
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && onConfirm()}
-            placeholder="es. Tavolo VIP 1"
+            placeholder={fp.tableNamePlaceholder}
             className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors"
           />
         </div>
         <div>
-          <label className="block text-xs text-slate-500 mb-1">Posti</label>
+          <label className="block text-xs text-slate-500 mb-1">{fp.fieldSeats}</label>
           <input
             type="number"
             min="1"
@@ -283,7 +289,7 @@ function TableForm({
           />
         </div>
         <div>
-          <label className="block text-xs text-slate-500 mb-1">Caparra default (€)</label>
+          <label className="block text-xs text-slate-500 mb-1">{fp.fieldDeposit}</label>
           <input
             type="number"
             min="0"
@@ -308,7 +314,7 @@ function TableForm({
           onClick={onCancel}
           className="text-slate-400 hover:text-slate-200 text-sm px-3 py-2 transition-colors"
         >
-          Annulla
+          {fp.cancel}
         </button>
         {onDelete && (
           <button
@@ -317,7 +323,7 @@ function TableForm({
             className="ml-auto flex items-center gap-1.5 text-red-400 hover:text-red-300 text-sm transition-colors"
           >
             <Trash2 size={13} />
-            Elimina
+            {fp.delete}
           </button>
         )}
       </div>
