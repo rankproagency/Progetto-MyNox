@@ -29,7 +29,7 @@ export default function AnalyticsCharts({ salesByEvent, revenueData, tablesByEve
         <div className="bg-[#111118] border border-white/8 rounded-xl p-6">
           <h2 className="text-sm font-semibold text-white mb-6">{t.analyticsCharts.monthlyRevenue}</h2>
           {revenueData.every((d) => d.ricavi === 0) ? (
-            <EmptyChart />
+            <EmptyChart label={t.analyticsCharts.noData} />
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={revenueData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -48,7 +48,7 @@ export default function AnalyticsCharts({ salesByEvent, revenueData, tablesByEve
       <div className="bg-[#111118] border border-white/8 rounded-xl p-6">
         <h2 className="text-sm font-semibold text-white mb-6">{t.analyticsCharts.ticketsByEvent}</h2>
         {salesByEvent.length === 0 ? (
-          <EmptyChart />
+          <EmptyChart label={t.analyticsCharts.noData} />
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={salesByEvent} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -66,7 +66,7 @@ export default function AnalyticsCharts({ salesByEvent, revenueData, tablesByEve
       <div className="bg-[#111118] border border-white/8 rounded-xl p-6">
         <h2 className="text-sm font-semibold text-white mb-6">{t.analyticsCharts.tablesByEvent}</h2>
         {tablesByEvent.length === 0 ? (
-          <EmptyChart />
+          <EmptyChart label={t.analyticsCharts.noData} />
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={tablesByEvent} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -84,10 +84,10 @@ export default function AnalyticsCharts({ salesByEvent, revenueData, tablesByEve
   );
 }
 
-function EmptyChart() {
+function EmptyChart({ label }: { label: string }) {
   return (
     <div className="h-[220px] flex items-center justify-center text-slate-500 text-sm">
-      {t.analyticsCharts.noData}
+      {label}
     </div>
   );
 }
