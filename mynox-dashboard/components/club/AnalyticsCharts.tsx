@@ -4,6 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line,
 } from 'recharts';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 interface Props {
   salesByEvent: { name: string; venduti: number; capacita: number }[];
@@ -20,12 +21,13 @@ const tooltipStyle = {
 };
 
 export default function AnalyticsCharts({ salesByEvent, revenueData, tablesByEvent }: Props) {
+  const { t } = useLanguage();
   return (
     <div className="space-y-6">
       {/* Ricavi per mese — solo con permesso */}
       {revenueData !== null && (
         <div className="bg-[#111118] border border-white/8 rounded-xl p-6">
-          <h2 className="text-sm font-semibold text-white mb-6">Ricavi mensili (ultimi 6 mesi)</h2>
+          <h2 className="text-sm font-semibold text-white mb-6">{t.analyticsCharts.monthlyRevenue}</h2>
           {revenueData.every((d) => d.ricavi === 0) ? (
             <EmptyChart />
           ) : (
@@ -34,7 +36,7 @@ export default function AnalyticsCharts({ salesByEvent, revenueData, tablesByEve
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                 <XAxis dataKey="mese" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `€${v}`} />
-                <Tooltip contentStyle={tooltipStyle} formatter={(value) => [`€${Number(value).toFixed(2)}`, 'Ricavi']} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(value) => [`€${Number(value).toFixed(2)}`, t.analyticsCharts.monthlyRevenue]} />
                 <Line type="monotone" dataKey="ricavi" stroke="#a855f7" strokeWidth={2} dot={{ fill: '#a855f7', r: 4 }} activeDot={{ r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
@@ -44,7 +46,7 @@ export default function AnalyticsCharts({ salesByEvent, revenueData, tablesByEve
 
       {/* Biglietti per evento */}
       <div className="bg-[#111118] border border-white/8 rounded-xl p-6">
-        <h2 className="text-sm font-semibold text-white mb-6">Biglietti venduti per evento</h2>
+        <h2 className="text-sm font-semibold text-white mb-6">{t.analyticsCharts.ticketsByEvent}</h2>
         {salesByEvent.length === 0 ? (
           <EmptyChart />
         ) : (
@@ -54,15 +56,15 @@ export default function AnalyticsCharts({ salesByEvent, revenueData, tablesByEve
               <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="venduti" name="Venduti" fill="#a855f7" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="capacita" name="Capacità" fill="rgba(168,85,247,0.2)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="venduti" name={t.analyticsCharts.sold} fill="#a855f7" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="capacita" name={t.analyticsCharts.capacity} fill="rgba(168,85,247,0.2)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
       </div>
       {/* Tavoli per evento */}
       <div className="bg-[#111118] border border-white/8 rounded-xl p-6">
-        <h2 className="text-sm font-semibold text-white mb-6">Tavoli per evento</h2>
+        <h2 className="text-sm font-semibold text-white mb-6">{t.analyticsCharts.tablesByEvent}</h2>
         {tablesByEvent.length === 0 ? (
           <EmptyChart />
         ) : (
@@ -72,8 +74,8 @@ export default function AnalyticsCharts({ salesByEvent, revenueData, tablesByEve
               <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="prenotati" name="Prenotati" fill="#a855f7" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="disponibili" name="Disponibili" fill="rgba(168,85,247,0.2)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="prenotati" name={t.analyticsCharts.booked} fill="#a855f7" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="disponibili" name={t.analyticsCharts.available} fill="rgba(168,85,247,0.2)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -85,7 +87,7 @@ export default function AnalyticsCharts({ salesByEvent, revenueData, tablesByEve
 function EmptyChart() {
   return (
     <div className="h-[220px] flex items-center justify-center text-slate-500 text-sm">
-      Nessun dato disponibile ancora.
+      {t.analyticsCharts.noData}
     </div>
   );
 }

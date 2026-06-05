@@ -203,7 +203,7 @@ export default function StaffManager({ initialStaff }: Props) {
       )}
       {/* Invite form */}
       <div className="bg-[#111118] border border-white/8 rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-white mb-4">Invita nuovo membro</h2>
+        <h2 className="text-sm font-semibold text-white mb-4">{t.staffManager.inviteNew}</h2>
 
         {/* Preset selector */}
         <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mb-4">
@@ -363,8 +363,8 @@ export default function StaffManager({ initialStaff }: Props) {
               <table className="w-full text-sm min-w-[680px]">
                 <thead>
                   <tr className="border-b border-white/8">
-                    <th className="text-left px-5 py-3 text-slate-400 font-medium">Membro</th>
-                    <th className="text-left px-5 py-3 text-slate-400 font-medium text-xs">Ruolo rapido</th>
+                    <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.staffManager.memberCol}</th>
+                    <th className="text-left px-5 py-3 text-slate-400 font-medium text-xs">{t.staffManager.quickRole}</th>
                     {PERMISSION_LABELS.map((p) => (
                       <th key={p.key} className="text-center px-3 py-3 text-slate-400 font-medium text-xs">
                         {p.label}

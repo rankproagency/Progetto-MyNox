@@ -170,8 +170,8 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
             className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-medium px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
           >
             {uploadingImage
-              ? <><Loader2 size={13} className="animate-spin" /> Caricamento...</>
-              : <><Camera size={13} /> Cambia foto</>
+              ? <><Loader2 size={13} className="animate-spin" /> {t.settingsForm.uploading}</>
+              : <><Camera size={13} /> {t.settingsForm.changePhoto}</>
             }
           </button>
         </div>
@@ -188,20 +188,20 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
       {/* Informazioni base */}
       <section className="space-y-4">
         <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider pb-2 border-b border-white/8">
-          Informazioni
+          {t.settingsForm.sectionInfo}
         </h2>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Nome club *" icon={<Building2 size={14} />}>
+          <Field label={t.settingsForm.fieldName} icon={<Building2 size={14} />}>
             <input
               required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Nome della discoteca"
+              placeholder={t.settingsForm.namePlaceholder}
               className={inputClass}
             />
           </Field>
-          <Field label="Città" icon={<MapPin size={14} />}>
+          <Field label={t.settingsForm.fieldCity} icon={<MapPin size={14} />}>
             <input
               value={form.city}
               onChange={(e) => setForm({ ...form, city: e.target.value })}
@@ -211,20 +211,20 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
           </Field>
         </div>
 
-        <Field label="Indirizzo" icon={<MapPin size={14} />}>
+        <Field label={t.settingsForm.fieldAddress} icon={<MapPin size={14} />}>
           <input
             value={form.address}
             onChange={(e) => setForm({ ...form, address: e.target.value })}
-            placeholder="es. Via Roma 1, 35122 Padova"
+            placeholder={t.settingsForm.addressPlaceholder}
             className={inputClass}
           />
         </Field>
       </section>
 
-      {/* Social & Contatti */}
+      {/* Social & Contacts */}
       <section className="space-y-4">
         <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider pb-2 border-b border-white/8">
-          Social & Contatti
+          {t.settingsForm.sectionSocial}
         </h2>
 
         <div className="grid grid-cols-2 gap-4">

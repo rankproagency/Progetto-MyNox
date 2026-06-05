@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Search, Pencil, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import PublishToggle from '@/components/club/PublishToggle';
 import DuplicateEventButton from '@/components/club/DuplicateEventButton';
+import { useLanguage } from '@/components/providers/I18nProvider';
 
 type Event = {
   id: string;
@@ -26,6 +27,7 @@ export default function ClubEventsTable({
   futureEvents: Event[];
   pastEvents: Event[];
 }) {
+  const { t } = useLanguage();
   const [tab, setTab] = useState<'future' | 'past'>('future');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -60,7 +62,7 @@ export default function ClubEventsTable({
         <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
         <input
           type="text"
-          placeholder="Cerca per nome evento…"
+          placeholder={t.eventsTable.searchPlaceholder}
           value={query}
           onChange={(e) => handleQueryChange(e.target.value)}
           className="w-full bg-[#111118] border border-white/8 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/50 transition-colors"
@@ -70,8 +72,8 @@ export default function ClubEventsTable({
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-4 bg-[#111118] border border-white/8 rounded-xl p-1 w-fit">
         {([
-          { key: 'future', label: 'Futuri', count: filteredFuture.length },
-          { key: 'past',   label: 'Passati', count: filteredPast.length },
+          { key: 'future', label: t.eventsTable.tabFuture, count: filteredFuture.length },
+          { key: 'past',   label: t.eventsTable.tabPast, count: filteredPast.length },
         ] as const).map(({ key, label, count }) => (
           <button
             key={key}
@@ -95,11 +97,11 @@ export default function ClubEventsTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/8">
-              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Nome</th>
-              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Data</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Biglietti</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">Ricavi</th>
-              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">Stato</th>
+              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{t.eventsTable.colName}</th>
+              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{t.eventsTable.colDate}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.eventsTable.colTickets}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.eventsTable.colRevenue}</th>
+              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{t.eventsTable.colStatus}</th>
               <th className="px-3 md:px-5 py-3" />
             </tr>
           </thead>
@@ -108,22 +110,22 @@ export default function ClubEventsTable({
               <tr>
                 <td colSpan={6} className="px-5 py-12 text-center text-slate-500">
                   {q
-                    ? 'Nessun evento corrisponde alla ricerca.'
+                    ? t.eventsTable.noMatch
                     : tab === 'future'
                       ? (
                         <div>
-                          <p className="font-medium text-slate-400 mb-1">Nessun evento in programma</p>
-                          <p className="text-xs mb-4">Crea il tuo primo evento per iniziare a vendere biglietti.</p>
+                          <p className="font-medium text-slate-400 mb-1">{t.eventsTable.noFuture}</p>
+                          <p className="text-xs mb-4">{t.eventsTable.noFutureHint}</p>
                           <Link
                             href="/club/events/new"
                             className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
                           >
                             <Plus size={14} />
-                            Crea evento
+                            {t.eventsTable.createEvent}
                           </Link>
                         </div>
                       )
-                      : 'Nessun evento passato.'}
+                      : t.eventsTable.noPast}
                 </td>
               </tr>
             ) : displayList.map((event, i) => {
