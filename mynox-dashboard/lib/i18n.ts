@@ -179,6 +179,8 @@ export const translations = {
       inviteError: 'Errore durante l\'invito', networkError: 'Errore di rete',
       inviteSent: 'Invito inviato a {email}',
       inviteNew: 'Invita nuovo membro', memberCol: 'Membro', quickRole: 'Ruolo rapido',
+      emailPlaceholder: 'email@esempio.com', sending: 'Invio...', inviteBtn: 'Invita',
+      noStaff: 'Nessun membro nello staff', noStaffHint: 'Invita qualcuno usando il modulo qui sopra.',
     },
     promoManager: {
       totalCodes: 'Codici totali', activeNow: 'Attivi ora', totalUses: 'Utilizzi totali',
@@ -490,6 +492,8 @@ export const translations = {
       inviteError: 'Error sending invite', networkError: 'Network error',
       inviteSent: 'Invite sent to {email}',
       inviteNew: 'Invite new member', memberCol: 'Member', quickRole: 'Quick role',
+      emailPlaceholder: 'email@example.com', sending: 'Sending...', inviteBtn: 'Invite',
+      noStaff: 'No staff members yet', noStaffHint: 'Invite someone using the form above.',
     },
     promoManager: {
       totalCodes: 'Total codes', activeNow: 'Active now', totalUses: 'Total uses',

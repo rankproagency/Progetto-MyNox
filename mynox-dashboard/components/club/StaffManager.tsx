@@ -271,7 +271,7 @@ export default function StaffManager({ initialStaff }: Props) {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="email@esempio.com"
+            placeholder={t.staffManager.emailPlaceholder}
             required
             className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30"
           />
@@ -281,7 +281,7 @@ export default function StaffManager({ initialStaff }: Props) {
             className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
           >
             <UserPlus size={15} />
-            {inviting ? 'Invio...' : 'Invita'}
+            {inviting ? t.staffManager.sending : t.staffManager.inviteBtn}
           </button>
         </form>
         {inviteError && <p className="mt-2 text-xs text-red-400">{inviteError}</p>}
@@ -292,8 +292,8 @@ export default function StaffManager({ initialStaff }: Props) {
       <div className="bg-[#111118] border border-white/8 rounded-xl">
         {staff.length === 0 ? (
           <div className="px-5 py-16 text-center">
-            <p className="text-slate-400 font-medium mb-1">Nessun membro nello staff</p>
-            <p className="text-slate-500 text-xs">Invita qualcuno usando il modulo qui sopra.</p>
+            <p className="text-slate-400 font-medium mb-1">{t.staffManager.noStaff}</p>
+            <p className="text-slate-500 text-xs">{t.staffManager.noStaffHint}</p>
           </div>
         ) : (
           <>
