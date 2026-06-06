@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { UserPlus, Trash2, LayoutGrid, BarChart3, Users, Sliders, ScanLine, Check, AlertTriangle } from 'lucide-react';
 import type { ClubStaff, StaffPermissions } from '@/types';
 import { useLanguage } from '@/components/providers/I18nProvider';
@@ -21,6 +22,7 @@ interface Props {
 
 export default function StaffManager({ initialStaff }: Props) {
   const { t } = useLanguage();
+  const router = useRouter();
 
   const PERMISSION_LABELS: { key: PermKey; label: string }[] = [
     { key: 'can_manage_events', label: t.staffManager.manageEvents },
@@ -111,6 +113,7 @@ export default function StaffManager({ initialStaff }: Props) {
         setInviteSuccess(t.staffManager.inviteSent.replace('{email}', email));
         setEmail('');
         setSelectedPreset(PRESETS[0]);
+        router.refresh();
       }
     } catch {
       setInviteError(t.staffManager.networkError);
@@ -179,10 +182,10 @@ export default function StaffManager({ initialStaff }: Props) {
               <div className="flex items-center justify-center w-9 h-9 rounded-full bg-red-500/10">
                 <AlertTriangle size={18} className="text-red-400" />
               </div>
-              <h3 className="text-white font-semibold text-sm">Rimuovi membro</h3>
+              <h3 className="text-white font-semibold text-sm">{t.staffManager.removeTitle}</h3>
             </div>
             <p className="text-slate-400 text-sm mb-5">
-              Vuoi rimuovere <span className="text-white font-medium">{memberToRemove.profiles?.name ?? memberToRemove.profiles?.email ?? 'questo membro'}</span> dallo staff? L&apos;accesso verrà revocato immediatamente.
+              {t.staffManager.removeConfirm} <span className="text-white font-medium">{memberToRemove.profiles?.name ?? memberToRemove.profiles?.email ?? '—'}</span> {t.staffManager.removeFromStaff}
             </p>
             <div className="flex gap-3">
               <button
@@ -195,7 +198,7 @@ export default function StaffManager({ initialStaff }: Props) {
                 onClick={confirmRemove}
                 className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-sm font-semibold text-white transition-colors"
               >
-                Rimuovi
+                {t.staffManager.removeBtn}
               </button>
             </div>
           </div>
@@ -326,7 +329,7 @@ export default function StaffManager({ initialStaff }: Props) {
                     }}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-purple-500/40 cursor-pointer mb-3"
                   >
-                    <option value="custom" disabled>Personalizzato</option>
+                    <option value="custom" disabled>{t.staffManager.customOption}</option>
                     {PRESETS.filter((p) => p.id !== 'custom').map((p) => (
                       <option key={p.id} value={p.id}>{p.label}</option>
                     ))}
@@ -394,7 +397,7 @@ export default function StaffManager({ initialStaff }: Props) {
                           }}
                           className="bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-purple-500/40 cursor-pointer"
                         >
-                          <option value="custom" disabled>Personalizzato</option>
+                          <option value="custom" disabled>{t.staffManager.customOption}</option>
                           {PRESETS.filter((p) => p.id !== 'custom').map((p) => (
                             <option key={p.id} value={p.id}>{p.label}</option>
                           ))}
@@ -423,7 +426,7 @@ export default function StaffManager({ initialStaff }: Props) {
                         <button
                           onClick={() => setMemberToRemove(member)}
                           className="text-slate-500 hover:text-red-400 transition-colors"
-                          title="Rimuovi"
+                          title={t.staffManager.removeBtn}
                         >
                           <Trash2 size={15} />
                         </button>

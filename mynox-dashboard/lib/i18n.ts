@@ -181,6 +181,8 @@ export const translations = {
       inviteNew: 'Invita nuovo membro', memberCol: 'Membro', quickRole: 'Ruolo rapido',
       emailPlaceholder: 'email@esempio.com', sending: 'Invio...', inviteBtn: 'Invita',
       noStaff: 'Nessun membro nello staff', noStaffHint: 'Invita qualcuno usando il modulo qui sopra.',
+      removeTitle: 'Rimuovi membro', removeConfirm: 'Vuoi rimuovere', removeFromStaff: 'dallo staff? L\'accesso verrà revocato immediatamente.',
+      removeBtn: 'Rimuovi', customOption: 'Personalizzato',
     },
     promoManager: {
       totalCodes: 'Codici totali', activeNow: 'Attivi ora', totalUses: 'Utilizzi totali',
@@ -494,6 +496,8 @@ export const translations = {
       inviteNew: 'Invite new member', memberCol: 'Member', quickRole: 'Quick role',
       emailPlaceholder: 'email@example.com', sending: 'Sending...', inviteBtn: 'Invite',
       noStaff: 'No staff members yet', noStaffHint: 'Invite someone using the form above.',
+      removeTitle: 'Remove member', removeConfirm: 'Are you sure you want to remove', removeFromStaff: 'from staff? Access will be revoked immediately.',
+      removeBtn: 'Remove', customOption: 'Custom',
     },
     promoManager: {
       totalCodes: 'Total codes', activeNow: 'Active now', totalUses: 'Total uses',
