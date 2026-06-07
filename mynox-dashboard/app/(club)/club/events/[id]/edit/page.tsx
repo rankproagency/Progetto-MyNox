@@ -18,12 +18,14 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
   }
 
   const supabase = await createClient();
-  const [{ data: event }, { data: ticketTypes }, { data: club }, { data: clubTables }, { data: eventTables }] = await Promise.all([
+  const [{ data: event }, { data: ticketTypes }, { data: club }, { data: clubTables }, { data: eventTables }, { data: clubExtras }, { data: eventExtrasData }] = await Promise.all([
     supabase.from('events').select('*').eq('id', id).eq('club_id', profile.club_id).single(),
     supabase.from('ticket_types').select('*').eq('event_id', id).order('created_at', { ascending: true }),
     supabase.from('clubs').select('floor_plan_url').eq('id', profile.club_id).single(),
     supabase.from('club_tables').select('*').eq('club_id', profile.club_id).order('created_at'),
     supabase.from('tables').select('*').eq('event_id', id),
+    supabase.from('club_extras').select('id, name, description, deposit').eq('club_id', profile.club_id).eq('is_available', true).order('created_at'),
+    supabase.from('event_extras').select('*').eq('event_id', id),
   ]);
 
   if (!event) notFound();
@@ -82,9 +84,19 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
         clubId={profile.club_id}
         clubFloorPlanUrl={club?.floor_plan_url}
         clubTables={mappedClubTables}
+        clubExtras={(clubExtras ?? []).map((e: any) => ({ id: e.id, name: e.name, description: e.description, deposit: e.deposit }))}
         event={{ ...event, performers: event.performers ?? [] }}
         initialTicketTypes={initialTicketTypes.length > 0 ? initialTicketTypes : undefined}
         initialEventTables={initialEventTables.length > 0 ? initialEventTables : undefined}
+        initialEventExtras={(clubExtras ?? []).length > 0 ? (clubExtras ?? []).map((ce: any) => {
+          const existing = (eventExtrasData ?? []).find((ee: any) => ee.club_extra_id === ce.id);
+          return {
+            clubExtraId: ce.id, label: ce.name,
+            deposit: existing ? String(existing.deposit) : String(ce.deposit),
+            defaultDeposit: ce.deposit,
+            isAvailable: existing ? existing.is_available : true,
+          };
+        }) : undefined}
       />
     </div>
   );

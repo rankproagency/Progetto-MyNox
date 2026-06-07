@@ -259,6 +259,15 @@
     "gift_message_cta": "Scarica MyNox → Biglietti → Riscatta regalo."
   },
 
+  "extras": {
+    "section_title": "Aggiungi al tavolo",
+    "section_subtitle": "Personalizza la tua esperienza",
+    "deposit_label": "caparra",
+    "rest_in_venue": "resto in loco",
+    "ordered_title": "Extras ordinati",
+    "deposit_each": "caparra cad."
+  },
+
   "checkout": {
     "header_title_checkout": "Checkout",
     "header_title_table": "Prenota tavolo",
@@ -303,7 +312,9 @@
     "success_paid": "€{{total}} pagati",
     "success_view_tickets": "Vedi i miei biglietti",
     "server_timeout": "Il server non risponde. Riprova tra qualche secondo.",
-    "unknown_error": "Errore sconosciuto"
+    "unknown_error": "Errore sconosciuto",
+    "extras_section": "Extras",
+    "extras_item": "{{label}} × {{qty}}"
   },
 
   "event": {

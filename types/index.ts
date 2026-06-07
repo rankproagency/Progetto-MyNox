@@ -45,6 +45,7 @@ export interface Event {
   updatedAt?: string;
   floorPlanUrl?: string;
   doorEntryAvailable?: boolean;
+  extras?: EventExtra[];
   minAge: number;
   dressCode: string;
   capacity: number;
@@ -80,6 +81,23 @@ export interface Table {
   tableNumber?: number;
 }
 
+export interface EventExtra {
+  id: string;
+  eventId: string;
+  clubExtraId: string;
+  label: string;
+  description?: string;
+  deposit: number;
+  isAvailable: boolean;
+}
+
+export interface OrderedExtra {
+  extraId: string;
+  label: string;
+  quantity: number;
+  unitDeposit: number;
+}
+
 export interface Ticket {
   id: string;
   eventId: string;
@@ -93,6 +111,7 @@ export interface Ticket {
   drinkUsed: boolean;
   status: 'valid' | 'used' | 'denied';
   purchasedAt: string;
+  extras?: OrderedExtra[];
 }
 
 export interface User {

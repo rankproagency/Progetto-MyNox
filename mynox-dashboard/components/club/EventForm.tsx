@@ -39,10 +39,26 @@ interface EventTableRow {
   isAvailable: boolean;
 }
 
+interface ClubExtraData {
+  id: string;
+  name: string;
+  description: string | null;
+  deposit: number;
+}
+
+interface EventExtraRow {
+  clubExtraId: string;
+  label: string;
+  deposit: string;
+  defaultDeposit: number;
+  isAvailable: boolean;
+}
+
 interface EventFormProps {
   clubId: string;
   clubFloorPlanUrl?: string | null;
   clubTables?: ClubTableData[];
+  clubExtras?: ClubExtraData[];
   event?: {
     id: string;
     name: string;
@@ -60,9 +76,10 @@ interface EventFormProps {
   };
   initialTicketTypes?: TicketTypeRow[];
   initialEventTables?: EventTableRow[];
+  initialEventExtras?: EventExtraRow[];
 }
 
-export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event, initialTicketTypes, initialEventTables }: EventFormProps) {
+export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubExtras, event, initialTicketTypes, initialEventTables, initialEventExtras }: EventFormProps) {
   const router = useRouter();
   const isEdit = !!event;
   const { t } = useLanguage();
@@ -104,6 +121,21 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
   );
   const [customizeTables, setCustomizeTables] = useState(
     !!initialEventTables && initialEventTables.some((et) => et.deposit !== String(et.defaultDeposit))
+  );
+
+  const defaultEventExtras = (clubExtras ?? []).map((ce) => ({
+    clubExtraId: ce.id,
+    label: ce.name,
+    deposit: String(ce.deposit),
+    defaultDeposit: ce.deposit,
+    isAvailable: true,
+  }));
+
+  const [eventExtras, setEventExtras] = useState<EventExtraRow[]>(
+    initialEventExtras ?? defaultEventExtras
+  );
+  const [customizeExtras, setCustomizeExtras] = useState(
+    !!initialEventExtras && initialEventExtras.some((ee) => ee.deposit !== String(ee.defaultDeposit))
   );
 
   const [loading, setLoading] = useState(false);
@@ -238,6 +270,23 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
         })
       );
       if (tablesError) { setError(ef.saveTablesError + ' ' + tablesError.message); setLoading(false); return; }
+    }
+
+    // Salva extras evento
+    if (eventId && eventExtras.length > 0) {
+      await supabase.from('event_extras').delete().eq('event_id', eventId);
+      const activeExtras = eventExtras.filter((ee) => ee.isAvailable);
+      if (activeExtras.length > 0) {
+        await supabase.from('event_extras').insert(
+          activeExtras.map((ee) => ({
+            event_id: eventId,
+            club_extra_id: ee.clubExtraId,
+            label: ee.label,
+            deposit: parseFloat(ee.deposit) || 0,
+            is_available: true,
+          }))
+        );
+      }
     }
 
     setLoading(false);
@@ -629,6 +678,78 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, event,
           </div>
         ))}
       </div>
+
+      {/* Extras & Upsell */}
+      {eventExtras.length > 0 ? (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-medium text-slate-400 uppercase tracking-wide">
+              {t.clubExtras.eventSection}
+            </label>
+            <button
+              type="button"
+              onClick={() => {
+                if (customizeExtras) {
+                  setEventExtras(defaultEventExtras.map((de) => ({
+                    ...de,
+                    isAvailable: eventExtras.find((ee) => ee.clubExtraId === de.clubExtraId)?.isAvailable ?? true,
+                  })));
+                }
+                setCustomizeExtras((v) => !v);
+              }}
+              className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
+                customizeExtras
+                  ? 'border-purple-500/30 text-purple-400 bg-purple-500/10 hover:bg-purple-500/20'
+                  : 'border-white/10 text-slate-400 hover:text-slate-200 hover:border-white/20'
+              }`}
+            >
+              {customizeExtras ? ef.resetDefault : ef.editForEvent}
+            </button>
+          </div>
+          <div className="space-y-2">
+            {eventExtras.map((ee, i) => (
+              <div key={ee.clubExtraId} className={`flex items-center gap-3 bg-[#111118] border rounded-lg px-4 py-3 transition-colors ${
+                !ee.isAvailable ? 'opacity-50 border-white/5' : 'border-white/8'
+              }`}>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{ee.label}</p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-xs text-slate-500">€</span>
+                  <input
+                    type="number" min="0" step="0.01"
+                    value={customizeExtras ? ee.deposit : ee.defaultDeposit}
+                    disabled={!customizeExtras}
+                    onChange={(e) => setEventExtras((prev) =>
+                      prev.map((row, idx) => idx === i ? { ...row, deposit: e.target.value } : row)
+                    )}
+                    className="w-20 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors text-right disabled:opacity-40 disabled:cursor-not-allowed"
+                  />
+                </div>
+                <label className={`flex items-center gap-1.5 shrink-0 ${customizeExtras ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}>
+                  <input
+                    type="checkbox"
+                    checked={ee.isAvailable}
+                    disabled={!customizeExtras}
+                    onChange={(e) => setEventExtras((prev) =>
+                      prev.map((row, idx) => idx === i ? { ...row, isAvailable: e.target.checked } : row)
+                    )}
+                    className="w-3.5 h-3.5 rounded accent-purple-500"
+                  />
+                  <span className="text-xs text-slate-500">{ef.active}</span>
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (clubExtras !== undefined && clubExtras.length === 0) ? (
+        <div className="bg-[#111118] border border-white/8 rounded-xl p-5 text-center">
+          <p className="text-sm text-slate-500">{t.clubExtras.noEventExtras}</p>
+          <a href="/club/extras" className="text-xs text-purple-400 hover:text-purple-300 mt-1 inline-block">
+            {t.clubExtras.goToExtras}
+          </a>
+        </div>
+      ) : null}
 
       {/* Biglietteria fisica */}
       <div className="bg-[#111118] border border-white/8 rounded-xl p-5 space-y-3">

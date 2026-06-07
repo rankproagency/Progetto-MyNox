@@ -85,12 +85,13 @@ type PromoResult = { type: 'percent' | 'flat'; value: number; label: string; pro
 
 export default function CheckoutScreen() {
   const { t } = useTranslation();
-  const { eventId, ticketId, tableId, tableName, qty } = useLocalSearchParams<{
+  const { eventId, ticketId, tableId, tableName, qty, extras: extrasParam } = useLocalSearchParams<{
     eventId: string;
     ticketId: string;
     tableId: string;
     tableName: string;
     qty: string;
+    extras: string;
   }>();
   const router = useRouter();
   const { addTickets } = useTickets();
@@ -102,6 +103,8 @@ export default function CheckoutScreen() {
   const table = tableId ? event?.tables.find((t) => t.id === tableId) : null;
   const quantity = Math.max(1, parseInt(qty ?? '1', 10));
   const isTableOnly = !ticket && !!table;
+  const parsedExtras: { extraId: string; label: string; quantity: number; unitDeposit: number }[] =
+    extrasParam ? (() => { try { return JSON.parse(extrasParam); } catch { return []; } })() : [];
 
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<PromoResult | null>(null);
@@ -186,7 +189,8 @@ export default function CheckoutScreen() {
     : 0;
   const discountedSubtotal = ticketSubtotal - discount;
   const tableDeposit = table?.deposit ?? 0;
-  const base = isTableOnly ? tableDeposit : discountedSubtotal + tableDeposit;
+  const extrasTotal = parsedExtras.reduce((sum, e) => sum + e.quantity * e.unitDeposit, 0);
+  const base = isTableOnly ? tableDeposit + extrasTotal : discountedSubtotal + tableDeposit + extrasTotal;
   const commission = parseFloat((base * 0.08).toFixed(2));
   const total = parseFloat((base + commission).toFixed(2));
 
@@ -245,6 +249,7 @@ export default function CheckoutScreen() {
         metadata.table_id = tableId;
         metadata.table_name = tableName?.trim() ?? '';
       }
+      if (parsedExtras.length > 0) metadata.extras = JSON.stringify(parsedExtras);
 
       let createdTickets: any[];
 
@@ -484,6 +489,13 @@ export default function CheckoutScreen() {
                 value={`€${tableDeposit}`}
               />
             )}
+            {parsedExtras.map((e) => (
+              <Row
+                key={e.extraId}
+                label={`${e.label} × ${e.quantity}${t('checkout.deposit_label_suffix')}`}
+                value={`€${(e.quantity * e.unitDeposit).toFixed(2)}`}
+              />
+            ))}
 
             {appliedPromo && (
               <>

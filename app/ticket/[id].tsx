@@ -342,6 +342,21 @@ export default function TicketScreen() {
           </Text>
         </View>
 
+        {ticket.extras && ticket.extras.length > 0 && (
+          <View style={styles.extrasCard}>
+            <View style={styles.extrasHeader}>
+              <Ionicons name="sparkles-outline" size={15} color={Colors.accent} />
+              <Text style={styles.extrasTitle}>{t('extras.ordered_title')}</Text>
+            </View>
+            {ticket.extras.map((e) => (
+              <View key={e.extraId} style={styles.extrasRow}>
+                <Text style={styles.extrasLabel}>{e.label}</Text>
+                <Text style={styles.extrasMeta}>× {e.quantity}  ·  €{(e.unitDeposit * e.quantity).toFixed(2)} {t('extras.deposit_label')}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
       </ScrollView>
 
     </SafeAreaView>
@@ -607,4 +622,27 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
   },
+
+  extrasCard: {
+    width: '100%',
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.accentBorder,
+    padding: 14,
+    marginTop: 16,
+    gap: 10,
+  },
+  extrasHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 7,
+    marginBottom: 4,
+  },
+  extrasTitle: { fontSize: 13, fontFamily: Font.bold, color: Colors.accent },
+  extrasRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 6,
+    borderTopWidth: 1, borderTopColor: Colors.border,
+  },
+  extrasLabel: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.textPrimary, flex: 1 },
+  extrasMeta: { fontSize: 12, color: Colors.textMuted },
 });

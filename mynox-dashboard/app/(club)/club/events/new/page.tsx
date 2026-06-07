@@ -17,9 +17,10 @@ export default async function NewEventPage() {
   }
 
   const supabase = await createClient();
-  const [{ data: club }, { data: clubTables }] = await Promise.all([
+  const [{ data: club }, { data: clubTables }, { data: clubExtras }] = await Promise.all([
     supabase.from('clubs').select('floor_plan_url').eq('id', profile.club_id).single(),
     supabase.from('club_tables').select('*').eq('club_id', profile.club_id).order('created_at'),
+    supabase.from('club_extras').select('id, name, description, deposit').eq('club_id', profile.club_id).eq('is_available', true).order('created_at'),
   ]);
 
   return (
@@ -32,12 +33,11 @@ export default async function NewEventPage() {
         clubId={profile.club_id}
         clubFloorPlanUrl={club?.floor_plan_url}
         clubTables={(clubTables ?? []).map((t: any) => ({
-          id: t.id,
-          label: t.label,
-          capacity: t.capacity,
-          posX: t.pos_x,
-          posY: t.pos_y,
-          defaultDeposit: t.default_deposit ?? 0,
+          id: t.id, label: t.label, capacity: t.capacity,
+          posX: t.pos_x, posY: t.pos_y, defaultDeposit: t.default_deposit ?? 0,
+        }))}
+        clubExtras={(clubExtras ?? []).map((e: any) => ({
+          id: e.id, name: e.name, description: e.description, deposit: e.deposit,
         }))}
       />
     </div>

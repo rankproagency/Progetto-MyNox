@@ -78,8 +78,12 @@ export default function EventScreen() {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [tableName, setTableName] = useState('');
   const [ticketQty, setTicketQty] = useState(1);
+  const [orderedExtras, setOrderedExtras] = useState<Record<string, number>>({});
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [floorPlanModalVisible, setFloorPlanModalVisible] = useState(false);
+
+  const availableExtras = (event?.extras ?? []).filter((e) => e.isAvailable);
+  const extrasDeposit = availableExtras.reduce((sum, e) => sum + (orderedExtras[e.id] ?? 0) * e.deposit, 0);
 
   function switchMode(mode: 'ticket' | 'table') {
     setBookingMode(mode);
@@ -87,6 +91,7 @@ export default function EventScreen() {
     setSelectedTable(null);
     setTableName('');
     setTicketQty(1);
+    setOrderedExtras({});
   }
 
   if (isLoading) {
@@ -119,7 +124,7 @@ export default function EventScreen() {
   const ticketSubtotal = (selectedTicket?.price ?? 0) * ticketQty;
   const tableSubtotal = selectedTable?.deposit ?? 0;
   const total = bookingMode === 'table'
-    ? tableSubtotal
+    ? tableSubtotal + extrasDeposit
     : ticketSubtotal + tableSubtotal;
   const isSoldOut = hasTickets && (event?.ticketTypes.every((t) => t.available === 0) ?? false);
   const isEventPast = (() => {
@@ -537,9 +542,51 @@ export default function EventScreen() {
                   <TableMap
                     tables={event.tables}
                     selected={selectedTable}
-                    onSelect={(t) => { setSelectedTable(t); if (!t) setTableName(''); }}
+                    onSelect={(tbl) => { setSelectedTable(tbl); if (!tbl) setTableName(''); }}
                     floorPlanUrl={event.floorPlanUrl}
                   />
+
+                  {/* Extras & Upsell */}
+                  {availableExtras.length > 0 && (
+                    <View style={styles.extrasSection}>
+                      <Text style={styles.extrasSectionTitle}>{t('extras.section_title')}</Text>
+                      <Text style={styles.extrasSectionSub}>{t('extras.section_subtitle')}</Text>
+                      {availableExtras.map((extra) => {
+                        const qty = orderedExtras[extra.id] ?? 0;
+                        return (
+                          <View key={extra.id} style={styles.extraRow}>
+                            <View style={styles.extraInfo}>
+                              <Text style={styles.extraName}>{extra.label}</Text>
+                              <Text style={styles.extraPrice}>
+                                €{extra.deposit.toFixed(2)} {t('extras.deposit_label')} · {t('extras.rest_in_venue')}
+                              </Text>
+                            </View>
+                            <View style={styles.extraQty}>
+                              <TouchableOpacity
+                                style={styles.qtyBtn}
+                                onPress={() => {
+                                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                  setOrderedExtras((prev) => ({ ...prev, [extra.id]: Math.max(0, (prev[extra.id] ?? 0) - 1) }));
+                                }}
+                              >
+                                <Ionicons name="remove" size={16} color={qty > 0 ? Colors.accent : Colors.textMuted} />
+                              </TouchableOpacity>
+                              <Text style={[styles.qtyValue, qty > 0 && { color: Colors.accent }]}>{qty}</Text>
+                              <TouchableOpacity
+                                style={styles.qtyBtn}
+                                onPress={() => {
+                                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                  setOrderedExtras((prev) => ({ ...prev, [extra.id]: (prev[extra.id] ?? 0) + 1 }));
+                                }}
+                              >
+                                <Ionicons name="add" size={16} color={Colors.accent} />
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  )}
                 </>
               )}
             </>
@@ -635,6 +682,9 @@ export default function EventScreen() {
                   );
                   return;
                 }
+                const orderedList = availableExtras
+                  .filter((e) => (orderedExtras[e.id] ?? 0) > 0)
+                  .map((e) => ({ extraId: e.id, label: e.label, quantity: orderedExtras[e.id], unitDeposit: e.deposit }));
                 router.push({
                   pathname: '/checkout',
                   params: {
@@ -643,6 +693,7 @@ export default function EventScreen() {
                     tableId: selectedTable?.id ?? '',
                     tableName: tableName.trim(),
                     qty: String(ticketQty),
+                    extras: orderedList.length > 0 ? JSON.stringify(orderedList) : '',
                   },
                 });
               }}
@@ -1077,6 +1128,21 @@ const styles = StyleSheet.create({
     fontFamily: Font.semiBold,
     color: Colors.accent,
   },
+
+  // Extras & Upsell
+  extrasSection: { marginTop: 20 },
+  extrasSectionTitle: { fontSize: 14, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 2 },
+  extrasSectionSub: { fontSize: 12, color: Colors.textMuted, marginBottom: 12 },
+  extraRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    borderRadius: 12, borderWidth: 1, borderColor: Colors.border,
+    paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8,
+  },
+  extraInfo: { flex: 1, marginRight: 12 },
+  extraName: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.textPrimary },
+  extraPrice: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
+  extraQty: { flexDirection: 'row', alignItems: 'center', gap: 0 },
 
   // Sold out
   soldOutBox: {

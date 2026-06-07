@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect, useRef, Re
 import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
+import type { OrderedExtra } from '../types';
 
 const ticketCacheKey = (uid: string) => `@mynox_tickets_${uid}`;
 
@@ -29,6 +30,7 @@ export interface MockTicket {
   entryCode?: string;
   imageUrl?: string;
   eventImageUrl?: string;
+  extras?: OrderedExtra[];
 }
 
 interface TicketsCtx {
@@ -94,6 +96,7 @@ function dbRowToMockTicket(row: any): MockTicket {
     entryCode: row.entry_code ?? undefined,
     imageUrl: ev?.clubs?.image_url ?? undefined,
     eventImageUrl: ev?.image_url ?? undefined,
+    extras: Array.isArray(row.extras) && row.extras.length > 0 ? row.extras as OrderedExtra[] : undefined,
   };
 }
 
@@ -113,7 +116,7 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
     const { data } = await supabase
       .from('tickets')
       .select(`
-        id, qr_code, drink_qr_code, entry_code, status, drink_used, price_paid, table_name, table_id,
+        id, qr_code, drink_qr_code, entry_code, status, drink_used, price_paid, table_name, table_id, extras,
         ticket_types(label, includes_drink),
         events(id, name, date, start_time, end_time, image_url, clubs(name, image_url)),
         tables(label, capacity, section),

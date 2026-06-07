@@ -259,6 +259,15 @@
     "gift_message_cta": "Download MyNox → Tickets → Redeem gift."
   },
 
+  "extras": {
+    "section_title": "Add to your table",
+    "section_subtitle": "Personalise your experience",
+    "deposit_label": "deposit",
+    "rest_in_venue": "rest on the night",
+    "ordered_title": "Extras ordered",
+    "deposit_each": "deposit each"
+  },
+
   "checkout": {
     "header_title_checkout": "Checkout",
     "header_title_table": "Book a table",
@@ -303,7 +312,9 @@
     "success_paid": "€{{total}} paid",
     "success_view_tickets": "View my tickets",
     "server_timeout": "The server is not responding. Please try again in a moment.",
-    "unknown_error": "Unknown error"
+    "unknown_error": "Unknown error",
+    "extras_section": "Extras",
+    "extras_item": "{{label}} × {{qty}}"
   },
 
   "event": {
