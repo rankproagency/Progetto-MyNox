@@ -262,10 +262,10 @@ export default function EventScreen() {
             contentFit="cover"
             cachePolicy="memory-disk"
           />
-          {/* Gradient solo in alto per i pulsanti */}
+          {/* Gradient: scuro in alto per i pulsanti, fade in basso per la transizione */}
           <LinearGradient
-            colors={['rgba(7,8,15,0.6)', 'transparent']}
-            locations={[0, 0.28]}
+            colors={['rgba(7,8,15,0.6)', 'transparent', 'transparent', 'rgba(7,8,15,0.85)']}
+            locations={[0, 0.25, 0.72, 1]}
             style={StyleSheet.absoluteFill}
             pointerEvents="none"
           />
@@ -823,12 +823,12 @@ const styles = StyleSheet.create({
   // Info evento (sotto l'immagine)
   infoSection: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 14,
     paddingBottom: 6,
   },
   infoEventName: {
-    fontSize: 28, fontFamily: Font.black, color: Colors.white,
-    lineHeight: 34, marginBottom: 10, letterSpacing: 0.2,
+    fontSize: 24, fontFamily: Font.black, color: Colors.white,
+    lineHeight: 30, marginBottom: 10, letterSpacing: 0.2,
   },
   infoClubName: {
     fontSize: 17, fontFamily: Font.bold, color: Colors.accent, marginBottom: 6,
