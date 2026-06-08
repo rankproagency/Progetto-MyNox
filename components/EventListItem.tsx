@@ -37,6 +37,7 @@ export default function EventListItem({ event }: Props) {
   const hasTickets = event.ticketTypes.length > 0;
   const minPrice = hasTickets ? Math.min(...event.ticketTypes.map((t) => t.price)) : 0;
   const isSoldOut = hasTickets && event.ticketTypes.every((t) => t.available === 0);
+  const atDoor = isSoldOut && !!event.doorEntryAvailable;
 
   return (
     <TouchableOpacity
@@ -48,7 +49,7 @@ export default function EventListItem({ event }: Props) {
     <Animated.View style={[styles.container, { transform: [{ scale }] }]}>
       <View style={styles.imageWrapper}>
         <Image source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }} style={styles.image} contentFit="cover" cachePolicy="memory-disk" />
-        {isSoldOut && (
+        {isSoldOut && !atDoor && (
           <View style={styles.soldOverlay}>
             <Text style={styles.soldOverlayText}>SOLD</Text>
           </View>
@@ -72,7 +73,9 @@ export default function EventListItem({ event }: Props) {
         </View>
       </View>
       <View style={styles.right}>
-        {isSoldOut ? (
+        {atDoor ? (
+          <Text style={styles.atDoorText}>{t('common.at_door')}</Text>
+        ) : isSoldOut ? (
           <Text style={styles.soldText}>{t('common.sold_out')}</Text>
         ) : !hasTickets ? (
           <Text style={styles.freeText}>{t('common.free_entry')}</Text>
@@ -171,6 +174,11 @@ const styles = StyleSheet.create({
   },
   price: {
     fontSize: 13,
+    fontFamily: Font.bold,
+    color: Colors.accent,
+  },
+  atDoorText: {
+    fontSize: 12,
     fontFamily: Font.bold,
     color: Colors.accent,
   },

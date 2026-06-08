@@ -384,17 +384,22 @@ export default function EventScreen() {
               <Text style={[styles.soldOutText, { color: Colors.accent }]}>{t('event.free_entry_no_tickets')}</Text>
             </View>
           ) : isSoldOut ? (
-            <View style={styles.soldOutBox}>
-              <Ionicons name="close-circle" size={20} color={event.doorEntryAvailable ? Colors.accent : Colors.error} />
-              <View>
-                <Text style={[styles.soldOutText, event.doorEntryAvailable && { color: Colors.accent }]}>
-                  {event.doorEntryAvailable ? t('event.event_sold_out_app_only') : t('event.event_sold_out')}
-                </Text>
-                {event.doorEntryAvailable && (
-                  <Text style={styles.doorEntryHint}>{t('event.event_door_entry_hint')}</Text>
-                )}
+            event.doorEntryAvailable ? (
+              <View style={styles.doorEntryCard}>
+                <View style={styles.doorEntryIconBox}>
+                  <Ionicons name="location" size={22} color={Colors.accent} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.doorEntryTitle}>{t('event.event_sold_out_app_only')}</Text>
+                  <Text style={styles.doorEntryBody}>{t('event.event_door_entry_hint')}</Text>
+                </View>
               </View>
-            </View>
+            ) : (
+              <View style={styles.soldOutBox}>
+                <Ionicons name="close-circle" size={20} color={Colors.error} />
+                <Text style={styles.soldOutText}>{t('event.event_sold_out')}</Text>
+              </View>
+            )
           ) : (
             <>
               {/* Segment control — solo se ci sono tavoli */}
@@ -1142,11 +1147,27 @@ const styles = StyleSheet.create({
 
   // Sold out
   soldOutBox: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
+    flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: 'rgba(239,68,68,0.08)',
     borderRadius: 12, borderWidth: 1, borderColor: Colors.error,
     padding: 14, marginBottom: 4,
   },
   soldOutText: { fontSize: 15, fontFamily: Font.bold, color: Colors.error },
-  doorEntryHint: { fontSize: 12, color: Colors.accent, marginTop: 3, opacity: 0.85 },
+  doorEntryCard: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 14,
+    backgroundColor: Colors.accentBg,
+    borderRadius: 16, borderWidth: 1, borderColor: Colors.accentBorder,
+    padding: 16, marginBottom: 4,
+  },
+  doorEntryIconBox: {
+    width: 44, height: 44, borderRadius: 12,
+    backgroundColor: 'rgba(168,85,247,0.15)',
+    justifyContent: 'center', alignItems: 'center', flexShrink: 0,
+  },
+  doorEntryTitle: {
+    fontSize: 15, fontFamily: Font.bold, color: Colors.accent, marginBottom: 5,
+  },
+  doorEntryBody: {
+    fontSize: 13, color: Colors.textSecondary, lineHeight: 20,
+  },
 });

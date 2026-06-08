@@ -50,6 +50,7 @@ export default function EventCard({ event }: Props) {
   const hasTickets = event.ticketTypes.length > 0;
   const minPrice = hasTickets ? Math.min(...event.ticketTypes.map((t) => t.price)) : 0;
   const isSoldOut = hasTickets && event.ticketTypes.every((t) => t.available === 0);
+  const atDoor = isSoldOut && !!event.doorEntryAvailable;
 
   return (
     <TouchableOpacity
@@ -98,7 +99,9 @@ export default function EventCard({ event }: Props) {
                 · {event.minAge}+
               </Text>
             </View>
-            {isSoldOut ? (
+            {atDoor ? (
+              <Text style={[styles.soldOutText, { color: Colors.accent }]}>{t('common.at_door')}</Text>
+            ) : isSoldOut ? (
               <Text style={styles.soldOutText}>{t('common.sold_out')}</Text>
             ) : !hasTickets ? (
               <Text style={styles.freeText}>{t('common.free_entry')}</Text>
