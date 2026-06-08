@@ -56,7 +56,9 @@ export async function proxy(request: NextRequest) {
     if (pathname === '/' || pathname === '/login') {
       if (role === 'admin') return NextResponse.redirect(new URL('/admin/dashboard', request.url));
       if (role === 'club_admin' || role === 'club_staff') return NextResponse.redirect(new URL('/club/dashboard', request.url));
-      return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
+      // Se il ruolo non è leggibile e siamo già su /login, lascia passare per evitare loop
+      if (pathname === '/login') return supabaseResponse;
+      return NextResponse.redirect(new URL('/login', request.url));
     }
 
     // Protegge /admin/* — solo admin
