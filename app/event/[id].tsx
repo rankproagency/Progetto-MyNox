@@ -368,10 +368,7 @@ export default function EventScreen() {
           </View>
         )}
 
-        {/* Separatore zona acquisto */}
-        <View style={styles.bookingDivider} />
-
-        {/* Prevendita / Tavolo */}
+        {/* Zona acquisto */}
         <View style={styles.bookingSection}>
           {isEventPast ? (
             <View style={styles.soldOutBox}>
@@ -428,18 +425,23 @@ export default function EventScreen() {
                 </View>
               )}
 
-              {/* Scarsità — sopra i biglietti, dove crea urgenza */}
-              {showScarcity && bookingMode === 'ticket' && (
-                <View style={styles.scarcityBox}>
-                  {isLowStock || isMediumStock ? (
-                    <>
+              {/* Prevendita */}
+              {bookingMode === 'ticket' && (
+                <>
+                  {hasTickets && event.ticketTypes.every((tk) => tk.includesDrink) && (
+                    <View style={styles.drinkBadge}>
+                      <Ionicons name="wine-outline" size={13} color={Colors.accent} />
+                      <Text style={styles.drinkBadgeText}>{t('event.every_ticket_includes_drink')}</Text>
+                    </View>
+                  )}
+                  {/* Scarsità — solo quando rilevante (>50% sold) */}
+                  {showScarcity && (isLowStock || isMediumStock) && (
+                    <View style={styles.scarcityBox}>
                       <View style={styles.soldRow}>
                         <View style={styles.soldLeft}>
                           <Ionicons name="flame" size={15} color={isLowStock ? '#ef4444' : '#f59e0b'} />
-                          <Text style={styles.soldText}>
-                            <Text style={[styles.soldCount, { color: isLowStock ? '#ef4444' : '#f59e0b' }]}>
-                              {isLowStock ? t('event.scarcity_low_stock') : t('event.scarcity_medium_stock')}
-                            </Text>
+                          <Text style={[styles.soldCount, { color: isLowStock ? '#ef4444' : '#f59e0b' }]}>
+                            {isLowStock ? t('event.scarcity_low_stock') : t('event.scarcity_medium_stock')}
                           </Text>
                         </View>
                         <Text style={[styles.soldPercent, isLowStock && { color: '#ef4444' }]}>{soldPercent}%</Text>
@@ -451,24 +453,6 @@ export default function EventScreen() {
                           style={[styles.progressFill, { width: `${Math.min(soldPercent, 100)}%` }]}
                         />
                       </View>
-                    </>
-                  ) : (
-                    <View style={styles.soldLeft}>
-                      <Ionicons name="checkmark-circle-outline" size={15} color={Colors.success} />
-                      <Text style={styles.scarcityNeutralText}>{t('event.scarcity_ok')}</Text>
-                    </View>
-                  )}
-                </View>
-              )}
-
-              {/* Prevendita */}
-              {bookingMode === 'ticket' && (
-                <>
-                  {!hasTables && <Text style={styles.bookingLabel}>{t('event.tickets_label')}</Text>}
-                  {hasTickets && event.ticketTypes.every((tk) => tk.includesDrink) && (
-                    <View style={styles.drinkBadge}>
-                      <Ionicons name="wine-outline" size={13} color={Colors.accent} />
-                      <Text style={styles.drinkBadgeText}>{t('event.every_ticket_includes_drink')}</Text>
                     </View>
                   )}
                   {event.ticketTypes.map((ticket) => (
@@ -907,28 +891,27 @@ const styles = StyleSheet.create({
     height: '100%', borderRadius: 3,
   },
 
-  // Separatore zona acquisto
-  bookingDivider: {
-    marginHorizontal: 20,
-    marginTop: 28,
-    marginBottom: 28,
-    height: 1,
-    backgroundColor: Colors.border,
+  // Sezione prenotazione — card elevata
+  bookingSection: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 8,
+    marginTop: 8,
+    backgroundColor: Colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
   },
-
-  // Sezione prenotazione
-  bookingSection: { paddingHorizontal: 20 },
   bookingLabel: {
     fontSize: 11, fontFamily: Font.bold, color: Colors.textMuted,
     textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12,
   },
-  scarcityBox: { marginBottom: 16 },
+  scarcityBox: { marginBottom: 14, marginTop: 2 },
   drinkBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 7,
     backgroundColor: Colors.accentBg,
     borderRadius: 10, borderWidth: 1, borderColor: Colors.accentBorder,
     paddingHorizontal: 12, paddingVertical: 9,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   drinkBadgeText: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.accent },
   sectionSubtitle: { fontSize: 12, color: Colors.textMuted, marginBottom: 12 },
