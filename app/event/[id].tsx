@@ -140,8 +140,9 @@ export default function EventScreen() {
     return new Date() > cutoff;
   })();
   const onWaitlist = event ? isOnWaitlist(event.id) : false;
-  const soldPercent = event.capacity > 0 ? Math.round((event.ticketsSold / event.capacity) * 100) : 0;
-  const remaining = event.capacity > 0 ? event.capacity - event.ticketsSold : 0;
+  const totalTicketSlots = event.ticketTypes.reduce((sum, t) => sum + t.available, 0) + event.ticketsSold;
+  const soldPercent = totalTicketSlots > 0 ? Math.round((event.ticketsSold / totalTicketSlots) * 100) : 0;
+  const remaining = totalTicketSlots - event.ticketsSold;
   const isLowStock = soldPercent >= 80;
   const isMediumStock = soldPercent >= 50 && soldPercent < 80;
   const showScarcity = hasTickets && !isSoldOut;

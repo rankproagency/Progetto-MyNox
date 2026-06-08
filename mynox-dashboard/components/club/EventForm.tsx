@@ -92,7 +92,6 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
     start_time: event?.start_time ?? '',
     end_time: event?.end_time ?? '',
     dress_code: event?.dress_code ?? '',
-    capacity: event?.capacity?.toString() ?? '',
     image_url: event?.image_url ?? '',
     genres: event?.genres ?? [] as string[],
     is_published: event?.is_published ?? false,
@@ -215,7 +214,6 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
       start_time: form.start_time,
       end_time: form.end_time || null,
       dress_code: form.dress_code || null,
-      capacity: form.capacity ? parseInt(form.capacity) : null,
       image_url: form.image_url || null,
       genres: form.genres,
       performers: performers.filter((p) => p.name.trim()),
@@ -359,27 +357,15 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
         </Field>
       </div>
 
-      {/* Capienza e dress code */}
-      <div className="grid grid-cols-2 gap-4">
-        <Field label={ef.fieldCapacity}>
-          <input
-            type="number"
-            min="1"
-            value={form.capacity}
-            onChange={(e) => setForm({ ...form, capacity: e.target.value })}
-            placeholder="es. 500"
-            className={inputClass}
-          />
-        </Field>
-        <Field label={ef.fieldDressCode}>
-          <input
-            value={form.dress_code}
-            onChange={(e) => setForm({ ...form, dress_code: e.target.value })}
-            placeholder="es. Elegante"
-            className={inputClass}
-          />
-        </Field>
-      </div>
+      {/* Dress code */}
+      <Field label={ef.fieldDressCode}>
+        <input
+          value={form.dress_code}
+          onChange={(e) => setForm({ ...form, dress_code: e.target.value })}
+          placeholder="es. Elegante"
+          className={inputClass}
+        />
+      </Field>
 
       {/* Immagine copertina */}
       <Field label={ef.fieldCoverImage}>
