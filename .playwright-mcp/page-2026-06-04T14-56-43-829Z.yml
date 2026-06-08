@@ -1,0 +1,23 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: MYNOX
+      - heading "Dashboard" [level=3] [ref=e6]
+      - paragraph [ref=e7]: Accedi con il tuo account
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - text: Email
+          - textbox "Email" [ref=e11]:
+            - /placeholder: email@esempio.com
+        - generic [ref=e12]:
+          - text: Password
+          - textbox "Password" [ref=e13]:
+            - /placeholder: ••••••••
+        - button "Accedi" [ref=e14]
+      - generic [ref=e17]: oppure
+      - button "Continua con Google" [ref=e19]:
+        - img
+        - text: Continua con Google
+  - button "Open Next.js Dev Tools" [ref=e25] [cursor=pointer]:
+    - img [ref=e26]

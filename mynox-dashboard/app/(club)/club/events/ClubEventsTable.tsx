@@ -27,10 +27,12 @@ export default function ClubEventsTable({
   futureEvents: Event[];
   pastEvents: Event[];
 }) {
-  const { t } = useLanguage();
   const [tab, setTab] = useState<'future' | 'past'>('future');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
+  const { t, lang } = useLanguage();
+  const ce = t.clubEvents;
+  const locale = lang === 'en' ? 'en-US' : 'it-IT';
 
   const q = query.trim().toLowerCase();
 
@@ -62,7 +64,7 @@ export default function ClubEventsTable({
         <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
         <input
           type="text"
-          placeholder={t.eventsTable.searchPlaceholder}
+          placeholder={ce.searchPlaceholder}
           value={query}
           onChange={(e) => handleQueryChange(e.target.value)}
           className="w-full bg-[#111118] border border-white/8 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/50 transition-colors"
@@ -72,8 +74,8 @@ export default function ClubEventsTable({
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-4 bg-[#111118] border border-white/8 rounded-xl p-1 w-fit">
         {([
-          { key: 'future', label: t.eventsTable.tabFuture, count: filteredFuture.length },
-          { key: 'past',   label: t.eventsTable.tabPast, count: filteredPast.length },
+          { key: 'future', label: ce.tabFuture, count: filteredFuture.length },
+          { key: 'past',   label: ce.tabPast,   count: filteredPast.length },
         ] as const).map(({ key, label, count }) => (
           <button
             key={key}
@@ -97,11 +99,11 @@ export default function ClubEventsTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/8">
-              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{t.eventsTable.colName}</th>
-              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{t.eventsTable.colDate}</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.eventsTable.colTickets}</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{t.eventsTable.colRevenue}</th>
-              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{t.eventsTable.colStatus}</th>
+              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{ce.colName}</th>
+              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{ce.colDate}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{ce.colTickets}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{ce.colRevenue}</th>
+              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{ce.colStatus}</th>
               <th className="px-3 md:px-5 py-3" />
             </tr>
           </thead>
@@ -110,22 +112,22 @@ export default function ClubEventsTable({
               <tr>
                 <td colSpan={6} className="px-5 py-12 text-center text-slate-500">
                   {q
-                    ? t.eventsTable.noMatch
+                    ? ce.noSearch
                     : tab === 'future'
                       ? (
                         <div>
-                          <p className="font-medium text-slate-400 mb-1">{t.eventsTable.noFuture}</p>
-                          <p className="text-xs mb-4">{t.eventsTable.noFutureHint}</p>
+                          <p className="font-medium text-slate-400 mb-1">{ce.noFuture}</p>
+                          <p className="text-xs mb-4">{ce.noFutureDesc}</p>
                           <Link
                             href="/club/events/new"
                             className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
                           >
                             <Plus size={14} />
-                            {t.eventsTable.createEvent}
+                            {ce.createEvent}
                           </Link>
                         </div>
                       )
-                      : t.eventsTable.noPast}
+                      : ce.noPast}
                 </td>
               </tr>
             ) : displayList.map((event, i) => {
@@ -146,18 +148,18 @@ export default function ClubEventsTable({
                     </Link>
                   </td>
                   <td className={`px-3 md:px-5 py-4 whitespace-nowrap ${isPast ? 'text-slate-400' : 'text-slate-300'}`}>
-                    {new Date(event.date).toLocaleDateString()} · {event.start_time}
+                    {new Date(event.date).toLocaleDateString(locale)} · {event.start_time}
                   </td>
                   <td className={`px-5 py-4 hidden md:table-cell ${isPast ? 'text-slate-400' : 'text-slate-300'}`}>
                     {event.tickets_sold}{event.capacity != null ? ` / ${event.capacity}` : ''}
                   </td>
                   <td className={`px-5 py-4 font-semibold hidden md:table-cell ${isPast ? 'text-purple-400/70' : 'text-purple-400'}`}>
-                    €{event.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    €{event.revenue.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-3 md:px-5 py-4">
                     {isPast ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-slate-500/10 text-slate-500 border-slate-500/20">
-                        Concluso
+                        {ce.concluded}
                       </span>
                     ) : (
                       <PublishToggle eventId={event.id} isPublished={event.is_published} />
@@ -176,7 +178,7 @@ export default function ClubEventsTable({
                           className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-2 md:px-3 py-1.5 rounded-lg transition-colors"
                         >
                           <Pencil size={12} />
-                          <span className="hidden md:inline">Modifica</span>
+                          <span className="hidden md:inline">{ce.edit}</span>
                         </Link>
                       </div>
                     )}
@@ -191,7 +193,10 @@ export default function ClubEventsTable({
         {tab === 'past' && totalPages > 1 && (
           <div className="flex items-center justify-between px-5 py-3 border-t border-white/8">
             <p className="text-xs text-slate-500">
-              {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredPast.length)} di {filteredPast.length} eventi
+              {ce.pagination
+                .replace('{from}', String((page - 1) * PAGE_SIZE + 1))
+                .replace('{to}', String(Math.min(page * PAGE_SIZE, filteredPast.length)))
+                .replace('{total}', String(filteredPast.length))}
             </p>
             <div className="flex items-center gap-1">
               <button

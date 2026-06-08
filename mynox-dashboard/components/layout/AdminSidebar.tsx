@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useLanguage } from '@/components/providers/I18nProvider';
 import { createClient } from '@/lib/supabase/client';
 import { useState } from 'react';
-import { useLanguage } from '@/components/providers/I18nProvider';
 import {
   Home,
   Building2,

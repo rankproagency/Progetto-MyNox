@@ -42,7 +42,9 @@ const EMPTY_FORM = {
 };
 
 export default function PromoManager({ initialCodes, events, clubId }: Props) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const pm = t.promoManager;
+  const locale = lang === 'en' ? 'en-US' : 'it-IT';
   const supabase = createClient();
   const router = useRouter();
   const [codes, setCodes] = useState<PromoCode[]>(initialCodes);
@@ -55,7 +57,7 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
   const FLAT_PRESETS = [5, 10, 15, 20];
 
   function formatDate(d: string) {
-    return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
+    return new Date(d).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
   function discountLabel(code: PromoCode) {
@@ -156,12 +158,12 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/8 text-xs text-slate-500 uppercase tracking-wide">
-                <th className="text-left px-5 py-3">Codice</th>
-                <th className="text-left px-5 py-3">Sconto</th>
-                <th className="text-left px-5 py-3">Evento</th>
-                <th className="text-left px-5 py-3">Utilizzi</th>
-                <th className="text-left px-5 py-3">Scadenza</th>
-                <th className="text-left px-5 py-3">Stato</th>
+                <th className="text-left px-5 py-3">{pm.colCode}</th>
+                <th className="text-left px-5 py-3">{pm.colDiscount}</th>
+                <th className="text-left px-5 py-3">{pm.colEvent}</th>
+                <th className="text-left px-5 py-3">{pm.colUses}</th>
+                <th className="text-left px-5 py-3">{pm.colExpiry}</th>
+                <th className="text-left px-5 py-3">{pm.colStatus}</th>
                 <th className="px-5 py-3" />
               </tr>
             </thead>
@@ -176,30 +178,30 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
                     </td>
                     <td className="px-5 py-3.5 text-white font-semibold">{discountLabel(code)}</td>
                     <td className="px-5 py-3.5 text-slate-400 max-w-[180px] truncate">
-                      {event ? event.name : <span className="text-slate-600">Tutti gli eventi</span>}
+                      {event ? event.name : <span className="text-slate-600">{pm.allEvents}</span>}
                     </td>
                     <td className="px-5 py-3.5 text-slate-300">{usesLabel(code)}</td>
                     <td className="px-5 py-3.5 text-slate-400">
                       {code.expires_at ? (
                         <span className={expired ? 'text-red-400' : ''}>{formatDate(code.expires_at)}</span>
                       ) : (
-                        <span className="text-slate-600">Nessuna</span>
+                        <span className="text-slate-600">{pm.noDate}</span>
                       )}
                     </td>
                     <td className="px-5 py-3.5">
                       {expired ? (
-                        <span className="flex items-center gap-1.5 text-xs text-red-400"><AlertCircle size={13} /> Scaduto</span>
+                        <span className="flex items-center gap-1.5 text-xs text-red-400"><AlertCircle size={13} /> {pm.statusExpired}</span>
                       ) : code.is_active ? (
-                        <span className="flex items-center gap-1.5 text-xs text-green-400"><CheckCircle size={13} /> Attivo</span>
+                        <span className="flex items-center gap-1.5 text-xs text-green-400"><CheckCircle size={13} /> {pm.statusActive}</span>
                       ) : (
-                        <span className="text-xs text-slate-500">Disattivato</span>
+                        <span className="text-xs text-slate-500">{pm.statusDisabled}</span>
                       )}
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3 justify-end">
                         <button
                           onClick={() => handleToggle(code)}
-                          title={code.is_active ? 'Disattiva' : 'Attiva'}
+                          title={code.is_active ? pm.toggleDisable : pm.toggleEnable}
                           className="text-slate-400 hover:text-white transition-colors"
                         >
                           {code.is_active ? <ToggleRight size={28} className="text-purple-400" /> : <ToggleLeft size={28} />}
@@ -225,7 +227,7 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
           <div className="bg-[#111118] border border-white/10 rounded-2xl w-full max-w-md p-6 space-y-5">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-white">Nuovo codice promo</h3>
+              <h3 className="text-lg font-bold text-white">{pm.newCode}</h3>
               <button onClick={() => setShowModal(false)} className="text-slate-500 hover:text-white">
                 <X size={18} />
               </button>
@@ -234,10 +236,10 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
             <div className="space-y-4">
               {/* Codice */}
               <div>
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Codice</label>
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{pm.fieldCode}</label>
                 <input
                   className="mt-1.5 w-full bg-[#0a0a0f] border border-white/10 rounded-lg px-3 py-2.5 text-white font-mono uppercase tracking-widest text-sm focus:outline-none focus:border-purple-500"
-                  placeholder="ES. ESTATE25"
+                  placeholder={pm.codePlaceholder}
                   value={form.code}
                   onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))}
                 />
@@ -246,19 +248,19 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
               {/* Tipo + valore */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Tipo sconto</label>
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{pm.fieldDiscountType}</label>
                   <select
                     className="mt-1.5 w-full bg-[#0a0a0f] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500"
                     value={form.discount_type}
                     onChange={(e) => setForm((f) => ({ ...f, discount_type: e.target.value as 'percentage' | 'fixed' }))}
                   >
-                    <option value="percentage">Percentuale (%)</option>
-                    <option value="fixed">Importo fisso (€)</option>
+                    <option value="percentage">{pm.typePercentage}</option>
+                    <option value="fixed">{pm.typeFixed}</option>
                   </select>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
-                    Valore {form.discount_type === 'percentage' ? '(%)' : '(€)'}
+                    {pm.fieldValue} {form.discount_type === 'percentage' ? '(%)' : '(€)'}
                   </label>
                   <input
                     type="number"
@@ -292,13 +294,13 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
 
               {/* Evento */}
               <div>
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Evento (opzionale)</label>
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{pm.fieldEvent}</label>
                 <select
                   className="mt-1.5 w-full bg-[#0a0a0f] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500"
                   value={form.event_id}
                   onChange={(e) => setForm((f) => ({ ...f, event_id: e.target.value }))}
                 >
-                  <option value="">Tutti gli eventi</option>
+                  <option value="">{pm.allEvents}</option>
                   {events.map((ev) => (
                     <option key={ev.id} value={ev.id}>{ev.name} — {formatDate(ev.date)}</option>
                   ))}
@@ -308,18 +310,18 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
               {/* Max utilizzi + scadenza */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Max utilizzi</label>
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{pm.fieldMaxUses}</label>
                   <input
                     type="number"
                     min="1"
                     className="mt-1.5 w-full bg-[#0a0a0f] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500"
-                    placeholder="Illimitati"
+                    placeholder={pm.usesPlaceholder}
                     value={form.max_uses}
                     onChange={(e) => setForm((f) => ({ ...f, max_uses: e.target.value }))}
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Scadenza</label>
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{pm.fieldExpiry}</label>
                   <input
                     type="date"
                     className="mt-1.5 w-full bg-[#0a0a0f] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500"
@@ -332,7 +334,7 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
 
             {!form.event_id && !form.expires_at && (
               <p className="text-xs text-amber-400 bg-amber-400/8 border border-amber-400/20 rounded-lg px-3 py-2">
-                Nessun evento né scadenza impostati — questo codice sarà valido per sempre su tutti gli eventi.
+                {pm.noEventNoExpiry}
               </p>
             )}
 

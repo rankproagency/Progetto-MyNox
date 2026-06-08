@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { UserPlus, Trash2, LayoutGrid, BarChart3, Users, Sliders, ScanLine, Check, AlertTriangle } from 'lucide-react';
 import type { ClubStaff, StaffPermissions } from '@/types';
 import { useLanguage } from '@/components/providers/I18nProvider';
@@ -22,7 +21,6 @@ interface Props {
 
 export default function StaffManager({ initialStaff }: Props) {
   const { t } = useLanguage();
-  const router = useRouter();
 
   const PERMISSION_LABELS: { key: PermKey; label: string }[] = [
     { key: 'can_manage_events', label: t.staffManager.manageEvents },
@@ -113,7 +111,6 @@ export default function StaffManager({ initialStaff }: Props) {
         setInviteSuccess(t.staffManager.inviteSent.replace('{email}', email));
         setEmail('');
         setSelectedPreset(PRESETS[0]);
-        router.refresh();
       }
     } catch {
       setInviteError(t.staffManager.networkError);
@@ -185,7 +182,7 @@ export default function StaffManager({ initialStaff }: Props) {
               <h3 className="text-white font-semibold text-sm">{t.staffManager.removeTitle}</h3>
             </div>
             <p className="text-slate-400 text-sm mb-5">
-              {t.staffManager.removeConfirm} <span className="text-white font-medium">{memberToRemove.profiles?.name ?? memberToRemove.profiles?.email ?? '—'}</span> {t.staffManager.removeFromStaff}
+              {t.staffManager.removeConfirm.replace('{name}', memberToRemove.profiles?.name ?? memberToRemove.profiles?.email ?? '—')}
             </p>
             <div className="flex gap-3">
               <button
@@ -198,7 +195,7 @@ export default function StaffManager({ initialStaff }: Props) {
                 onClick={confirmRemove}
                 className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-sm font-semibold text-white transition-colors"
               >
-                {t.staffManager.removeBtn}
+                {t.staffManager.remove}
               </button>
             </div>
           </div>
@@ -206,7 +203,7 @@ export default function StaffManager({ initialStaff }: Props) {
       )}
       {/* Invite form */}
       <div className="bg-[#111118] border border-white/8 rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-white mb-4">{t.staffManager.inviteNew}</h2>
+        <h2 className="text-sm font-semibold text-white mb-4">{t.staffManager.inviteTitle}</h2>
 
         {/* Preset selector */}
         <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mb-4">
@@ -274,7 +271,7 @@ export default function StaffManager({ initialStaff }: Props) {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder={t.staffManager.emailPlaceholder}
+            placeholder="email@esempio.com"
             required
             className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30"
           />
@@ -284,7 +281,7 @@ export default function StaffManager({ initialStaff }: Props) {
             className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
           >
             <UserPlus size={15} />
-            {inviting ? t.staffManager.sending : t.staffManager.inviteBtn}
+            {inviting ? t.staffManager.sending : t.staffManager.invite}
           </button>
         </form>
         {inviteError && <p className="mt-2 text-xs text-red-400">{inviteError}</p>}
@@ -329,7 +326,7 @@ export default function StaffManager({ initialStaff }: Props) {
                     }}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-purple-500/40 cursor-pointer mb-3"
                   >
-                    <option value="custom" disabled>{t.staffManager.customOption}</option>
+                    <option value="custom" disabled>{t.staffManager.customPreset}</option>
                     {PRESETS.filter((p) => p.id !== 'custom').map((p) => (
                       <option key={p.id} value={p.id}>{p.label}</option>
                     ))}
@@ -366,8 +363,8 @@ export default function StaffManager({ initialStaff }: Props) {
               <table className="w-full text-sm min-w-[680px]">
                 <thead>
                   <tr className="border-b border-white/8">
-                    <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.staffManager.memberCol}</th>
-                    <th className="text-left px-5 py-3 text-slate-400 font-medium text-xs">{t.staffManager.quickRole}</th>
+                    <th className="text-left px-5 py-3 text-slate-400 font-medium">{t.staffManager.colMember}</th>
+                    <th className="text-left px-5 py-3 text-slate-400 font-medium text-xs">{t.staffManager.colQuickRole}</th>
                     {PERMISSION_LABELS.map((p) => (
                       <th key={p.key} className="text-center px-3 py-3 text-slate-400 font-medium text-xs">
                         {p.label}
@@ -397,7 +394,7 @@ export default function StaffManager({ initialStaff }: Props) {
                           }}
                           className="bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-purple-500/40 cursor-pointer"
                         >
-                          <option value="custom" disabled>{t.staffManager.customOption}</option>
+                          <option value="custom" disabled>{t.staffManager.customPreset}</option>
                           {PRESETS.filter((p) => p.id !== 'custom').map((p) => (
                             <option key={p.id} value={p.id}>{p.label}</option>
                           ))}
@@ -426,7 +423,7 @@ export default function StaffManager({ initialStaff }: Props) {
                         <button
                           onClick={() => setMemberToRemove(member)}
                           className="text-slate-500 hover:text-red-400 transition-colors"
-                          title={t.staffManager.removeBtn}
+                          title={t.staffManager.remove}
                         >
                           <Trash2 size={15} />
                         </button>

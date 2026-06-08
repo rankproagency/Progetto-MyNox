@@ -1,0 +1,26 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - img "MyNox" [ref=e7]
+        - paragraph [ref=e8]: Il futuro della nightlife
+      - heading "Dashboard" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Accedi con il tuo account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: email@esempio.com
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - generic [ref=e17]: Password
+            - button "Password dimenticata?" [ref=e18]
+          - textbox "Password" [ref=e19]:
+            - /placeholder: ••••••••
+        - button "Accedi" [ref=e20]
+      - generic [ref=e23]: oppure
+      - button "Continua con Google" [ref=e25]:
+        - img
+        - text: Continua con Google
+  - alert [ref=e26]

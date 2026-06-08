@@ -1,0 +1,35 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "analytics": "Analytics",
+    "clubs": "Venues",
+    "allEvents": "Events",
+    "users": "Users",
+    "myEvents": "My events",
+    "venue": "Floor plan & Tables",
+    "scanner": "Scanner",
+    "staff": "Staff",
+    "settings": "Club profile"
+  },
+  "common": {
+    "logout": "Logout",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "loading": "Loading...",
+    "noData": "No data",
+    "confirm": "Confirm",
+    "publish": "Publish",
+    "unpublish": "Unpublish",
+    "duplicate": "Duplicate",
+    "back": "Back"
+  },
+  "language": {
+    "italian": "Italiano",
+    "english": "English",
+    "label": "Language"
+  }
+}

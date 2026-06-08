@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useLanguage } from '@/components/providers/I18nProvider';
 import { createClient } from '@/lib/supabase/client';
+import { useLanguage } from '@/components/providers/I18nProvider';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -30,7 +30,7 @@ function sinceDate(filter: TimeFilter): string {
   return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 }
 
-function generateBuckets(filter: TimeFilter): HourlyBucket[] {
+function generateBuckets(filter: TimeFilter, locale: string): HourlyBucket[] {
   const now = new Date();
   if (filter === '12h') {
     return Array.from({ length: 12 }, (_, i) => {
@@ -47,7 +47,7 @@ function generateBuckets(filter: TimeFilter): HourlyBucket[] {
     const d = new Date(now);
     d.setDate(d.getDate() - (days - 1 - i));
     const isoKey = d.toISOString().slice(0, 10);
-    const label = d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' });
+    const label = d.toLocaleDateString(locale, { day: '2-digit', month: 'short' });
     return { label, isoKey, count: 0, revenue: 0 };
   });
 }
@@ -71,13 +71,17 @@ const tooltipStyle = {
   fontSize: 12,
 };
 
-function useTimeLabels(t: ReturnType<typeof useLanguage>['t']): Record<TimeFilter, string> {
-  return { '12h': '12h', '3d': t.realtimeChart.filter3d, '7d': t.realtimeChart.filter7d };
-}
-
 export default function RealtimeSalesChart({ eventIds, initialBuckets, showRevenue = true }: Props) {
-  const { t } = useLanguage();
-  const TIME_LABELS = useTimeLabels(t);
+  const { t, lang } = useLanguage();
+  const rc = t.realtimeChart;
+  const locale = lang === 'en' ? 'en-US' : 'it-IT';
+
+  const TIME_LABELS: Record<TimeFilter, string> = {
+    '12h': '12h',
+    '3d': rc.days3,
+    '7d': rc.days7,
+  };
+
   const [buckets, setBuckets] = useState<HourlyBucket[]>(initialBuckets);
   const [loading, setLoading] = useState(false);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('12h');
@@ -91,7 +95,7 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets, showReven
 
   const fetchBuckets = useCallback(async (filter: TimeFilter) => {
     if (eventIds.length === 0) {
-      setBuckets(generateBuckets(filter));
+      setBuckets(generateBuckets(filter, locale));
       return;
     }
     setLoading(true);
@@ -105,7 +109,7 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets, showReven
         .gte('created_at', sinceDate(filter))
         .order('created_at', { ascending: true });
 
-      const empty = generateBuckets(filter);
+      const empty = generateBuckets(filter, locale);
       (data ?? []).forEach((t: any) => {
         const key = ticketToKey(t.created_at, filter);
         const bucket = empty.find((b) => b.isoKey === key);
@@ -118,7 +122,7 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets, showReven
     } finally {
       setLoading(false);
     }
-  }, [eventIds]);
+  }, [eventIds, locale]);
 
   // Skip fetch on first mount — use server-provided initial data
   useEffect(() => {
@@ -184,7 +188,7 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets, showReven
       <div className="px-5 py-4 border-b border-white/8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <h2 className="text-sm font-semibold text-white">{t.realtimeChart.title}</h2>
+            <h2 className="text-sm font-semibold text-white">{rc.title}</h2>
             <span className="flex items-center gap-1.5 text-xs text-green-400 bg-green-400/10 border border-green-400/20 px-2 py-0.5 rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
               Live
@@ -192,12 +196,12 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets, showReven
           </div>
           <div className="flex items-center gap-5">
             <div className="text-right">
-              <p className="text-xs text-slate-500">{t.realtimeChart.tickets}</p>
+              <p className="text-xs text-slate-500">{rc.tickets}</p>
               <p className="text-sm font-bold text-white">{totalCount}</p>
             </div>
             {showRevenue && (
               <div className="text-right">
-                <p className="text-xs text-slate-500">{t.realtimeChart.revenue}</p>
+                <p className="text-xs text-slate-500">{rc.revenue}</p>
                 <p className="text-sm font-bold text-purple-400">€{totalRevenue.toFixed(2)}</p>
               </div>
             )}
@@ -234,7 +238,7 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets, showReven
                     : 'text-slate-500 hover:text-slate-300'
                 }`}
               >
-                {t.realtimeChart.tickets}
+                {rc.tickets}
               </button>
               <button
                 onClick={() => setMetric('revenue')}
@@ -244,7 +248,7 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets, showReven
                     : 'text-slate-500 hover:text-slate-300'
                 }`}
               >
-                {t.realtimeChart.revenue}
+                {rc.revenue}
               </button>
             </div>
           )}
@@ -259,8 +263,8 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets, showReven
       >
         {isEmpty && !loading ? (
           <div className="h-[200px] flex flex-col items-center justify-center gap-1.5">
-            <span className="text-slate-500 text-sm">{t.realtimeChart.empty}</span>
-            <span className="text-xs text-slate-600">{t.realtimeChart.emptyHint}</span>
+            <span className="text-slate-500 text-sm">{rc.noSales}</span>
+            <span className="text-xs text-slate-600">{rc.autoUpdate}</span>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={200}>
@@ -295,11 +299,11 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets, showReven
                 contentStyle={tooltipStyle}
                 formatter={(value) =>
                   metric === 'revenue'
-                    ? [`€${Number(value).toFixed(2)}`, t.realtimeChart.revenue]
-                    : [value, t.realtimeChart.tickets]
+                    ? [`€${Number(value).toFixed(2)}`, rc.revenue]
+                    : [value, rc.tickets]
                 }
                 labelFormatter={(label) =>
-                  timeFilter === '12h' ? `${t.realtimeChart.tooltipHour}${label}` : `${t.realtimeChart.tooltipDate}${label}`
+                  timeFilter === '12h' ? `${rc.hourPrefix} ${label}` : `${rc.datePrefix} ${label}`
                 }
               />
               <Area
