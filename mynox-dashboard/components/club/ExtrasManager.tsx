@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Package, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, Pencil, Trash2, Package } from 'lucide-react';
 import { useLanguage } from '@/components/providers/I18nProvider';
 import { createExtra, updateExtra, toggleExtra, deleteExtra } from '@/app/(club)/club/extras/actions';
 
@@ -30,6 +30,7 @@ export default function ExtrasManager({ clubId, initialExtras }: Props) {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   function openAdd() {
     setEditingId(null);
@@ -78,9 +79,11 @@ export default function ExtrasManager({ clubId, initialExtras }: Props) {
   }
 
   async function handleToggle(extra: ClubExtra) {
+    setTogglingId(extra.id);
     const next = !extra.is_available;
     setExtras((prev) => prev.map((e) => e.id === extra.id ? { ...e, is_available: next } : e));
     await toggleExtra(extra.id, next);
+    setTogglingId(null);
   }
 
   async function handleDelete(id: string) {
@@ -91,8 +94,9 @@ export default function ExtrasManager({ clubId, initialExtras }: Props) {
   }
 
   return (
-    <div className="max-w-2xl space-y-4">
-      {/* List */}
+    <div className="max-w-2xl space-y-3">
+
+      {/* Lista extras */}
       {extras.length === 0 && !showForm ? (
         <div className="bg-[#111118] border border-white/8 rounded-xl p-10 text-center">
           <Package size={36} className="text-slate-600 mx-auto mb-3" />
@@ -105,82 +109,126 @@ export default function ExtrasManager({ clubId, initialExtras }: Props) {
         </div>
       ) : (
         <>
-          <div className="space-y-3">
-            {extras.map((extra) => (
-              <div key={extra.id} className={`bg-[#111118] border rounded-xl px-5 py-4 flex items-center gap-4 transition-opacity ${extra.is_available ? 'border-white/8' : 'border-white/4 opacity-50'}`}>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium text-sm">{extra.name}</p>
-                  {extra.description && <p className="text-slate-500 text-xs mt-0.5 truncate">{extra.description}</p>}
-                  <p className="text-purple-400 text-xs mt-1 font-medium">€{extra.deposit.toFixed(2)}{ex.depositSuffix}</p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={() => handleToggle(extra)} className="text-slate-500 hover:text-purple-400 transition-colors">
-                    {extra.is_available ? <ToggleRight size={20} className="text-purple-400" /> : <ToggleLeft size={20} />}
-                  </button>
-                  <button onClick={() => openEdit(extra)} className="text-slate-500 hover:text-white transition-colors p-1">
-                    <Pencil size={14} />
-                  </button>
-                  <button onClick={() => handleDelete(extra.id)} className="text-slate-500 hover:text-red-400 transition-colors p-1">
-                    <Trash2 size={14} />
-                  </button>
-                </div>
+          {extras.map((extra) => (
+            <div key={extra.id} className="group bg-[#111118] border border-white/8 rounded-xl px-5 py-4 flex items-center gap-4">
+
+              {/* Indicatore attivo */}
+              <div className={`w-2 h-2 rounded-full shrink-0 transition-colors ${extra.is_available ? 'bg-emerald-400' : 'bg-slate-600'}`} />
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <p className={`font-semibold text-sm transition-colors ${extra.is_available ? 'text-white' : 'text-slate-500'}`}>
+                  {extra.name}
+                </p>
+                {extra.description && (
+                  <p className="text-slate-500 text-xs mt-0.5 truncate">{extra.description}</p>
+                )}
+                <p className="text-purple-400 text-xs mt-1 font-medium">
+                  €{extra.deposit.toFixed(2)}{ex.depositSuffix}
+                </p>
               </div>
-            ))}
-          </div>
+
+              {/* Badge stato — cliccabile */}
+              <button
+                onClick={() => handleToggle(extra)}
+                disabled={togglingId === extra.id}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                  extra.is_available
+                    ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20'
+                    : 'bg-white/5 border-white/10 text-slate-500 hover:bg-white/10 hover:text-slate-300'
+                }`}
+              >
+                {extra.is_available ? ex.available : ex.unavailable}
+              </button>
+
+              {/* Azioni — visibili solo su hover */}
+              <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => openEdit(extra)}
+                  className="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors"
+                >
+                  <Pencil size={14} />
+                </button>
+                <button
+                  onClick={() => handleDelete(extra.id)}
+                  className="p-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-400/8 transition-colors"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          ))}
 
           {!showForm && (
             <button onClick={openAdd}
-              className="flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300 transition-colors">
+              className="flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300 transition-colors pt-1 pl-1">
               <Plus size={14} /> {ex.addExtra}
             </button>
           )}
         </>
       )}
 
-      {/* Form */}
+      {/* Form aggiunta/modifica */}
       {showForm && (
-        <div className="bg-[#111118] border border-purple-500/30 rounded-xl p-5 space-y-4">
+        <div className="bg-[#111118] border border-purple-500/30 rounded-xl p-5 space-y-4 mt-2">
           <h3 className="text-sm font-semibold text-white">{editingId ? ex.editExtra : ex.addExtra}</h3>
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-slate-400 uppercase tracking-wide">{ex.nameLabel}</label>
-            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+            <input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder={ex.namePlaceholder}
-              className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60" />
+              className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60"
+            />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-slate-400 uppercase tracking-wide">{ex.descriptionLabel}</label>
-            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder={ex.descriptionPlaceholder} rows={2}
-              className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 resize-none" />
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder={ex.descriptionPlaceholder}
+              rows={2}
+              className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 resize-none"
+            />
           </div>
 
           <div className="space-y-1.5 max-w-[160px]">
             <label className="text-xs font-medium text-slate-400 uppercase tracking-wide">{ex.depositLabel}</label>
             <div className="flex items-center gap-2 bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2.5">
               <span className="text-slate-500 text-sm">€</span>
-              <input type="number" min="0" step="0.01" value={form.deposit}
+              <input
+                type="number" min="0" step="0.01"
+                value={form.deposit}
                 onChange={(e) => setForm({ ...form, deposit: e.target.value })}
                 placeholder={ex.depositPlaceholder}
-                className="flex-1 bg-transparent text-sm text-white placeholder-slate-500 focus:outline-none" />
+                className="flex-1 bg-transparent text-sm text-white placeholder-slate-500 focus:outline-none"
+              />
             </div>
           </div>
 
           {error && <p className="text-red-400 text-xs">{error}</p>}
 
           <div className="flex items-center gap-3 pt-1">
-            <button onClick={handleSave} disabled={saving}
-              className="bg-purple-600 hover:bg-purple-500 disabled:opacity-60 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-purple-600 hover:bg-purple-500 disabled:opacity-60 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors"
+            >
               {saving ? '...' : ex.saveBtn}
             </button>
-            <button onClick={closeForm}
-              className="text-slate-400 hover:text-slate-200 text-sm font-medium px-4 py-2 transition-colors">
+            <button
+              onClick={closeForm}
+              className="text-slate-400 hover:text-slate-200 text-sm font-medium px-4 py-2 transition-colors"
+            >
               {ex.cancelBtn}
             </button>
             {editingId && (
-              <button onClick={() => handleDelete(editingId)}
-                className="ml-auto text-sm text-red-400 hover:text-red-300 transition-colors">
+              <button
+                onClick={() => handleDelete(editingId)}
+                className="ml-auto text-sm text-red-400 hover:text-red-300 transition-colors"
+              >
                 {ex.deleteBtn}
               </button>
             )}
