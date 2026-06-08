@@ -259,7 +259,7 @@ export default function EventScreen() {
           <Image
             source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }}
             style={styles.heroImage}
-            contentFit="contain"
+            contentFit="cover"
             cachePolicy="memory-disk"
           />
           {/* Gradient solo in alto per i pulsanti */}
@@ -751,9 +751,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
 
-  // Hero — locandina portrait intera
+  // Hero — locandina portrait
   hero: { width, height: width * 1.35, position: 'relative', backgroundColor: Colors.background },
-  heroImage: { width: '100%', height: '100%' },
+  heroImage: { ...StyleSheet.absoluteFillObject },
   heroTopRight: { flexDirection: 'row', gap: 8 },
   backButton: {
     width: 38, height: 38, borderRadius: 12,
