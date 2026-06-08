@@ -71,7 +71,6 @@ function rowToEvent(row: any): Event {
     label: e.label,
     deposit: Number(e.deposit),
     isAvailable: e.is_available,
-    maxQuantity: e.max_quantity ?? 10,
     totalStock: e.total_stock ?? null,
     availableStock: e.available_stock ?? null,
   }));

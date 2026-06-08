@@ -20,7 +20,7 @@ interface Props {
   initialExtras: ClubExtra[];
 }
 
-const emptyForm = { name: '', description: '', deposit: '', maxQuantity: '10' };
+const emptyForm = { name: '', description: '', deposit: '' };
 
 export default function ExtrasManager({ clubId, initialExtras }: Props) {
   const { t } = useLanguage();
@@ -42,7 +42,7 @@ export default function ExtrasManager({ clubId, initialExtras }: Props) {
 
   function openEdit(extra: ClubExtra) {
     setEditingId(extra.id);
-    setForm({ name: extra.name, description: extra.description ?? '', deposit: String(extra.deposit), maxQuantity: String(extra.max_quantity ?? 10) });
+    setForm({ name: extra.name, description: extra.description ?? '', deposit: String(extra.deposit) });
     setError('');
     setShowForm(true);
   }
@@ -63,7 +63,6 @@ export default function ExtrasManager({ clubId, initialExtras }: Props) {
       name: form.name.trim(),
       description: form.description.trim(),
       deposit: parseFloat(form.deposit) || 0,
-      maxQuantity: parseInt(form.maxQuantity) || 10,
     };
 
     if (editingId) {
@@ -196,30 +195,17 @@ export default function ExtrasManager({ clubId, initialExtras }: Props) {
             />
           </div>
 
-          <div className="flex items-start gap-4">
-            <div className="space-y-1.5 max-w-[160px]">
-              <label className="text-xs font-medium text-slate-400 uppercase tracking-wide">{ex.depositLabel}</label>
-              <div className="flex items-center gap-2 bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2.5">
-                <span className="text-slate-500 text-sm">€</span>
-                <input
-                  type="number" min="0" step="0.01"
-                  value={form.deposit}
-                  onChange={(e) => setForm({ ...form, deposit: e.target.value })}
-                  placeholder={ex.depositPlaceholder}
-                  className="flex-1 bg-transparent text-sm text-white placeholder-slate-500 focus:outline-none"
-                />
-              </div>
-            </div>
-            <div className="space-y-1.5 max-w-[140px]">
-              <label className="text-xs font-medium text-slate-400 uppercase tracking-wide">{ex.maxQuantityLabel}</label>
+          <div className="space-y-1.5 max-w-[160px]">
+            <label className="text-xs font-medium text-slate-400 uppercase tracking-wide">{ex.depositLabel}</label>
+            <div className="flex items-center gap-2 bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2.5">
+              <span className="text-slate-500 text-sm">€</span>
               <input
-                type="number" min="1" max="99"
-                value={form.maxQuantity}
-                onChange={(e) => setForm({ ...form, maxQuantity: e.target.value })}
-                placeholder="es. 2"
-                className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60"
+                type="number" min="0" step="0.01"
+                value={form.deposit}
+                onChange={(e) => setForm({ ...form, deposit: e.target.value })}
+                placeholder={ex.depositPlaceholder}
+                className="flex-1 bg-transparent text-sm text-white placeholder-slate-500 focus:outline-none"
               />
-              <p className="text-xs text-slate-600">{ex.maxQuantityHint}</p>
             </div>
           </div>
 

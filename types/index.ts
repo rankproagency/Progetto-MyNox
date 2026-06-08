@@ -89,7 +89,6 @@ export interface EventExtra {
   description?: string;
   deposit: number;
   isAvailable: boolean;
-  maxQuantity: number;
   totalStock: number | null;
   availableStock: number | null;
 }

@@ -84,7 +84,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
         clubId={profile.club_id}
         clubFloorPlanUrl={club?.floor_plan_url}
         clubTables={mappedClubTables}
-        clubExtras={(clubExtras ?? []).map((e: any) => ({ id: e.id, name: e.name, description: e.description, deposit: e.deposit, maxQuantity: e.max_quantity ?? 10 }))}
+        clubExtras={(clubExtras ?? []).map((e: any) => ({ id: e.id, name: e.name, description: e.description, deposit: e.deposit }))}
         event={{ ...event, performers: event.performers ?? [] }}
         initialTicketTypes={initialTicketTypes.length > 0 ? initialTicketTypes : undefined}
         initialEventTables={initialEventTables.length > 0 ? initialEventTables : undefined}

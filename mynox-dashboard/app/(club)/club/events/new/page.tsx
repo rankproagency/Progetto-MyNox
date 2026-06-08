@@ -37,7 +37,7 @@ export default async function NewEventPage() {
           posX: t.pos_x, posY: t.pos_y, defaultDeposit: t.default_deposit ?? 0,
         }))}
         clubExtras={(clubExtras ?? []).map((e: any) => ({
-          id: e.id, name: e.name, description: e.description, deposit: e.deposit, maxQuantity: e.max_quantity ?? 10,
+          id: e.id, name: e.name, description: e.description, deposit: e.deposit,
         }))}
       />
     </div>

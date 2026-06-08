@@ -551,8 +551,7 @@ export default function EventScreen() {
                         const qty = orderedExtras[extra.id] ?? 0;
                         return (
                           (() => {
-                            const stockMax = extra.availableStock !== null ? extra.availableStock : 999;
-                            const effectiveMax = Math.min(extra.maxQuantity ?? 10, stockMax);
+                            const effectiveMax = extra.availableStock !== null ? extra.availableStock : 99;
                             const isOutOfStock = extra.availableStock !== null && extra.availableStock <= 0;
                             const isLowStock = extra.availableStock !== null && extra.availableStock > 0 && extra.availableStock <= 3;
                             return (
