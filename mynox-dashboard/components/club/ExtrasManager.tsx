@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import { Plus, Pencil, Trash2, Package, ToggleLeft, ToggleRight } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import { useLanguage } from '@/components/providers/I18nProvider';
-import { useRouter } from 'next/navigation';
+import { createExtra, updateExtra, toggleExtra, deleteExtra } from '@/app/(club)/club/extras/actions';
 
 interface ClubExtra {
   id: string;
@@ -25,7 +24,6 @@ const emptyForm = { name: '', description: '', deposit: '' };
 export default function ExtrasManager({ clubId, initialExtras }: Props) {
   const { t } = useLanguage();
   const ex = t.clubExtras;
-  const router = useRouter();
   const [extras, setExtras] = useState<ClubExtra[]>(initialExtras);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -58,41 +56,38 @@ export default function ExtrasManager({ clubId, initialExtras }: Props) {
     if (!form.name.trim()) { setError(ex.nameLabel.replace(' *', '') + ' obbligatorio'); return; }
     setSaving(true);
     setError('');
-    const supabase = createClient();
+
     const payload = {
-      club_id: clubId,
       name: form.name.trim(),
-      description: form.description.trim() || null,
+      description: form.description.trim(),
       deposit: parseFloat(form.deposit) || 0,
     };
 
     if (editingId) {
-      const { error: err } = await supabase.from('club_extras').update(payload).eq('id', editingId);
-      if (err) { setError(err.message); setSaving(false); return; }
-      setExtras((prev) => prev.map((e) => e.id === editingId ? { ...e, ...payload } : e));
+      const res = await updateExtra(editingId, payload);
+      if (res.error) { setError(res.error); setSaving(false); return; }
+      setExtras((prev) => prev.map((e) => e.id === editingId ? { ...e, ...payload, description: payload.description || null } : e));
     } else {
-      const { data, error: err } = await supabase.from('club_extras').insert(payload).select().single();
-      if (err || !data) { setError(err?.message ?? 'Errore'); setSaving(false); return; }
-      setExtras((prev) => [...prev, data as ClubExtra]);
+      const res = await createExtra(payload);
+      if (res.error) { setError(res.error); setSaving(false); return; }
+      if (res.data) setExtras((prev) => [...prev, res.data as ClubExtra]);
     }
+
     setSaving(false);
     closeForm();
-    router.refresh();
   }
 
   async function handleToggle(extra: ClubExtra) {
-    const supabase = createClient();
     const next = !extra.is_available;
     setExtras((prev) => prev.map((e) => e.id === extra.id ? { ...e, is_available: next } : e));
-    await supabase.from('club_extras').update({ is_available: next }).eq('id', extra.id);
+    await toggleExtra(extra.id, next);
   }
 
   async function handleDelete(id: string) {
     if (!confirm(ex.deleteConfirm)) return;
-    const supabase = createClient();
-    await supabase.from('club_extras').delete().eq('id', id);
+    const res = await deleteExtra(id);
+    if (res.error) { alert(res.error); return; }
     setExtras((prev) => prev.filter((e) => e.id !== id));
-    router.refresh();
   }
 
   return (
