@@ -23,7 +23,7 @@ interface AuthCtx {
   isOnboarded: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, dateOfBirth: Date) => Promise<void>;
+  register: (name: string, email: string, password: string, dateOfBirth: Date, marketingConsent?: boolean) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => void;
   completeOnboarding: () => void;
@@ -203,7 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(async (name: string, email: string, password: string, dateOfBirth: Date) => {
+  const register = useCallback(async (name: string, email: string, password: string, dateOfBirth: Date, marketingConsent = false) => {
     setIsLoading(true);
     try {
       const birthdate = dateOfBirth.toISOString().split('T')[0];
@@ -215,7 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw new Error(error.message);
       setIsOnboarded(false);
       if (data.session) {
-        await supabase.from('profiles').update({ date_of_birth: birthdate }).eq('id', data.session.user.id);
+        await supabase.from('profiles').update({ date_of_birth: birthdate, marketing_consent: marketingConsent }).eq('id', data.session.user.id);
       }
     } finally {
       setIsLoading(false);

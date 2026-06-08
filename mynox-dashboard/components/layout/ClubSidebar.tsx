@@ -16,6 +16,7 @@ import {
   Users,
   ScanLine,
   Tag,
+  BookUser,
   Menu,
   X,
   Globe,
@@ -41,6 +42,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/club/scan', labelKey: 'scanner', icon: ScanLine, permission: 'can_scan_tickets', staffOnly: true },
   { href: '/club/extras', labelKey: 'extras', icon: Sparkles, ownerOnly: true },
   { href: '/club/promo', labelKey: 'promo', icon: Tag, permission: 'can_manage_promos' },
+  { href: '/club/crm', labelKey: 'crm', icon: BookUser, permission: 'can_view_participants' },
   { href: '/club/staff', labelKey: 'staff', icon: Users, ownerOnly: true },
   { href: '/club/settings', labelKey: 'settings', icon: Settings, ownerOnly: true },
 ];

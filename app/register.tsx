@@ -51,6 +51,7 @@ export default function RegisterScreen() {
   const [tempDate, setTempDate] = useState<Date>(MAX_DATE);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
 
   async function handleRegister() {
     if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim() || !dateOfBirth) {
@@ -81,7 +82,7 @@ export default function RegisterScreen() {
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      await register(name.trim(), email.trim(), password, dateOfBirth);
+      await register(name.trim(), email.trim(), password, dateOfBirth, marketingConsent);
       // navigation handled by _layout.tsx: new users (isOnboarded=false) are redirected to onboarding
     } catch (e: any) {
       Alert.alert(t('register.error_registration_failed'), e.message ?? t('common.retry'));
@@ -237,6 +238,17 @@ export default function RegisterScreen() {
                   {t('register.terms_link')}
                 </Text>
               </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.checkboxRow}
+              activeOpacity={0.7}
+              onPress={() => { Haptics.selectionAsync(); setMarketingConsent((v) => !v); }}
+            >
+              <View style={[styles.checkbox, marketingConsent && styles.checkboxChecked]}>
+                {marketingConsent && <Ionicons name="checkmark" size={12} color={Colors.white} />}
+              </View>
+              <Text style={styles.checkboxLabel}>{t('register.marketing_accept')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity

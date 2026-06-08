@@ -8,7 +8,7 @@ export const translations = {
       home: 'Home', myEvents: 'I miei eventi', venue: 'Piantina & Tavoli',
       analytics: 'Analytics', scanner: 'Scanner', promo: 'Codici Promo',
       staff: 'Staff', settings: 'Profilo club', clubs: 'Discoteche',
-      allEvents: 'Eventi', users: 'Utenti', extras: 'Extras & Upsell',
+      allEvents: 'Eventi', users: 'Utenti', extras: 'Extras & Upsell', crm: 'CRM Clienti',
     },
     common: {
       logout: 'Esci', save: 'Salva', saving: 'Salvataggio...', cancel: 'Annulla',
@@ -128,6 +128,14 @@ export const translations = {
     },
     clubStaff: {
       title: 'Gestione Staff', subtitle: 'Invita membri e gestisci i loro permessi.',
+    },
+    clubCrm: {
+      title: 'CRM Clienti', subtitle: 'Contatti degli utenti che hanno dato il consenso marketing.',
+      allEvents: 'Tutti gli eventi', search: 'Cerca per nome o email…',
+      colName: 'Nome', colEmail: 'Email', colEvent: 'Evento', colDate: 'Data acquisto',
+      noData: 'Nessun contatto disponibile.',
+      noDataHint: 'I clienti appariranno qui dopo aver acquistato un biglietto e aver dato il consenso marketing.',
+      exportCsv: 'Esporta CSV', total: '{n} contatti',
     },
     clubPromo: {
       title: 'Codici Promo', subtitle: 'Crea e gestisci i codici sconto per i tuoi eventi.',
@@ -371,7 +379,7 @@ export const translations = {
       home: 'Home', myEvents: 'My events', venue: 'Floor plan & Tables',
       analytics: 'Analytics', scanner: 'Scanner', promo: 'Promo codes',
       staff: 'Staff', settings: 'Club profile', clubs: 'Venues',
-      allEvents: 'Events', users: 'Users', extras: 'Extras & Upsell',
+      allEvents: 'Events', users: 'Users', extras: 'Extras & Upsell', crm: 'Customer CRM',
     },
     common: {
       logout: 'Logout', save: 'Save', saving: 'Saving...', cancel: 'Cancel',
@@ -491,6 +499,14 @@ export const translations = {
     },
     clubStaff: {
       title: 'Staff management', subtitle: 'Invite members and manage their permissions.',
+    },
+    clubCrm: {
+      title: 'Customer CRM', subtitle: 'Contacts of users who gave marketing consent.',
+      allEvents: 'All events', search: 'Search by name or email…',
+      colName: 'Name', colEmail: 'Email', colEvent: 'Event', colDate: 'Purchase date',
+      noData: 'No contacts available.',
+      noDataHint: 'Customers will appear here after purchasing a ticket and giving marketing consent.',
+      exportCsv: 'Export CSV', total: '{n} contacts',
     },
     clubPromo: {
       title: 'Promo codes', subtitle: 'Create and manage discount codes for your events.',
