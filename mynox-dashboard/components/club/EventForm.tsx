@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Plus, Trash2, Mic2, Music } from 'lucide-react';
 import { useLanguage } from '@/components/providers/I18nProvider';
+import { saveEventExtras } from '@/app/(club)/club/events/actions';
 
 interface PerformerRow {
   name: string;
@@ -293,21 +294,16 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
       if (tablesError) { setError(ef.saveTablesError + ' ' + tablesError.message); setLoading(false); return; }
     }
 
-    // Salva extras evento
+    // Salva extras evento via Server Action (bypassa RLS)
     if (eventId && eventExtras.length > 0) {
-      await supabase.from('event_extras').delete().eq('event_id', eventId);
-      const activeExtras = eventExtras.filter((ee) => ee.isAvailable);
-      if (activeExtras.length > 0) {
-        await supabase.from('event_extras').insert(
-          activeExtras.map((ee) => ({
-            event_id: eventId,
-            club_extra_id: ee.clubExtraId,
-            label: ee.label,
-            deposit: parseFloat(ee.deposit) || 0,
-            is_available: true,
-          }))
-        );
-      }
+      const activeExtras = eventExtras
+        .filter((ee) => ee.isAvailable)
+        .map((ee) => ({
+          clubExtraId: ee.clubExtraId,
+          label: ee.label,
+          deposit: parseFloat(ee.deposit) || 0,
+        }));
+      await saveEventExtras(eventId, activeExtras);
     }
 
     setLoading(false);
