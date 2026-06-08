@@ -132,7 +132,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
     deposit: String(ce.deposit),
     defaultDeposit: ce.deposit,
     isAvailable: true,
-    totalStock: '',
+    totalStock: '5',
   }));
 
   const [eventExtras, setEventExtras] = useState<EventExtraRow[]>(
