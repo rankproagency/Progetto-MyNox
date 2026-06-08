@@ -219,6 +219,7 @@ export default function ExtrasManager({ clubId, initialExtras }: Props) {
                 placeholder="es. 2"
                 className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60"
               />
+              <p className="text-xs text-slate-600">{ex.maxQuantityHint}</p>
             </div>
           </div>
 
