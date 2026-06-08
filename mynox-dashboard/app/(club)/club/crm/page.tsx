@@ -36,6 +36,15 @@ export default async function CrmPage() {
       .order('date', { ascending: false }),
   ]);
 
+  const normalized = (contacts ?? [])
+    .map((c) => ({
+      id: c.id as string,
+      created_at: c.created_at as string,
+      profiles: Array.isArray(c.profiles) ? c.profiles[0] : c.profiles,
+      events: Array.isArray(c.events) ? c.events[0] : c.events,
+    }))
+    .filter((c) => c.profiles && c.events);
+
   return (
     <div>
       <div className="mb-8">
@@ -43,7 +52,7 @@ export default async function CrmPage() {
         <p className="text-slate-400 mt-1">{t.clubCrm.subtitle}</p>
       </div>
       <CrmTable
-        contacts={contacts ?? []}
+        contacts={normalized}
         events={events ?? []}
       />
     </div>
