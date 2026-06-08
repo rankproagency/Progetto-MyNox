@@ -88,6 +88,8 @@ function rowToEvent(row: any): Event {
     dressCode: row.dress_code ?? 'No dress code',
     capacity: row.capacity ?? 500,
     ticketsSold: row.tickets_sold ?? 0,
+    doorEntryAvailable: row.door_entry_available ?? false,
+    updatedAt: row.updated_at ?? undefined,
     genres: (row.genres ?? []) as Genre[],
     description: row.description ?? '',
     floorPlanUrl: row.clubs?.floor_plan_url ?? undefined,
