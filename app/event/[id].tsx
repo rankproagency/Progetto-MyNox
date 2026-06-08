@@ -254,72 +254,70 @@ export default function EventScreen() {
 
       <ScrollView ref={scrollRef} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-        {/* Hero */}
+        {/* Hero — locandina pura, nessun testo sovrapposto */}
         <View style={styles.hero}>
           <Image source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }} style={styles.heroImage} contentFit="cover" cachePolicy="memory-disk" />
           <LinearGradient
-            colors={['rgba(7,8,15,0.1)', 'transparent', 'rgba(7,8,15,0.6)', 'rgba(7,8,15,0.97)']}
-            locations={[0, 0.3, 0.65, 1]}
+            colors={['rgba(7,8,15,0.55)', 'transparent', 'transparent', 'rgba(7,8,15,0.25)']}
+            locations={[0, 0.22, 0.7, 1]}
             style={StyleSheet.absoluteFill}
+            pointerEvents="none"
           />
-          <View style={styles.heroBottom}>
+        </View>
 
-            {/* Nome evento */}
-            <Text style={styles.eventName}>{event.name}</Text>
+        {/* Info evento */}
+        <View style={styles.infoSection}>
+          <Text style={styles.infoEventName}>{event.name}</Text>
 
-            {/* Club + indirizzo */}
-            <View style={styles.heroClubBlock}>
-              <TouchableOpacity activeOpacity={0.75} onPress={() => router.push(`/club/${event.clubId}`)}>
-                <Text style={styles.clubName}>{event.club?.name}</Text>
-              </TouchableOpacity>
-              {event.club?.address && (
-                <TouchableOpacity
-                  style={styles.heroAddressRow}
-                  activeOpacity={0.75}
-                  onPress={() => {
-                    const query = encodeURIComponent(event.club!.address);
-                    Linking.openURL(`https://maps.apple.com/?q=${query}`);
-                  }}
-                >
-                  <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.5)" />
-                  <Text style={styles.heroAddressText}>{event.club.address}</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+          <TouchableOpacity activeOpacity={0.75} onPress={() => router.push(`/club/${event.clubId}`)}>
+            <Text style={styles.infoClubName}>{event.club?.name}</Text>
+          </TouchableOpacity>
 
-            {/* Data · orario · dress code · età */}
-            <View style={styles.heroMeta}>
-              <Text style={styles.heroMetaText}>{formatDate(event.date)}</Text>
-              <Text style={styles.heroMetaDot}>·</Text>
-              <Text style={styles.heroMetaText}>
-                {event.endTime ? `${event.startTime} – ${event.endTime}` : event.startTime}
-              </Text>
-              <Text style={styles.heroMetaDot}>·</Text>
-              <Text style={styles.heroMetaText}>{event.dressCode}</Text>
-              <Text style={styles.heroMetaDot}>·</Text>
-              <Text style={[styles.heroMetaText, event.minAge < 18 && { color: Colors.warning }]}>
-                {event.minAge}+
-              </Text>
-            </View>
+          {event.club?.address && (
+            <TouchableOpacity
+              style={styles.infoAddressRow}
+              activeOpacity={0.75}
+              onPress={() => {
+                const query = encodeURIComponent(event.club!.address);
+                Linking.openURL(`https://maps.apple.com/?q=${query}`);
+              }}
+            >
+              <Ionicons name="location-outline" size={13} color={Colors.textMuted} />
+              <Text style={styles.infoAddressText}>{event.club.address}</Text>
+            </TouchableOpacity>
+          )}
 
-            {/* Generi — dentro l'hero, zero gap */}
-            {event.genres.length > 0 && (
-              <View style={styles.heroGenres}>
-                {event.genres.map((g) => {
-                  const cfg = GENRE_CONFIG[g as Genre];
-                  const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : Colors.accentBg;
-                  const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : Colors.accentBorder;
-                  const text = cfg ? cfg.color.replace(/[\d.]+\)$/, '1)') : Colors.accent;
-                  return (
-                    <View key={g} style={[styles.heroGenreTag, { backgroundColor: bg, borderColor: border }]}>
-                      <Text style={[styles.heroGenreTagText, { color: text }]}>{g}</Text>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
-
+          <View style={styles.infoMetaRow}>
+            <Ionicons name="calendar-outline" size={13} color={Colors.textMuted} />
+            <Text style={styles.infoMetaText}>{formatDate(event.date)}</Text>
+            <Text style={styles.infoMetaDot}>·</Text>
+            <Ionicons name="time-outline" size={13} color={Colors.textMuted} />
+            <Text style={styles.infoMetaText}>
+              {event.endTime ? `${event.startTime} – ${event.endTime}` : event.startTime}
+            </Text>
+            <Text style={styles.infoMetaDot}>·</Text>
+            <Text style={styles.infoMetaText}>{event.dressCode}</Text>
+            <Text style={styles.infoMetaDot}>·</Text>
+            <Text style={[styles.infoMetaText, event.minAge < 18 && { color: Colors.warning }]}>
+              {event.minAge}+
+            </Text>
           </View>
+
+          {event.genres.length > 0 && (
+            <View style={styles.infoGenres}>
+              {event.genres.map((g) => {
+                const cfg = GENRE_CONFIG[g as Genre];
+                const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : Colors.accentBg;
+                const border = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.35)') : Colors.accentBorder;
+                const text = cfg ? cfg.color.replace(/[\d.]+\)$/, '1)') : Colors.accent;
+                return (
+                  <View key={g} style={[styles.heroGenreTag, { backgroundColor: bg, borderColor: border }]}>
+                    <Text style={[styles.heroGenreTagText, { color: text }]}>{g}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
         </View>
 
         {/* Contenuto principale — non renderizzato se vuoto */}
@@ -434,25 +432,34 @@ export default function EventScreen() {
                       <Text style={styles.drinkBadgeText}>{t('event.every_ticket_includes_drink')}</Text>
                     </View>
                   )}
-                  {/* Scarsità — solo quando rilevante (>50% sold) */}
-                  {showScarcity && (isLowStock || isMediumStock) && (
+                  {/* Scarsità */}
+                  {showScarcity && (
                     <View style={styles.scarcityBox}>
-                      <View style={styles.soldRow}>
+                      {isLowStock || isMediumStock ? (
+                        <>
+                          <View style={styles.soldRow}>
+                            <View style={styles.soldLeft}>
+                              <Ionicons name="flame" size={15} color={isLowStock ? '#ef4444' : '#f59e0b'} />
+                              <Text style={[styles.soldCount, { color: isLowStock ? '#ef4444' : '#f59e0b' }]}>
+                                {isLowStock ? t('event.scarcity_low_stock') : t('event.scarcity_medium_stock')}
+                              </Text>
+                            </View>
+                            <Text style={[styles.soldPercent, isLowStock && { color: '#ef4444' }]}>{soldPercent}%</Text>
+                          </View>
+                          <View style={styles.progressBar}>
+                            <LinearGradient
+                              colors={isLowStock ? ['#ef4444', '#dc2626'] : ['#f59e0b', '#d97706']}
+                              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                              style={[styles.progressFill, { width: `${Math.min(soldPercent, 100)}%` }]}
+                            />
+                          </View>
+                        </>
+                      ) : (
                         <View style={styles.soldLeft}>
-                          <Ionicons name="flame" size={15} color={isLowStock ? '#ef4444' : '#f59e0b'} />
-                          <Text style={[styles.soldCount, { color: isLowStock ? '#ef4444' : '#f59e0b' }]}>
-                            {isLowStock ? t('event.scarcity_low_stock') : t('event.scarcity_medium_stock')}
-                          </Text>
+                          <Ionicons name="checkmark-circle-outline" size={15} color={Colors.success} />
+                          <Text style={styles.scarcityNeutralText}>{t('event.scarcity_ok')}</Text>
                         </View>
-                        <Text style={[styles.soldPercent, isLowStock && { color: '#ef4444' }]}>{soldPercent}%</Text>
-                      </View>
-                      <View style={styles.progressBar}>
-                        <LinearGradient
-                          colors={isLowStock ? ['#ef4444', '#dc2626'] : ['#f59e0b', '#d97706']}
-                          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                          style={[styles.progressFill, { width: `${Math.min(soldPercent, 100)}%` }]}
-                        />
-                      </View>
+                      )}
                     </View>
                   )}
                   {event.ticketTypes.map((ticket) => (
@@ -736,7 +743,7 @@ const styles = StyleSheet.create({
   },
 
   // Hero
-  hero: { width, height: 480, position: 'relative' },
+  hero: { width, height: 420, position: 'relative' },
   heroImage: { ...StyleSheet.absoluteFillObject },
   heroTopRight: { flexDirection: 'row', gap: 8 },
   backButton: {
@@ -802,6 +809,38 @@ const styles = StyleSheet.create({
   },
   heroGenreTagText: {
     fontSize: 12, fontFamily: Font.bold,
+  },
+
+  // Info evento (sotto l'immagine)
+  infoSection: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 6,
+  },
+  infoEventName: {
+    fontSize: 28, fontFamily: Font.black, color: Colors.white,
+    lineHeight: 34, marginBottom: 10, letterSpacing: 0.2,
+  },
+  infoClubName: {
+    fontSize: 17, fontFamily: Font.bold, color: Colors.accent, marginBottom: 6,
+  },
+  infoAddressRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 14,
+  },
+  infoAddressText: {
+    fontSize: 13, color: Colors.textMuted, fontFamily: Font.regular,
+  },
+  infoMetaRow: {
+    flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 14,
+  },
+  infoMetaText: {
+    fontSize: 14, fontFamily: Font.semiBold, color: Colors.textPrimary,
+  },
+  infoMetaDot: {
+    fontSize: 14, color: 'rgba(255,255,255,0.25)',
+  },
+  infoGenres: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginBottom: 4,
   },
 
   // Contenuto principale
