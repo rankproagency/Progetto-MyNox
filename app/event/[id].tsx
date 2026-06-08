@@ -254,12 +254,18 @@ export default function EventScreen() {
 
       <ScrollView ref={scrollRef} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-        {/* Hero — locandina pura, nessun testo sovrapposto */}
+        {/* Hero — locandina verticale intera */}
         <View style={styles.hero}>
-          <Image source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }} style={styles.heroImage} contentFit="cover" cachePolicy="memory-disk" />
+          <Image
+            source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }}
+            style={styles.heroImage}
+            contentFit="contain"
+            cachePolicy="memory-disk"
+          />
+          {/* Gradient solo in alto per i pulsanti */}
           <LinearGradient
-            colors={['rgba(7,8,15,0.55)', 'transparent', 'transparent', 'rgba(7,8,15,0.25)']}
-            locations={[0, 0.22, 0.7, 1]}
+            colors={['rgba(7,8,15,0.6)', 'transparent']}
+            locations={[0, 0.28]}
             style={StyleSheet.absoluteFill}
             pointerEvents="none"
           />
@@ -366,7 +372,10 @@ export default function EventScreen() {
           </View>
         )}
 
-        {/* Zona acquisto */}
+        {/* Separatore zona acquisto */}
+        <View style={styles.bookingDivider} />
+
+        {/* Prevendita / Tavolo */}
         <View style={styles.bookingSection}>
           {isEventPast ? (
             <View style={styles.soldOutBox}>
@@ -742,9 +751,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
 
-  // Hero
-  hero: { width, height: 420, position: 'relative' },
-  heroImage: { ...StyleSheet.absoluteFillObject },
+  // Hero — locandina portrait intera
+  hero: { width, height: width * 1.35, position: 'relative', backgroundColor: Colors.background },
+  heroImage: { width: '100%', height: '100%' },
   heroTopRight: { flexDirection: 'row', gap: 8 },
   backButton: {
     width: 38, height: 38, borderRadius: 12,
@@ -930,16 +939,17 @@ const styles = StyleSheet.create({
     height: '100%', borderRadius: 3,
   },
 
-  // Sezione prenotazione — card elevata
-  bookingSection: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 8,
-    marginTop: 8,
-    backgroundColor: Colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
+  // Separatore zona acquisto
+  bookingDivider: {
+    marginHorizontal: 20,
+    marginTop: 24,
+    marginBottom: 24,
+    height: 1,
+    backgroundColor: Colors.border,
   },
+
+  // Sezione prenotazione
+  bookingSection: { paddingHorizontal: 20 },
   bookingLabel: {
     fontSize: 11, fontFamily: Font.bold, color: Colors.textMuted,
     textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12,
