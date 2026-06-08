@@ -6,7 +6,6 @@ import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { FavoritesProvider } from '../contexts/FavoritesContext';
 import { TicketsProvider } from '../contexts/TicketsContext';
 import { ProfileProvider } from '../contexts/ProfileContext';
-import { WaitlistProvider } from '../contexts/WaitlistContext';
 import { RecentlyViewedProvider } from '../contexts/RecentlyViewedContext';
 import { EventsProvider } from '../contexts/EventsContext';
 import { ClubsProvider } from '../contexts/ClubsContext';
@@ -57,13 +56,11 @@ export default function RootLayout() {
         <EventsProvider>
           <ClubsProvider>
             <TicketsProvider>
-              <WaitlistProvider>
                 <FavoritesProvider>
                   <RecentlyViewedProvider>
                     <RootNavigator />
                   </RecentlyViewedProvider>
                 </FavoritesProvider>
-              </WaitlistProvider>
             </TicketsProvider>
           </ClubsProvider>
         </EventsProvider>

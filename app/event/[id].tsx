@@ -31,7 +31,6 @@ import { useEvents } from '../../contexts/EventsContext';
 import { TicketType, Table, Genre } from '../../types';
 import TableMap from '../../components/TableMap';
 import { useFavorites } from '../../contexts/FavoritesContext';
-import { useWaitlist } from '../../contexts/WaitlistContext';
 import { useRecentlyViewed } from '../../contexts/RecentlyViewedContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTickets } from '../../contexts/TicketsContext';
@@ -45,7 +44,6 @@ export default function EventScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const { isOnWaitlist, addToWaitlist, removeFromWaitlist } = useWaitlist();
   const { addRecentlyViewed } = useRecentlyViewed();
   const { user } = useAuth();
   const { tickets } = useTickets();
@@ -139,7 +137,6 @@ export default function EventScreen() {
     }
     return new Date() > cutoff;
   })();
-  const onWaitlist = event ? isOnWaitlist(event.id) : false;
   const totalTicketSlots = event.ticketTypes.reduce((sum, t) => sum + t.available, 0) + event.ticketsSold;
   const soldPercent = totalTicketSlots > 0 ? Math.round((event.ticketsSold / totalTicketSlots) * 100) : 0;
   const remaining = totalTicketSlots - event.ticketsSold;
@@ -435,11 +432,9 @@ export default function EventScreen() {
                         <View style={styles.soldLeft}>
                           <Ionicons name="flame" size={15} color={isLowStock ? '#ef4444' : '#f59e0b'} />
                           <Text style={styles.soldText}>
-                            {isLowStock ? (
-                              <><Text style={[styles.soldCount, { color: '#ef4444' }]}>{t('event.scarcity_low_stock_prefix')}{remaining}</Text>{t('event.scarcity_low_stock_suffix')}</>
-                            ) : (
-                              t('event.scarcity_medium_stock')
-                            )}
+                            <Text style={[styles.soldCount, { color: isLowStock ? '#ef4444' : '#f59e0b' }]}>
+                              {isLowStock ? t('event.scarcity_low_stock') : t('event.scarcity_medium_stock')}
+                            </Text>
                           </Text>
                         </View>
                         <Text style={[styles.soldPercent, isLowStock && { color: '#ef4444' }]}>{soldPercent}%</Text>
@@ -611,27 +606,10 @@ export default function EventScreen() {
               <Text style={styles.ctaText}>{t('event.door_entry_cta')}</Text>
             </View>
           ) : (
-            <TouchableOpacity
-              style={[styles.ctaButton, onWaitlist && styles.ctaWaitlistActive]}
-              activeOpacity={0.85}
-              onPress={async () => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                if (onWaitlist) {
-                  removeFromWaitlist(event.id);
-                } else {
-                  await addToWaitlist(event.id, event.name);
-                }
-              }}
-            >
-              <Ionicons
-                name={onWaitlist ? 'notifications' : 'notifications-outline'}
-                size={16}
-                color={Colors.white}
-              />
-              <Text style={styles.ctaText}>
-                {onWaitlist ? t('event.waitlist_active') : t('event.waitlist_join')}
-              </Text>
-            </TouchableOpacity>
+            <View style={[styles.ctaButton, styles.ctaDisabled]}>
+              <Ionicons name="close-circle-outline" size={16} color={Colors.textMuted} />
+              <Text style={[styles.ctaText, { color: Colors.textMuted }]}>{t('event.event_sold_out')}</Text>
+            </View>
           )
         ) : (!hasTickets && bookingMode === 'ticket') ? null : (
           <>
