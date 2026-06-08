@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
-import { Event, Club, TicketType, Table, LineupArtist, Performer, Genre } from '../types';
+import { Event, Club, TicketType, Table, EventExtra, LineupArtist, Performer, Genre } from '../types';
 
 interface EventsCtx {
   events: Event[];
@@ -64,6 +64,15 @@ function rowToEvent(row: any): Event {
   const lineup: LineupArtist[] = Array.isArray(row.lineup) ? row.lineup : [];
   const performers: Performer[] = Array.isArray(row.performers) ? row.performers : [];
 
+  const extras: EventExtra[] = (row.event_extras ?? []).map((e: any) => ({
+    id: e.id,
+    eventId: row.id,
+    clubExtraId: e.club_extra_id,
+    label: e.label,
+    deposit: Number(e.deposit),
+    isAvailable: e.is_available,
+  }));
+
   return {
     id: row.id,
     clubId: club.id,
@@ -84,6 +93,7 @@ function rowToEvent(row: any): Event {
     performers,
     ticketTypes,
     tables,
+    extras,
   };
 }
 
@@ -103,7 +113,8 @@ export function EventsProvider({ children }: { children: ReactNode }) {
         *,
         clubs (*, club_tables (label, pos_x, pos_y)),
         ticket_types (*),
-        tables (*)
+        tables (*),
+        event_extras (*)
       `)
       .eq('is_published', true)
       .gte('date', today)

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getProfile, getStaffPermissions } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getT } from '@/lib/i18n-server';
 import CrmTable from '@/components/club/CrmTable';
 
@@ -15,35 +15,47 @@ export default async function CrmPage() {
     if (!perms?.can_view_participants) redirect('/club/dashboard');
   }
 
-  const supabase = await createClient();
+  const admin = createAdminClient();
 
-  const [{ data: contacts }, { data: events }] = await Promise.all([
-    supabase
-      .from('tickets')
-      .select(`
-        id,
-        created_at,
-        profiles!inner(id, name, email, marketing_consent),
-        events!inner(id, name, date, club_id)
-      `)
-      .eq('events.club_id', profile.club_id)
-      .eq('profiles.marketing_consent', true)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('events')
-      .select('id, name')
-      .eq('club_id', profile.club_id)
-      .order('date', { ascending: false }),
-  ]);
+  // Step 1: get this club's events
+  const { data: events } = await admin
+    .from('events')
+    .select('id, name, date')
+    .eq('club_id', profile.club_id)
+    .order('date', { ascending: false });
 
-  const normalized = (contacts ?? [])
-    .map((c) => ({
-      id: c.id as string,
-      created_at: c.created_at as string,
-      profiles: Array.isArray(c.profiles) ? c.profiles[0] : c.profiles,
-      events: Array.isArray(c.events) ? c.events[0] : c.events,
-    }))
-    .filter((c) => c.profiles && c.events);
+  const eventIds = (events ?? []).map((e) => e.id);
+  const eventMap = new Map((events ?? []).map((e) => [e.id, e]));
+
+  // Step 2: get tickets for those events
+  const { data: tickets } = eventIds.length > 0
+    ? await admin
+        .from('tickets')
+        .select('id, created_at, user_id, event_id')
+        .in('event_id', eventIds)
+        .order('created_at', { ascending: false })
+    : { data: null };
+
+  // Step 3: fetch profiles with marketing_consent = true for those users
+  const userIds = [...new Set((tickets ?? []).map((t: any) => t.user_id))];
+  const { data: profiles } = userIds.length > 0
+    ? await admin
+        .from('profiles')
+        .select('id, name, email, marketing_consent')
+        .in('id', userIds)
+        .eq('marketing_consent', true)
+    : { data: null };
+
+  const profileMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+
+  const normalized = (tickets ?? [])
+    .filter((t: any) => profileMap.has(t.user_id) && eventMap.has(t.event_id))
+    .map((t: any) => ({
+      id: t.id as string,
+      created_at: t.created_at as string,
+      profiles: profileMap.get(t.user_id),
+      events: eventMap.get(t.event_id),
+    }));
 
   return (
     <div>
@@ -52,7 +64,7 @@ export default async function CrmPage() {
         <p className="text-slate-400 mt-1">{t.clubCrm.subtitle}</p>
       </div>
       <CrmTable
-        contacts={normalized}
+        contacts={normalized as any}
         events={events ?? []}
       />
     </div>

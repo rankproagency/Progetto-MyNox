@@ -19,6 +19,7 @@ interface TicketTypeRow {
   price: string;
   total_quantity: string;
   includes_drink: boolean;
+  sold_quantity?: number;
 }
 
 interface ClubTableData {
@@ -232,21 +233,43 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
       eventId = data.id;
     }
 
-    // Salva tipi biglietto: elimina i vecchi e reinserisci
+    // Salva tipi biglietto: upsert intelligente che preserva sold_quantity
     const validTickets = ticketTypes.filter((tk) => tk.label.trim() && tk.price);
-    if (validTickets.length > 0 && eventId) {
-      await supabase.from('ticket_types').delete().eq('event_id', eventId);
-      const { error: ticketError } = await supabase.from('ticket_types').insert(
-        validTickets.map((tk) => ({
-          event_id: eventId,
+    if (eventId) {
+      // Elimina solo i tipi rimossi dall'utente (non tutti)
+      const keepIds = validTickets.filter((tk) => tk.id).map((tk) => tk.id!);
+      if (keepIds.length > 0) {
+        await supabase.from('ticket_types').delete().eq('event_id', eventId).not('id', 'in', `(${keepIds.join(',')})`);
+      } else {
+        // Nessun ticket esistente da mantenere — elimina tutti per questo evento
+        await supabase.from('ticket_types').delete().eq('event_id', eventId);
+      }
+
+      // Aggiorna quelli esistenti (preserva sold_quantity)
+      for (const tk of validTickets.filter((tk) => tk.id)) {
+        await supabase.from('ticket_types').update({
           label: tk.label.trim(),
           price: parseFloat(tk.price),
           total_quantity: tk.total_quantity ? parseInt(tk.total_quantity) : null,
-          sold_quantity: 0,
           includes_drink: tk.includes_drink,
-        }))
-      );
-      if (ticketError) { setError(ef.saveTicketsError + ' ' + ticketError.message); setLoading(false); return; }
+        }).eq('id', tk.id!);
+      }
+
+      // Inserisce i nuovi (senza id)
+      const newTickets = validTickets.filter((tk) => !tk.id);
+      if (newTickets.length > 0) {
+        const { error: ticketError } = await supabase.from('ticket_types').insert(
+          newTickets.map((tk) => ({
+            event_id: eventId,
+            label: tk.label.trim(),
+            price: parseFloat(tk.price),
+            total_quantity: tk.total_quantity ? parseInt(tk.total_quantity) : null,
+            sold_quantity: 0,
+            includes_drink: tk.includes_drink,
+          }))
+        );
+        if (ticketError) { setError(ef.saveTicketsError + ' ' + ticketError.message); setLoading(false); return; }
+      }
     }
 
     // Salva tavoli evento (con prezzi specifici per questo evento)
