@@ -18,7 +18,7 @@ const corsHeaders = {
 };
 
 const TICKET_SELECT = `
-  id, qr_code, drink_qr_code, entry_code, status, drink_used, price_paid, table_name,
+  id, qr_code, drink_qr_code, entry_code, status, drink_used, price_paid, table_name, extras,
   ticket_types(label, includes_drink),
   events(id, name, date, start_time, clubs(name, image_url))
 `;
@@ -74,6 +74,11 @@ Deno.serve(async (req) => {
       console.error('stripe_payment_events insert error:', idempotencyError.message);
     }
 
+    const parsedExtras = (() => {
+      try { return meta.extras ? JSON.parse(meta.extras) : []; }
+      catch { return []; }
+    })();
+
     const toInsert = Array.from({ length: quantity }, () => {
       const id = crypto.randomUUID();
       return {
@@ -90,6 +95,7 @@ Deno.serve(async (req) => {
         price_paid: priceEach,
         stripe_payment_intent_id: payment_intent_id,
         entry_code: generateEntryCode(),
+        extras: parsedExtras,
       };
     });
 

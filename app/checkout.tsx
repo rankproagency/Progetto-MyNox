@@ -68,6 +68,7 @@ function dbRowToMockTicket(row: any): MockTicket {
     status: row.status,
     imageUrl: ev?.clubs?.image_url ?? undefined,
     eventImageUrl: ev?.image_url ?? undefined,
+    extras: Array.isArray(row.extras) && row.extras.length > 0 ? row.extras : undefined,
   };
 }
 

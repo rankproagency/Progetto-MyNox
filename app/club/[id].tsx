@@ -77,6 +77,7 @@ export default function ClubScreen() {
           description: row.description ?? '',
           lineup: Array.isArray(row.lineup) ? row.lineup : [],
           performers: Array.isArray(row.performers) ? row.performers : [],
+          doorEntryAvailable: row.door_entry_available ?? false,
           ticketTypes: (row.ticket_types ?? []).map((t: any): TicketType => ({
             id: t.id,
             eventId: row.id,
@@ -85,7 +86,7 @@ export default function ClubScreen() {
                   : t.label.toLowerCase().includes('uomo') ? 'male' : 'any',
             price: Number(t.price),
             includesDrink: t.includes_drink,
-            available: (t.total_quantity ?? 999) - (t.sold_quantity ?? 0),
+            available: Math.max(0, (t.total_quantity ?? 999) - (t.sold_quantity ?? 0)),
           })),
           tables: (row.tables ?? []).map((t: any): Table => ({
             id: t.id,
@@ -94,8 +95,8 @@ export default function ClubScreen() {
             capacity: t.capacity,
             deposit: Number(t.deposit),
             available: t.is_available,
-          posX: t.club_tables?.pos_x ?? t.pos_x ?? undefined,
-          posY: t.club_tables?.pos_y ?? t.pos_y ?? undefined,
+            posX: t.club_tables?.pos_x ?? t.pos_x ?? undefined,
+            posY: t.club_tables?.pos_y ?? t.pos_y ?? undefined,
           })),
         })));
       }
