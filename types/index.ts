@@ -90,6 +90,8 @@ export interface EventExtra {
   deposit: number;
   isAvailable: boolean;
   maxQuantity: number;
+  totalStock: number | null;
+  availableStock: number | null;
 }
 
 export interface OrderedExtra {

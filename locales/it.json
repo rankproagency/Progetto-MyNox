@@ -266,7 +266,9 @@
     "deposit_label": "caparra",
     "rest_in_venue": "resto in loco",
     "ordered_title": "Extras ordinati",
-    "deposit_each": "caparra cad."
+    "deposit_each": "caparra cad.",
+    "remaining": "rimasti",
+    "out_of_stock": "Esaurito"
   },
 
   "checkout": {

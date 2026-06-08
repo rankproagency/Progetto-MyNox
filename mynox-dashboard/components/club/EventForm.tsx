@@ -55,6 +55,7 @@ interface EventExtraRow {
   deposit: string;
   defaultDeposit: number;
   isAvailable: boolean;
+  totalStock: string; // '' = illimitato
 }
 
 interface EventFormProps {
@@ -131,6 +132,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
     deposit: String(ce.deposit),
     defaultDeposit: ce.deposit,
     isAvailable: true,
+    totalStock: '',
   }));
 
   const [eventExtras, setEventExtras] = useState<EventExtraRow[]>(
@@ -304,6 +306,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
           label: ee.label,
           deposit: parseFloat(ee.deposit) || 0,
           maxQuantity: clubExtras?.find((ce) => ce.id === ee.clubExtraId)?.maxQuantity ?? 10,
+          totalStock: ee.totalStock !== '' ? parseInt(ee.totalStock) : null,
         }));
       await saveEventExtras(eventId, activeExtras);
     }
@@ -713,6 +716,13 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
               {customizeExtras ? ef.resetDefault : ef.editForEvent}
             </button>
           </div>
+          {/* Header colonne */}
+          <div className="flex items-center gap-3 px-4 pb-1">
+            <div className="flex-1" />
+            <span className="text-xs text-slate-600 w-20 text-right">€ caparra</span>
+            <span className="text-xs text-slate-600 w-16 text-right">{t.clubExtras.stockLabel}</span>
+            <span className="text-xs text-slate-600 w-14 text-center">{ef.active}</span>
+          </div>
           <div className="space-y-2">
             {eventExtras.map((ee, i) => (
               <div key={ee.clubExtraId} className={`flex items-center gap-3 bg-[#111118] border rounded-lg px-4 py-3 transition-colors ${
@@ -721,7 +731,8 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-white truncate">{ee.label}</p>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
+                {/* Caparra */}
+                <div className="flex items-center gap-1 shrink-0">
                   <span className="text-xs text-slate-500">€</span>
                   <input
                     type="number" min="0" step="0.01"
@@ -730,20 +741,30 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
                     onChange={(e) => setEventExtras((prev) =>
                       prev.map((row, idx) => idx === i ? { ...row, deposit: e.target.value } : row)
                     )}
-                    className="w-20 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors text-right disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="w-16 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none focus:border-purple-500/60 text-right disabled:opacity-40 disabled:cursor-not-allowed"
                   />
                 </div>
-                <label className={`flex items-center gap-1.5 shrink-0 ${customizeExtras ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}>
+                {/* Stock serata */}
+                <input
+                  type="number" min="0"
+                  value={ee.totalStock}
+                  placeholder={t.clubExtras.stockPlaceholder}
+                  onChange={(e) => setEventExtras((prev) =>
+                    prev.map((row, idx) => idx === i ? { ...row, totalStock: e.target.value } : row)
+                  )}
+                  title={t.clubExtras.stockLabel}
+                  className="w-16 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 text-right"
+                />
+                {/* Attivo */}
+                <label className="flex items-center justify-center w-14 shrink-0 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={ee.isAvailable}
-                    disabled={!customizeExtras}
                     onChange={(e) => setEventExtras((prev) =>
                       prev.map((row, idx) => idx === i ? { ...row, isAvailable: e.target.checked } : row)
                     )}
                     className="w-3.5 h-3.5 rounded accent-purple-500"
                   />
-                  <span className="text-xs text-slate-500">{ef.active}</span>
                 </label>
               </div>
             ))}

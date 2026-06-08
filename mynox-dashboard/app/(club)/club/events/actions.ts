@@ -9,6 +9,7 @@ interface EventExtraPayload {
   label: string;
   deposit: number;
   maxQuantity?: number;
+  totalStock: number | null; // null = illimitato
 }
 
 export async function saveEventExtras(eventId: string, extras: EventExtraPayload[]) {
@@ -19,18 +20,37 @@ export async function saveEventExtras(eventId: string, extras: EventExtraPayload
 
   const admin = createAdminClient();
 
+  // Legge i valori esistenti per preservare lo stock già venduto
+  const { data: existing } = await admin
+    .from('event_extras')
+    .select('club_extra_id, total_stock, available_stock')
+    .eq('event_id', eventId);
+
   await admin.from('event_extras').delete().eq('event_id', eventId);
 
   if (extras.length > 0) {
     const { error } = await admin.from('event_extras').insert(
-      extras.map((e) => ({
-        event_id: eventId,
-        club_extra_id: e.clubExtraId,
-        label: e.label,
-        deposit: e.deposit,
-        max_quantity: e.maxQuantity ?? 10,
-        is_available: true,
-      }))
+      extras.map((e) => {
+        const prev = existing?.find((x: any) => x.club_extra_id === e.clubExtraId);
+        // unità già vendute = total_stock precedente - available_stock precedente
+        const alreadySold =
+          prev && prev.total_stock !== null && prev.available_stock !== null
+            ? prev.total_stock - prev.available_stock
+            : 0;
+        const availableStock =
+          e.totalStock !== null ? Math.max(0, e.totalStock - alreadySold) : null;
+
+        return {
+          event_id: eventId,
+          club_extra_id: e.clubExtraId,
+          label: e.label,
+          deposit: e.deposit,
+          max_quantity: e.maxQuantity ?? 10,
+          total_stock: e.totalStock,
+          available_stock: availableStock,
+          is_available: true,
+        };
+      })
     );
     if (error) return { error: error.message };
   }

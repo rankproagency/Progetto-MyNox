@@ -95,6 +95,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
             deposit: existing ? String(existing.deposit) : String(ce.deposit),
             defaultDeposit: ce.deposit,
             isAvailable: existing ? existing.is_available : true,
+            totalStock: existing?.total_stock != null ? String(existing.total_stock) : '',
           };
         }) : undefined}
       />

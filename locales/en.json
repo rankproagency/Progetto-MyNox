@@ -266,7 +266,9 @@
     "deposit_label": "deposit",
     "rest_in_venue": "rest on the night",
     "ordered_title": "Extras ordered",
-    "deposit_each": "deposit each"
+    "deposit_each": "deposit each",
+    "remaining": "remaining",
+    "out_of_stock": "Out of stock"
   },
 
   "checkout": {

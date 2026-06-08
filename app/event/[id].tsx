@@ -550,37 +550,51 @@ export default function EventScreen() {
                       {availableExtras.map((extra) => {
                         const qty = orderedExtras[extra.id] ?? 0;
                         return (
-                          <View key={extra.id} style={styles.extraRow}>
-                            <View style={styles.extraInfo}>
-                              <Text style={styles.extraName}>{extra.label}</Text>
-                              <Text style={styles.extraPrice}>
-                                €{extra.deposit.toFixed(2)} {t('extras.deposit_label')} · {t('extras.rest_in_venue')}
-                              </Text>
-                            </View>
-                            <View style={styles.extraQty}>
-                              <TouchableOpacity
-                                style={[styles.qtyBtn, qty <= 0 && styles.qtyBtnDisabled]}
-                                disabled={qty <= 0}
-                                onPress={() => {
-                                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                  setOrderedExtras((prev) => ({ ...prev, [extra.id]: Math.max(0, (prev[extra.id] ?? 0) - 1) }));
-                                }}
-                              >
-                                <Ionicons name="remove" size={16} color={qty > 0 ? Colors.accent : Colors.textMuted} />
-                              </TouchableOpacity>
-                              <Text style={[styles.qtyValue, qty > 0 && { color: Colors.accent }]}>{qty}</Text>
-                              <TouchableOpacity
-                                style={[styles.qtyBtn, qty >= (extra.maxQuantity ?? 10) && styles.qtyBtnDisabled]}
-                                disabled={qty >= (extra.maxQuantity ?? 10)}
-                                onPress={() => {
-                                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                  setOrderedExtras((prev) => ({ ...prev, [extra.id]: Math.min((extra.maxQuantity ?? 10), (prev[extra.id] ?? 0) + 1) }));
-                                }}
-                              >
-                                <Ionicons name="add" size={16} color={qty >= (extra.maxQuantity ?? 10) ? Colors.textMuted : Colors.accent} />
-                              </TouchableOpacity>
-                            </View>
-                          </View>
+                          (() => {
+                            const stockMax = extra.availableStock !== null ? extra.availableStock : 999;
+                            const effectiveMax = Math.min(extra.maxQuantity ?? 10, stockMax);
+                            const isOutOfStock = extra.availableStock !== null && extra.availableStock <= 0;
+                            const isLowStock = extra.availableStock !== null && extra.availableStock > 0 && extra.availableStock <= 3;
+                            return (
+                              <View key={extra.id} style={[styles.extraRow, isOutOfStock && { opacity: 0.5 }]}>
+                                <View style={styles.extraInfo}>
+                                  <Text style={styles.extraName}>{extra.label}</Text>
+                                  <Text style={styles.extraPrice}>
+                                    €{extra.deposit.toFixed(2)} {t('extras.deposit_label')} · {t('extras.rest_in_venue')}
+                                  </Text>
+                                  {isOutOfStock && (
+                                    <Text style={styles.extraStockOut}>{t('extras.out_of_stock')}</Text>
+                                  )}
+                                  {isLowStock && (
+                                    <Text style={styles.extraStockLow}>{extra.availableStock} {t('extras.remaining')}</Text>
+                                  )}
+                                </View>
+                                <View style={styles.extraQty}>
+                                  <TouchableOpacity
+                                    style={[styles.qtyBtn, (qty <= 0 || isOutOfStock) && styles.qtyBtnDisabled]}
+                                    disabled={qty <= 0 || isOutOfStock}
+                                    onPress={() => {
+                                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                      setOrderedExtras((prev) => ({ ...prev, [extra.id]: Math.max(0, (prev[extra.id] ?? 0) - 1) }));
+                                    }}
+                                  >
+                                    <Ionicons name="remove" size={16} color={qty > 0 && !isOutOfStock ? Colors.accent : Colors.textMuted} />
+                                  </TouchableOpacity>
+                                  <Text style={[styles.qtyValue, qty > 0 && { color: Colors.accent }]}>{qty}</Text>
+                                  <TouchableOpacity
+                                    style={[styles.qtyBtn, (qty >= effectiveMax || isOutOfStock) && styles.qtyBtnDisabled]}
+                                    disabled={qty >= effectiveMax || isOutOfStock}
+                                    onPress={() => {
+                                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                      setOrderedExtras((prev) => ({ ...prev, [extra.id]: Math.min(effectiveMax, (prev[extra.id] ?? 0) + 1) }));
+                                    }}
+                                  >
+                                    <Ionicons name="add" size={16} color={qty >= effectiveMax || isOutOfStock ? Colors.textMuted : Colors.accent} />
+                                  </TouchableOpacity>
+                                </View>
+                              </View>
+                            );
+                          })()
                         );
                       })}
                     </View>
@@ -1123,6 +1137,8 @@ const styles = StyleSheet.create({
   extraInfo: { flex: 1, marginRight: 12 },
   extraName: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.textPrimary },
   extraPrice: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
+  extraStockLow: { fontSize: 11, color: '#f59e0b', fontFamily: Font.semiBold, marginTop: 3 },
+  extraStockOut: { fontSize: 11, color: Colors.error, fontFamily: Font.semiBold, marginTop: 3 },
   extraQty: { flexDirection: 'row', alignItems: 'center', gap: 0 },
 
   // Sold out
