@@ -89,6 +89,7 @@ export interface EventExtra {
   description?: string;
   deposit: number;
   isAvailable: boolean;
+  maxQuantity: number;
 }
 
 export interface OrderedExtra {

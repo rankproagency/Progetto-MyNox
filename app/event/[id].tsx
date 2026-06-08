@@ -559,7 +559,8 @@ export default function EventScreen() {
                             </View>
                             <View style={styles.extraQty}>
                               <TouchableOpacity
-                                style={styles.qtyBtn}
+                                style={[styles.qtyBtn, qty <= 0 && styles.qtyBtnDisabled]}
+                                disabled={qty <= 0}
                                 onPress={() => {
                                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                                   setOrderedExtras((prev) => ({ ...prev, [extra.id]: Math.max(0, (prev[extra.id] ?? 0) - 1) }));
@@ -569,13 +570,14 @@ export default function EventScreen() {
                               </TouchableOpacity>
                               <Text style={[styles.qtyValue, qty > 0 && { color: Colors.accent }]}>{qty}</Text>
                               <TouchableOpacity
-                                style={styles.qtyBtn}
+                                style={[styles.qtyBtn, qty >= (extra.maxQuantity ?? 10) && styles.qtyBtnDisabled]}
+                                disabled={qty >= (extra.maxQuantity ?? 10)}
                                 onPress={() => {
                                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                  setOrderedExtras((prev) => ({ ...prev, [extra.id]: (prev[extra.id] ?? 0) + 1 }));
+                                  setOrderedExtras((prev) => ({ ...prev, [extra.id]: Math.min((extra.maxQuantity ?? 10), (prev[extra.id] ?? 0) + 1) }));
                                 }}
                               >
-                                <Ionicons name="add" size={16} color={Colors.accent} />
+                                <Ionicons name="add" size={16} color={qty >= (extra.maxQuantity ?? 10) ? Colors.textMuted : Colors.accent} />
                               </TouchableOpacity>
                             </View>
                           </View>
@@ -1109,7 +1111,7 @@ const styles = StyleSheet.create({
   },
 
   // Extras & Upsell
-  extrasSection: { marginTop: 20 },
+  extrasSection: { marginTop: 20, paddingBottom: 8 },
   extrasSectionTitle: { fontSize: 14, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 2 },
   extrasSectionSub: { fontSize: 12, color: Colors.textMuted, marginBottom: 12 },
   extraRow: {

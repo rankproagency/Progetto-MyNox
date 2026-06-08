@@ -8,6 +8,7 @@ interface EventExtraPayload {
   clubExtraId: string;
   label: string;
   deposit: number;
+  maxQuantity?: number;
 }
 
 export async function saveEventExtras(eventId: string, extras: EventExtraPayload[]) {
@@ -27,6 +28,7 @@ export async function saveEventExtras(eventId: string, extras: EventExtraPayload
         club_extra_id: e.clubExtraId,
         label: e.label,
         deposit: e.deposit,
+        max_quantity: e.maxQuantity ?? 10,
         is_available: true,
       }))
     );

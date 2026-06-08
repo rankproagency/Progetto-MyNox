@@ -46,6 +46,7 @@ interface ClubExtraData {
   name: string;
   description: string | null;
   deposit: number;
+  maxQuantity: number;
 }
 
 interface EventExtraRow {
@@ -302,6 +303,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
           clubExtraId: ee.clubExtraId,
           label: ee.label,
           deposit: parseFloat(ee.deposit) || 0,
+          maxQuantity: clubExtras?.find((ce) => ce.id === ee.clubExtraId)?.maxQuantity ?? 10,
         }));
       await saveEventExtras(eventId, activeExtras);
     }

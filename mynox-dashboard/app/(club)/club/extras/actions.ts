@@ -11,7 +11,7 @@ async function requireClubAdmin() {
   return profile;
 }
 
-export async function createExtra(formData: { name: string; description: string; deposit: number }) {
+export async function createExtra(formData: { name: string; description: string; deposit: number; maxQuantity: number }) {
   const profile = await requireClubAdmin();
   const admin = createAdminClient();
   const { data, error } = await admin
@@ -21,6 +21,7 @@ export async function createExtra(formData: { name: string; description: string;
       name: formData.name,
       description: formData.description || null,
       deposit: formData.deposit,
+      max_quantity: formData.maxQuantity,
     })
     .select()
     .single();
@@ -29,7 +30,7 @@ export async function createExtra(formData: { name: string; description: string;
   return { data };
 }
 
-export async function updateExtra(id: string, formData: { name: string; description: string; deposit: number }) {
+export async function updateExtra(id: string, formData: { name: string; description: string; deposit: number; maxQuantity: number }) {
   const profile = await requireClubAdmin();
   const admin = createAdminClient();
   const { error } = await admin
@@ -38,6 +39,7 @@ export async function updateExtra(id: string, formData: { name: string; descript
       name: formData.name,
       description: formData.description || null,
       deposit: formData.deposit,
+      max_quantity: formData.maxQuantity,
     })
     .eq('id', id)
     .eq('club_id', profile.club_id!);
