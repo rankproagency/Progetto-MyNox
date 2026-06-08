@@ -621,10 +621,25 @@ export default function EventScreen() {
           </View>
         ) : !hasTickets && !hasTables ? null : isSoldOut ? (
           event.doorEntryAvailable ? (
-            <View style={[styles.ctaButton, { backgroundColor: Colors.accent }]}>
+            <TouchableOpacity
+              style={[styles.ctaButton, { backgroundColor: Colors.accent }]}
+              activeOpacity={0.85}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                const address = event.club?.address;
+                const lat = event.club?.latitude;
+                const lng = event.club?.longitude;
+                const url = lat && lng
+                  ? `https://maps.apple.com/?ll=${lat},${lng}&q=${encodeURIComponent(event.club?.name ?? '')}`
+                  : address
+                  ? `https://maps.apple.com/?q=${encodeURIComponent(address)}`
+                  : null;
+                if (url) Linking.openURL(url);
+              }}
+            >
               <Ionicons name="location-outline" size={16} color={Colors.white} />
               <Text style={styles.ctaText}>{t('event.door_entry_cta')}</Text>
-            </View>
+            </TouchableOpacity>
           ) : (
             <View style={[styles.ctaButton, styles.ctaDisabled]}>
               <Ionicons name="close-circle-outline" size={16} color={Colors.textMuted} />
