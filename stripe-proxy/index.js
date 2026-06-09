@@ -349,6 +349,23 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
+      // A1: consumo atomico del promo code PRIMA di creare il PaymentIntent.
+      // Questo previene la race condition: solo max_uses PaymentIntent vengono creati con lo sconto.
+      // I codici hardcoded (LAUNCH10, VIP20, ecc.) non hanno promo_id e vengono saltati.
+      const promoId = metadata.promo_id;
+      if (promoId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        try {
+          const result = await callSupabase('/rest/v1/rpc/increment_promo_uses', { p_promo_id: promoId });
+          if (result === false || (Array.isArray(result) && result[0] === false)) {
+            res.writeHead(409, CORS_HEADERS);
+            res.end(JSON.stringify({ error: 'Codice promo esaurito o non più valido.' }));
+            return;
+          }
+        } catch (e) {
+          console.error('promo atomic consume error:', e.message);
+        }
+      }
+
       const stripeBody = {
         amount: String(finalAmountCents),
         currency: 'eur',
@@ -510,10 +527,56 @@ const server = http.createServer(async (req, res) => {
   if (req.url === '/create-free-ticket') {
     try {
       const { metadata = {} } = body;
-      const { event_id, user_id, ticket_type_id, table_id, table_name, quantity: qty, includes_drink, extras: extrasStr } = metadata;
+      const { event_id, user_id, ticket_type_id, table_id, table_name, quantity: qty, includes_drink, extras: extrasStr, promo_id } = metadata;
       const quantity = parseInt(qty ?? '1', 10);
       const includesDrink = includes_drink === 'true';
       const parsedExtras = (() => { try { return extrasStr ? JSON.parse(extrasStr) : []; } catch { return []; } })();
+
+      // M4: verifica server-side che ticket, tavolo ed extras siano effettivamente gratuiti.
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        if (ticket_type_id) {
+          const tt = await callSupabaseGet(`/rest/v1/ticket_types?id=eq.${encodeURIComponent(ticket_type_id)}&select=price`);
+          if (Array.isArray(tt) && tt.length > 0 && Number(tt[0].price) > 0) {
+            res.writeHead(403, CORS_HEADERS);
+            res.end(JSON.stringify({ error: 'Biglietto non gratuito.' }));
+            return;
+          }
+        }
+        if (table_id) {
+          const tbl = await callSupabaseGet(`/rest/v1/tables?id=eq.${encodeURIComponent(table_id)}&select=deposit`);
+          if (Array.isArray(tbl) && tbl.length > 0 && Number(tbl[0].deposit) > 0) {
+            res.writeHead(403, CORS_HEADERS);
+            res.end(JSON.stringify({ error: 'Caparra tavolo non gratuita.' }));
+            return;
+          }
+        }
+        if (parsedExtras.length > 0) {
+          const extraIds = parsedExtras.map((e) => e.extraId).join(',');
+          const exRows = await callSupabaseGet(`/rest/v1/event_extras?id=in.(${extraIds})&select=deposit,label`);
+          if (Array.isArray(exRows)) {
+            const paid = exRows.find((e) => Number(e.deposit) > 0);
+            if (paid) {
+              res.writeHead(403, CORS_HEADERS);
+              res.end(JSON.stringify({ error: `Extra non gratuito: ${paid.label}` }));
+              return;
+            }
+          }
+        }
+      }
+
+      // A1: consumo atomico del promo code per biglietti gratuiti (es. sconto 100%)
+      if (promo_id && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        try {
+          const result = await callSupabase('/rest/v1/rpc/increment_promo_uses', { p_promo_id: promo_id });
+          if (result === false || (Array.isArray(result) && result[0] === false)) {
+            res.writeHead(409, CORS_HEADERS);
+            res.end(JSON.stringify({ error: 'Codice promo esaurito o non più valido.' }));
+            return;
+          }
+        } catch (e) {
+          console.error('promo atomic consume error (free ticket):', e.message);
+        }
+      }
 
       const charset = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
       const toInsert = Array.from({ length: quantity }, () => {

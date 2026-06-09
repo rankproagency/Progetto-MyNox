@@ -251,6 +251,8 @@ export default function CheckoutScreen() {
         metadata.table_name = tableName?.trim() ?? '';
       }
       if (parsedExtras.length > 0) metadata.extras = JSON.stringify(parsedExtras);
+      // promo_id nei metadata: il proxy lo consuma atomicamente prima di creare il PaymentIntent
+      if (appliedPromo?.promoId) metadata.promo_id = appliedPromo.promoId;
 
       let createdTickets: any[];
 
@@ -267,14 +269,7 @@ export default function CheckoutScreen() {
           return;
         }
         createdTickets = freeJson.tickets;
-
-        if (appliedPromo?.promoId) {
-          fetchWithTimeout(`${PROXY_URL}/use-promo`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ promo_id: appliedPromo.promoId }),
-          }, 5000).catch(() => {});
-        }
+        // Il promo (se presente) è stato consumato atomicamente nel proxy tramite metadata.promo_id.
       } else {
         // Flusso Stripe normale
         const rawBaseCents = Math.round((ticketSubtotal + tableDeposit + extrasTotal) * 100);
@@ -372,13 +367,7 @@ export default function CheckoutScreen() {
           return;
         }
 
-        if (appliedPromo?.promoId) {
-          fetchWithTimeout(`${PROXY_URL}/use-promo`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ promo_id: appliedPromo.promoId }),
-          }, 5000).catch(() => {});
-        }
+        // Il promo è già stato consumato atomicamente in create-payment-intent.
       }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
