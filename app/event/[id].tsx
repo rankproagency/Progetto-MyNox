@@ -626,15 +626,7 @@ export default function EventScreen() {
               {bookingMode === 'table' && (
                 <>
                   <View style={styles.tableSectionHeader}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.sectionSubtitle}>{t('event.table_deposit_only')}</Text>
-                      {availableExtras.length > 0 && (
-                        <View style={styles.extrasBadgeHint}>
-                          <Ionicons name="sparkles-outline" size={11} color={Colors.accent} />
-                          <Text style={styles.extrasBadgeHintText}>{t('extras.select_table_hint')}</Text>
-                        </View>
-                      )}
-                    </View>
+                    <Text style={styles.sectionSubtitle}>{t('event.table_deposit_only')}</Text>
                     <TouchableOpacity
                       style={styles.expandMapBtn}
                       onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setFloorPlanModalVisible(true); }}
@@ -644,6 +636,12 @@ export default function EventScreen() {
                       <Text style={styles.expandMapBtnText}>{t('event.table_open_map')}</Text>
                     </TouchableOpacity>
                   </View>
+                  {availableExtras.length > 0 && (
+                    <View style={styles.extrasBadgeHint}>
+                      <Ionicons name="sparkles-outline" size={11} color={Colors.accent} />
+                      <Text style={styles.extrasBadgeHintText}>{t('extras.select_table_hint')}</Text>
+                    </View>
+                  )}
                   <TableMap
                     tables={event.tables}
                     selected={selectedTable}
@@ -1209,10 +1207,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   extrasBadgeHint: {
-    flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5,
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    marginBottom: 12,
   },
   extrasBadgeHintText: {
-    fontSize: 11, color: Colors.accent, fontFamily: Font.semiBold,
+    fontSize: 12, color: Colors.accent, fontFamily: Font.semiBold,
   },
   expandMapBtn: {
     flexDirection: 'row',
