@@ -343,11 +343,20 @@ export default function CheckoutScreen() {
         }
 
         if (fatalError) {
-          // Pagamento addebitato ma biglietti non creati (es. esauriti in gara).
-          // Il team MyNox vedrà il log e gestirà il rimborso manualmente.
+          // Il server ha emesso un rimborso automatico (sold_out / table_already_booked / extra_sold_out).
+          const isTableBooked = fatalError.includes('table_already_booked');
+          const isExtraSoldOut = fatalError.includes('extra_sold_out');
           Alert.alert(
-            t('checkout.tickets_issue_title'),
-            t('checkout.tickets_issue_body'),
+            isTableBooked
+              ? t('checkout.table_taken_title')
+              : isExtraSoldOut
+              ? t('checkout.extra_soldout_title')
+              : t('checkout.tickets_issue_title'),
+            isTableBooked
+              ? t('checkout.table_taken_body')
+              : isExtraSoldOut
+              ? t('checkout.extra_soldout_body')
+              : t('checkout.tickets_issue_body'),
             [{ text: t('common.ok') }]
           );
           return;

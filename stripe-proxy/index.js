@@ -542,26 +542,33 @@ const server = http.createServer(async (req, res) => {
       const inserted = await supabaseRequest('POST', `/rest/v1/tickets?select=${encodeURIComponent(selectQuery)}`, toInsert);
 
       if (!Array.isArray(inserted) || inserted.length === 0) {
+        const msg = inserted?.message ?? '';
+        // Errori atomici dal trigger DB
+        if (msg.includes('table_already_booked')) {
+          res.writeHead(409, CORS_HEADERS);
+          res.end(JSON.stringify({ error: 'Il tavolo è già stato prenotato da qualcun altro.' }));
+          return;
+        }
+        if (msg.startsWith('extra_sold_out')) {
+          const label = msg.split(':')[1] ?? 'extra';
+          res.writeHead(409, CORS_HEADERS);
+          res.end(JSON.stringify({ error: `Extra esaurito: ${label}` }));
+          return;
+        }
+        if (msg.includes('tickets_sold_out')) {
+          res.writeHead(409, CORS_HEADERS);
+          res.end(JSON.stringify({ error: 'Biglietti esauriti.' }));
+          return;
+        }
         res.writeHead(400, CORS_HEADERS);
-        res.end(JSON.stringify({ error: inserted?.message ?? 'Errore creazione biglietto gratuito' }));
+        res.end(JSON.stringify({ error: msg || 'Errore creazione biglietto gratuito' }));
         return;
       }
 
       if (ticket_type_id) {
         await callSupabase('/rest/v1/rpc/increment_ticket_sold', { p_ticket_type_id: ticket_type_id, p_qty: quantity });
       }
-
-      if (table_id) {
-        const bookResult = await callSupabase('/rest/v1/rpc/book_table', {
-          p_table_id: table_id,
-          p_reserved_by: table_name || null,
-        });
-        if (bookResult && bookResult.message && bookResult.message.includes('table_already_booked')) {
-          res.writeHead(409, CORS_HEADERS);
-          res.end(JSON.stringify({ error: 'Il tavolo è già stato prenotato da qualcun altro.' }));
-          return;
-        }
-      }
+      // Il trigger on_ticket_insert_book_table gestisce il tavolo atomicamente — book_table non è più necessario.
 
       res.writeHead(200, CORS_HEADERS);
       res.end(JSON.stringify({ tickets: inserted }));
