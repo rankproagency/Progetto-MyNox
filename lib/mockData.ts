@@ -31,9 +31,9 @@ export const MOCK_EVENTS: Event[] = [
       { name: 'DRVG CVLTVRE', time: '03:00' },
     ],
     ticketTypes: [
-      { id: 't1', eventId: '1', label: 'Donna', gender: 'female', price: 10, includesDrink: true, available: 120 },
-      { id: 't2', eventId: '1', label: 'Uomo', gender: 'male', price: 15, includesDrink: true, available: 80 },
-      { id: 't3', eventId: '1', label: 'Early Bird', gender: 'any', price: 8, includesDrink: true, available: 20 },
+      { id: 't1', eventId: '1', label: 'Donna', gender: 'female', price: 10, priceTiers: [], isUnlimited: false, includesDrink: true, available: 120 },
+      { id: 't2', eventId: '1', label: 'Uomo', gender: 'male', price: 15, priceTiers: [], isUnlimited: false, includesDrink: true, available: 80 },
+      { id: 't3', eventId: '1', label: 'Early Bird', gender: 'any', price: 8, priceTiers: [], isUnlimited: false, includesDrink: true, available: 20 },
     ],
     performers: [],
     tables: [
@@ -60,8 +60,8 @@ export const MOCK_EVENTS: Event[] = [
       { name: 'LATINO HEAT', time: '00:30' },
     ],
     ticketTypes: [
-      { id: 't4', eventId: '2', label: 'Donna', gender: 'female', price: 8, includesDrink: true, available: 150 },
-      { id: 't5', eventId: '2', label: 'Uomo', gender: 'male', price: 12, includesDrink: true, available: 100 },
+      { id: 't4', eventId: '2', label: 'Donna', gender: 'female', price: 8, priceTiers: [], isUnlimited: false, includesDrink: true, available: 150 },
+      { id: 't5', eventId: '2', label: 'Uomo', gender: 'male', price: 12, priceTiers: [], isUnlimited: false, includesDrink: true, available: 100 },
     ],
     performers: [],
     tables: [
@@ -88,9 +88,9 @@ export const MOCK_EVENTS: Event[] = [
       { name: 'FLORA B2B MARZ', time: '03:30' },
     ],
     ticketTypes: [
-      { id: 't6', eventId: '3', label: 'Donna', gender: 'female', price: 12, includesDrink: true, available: 60 },
-      { id: 't7', eventId: '3', label: 'Uomo', gender: 'male', price: 18, includesDrink: true, available: 40 },
-      { id: 't8', eventId: '3', label: 'Early Bird', gender: 'any', price: 10, includesDrink: true, available: 10 },
+      { id: 't6', eventId: '3', label: 'Donna', gender: 'female', price: 12, priceTiers: [], isUnlimited: false, includesDrink: true, available: 60 },
+      { id: 't7', eventId: '3', label: 'Uomo', gender: 'male', price: 18, priceTiers: [], isUnlimited: false, includesDrink: true, available: 40 },
+      { id: 't8', eventId: '3', label: 'Early Bird', gender: 'any', price: 10, priceTiers: [], isUnlimited: false, includesDrink: true, available: 10 },
     ],
     performers: [],
     tables: [],
@@ -114,8 +114,8 @@ export const MOCK_EVENTS: Event[] = [
       { name: 'OBJECT BLUE', time: '02:00' },
     ],
     ticketTypes: [
-      { id: 't9', eventId: '4', label: 'Donna', gender: 'female', price: 15, includesDrink: true, available: 80 },
-      { id: 't10', eventId: '4', label: 'Uomo', gender: 'male', price: 20, includesDrink: true, available: 50 },
+      { id: 't9', eventId: '4', label: 'Donna', gender: 'female', price: 15, priceTiers: [], isUnlimited: false, includesDrink: true, available: 80 },
+      { id: 't10', eventId: '4', label: 'Uomo', gender: 'male', price: 20, priceTiers: [], isUnlimited: false, includesDrink: true, available: 50 },
     ],
     performers: [],
     tables: [
@@ -141,8 +141,8 @@ export const MOCK_EVENTS: Event[] = [
       { name: 'PRINCE OF THE BOOTH', time: '00:00' },
     ],
     ticketTypes: [
-      { id: 't11', eventId: '5', label: 'Donna', gender: 'female', price: 10, includesDrink: true, available: 200 },
-      { id: 't12', eventId: '5', label: 'Uomo', gender: 'male', price: 15, includesDrink: true, available: 150 },
+      { id: 't11', eventId: '5', label: 'Donna', gender: 'female', price: 10, priceTiers: [], isUnlimited: false, includesDrink: true, available: 200 },
+      { id: 't12', eventId: '5', label: 'Uomo', gender: 'male', price: 15, priceTiers: [], isUnlimited: false, includesDrink: true, available: 150 },
     ],
     performers: [],
     tables: [],
@@ -167,8 +167,8 @@ export const MOCK_EVENTS: Event[] = [
       { name: 'MANNI DEH', time: '03:30' },
     ],
     ticketTypes: [
-      { id: 't13', eventId: '6', label: 'Donna', gender: 'female', price: 20, includesDrink: true, available: 0 },
-      { id: 't14', eventId: '6', label: 'Uomo', gender: 'male', price: 25, includesDrink: true, available: 0 },
+      { id: 't13', eventId: '6', label: 'Donna', gender: 'female', price: 20, priceTiers: [], isUnlimited: false, includesDrink: true, available: 0 },
+      { id: 't14', eventId: '6', label: 'Uomo', gender: 'male', price: 25, priceTiers: [], isUnlimited: false, includesDrink: true, available: 0 },
     ],
     performers: [],
     tables: [],

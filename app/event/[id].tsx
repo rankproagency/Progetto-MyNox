@@ -29,7 +29,35 @@ import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
 import { GENRE_CONFIG } from '../../constants/genres';
 import { useEvents } from '../../contexts/EventsContext';
-import { TicketType, Table, Genre } from '../../types';
+import { TicketType, Table, Genre, PriceTier } from '../../types';
+
+function getEffectivePrice(price: number, priceTiers: PriceTier[], eventDate: string): number {
+  if (!priceTiers.length) return price;
+  const now = new Date();
+  const base = new Date(eventDate + 'T00:00:00');
+  for (const tier of priceTiers) {
+    const [hh, mm] = tier.until.split(':').map(Number);
+    const t = new Date(base);
+    if (hh < 12) t.setDate(t.getDate() + 1);
+    t.setHours(hh, mm, 0, 0);
+    if (now <= t) return tier.price;
+  }
+  return price;
+}
+
+function getActiveTier(priceTiers: PriceTier[], eventDate: string): PriceTier | null {
+  if (!priceTiers.length) return null;
+  const now = new Date();
+  const base = new Date(eventDate + 'T00:00:00');
+  for (const tier of priceTiers) {
+    const [hh, mm] = tier.until.split(':').map(Number);
+    const t = new Date(base);
+    if (hh < 12) t.setDate(t.getDate() + 1);
+    t.setHours(hh, mm, 0, 0);
+    if (now <= t) return tier;
+  }
+  return null;
+}
 import TableMap from '../../components/TableMap';
 import { useFavorites } from '../../contexts/FavoritesContext';
 import { useRecentlyViewed } from '../../contexts/RecentlyViewedContext';
@@ -128,7 +156,9 @@ export default function EventScreen() {
     );
   }
 
-  const ticketSubtotal = (selectedTicket?.price ?? 0) * ticketQty;
+  const ticketSubtotal = selectedTicket
+    ? getEffectivePrice(selectedTicket.price, selectedTicket.priceTiers, event?.date ?? '') * ticketQty
+    : 0;
   const tableSubtotal = selectedTable?.deposit ?? 0;
   const total = bookingMode === 'table'
     ? tableSubtotal + extrasDeposit
@@ -600,10 +630,21 @@ export default function EventScreen() {
                         <Text style={styles.ticketLabel}>{ticket.label}</Text>
                       </View>
                       <View style={styles.ticketRight}>
-                        <Text style={styles.ticketPrice}>€{ticket.price}</Text>
-                        {ticket.includesDrink && (
-                          <Text style={styles.ticketDrink}>{t('event.ticket_drink_extra')}</Text>
-                        )}
+                        {(() => {
+                          const effectivePrice = getEffectivePrice(ticket.price, ticket.priceTiers, event.date);
+                          const activeTier = getActiveTier(ticket.priceTiers, event.date);
+                          return (
+                            <>
+                              <Text style={styles.ticketPrice}>€{effectivePrice}</Text>
+                              {activeTier && (
+                                <Text style={styles.ticketTierHint}>fino alle {activeTier.until}</Text>
+                              )}
+                              {ticket.includesDrink && (
+                                <Text style={styles.ticketDrink}>{t('event.ticket_drink_extra')}</Text>
+                              )}
+                            </>
+                          );
+                        })()}
                       </View>
                     </TouchableOpacity>
                   ))}
@@ -1040,6 +1081,7 @@ const styles = StyleSheet.create({
   ticketLabel: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.textPrimary },
   ticketAvailable: { fontSize: 11, color: Colors.textMuted, marginTop: 2 },
   ticketPrice: { fontSize: 16, fontFamily: Font.bold, color: Colors.accent },
+  ticketTierHint: { fontSize: 10, color: Colors.accent, marginTop: 1, opacity: 0.7 },
   ticketDrink: { fontSize: 10, color: Colors.textMuted, marginTop: 1 },
   soldOut: { fontSize: 11, color: Colors.error, marginTop: 2 },
   disabledText: { color: Colors.textMuted },

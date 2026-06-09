@@ -24,6 +24,21 @@ import { Font } from '../constants/typography';
 import { useStripe } from '@stripe/stripe-react-native';
 import { useEvents } from '../contexts/EventsContext';
 import { useAuth } from '../contexts/AuthContext';
+import { PriceTier } from '../types';
+
+function getEffectivePrice(price: number, priceTiers: PriceTier[], eventDate: string): number {
+  if (!priceTiers.length) return price;
+  const now = new Date();
+  const base = new Date(eventDate + 'T00:00:00');
+  for (const tier of priceTiers) {
+    const [hh, mm] = tier.until.split(':').map(Number);
+    const t = new Date(base);
+    if (hh < 12) t.setDate(t.getDate() + 1);
+    t.setHours(hh, mm, 0, 0);
+    if (now <= t) return tier.price;
+  }
+  return price;
+}
 import { notifyTicketConfirmed, scheduleEventReminders } from '../hooks/useNotifications';
 import { useTickets, MockTicket } from '../contexts/TicketsContext';
 
@@ -182,7 +197,7 @@ export default function CheckoutScreen() {
 
   if (!event || (!ticket && !table)) return null;
 
-  const ticketSubtotal = ticket ? ticket.price * quantity : 0;
+  const ticketSubtotal = ticket ? getEffectivePrice(ticket.price, ticket.priceTiers, event.date) * quantity : 0;
   const discount = appliedPromo && !isTableOnly
     ? appliedPromo.type === 'percent'
       ? parseFloat(((ticketSubtotal * appliedPromo.value) / 100).toFixed(2))
@@ -479,7 +494,7 @@ export default function CheckoutScreen() {
                 {quantity > 1 ? (
                   <Row label={`${t('checkout.ticket_label_prefix')}${ticket.label} × ${quantity}`} value={`€${ticketSubtotal}`} />
                 ) : (
-                  <Row label={`${t('checkout.ticket_label_prefix')}${ticket.label}`} value={`€${ticket.price}`} />
+                  <Row label={`${t('checkout.ticket_label_prefix')}${ticket.label}`} value={`€${getEffectivePrice(ticket.price, ticket.priceTiers, event.date)}`} />
                 )}
                 {ticket.includesDrink && (
                   <Row label={quantity > 1 ? `${quantity} ${t('checkout.free_drink_plural')}` : t('checkout.free_drink_single')} value="✓" accent />

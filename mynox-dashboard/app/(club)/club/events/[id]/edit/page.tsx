@@ -37,6 +37,10 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
     total_quantity: String(t.total_quantity ?? ''),
     includes_drink: t.includes_drink,
     sold_quantity: t.sold_quantity ?? 0,
+    price_tiers: (t.price_tiers ?? []).map((tier: any) => ({
+      until: tier.until ?? '',
+      price: String(tier.price ?? ''),
+    })),
   }));
 
   // Costruisci la lista tavoli per questo evento: usa quelli esistenti se ci sono,

@@ -85,6 +85,7 @@ export default function ClubScreen() {
             gender: t.label.toLowerCase().includes('donna') ? 'female'
                   : t.label.toLowerCase().includes('uomo') ? 'male' : 'any',
             price: Number(t.price),
+            priceTiers: Array.isArray(t.price_tiers) ? t.price_tiers : [],
             includesDrink: t.includes_drink,
             isUnlimited: t.total_quantity === null,
             available: t.total_quantity === null ? 999 : Math.max(0, t.total_quantity - (t.sold_quantity ?? 0)),

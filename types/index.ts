@@ -58,12 +58,18 @@ export interface Event {
   performers: Performer[];
 }
 
+export interface PriceTier {
+  until: string;
+  price: number;
+}
+
 export interface TicketType {
   id: string;
   eventId: string;
   label: string;
   gender: 'male' | 'female' | 'any';
   price: number;
+  priceTiers: PriceTier[];
   includesDrink: boolean;
   available: number;
   isUnlimited: boolean;
