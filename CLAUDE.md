@@ -144,7 +144,8 @@ Non introdurre mai bianchi, grigi chiari o temi alternativi.
 - Caparre non rimborsabili (stessa logica del biglietto)
 
 ### Commissione servizio
-- 8% su ogni transazione (biglietto + caparra)
+- 5% sui biglietti e sugli extra
+- 0% sulle caparre dei tavoli (da concordare con le discoteche)
 - Calcolata e mostrata nel checkout
 
 ### Selezione città
