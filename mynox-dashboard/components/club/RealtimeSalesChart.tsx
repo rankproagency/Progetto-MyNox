@@ -115,7 +115,7 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets, showReven
         const bucket = empty.find((b) => b.isoKey === key);
         if (bucket) {
           bucket.count++;
-          bucket.revenue += t.ticket_types?.price ?? (t.price_paid ?? 0) / 1.05;
+          bucket.revenue += (t.price_paid ?? 0) / 1.05;
         }
       });
       setBuckets(empty);
