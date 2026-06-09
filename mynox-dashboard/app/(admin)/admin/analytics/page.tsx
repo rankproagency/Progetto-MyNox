@@ -35,7 +35,7 @@ async function getAnalyticsData() {
   const revenueByMonthData = Object.entries(revenueByMonth).map(([mese, ricavi]) => ({
     mese,
     ricavi: +ricavi.toFixed(2),
-    commissioni: +(ricavi * 0.08).toFixed(2),
+    commissioni: +(ricavi * 0.05).toFixed(2),
   }));
 
   // Confronto mese corrente vs precedente
@@ -59,7 +59,7 @@ async function getAnalyticsData() {
     const name = (t.events as any)?.clubs?.name ?? 'Sconosciuto';
     if (!byClub[name]) byClub[name] = { biglietti: 0, ricavi: 0 };
     if (t.ticket_type_id !== null) byClub[name].biglietti += 1;
-    byClub[name].ricavi += (t.price_paid ?? 0) / 1.08;
+    byClub[name].ricavi += (t.price_paid ?? 0) / 1.05;
   });
   const ticketsByClub = Object.entries(byClub)
     .map(([club, d]) => ({ club, biglietti: d.biglietti, ricavi: +d.ricavi.toFixed(2) }))
@@ -75,15 +75,15 @@ async function getAnalyticsData() {
     const club = (t.events as any)?.clubs?.name ?? '—';
     if (!byEvent[id]) byEvent[id] = { name, club, biglietti: 0, ricavi: 0 };
     if (t.ticket_type_id !== null) byEvent[id].biglietti += 1;
-    byEvent[id].ricavi += (t.price_paid ?? 0) / 1.08;
+    byEvent[id].ricavi += (t.price_paid ?? 0) / 1.05;
   });
   const topEvents = Object.values(byEvent)
     .sort((a, b) => b.ricavi - a.ricavi)
     .slice(0, 5)
     .map((e) => ({ ...e, ricavi: +e.ricavi.toFixed(2) }));
 
-  const totalRevenue = all.reduce((sum: number, t: any) => sum + (t.price_paid ?? 0) / 1.08, 0);
-  const totalCommission = totalRevenue * 0.08;
+  const totalRevenue = all.reduce((sum: number, t: any) => sum + (t.price_paid ?? 0) / 1.05, 0);
+  const totalCommission = totalRevenue * 0.05;
 
   return {
     revenueByMonthData,
@@ -131,7 +131,7 @@ export default async function AdminAnalyticsPage() {
           </p>
           <div className="flex items-center gap-2 flex-wrap">
             <TrendBadge pct={data.revPct} />
-            <p className="text-xs text-slate-500">€{(data.currRev * 0.08).toFixed(2)} {t.adminAnalytics.thisMonth}</p>
+            <p className="text-xs text-slate-500">€{(data.currRev * 0.05).toFixed(2)} {t.adminAnalytics.thisMonth}</p>
           </div>
         </div>
       </div>

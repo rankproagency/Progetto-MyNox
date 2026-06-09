@@ -88,7 +88,7 @@ export const translations = {
     },
     adminAnalytics: {
       title: 'Analytics', subtitle: 'Performance storica della piattaforma MyNox.',
-      platformRevenue: 'Ricavi piattaforma', commissions: 'Commissioni MyNox (8%)',
+      platformRevenue: 'Ricavi piattaforma', commissions: 'Commissioni MyNox (5%)',
       vsLastMonth: 'questo mese vs il mese scorso', thisMonth: 'questo mese',
     },
     clubDashboard: {
@@ -208,7 +208,7 @@ export const translations = {
     },
     adminCharts: {
       revenueTitle: 'Ricavi piattaforma — ultimi 6 mesi',
-      revenueSubtitle: 'Ricavi lordi e commissioni MyNox (8%)',
+      revenueSubtitle: 'Ricavi lordi e commissioni MyNox (5%)',
       grossRevenue: 'Ricavi lordi', commissions: 'Commissioni MyNox',
       ticketsByClub: 'Biglietti venduti per discoteca', tickets: 'Biglietti', revenue: 'Ricavi',
       topEvents: 'Top eventi per ricavi', colRank: '#', colEvent: 'Evento',
@@ -463,7 +463,7 @@ export const translations = {
     },
     adminAnalytics: {
       title: 'Analytics', subtitle: 'Historical performance of the MyNox platform.',
-      platformRevenue: 'Platform revenue', commissions: 'MyNox commissions (8%)',
+      platformRevenue: 'Platform revenue', commissions: 'MyNox commissions (5%)',
       vsLastMonth: 'this month vs last month', thisMonth: 'this month',
     },
     clubDashboard: {
@@ -583,7 +583,7 @@ export const translations = {
     },
     adminCharts: {
       revenueTitle: 'Platform revenue — last 6 months',
-      revenueSubtitle: 'Gross revenue and MyNox commissions (8%)',
+      revenueSubtitle: 'Gross revenue and MyNox commissions (5%)',
       grossRevenue: 'Gross revenue', commissions: 'MyNox commissions',
       ticketsByClub: 'Tickets sold by venue', tickets: 'Tickets', revenue: 'Revenue',
       topEvents: 'Top events by revenue', colRank: '#', colEvent: 'Event',
