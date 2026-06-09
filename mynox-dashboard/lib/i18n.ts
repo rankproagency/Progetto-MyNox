@@ -136,6 +136,7 @@ export const translations = {
       noData: 'Nessun contatto disponibile.',
       noDataHint: 'I clienti appariranno qui dopo aver acquistato un biglietto e aver dato il consenso marketing.',
       exportCsv: 'Esporta CSV', total: '{n} contatti',
+      copyEmails: 'Copia email', emailsCopied: '✓ Copiate!',
     },
     clubPromo: {
       title: 'Codici Promo', subtitle: 'Crea e gestisci i codici sconto per i tuoi eventi.',
@@ -510,6 +511,7 @@ export const translations = {
       noData: 'No contacts available.',
       noDataHint: 'Customers will appear here after purchasing a ticket and giving marketing consent.',
       exportCsv: 'Export CSV', total: '{n} contacts',
+      copyEmails: 'Copy emails', emailsCopied: '✓ Copied!',
     },
     clubPromo: {
       title: 'Promo codes', subtitle: 'Create and manage discount codes for your events.',
