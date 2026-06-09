@@ -42,7 +42,7 @@ export default async function ClubEventsPage() {
 
     for (const t of ticketRevenue ?? []) {
       const id = (t as any).event_id;
-      const price = ((t as any).price_paid ?? 0) / 1.08;
+      const price = ((t as any).price_paid ?? 0) / 1.05;
       revenueByEvent[id] = (revenueByEvent[id] ?? 0) + price;
     }
 

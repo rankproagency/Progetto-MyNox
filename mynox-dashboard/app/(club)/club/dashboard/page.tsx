@@ -136,7 +136,7 @@ async function getDashboardData(clubId: string) {
     const bucket = initialBuckets.find((b) => b.isoKey === isoKey);
     if (bucket) {
       bucket.count++;
-      bucket.revenue += (t.price_paid ?? 0) / 1.08;
+      bucket.revenue += (t.price_paid ?? 0) / 1.05;
     }
   });
 
@@ -325,7 +325,7 @@ export default async function ClubDashboardPage() {
           ) : (
             <div className="divide-y divide-white/5">
               {recentTickets.map((ticket: any) => {
-                const paidNet = (ticket.price_paid ?? 0) / 1.08;
+                const paidNet = (ticket.price_paid ?? 0) / 1.05;
                 const listPrice = ticket.ticket_types?.price ?? null;
                 const hasPromo = listPrice !== null && paidNet < listPrice - 0.01;
                 return (

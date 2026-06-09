@@ -66,7 +66,7 @@ export default async function ClubEventDetailPage({
   for (const t of soldTickets ?? []) {
     const tid = (t as any).ticket_type_id;
     if (tid === null) continue; // tavoli — esclusi
-    const price = ((t as any).price_paid ?? 0) / 1.08;
+    const price = ((t as any).price_paid ?? 0) / 1.05;
     soldCountByType[tid] = (soldCountByType[tid] ?? 0) + 1;
     revenueByType[tid] = (revenueByType[tid] ?? 0) + price;
   }
@@ -76,7 +76,7 @@ export default async function ClubEventDetailPage({
   // Ricavi caparre tavoli
   const totalTableRevenue = (soldTickets ?? [])
     .filter((t: any) => t.ticket_type_id === null)
-    .reduce((s: number, t: any) => s + (t.price_paid ?? 0) / 1.08, 0);
+    .reduce((s: number, t: any) => s + (t.price_paid ?? 0) / 1.05, 0);
 
   // Mappa tavoli
   const eventTableByLabel = new Map((tables ?? []).map((t) => [t.label, t]));

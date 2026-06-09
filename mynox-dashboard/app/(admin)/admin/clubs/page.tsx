@@ -25,7 +25,7 @@ export default async function AdminClubsPage() {
   const revenueByClub: Record<string, number> = {};
   for (const t of ticketRevenue ?? []) {
     const clubId = (t as any).events?.club_id;
-    const price = ((t as any).price_paid ?? 0) / 1.08;
+    const price = ((t as any).price_paid ?? 0) / 1.05;
     if (clubId) revenueByClub[clubId] = (revenueByClub[clubId] ?? 0) + price;
   }
 

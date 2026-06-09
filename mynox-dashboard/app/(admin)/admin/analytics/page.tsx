@@ -28,7 +28,7 @@ async function getAnalyticsData() {
   all.forEach((t: any) => {
     const key = new Date(t.created_at).toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
     if (key in revenueByMonth) {
-      revenueByMonth[key] += (t.price_paid ?? 0) / 1.08;
+      revenueByMonth[key] += (t.price_paid ?? 0) / 1.05;
       if (t.ticket_type_id !== null) ticketsByMonth[key] += 1;
     }
   });

@@ -158,7 +158,7 @@ export default async function AdminDashboardPage() {
           ) : (
             <div className="divide-y divide-white/5">
               {data.recentTickets.map((t: any) => {
-                const paidNet = (t.price_paid ?? 0) / 1.08;
+                const paidNet = (t.price_paid ?? 0) / 1.05;
                 const listPrice = t.ticket_types?.price ?? null;
                 const hasPromo = listPrice !== null && paidNet < listPrice - 0.01;
                 return (

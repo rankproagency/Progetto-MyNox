@@ -130,7 +130,7 @@ export default function AdminAnalyticsCharts({ revenueByMonth, ticketsByClub, to
                   €{ev.ricavi.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </td>
                 <td className="px-5 py-4 text-green-400 font-semibold text-right">
-                  €{(ev.ricavi * 0.08).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  €{(ev.ricavi * 0.05).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </td>
               </tr>
             ))}
