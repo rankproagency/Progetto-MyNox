@@ -530,7 +530,15 @@ export default function EventScreen() {
               {bookingMode === 'table' && (
                 <>
                   <View style={styles.tableSectionHeader}>
-                    <Text style={styles.sectionSubtitle}>{t('event.table_deposit_only')}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.sectionSubtitle}>{t('event.table_deposit_only')}</Text>
+                      {availableExtras.length > 0 && !selectedTable && (
+                        <View style={styles.extrasBadgeHint}>
+                          <Ionicons name="sparkles-outline" size={11} color={Colors.accent} />
+                          <Text style={styles.extrasBadgeHintText}>{t('extras.select_table_hint')}</Text>
+                        </View>
+                      )}
+                    </View>
                     <TouchableOpacity
                       style={styles.expandMapBtn}
                       onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setFloorPlanModalVisible(true); }}
@@ -547,10 +555,13 @@ export default function EventScreen() {
                     floorPlanUrl={event.floorPlanUrl}
                   />
 
-                  {/* Extras & Upsell */}
-                  {availableExtras.length > 0 && (
+                  {/* Extras & Upsell — visibili solo dopo aver selezionato un tavolo */}
+                  {availableExtras.length > 0 && selectedTable && (
                     <View style={styles.extrasSection}>
-                      <Text style={styles.extrasSectionTitle}>{t('extras.section_title')}</Text>
+                      <View style={styles.extrasSectionHeader}>
+                        <Ionicons name="sparkles" size={15} color={Colors.accent} />
+                        <Text style={styles.extrasSectionTitle}>{t('extras.section_title')}</Text>
+                      </View>
                       <Text style={styles.extrasSectionSub}>{t('extras.section_subtitle')}</Text>
                       {availableExtras.map((extra) => {
                         const qty = orderedExtras[extra.id] ?? 0;
@@ -1157,6 +1168,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 12,
   },
+  extrasBadgeHint: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5,
+  },
+  extrasBadgeHintText: {
+    fontSize: 11, color: Colors.accent, fontFamily: Font.semiBold,
+  },
   expandMapBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1176,8 +1193,9 @@ const styles = StyleSheet.create({
   },
 
   // Extras & Upsell
-  extrasSection: { marginTop: 20, paddingBottom: 8 },
-  extrasSectionTitle: { fontSize: 14, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 2 },
+  extrasSection: { marginTop: 16, paddingBottom: 8 },
+  extrasSectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  extrasSectionTitle: { fontSize: 14, fontFamily: Font.bold, color: Colors.accent },
   extrasSectionSub: { fontSize: 12, color: Colors.textMuted, marginBottom: 12 },
   extraRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

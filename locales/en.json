@@ -269,7 +269,8 @@
     "ordered_title": "Extras ordered",
     "deposit_each": "deposit each",
     "remaining": "remaining",
-    "out_of_stock": "Out of stock"
+    "out_of_stock": "Out of stock",
+    "select_table_hint": "Select a table to add extras"
   },
 
   "checkout": {

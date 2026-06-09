@@ -269,7 +269,8 @@
     "ordered_title": "Extras ordinati",
     "deposit_each": "caparra cad.",
     "remaining": "rimasti",
-    "out_of_stock": "Esaurito"
+    "out_of_stock": "Esaurito",
+    "select_table_hint": "Seleziona un tavolo per aggiungere extras"
   },
 
   "checkout": {
