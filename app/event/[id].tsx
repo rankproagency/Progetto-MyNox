@@ -20,7 +20,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useTranslation } from 'react-i18next';
 import { getLocale } from '../../lib/i18n';
@@ -83,6 +84,13 @@ export default function EventScreen() {
 
   const availableExtras = (event?.extras ?? []).filter((e) => e.isAvailable);
   const extrasDeposit = availableExtras.reduce((sum, e) => sum + (orderedExtras[e.id] ?? 0) * e.deposit, 0);
+
+  useFocusEffect(useCallback(() => {
+    return () => {
+      setOrderedExtras({});
+      setExtrasModalVisible(false);
+    };
+  }, []));
 
   function switchMode(mode: 'ticket' | 'table') {
     setBookingMode(mode);
