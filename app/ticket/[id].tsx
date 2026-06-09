@@ -602,7 +602,7 @@ const styles = StyleSheet.create({
 
   disclaimer: {
     flexDirection: 'row', gap: 8, width: '100%',
-    paddingHorizontal: 4, paddingTop: 4,
+    paddingHorizontal: 4, marginTop: 16,
   },
   disclaimerText: { flex: 1, fontSize: 12, color: Colors.textMuted, lineHeight: 18 },
 
