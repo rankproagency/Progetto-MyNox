@@ -342,20 +342,34 @@ export default function TicketScreen() {
           </Text>
         </View>
 
-        {ticket.extras && ticket.extras.length > 0 && (
-          <View style={styles.extrasCard}>
-            <View style={styles.extrasHeader}>
-              <Ionicons name="sparkles-outline" size={15} color={Colors.accent} />
-              <Text style={styles.extrasTitle}>{t('extras.ordered_title')}</Text>
-            </View>
-            {ticket.extras.map((e) => (
-              <View key={e.extraId} style={styles.extrasRow}>
-                <Text style={styles.extrasLabel}>{e.label}</Text>
-                <Text style={styles.extrasMeta}>× {e.quantity}  ·  €{(e.unitDeposit * e.quantity).toFixed(2)} {t('extras.deposit_label')}</Text>
+        {ticket.extras && ticket.extras.length > 0 && (() => {
+          const extrasTotal = ticket.extras!.reduce((s, e) => s + e.unitDeposit * e.quantity, 0);
+          return (
+            <View style={styles.extrasCard}>
+              <View style={styles.extrasHeader}>
+                <Ionicons name="sparkles" size={14} color={Colors.accent} />
+                <Text style={styles.extrasTitle}>{t('extras.ordered_title')}</Text>
               </View>
-            ))}
-          </View>
-        )}
+              {ticket.extras!.map((e) => (
+                <View key={e.extraId} style={styles.extrasRow}>
+                  <Text style={styles.extrasLabel}>{e.label}</Text>
+                  <View style={styles.extrasRowRight}>
+                    <View style={styles.extrasQtyBadge}>
+                      <Text style={styles.extrasQtyText}>×{e.quantity}</Text>
+                    </View>
+                    <Text style={styles.extrasAmount}>€{(e.unitDeposit * e.quantity).toFixed(0)}</Text>
+                  </View>
+                </View>
+              ))}
+              {ticket.extras!.length > 1 && (
+                <View style={styles.extrasTotalRow}>
+                  <Text style={styles.extrasTotalLabel}>{t('extras.deposit_label')} totale</Text>
+                  <Text style={styles.extrasTotalAmount}>€{extrasTotal.toFixed(0)}</Text>
+                </View>
+              )}
+            </View>
+          );
+        })()}
 
       </ScrollView>
 
@@ -626,23 +640,38 @@ const styles = StyleSheet.create({
   extrasCard: {
     width: '100%',
     backgroundColor: Colors.surface,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.accentBorder,
-    padding: 14,
+    overflow: 'hidden',
     marginTop: 16,
-    gap: 10,
   },
   extrasHeader: {
     flexDirection: 'row', alignItems: 'center', gap: 7,
-    marginBottom: 4,
+    backgroundColor: Colors.accentBg,
+    paddingHorizontal: 14, paddingVertical: 10,
   },
   extrasTitle: { fontSize: 13, fontFamily: Font.bold, color: Colors.accent },
   extrasRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingVertical: 6,
+    paddingHorizontal: 14, paddingVertical: 12,
     borderTopWidth: 1, borderTopColor: Colors.border,
   },
-  extrasLabel: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.textPrimary, flex: 1 },
-  extrasMeta: { fontSize: 12, color: Colors.textMuted },
+  extrasLabel: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.textPrimary, flex: 1 },
+  extrasRowRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  extrasQtyBadge: {
+    backgroundColor: Colors.accentBg,
+    borderRadius: 8, borderWidth: 1, borderColor: Colors.accentBorder,
+    paddingHorizontal: 8, paddingVertical: 3,
+  },
+  extrasQtyText: { fontSize: 12, fontFamily: Font.bold, color: Colors.accent },
+  extrasAmount: { fontSize: 14, fontFamily: Font.bold, color: Colors.textPrimary, minWidth: 44, textAlign: 'right' },
+  extrasTotalRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 14, paddingVertical: 10,
+    borderTopWidth: 1, borderTopColor: Colors.accentBorder,
+    backgroundColor: Colors.accentBg,
+  },
+  extrasTotalLabel: { fontSize: 12, color: Colors.accent, fontFamily: Font.semiBold },
+  extrasTotalAmount: { fontSize: 15, fontFamily: Font.extraBold, color: Colors.accent },
 });
