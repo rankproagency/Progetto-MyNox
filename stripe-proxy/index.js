@@ -140,26 +140,38 @@ function readBody(req) {
   });
 }
 
-// Rate limiter in-memory: max 20 richieste per IP al minuto
-const rateLimitMap = new Map();
-function isRateLimited(ip) {
+// Rate limiter in-memory con limiti per endpoint.
+// Nota: su Render single-instance è sufficiente. Con più istanze usare Redis.
+const RATE_LIMITS = {
+  '/validate-promo':    { max: 10, windowMs: 60_000 },  // promo brute-force
+  '/gift-ticket':       { max: 5,  windowMs: 60_000 },  // gift code generation
+  '/claim-gift':        { max: 10, windowMs: 60_000 },  // claim attempts
+  '/delete-account':    { max: 3,  windowMs: 60_000 },  // account deletion
+  default:              { max: 20, windowMs: 60_000 },
+};
+const rateLimitMaps = new Map(); // endpoint → Map<ip, {count, start}>
+
+function isRateLimited(ip, endpoint) {
+  const cfg = RATE_LIMITS[endpoint] ?? RATE_LIMITS.default;
+  if (!rateLimitMaps.has(endpoint)) rateLimitMaps.set(endpoint, new Map());
+  const map = rateLimitMaps.get(endpoint);
   const now = Date.now();
-  const windowMs = 60 * 1000;
-  const max = 20;
-  const entry = rateLimitMap.get(ip) ?? { count: 0, start: now };
-  if (now - entry.start > windowMs) {
-    rateLimitMap.set(ip, { count: 1, start: now });
+  const entry = map.get(ip) ?? { count: 0, start: now };
+  if (now - entry.start > cfg.windowMs) {
+    map.set(ip, { count: 1, start: now });
     return false;
   }
   entry.count += 1;
-  rateLimitMap.set(ip, entry);
-  return entry.count > max;
+  map.set(ip, entry);
+  return entry.count > cfg.max;
 }
 // Pulizia periodica per evitare memory leak
 setInterval(() => {
   const cutoff = Date.now() - 2 * 60 * 1000;
-  for (const [ip, entry] of rateLimitMap) {
-    if (entry.start < cutoff) rateLimitMap.delete(ip);
+  for (const [, map] of rateLimitMaps) {
+    for (const [ip, entry] of map) {
+      if (entry.start < cutoff) map.delete(ip);
+    }
   }
 }, 60 * 1000);
 
@@ -178,7 +190,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ?? req.socket.remoteAddress ?? 'unknown';
-  if (isRateLimited(ip)) {
+  if (isRateLimited(ip, req.url)) {
     res.writeHead(429, CORS_HEADERS);
     res.end(JSON.stringify({ error: 'Troppe richieste. Riprova tra un minuto.' }));
     return;
@@ -186,36 +198,6 @@ const server = http.createServer(async (req, res) => {
 
   const body = await readBody(req);
 
-  // POST /auth/signup
-  if (req.url === '/auth/signup') {
-    try {
-      const { email, password, name, birthdate } = body;
-      const result = await supabaseAuthRequest('/auth/v1/signup', {
-        email, password,
-        data: { name, birthdate, onboarded: false },
-      });
-      res.writeHead(result.error ? 400 : 200, CORS_HEADERS);
-      res.end(JSON.stringify(result));
-    } catch (err) {
-      res.writeHead(500, CORS_HEADERS);
-      res.end(JSON.stringify({ error: err.message }));
-    }
-    return;
-  }
-
-  // POST /auth/signin
-  if (req.url === '/auth/signin') {
-    try {
-      const { email, password } = body;
-      const result = await supabaseAuthRequest('/auth/v1/token?grant_type=password', { email, password });
-      res.writeHead(result.error ? 400 : 200, CORS_HEADERS);
-      res.end(JSON.stringify(result));
-    } catch (err) {
-      res.writeHead(500, CORS_HEADERS);
-      res.end(JSON.stringify({ error: err.message }));
-    }
-    return;
-  }
 
   // POST /validate-promo
   if (req.url === '/validate-promo') {
