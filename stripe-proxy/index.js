@@ -415,10 +415,10 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      // Genera codice 8 caratteri uppercase
+      // Genera codice 8 caratteri con crypto.randomBytes (crittograficamente sicuro)
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      let code = '';
-      for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+      const codeBytes = Array.from(crypto.randomBytes(8));
+      const code = codeBytes.map((b) => chars[b % chars.length]).join('');
 
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
       await callSupabase('/rest/v1/gift_codes', { code, ticket_id, gifter_id, status: 'pending', expires_at: expiresAt });

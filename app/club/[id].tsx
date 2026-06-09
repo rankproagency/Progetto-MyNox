@@ -86,7 +86,8 @@ export default function ClubScreen() {
                   : t.label.toLowerCase().includes('uomo') ? 'male' : 'any',
             price: Number(t.price),
             includesDrink: t.includes_drink,
-            available: Math.max(0, (t.total_quantity ?? 999) - (t.sold_quantity ?? 0)),
+            isUnlimited: t.total_quantity === null,
+            available: t.total_quantity === null ? 999 : Math.max(0, t.total_quantity - (t.sold_quantity ?? 0)),
           })),
           tables: (row.tables ?? []).map((t: any): Table => ({
             id: t.id,

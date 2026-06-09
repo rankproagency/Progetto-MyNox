@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from 'react';
 import { LogBox, AppState } from 'react-native';
 import { supabase } from '../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
@@ -33,6 +33,8 @@ interface AuthCtx {
   resetPassword: (email: string) => Promise<void>;
   musicGenres: string[];
   setMusicGenres: (genres: string[]) => void;
+  pauseSessionValidation: () => void;
+  resumeSessionValidation: () => void;
 }
 
 const AuthContext = createContext<AuthCtx>({
@@ -50,6 +52,8 @@ const AuthContext = createContext<AuthCtx>({
   resetPassword: async () => {},
   musicGenres: [],
   setMusicGenres: () => {},
+  pauseSessionValidation: () => {},
+  resumeSessionValidation: () => {},
 });
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -74,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isOnboarded, setIsOnboarded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [musicGenres, setMusicGenresState] = useState<string[]>([]);
+  const validationPausedRef = useRef(false);
 
   useEffect(() => {
     // Carica i generi dal profilo Supabase dell'utente loggato.
@@ -122,6 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     async function validateSession() {
+      if (validationPausedRef.current) return;
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
@@ -309,11 +315,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const pauseSessionValidation = useCallback(() => { validationPausedRef.current = true; }, []);
+  const resumeSessionValidation = useCallback(() => { validationPausedRef.current = false; }, []);
+
   return (
     <AuthContext.Provider value={{
       user, isOnboarded, isLoading,
       login, register, loginWithGoogle, logout, completeOnboarding,
       updateUser, updateDateOfBirth, deleteAccount, resetPassword, musicGenres, setMusicGenres,
+      pauseSessionValidation, resumeSessionValidation,
     }}>
       {children}
     </AuthContext.Provider>

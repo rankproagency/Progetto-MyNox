@@ -66,6 +66,7 @@ export interface TicketType {
   price: number;
   includesDrink: boolean;
   available: number;
+  isUnlimited: boolean;
 }
 
 export interface Table {

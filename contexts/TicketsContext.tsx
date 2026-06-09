@@ -247,8 +247,9 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const markTicketGifted = useCallback(async (id: string, code: string, expiresAt?: string) => {
+    // Azzera il QR in locale — il gifter non può mostrare il vecchio QR neanche offline
     setTickets((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status: 'gifted' as const, giftCode: code, giftCodeExpiresAt: expiresAt } : t))
+      prev.map((t) => (t.id === id ? { ...t, status: 'gifted' as const, giftCode: code, giftCodeExpiresAt: expiresAt, qrCode: '', drinkQrCode: undefined } : t))
     );
     const { error } = await supabase.from('tickets').update({ status: 'gifted' }).eq('id', id);
     if (error) {
@@ -256,6 +257,18 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
         prev.map((t) => (t.id === id ? { ...t, status: 'valid' as const, giftCode: undefined, giftCodeExpiresAt: undefined } : t))
       );
       throw error;
+    }
+    // Aggiorna la cache offline con QR vuoto
+    const userId = currentUserIdRef.current;
+    if (userId) {
+      try {
+        const cached = await AsyncStorage.getItem(ticketCacheKey(userId));
+        if (cached) {
+          const parsed: MockTicket[] = JSON.parse(cached);
+          const updated = parsed.map((t) => t.id === id ? { ...t, status: 'gifted' as const, giftCode: code, giftCodeExpiresAt: expiresAt, qrCode: '', drinkQrCode: undefined } : t);
+          await AsyncStorage.setItem(ticketCacheKey(userId), JSON.stringify(updated));
+        }
+      } catch (_) {}
     }
   }, []);
 

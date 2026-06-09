@@ -37,7 +37,8 @@ function rowToEvent(row: any): Event {
           : t.label.toLowerCase().includes('uomo') ? 'male' : 'any',
     price: Number(t.price),
     includesDrink: t.includes_drink,
-    available: (t.total_quantity ?? 999) - (t.sold_quantity ?? 0),
+    isUnlimited: t.total_quantity === null,
+    available: t.total_quantity === null ? 999 : Math.max(0, t.total_quantity - (t.sold_quantity ?? 0)),
   }));
 
   // Build position lookup from club_tables (keyed by label)

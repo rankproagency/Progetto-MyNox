@@ -97,7 +97,7 @@ export default function CheckoutScreen() {
   const router = useRouter();
   const { addTickets } = useTickets();
 
-  const { user } = useAuth();
+  const { user, pauseSessionValidation, resumeSessionValidation } = useAuth();
   const { events } = useEvents();
   const event = events.find((e) => e.id === eventId);
   const ticket = ticketId ? event?.ticketTypes.find((t) => t.id === ticketId) : null;
@@ -230,6 +230,7 @@ export default function CheckoutScreen() {
   async function handlePay() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setPaying(true);
+    pauseSessionValidation();
 
     try {
       const userId = user?.id ?? '';
@@ -386,6 +387,7 @@ export default function CheckoutScreen() {
       Alert.alert(t('common.error'), String(err));
     } finally {
       setPaying(false);
+      resumeSessionValidation();
     }
   }
 

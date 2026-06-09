@@ -76,6 +76,7 @@ Deno.serve(async (req) => {
       .insert({ payment_intent_id, ticket_count: quantity });
 
     if (idempotencyError) {
+      // Duplicato — payment_intent già processato: restituiamo i biglietti esistenti
       if (idempotencyError.code === '23505') {
         const { data: existing } = await supabase
           .from('tickets')
@@ -86,7 +87,20 @@ Deno.serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      console.error('stripe_payment_events insert error:', idempotencyError.message);
+      // Errore non-duplicato: verifica difensiva per evitare biglietti doppi
+      // Prima di procedere, controlliamo se i biglietti esistono già
+      const { data: alreadyExisting } = await supabase
+        .from('tickets')
+        .select(TICKET_SELECT)
+        .eq('stripe_payment_intent_id', payment_intent_id);
+      if (alreadyExisting && alreadyExisting.length > 0) {
+        console.error('idempotency fallita ma biglietti già esistenti:', payment_intent_id);
+        return new Response(
+          JSON.stringify({ tickets: alreadyExisting }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      console.error('stripe_payment_events insert error (proceeding):', idempotencyError.message);
     }
 
     const parsedExtras = (() => {

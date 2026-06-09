@@ -133,7 +133,7 @@ export default function EventScreen() {
   const total = bookingMode === 'table'
     ? tableSubtotal + extrasDeposit
     : ticketSubtotal + tableSubtotal;
-  const isSoldOut = hasTickets && (event?.ticketTypes.every((t) => t.available === 0) ?? false);
+  const isSoldOut = hasTickets && (event?.ticketTypes.every((t) => !t.isUnlimited && t.available === 0) ?? false);
   const isEventPast = (() => {
     const cutoff = new Date(event.date);
     if (event.endTime) {
@@ -146,12 +146,14 @@ export default function EventScreen() {
     }
     return new Date() > cutoff;
   })();
-  const totalTicketSlots = event.ticketTypes.reduce((sum, t) => sum + t.available, 0) + event.ticketsSold;
+  const hasLimitedTickets = event.ticketTypes.some((t) => !t.isUnlimited);
+  const limitedAvailable = event.ticketTypes.filter((t) => !t.isUnlimited).reduce((sum, t) => sum + t.available, 0);
+  const totalTicketSlots = hasLimitedTickets ? limitedAvailable + event.ticketsSold : 0;
   const soldPercent = totalTicketSlots > 0 ? Math.round((event.ticketsSold / totalTicketSlots) * 100) : 0;
   const remaining = totalTicketSlots - event.ticketsSold;
-  const isLowStock = soldPercent >= 80;
-  const isMediumStock = soldPercent >= 50 && soldPercent < 80;
-  const showScarcity = hasTickets && !isSoldOut;
+  const isLowStock = hasLimitedTickets && soldPercent >= 80;
+  const isMediumStock = hasLimitedTickets && soldPercent >= 50 && soldPercent < 80;
+  const showScarcity = hasTickets && !isSoldOut && hasLimitedTickets;
 
   async function handleShare() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
