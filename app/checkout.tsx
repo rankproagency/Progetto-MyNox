@@ -277,7 +277,7 @@ export default function CheckoutScreen() {
         }
       } else {
         // Flusso Stripe normale
-        const rawBaseCents = Math.round((ticketSubtotal + tableDeposit) * 100);
+        const rawBaseCents = Math.round((ticketSubtotal + tableDeposit + extrasTotal) * 100);
         const fnRes = await fetchWithTimeout(`${PROXY_URL}/create-payment-intent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
