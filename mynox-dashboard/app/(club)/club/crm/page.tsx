@@ -4,7 +4,13 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getT } from '@/lib/i18n-server';
 import CrmTable from '@/components/club/CrmTable';
 
-export default async function CrmPage() {
+const PAGE_SIZE = 50;
+
+interface Props {
+  searchParams: Promise<{ query?: string; event?: string; page?: string }>;
+}
+
+export default async function CrmPage({ searchParams }: Props) {
   const t = await getT();
   const profile = await getProfile();
   if (!profile || !profile.club_id) redirect('/club/dashboard');
@@ -15,47 +21,39 @@ export default async function CrmPage() {
     if (!perms?.can_view_participants) redirect('/club/dashboard');
   }
 
+  const params = await searchParams;
+  const query = params.query?.trim() ?? '';
+  const eventFilter = params.event ?? '';
+  const page = Math.max(1, parseInt(params.page ?? '1', 10));
+  const offset = (page - 1) * PAGE_SIZE;
+
   const admin = createAdminClient();
 
-  // Step 1: get this club's events
+  // Carica eventi per il filtro dropdown (piccolo set, sempre veloce)
   const { data: events } = await admin
     .from('events')
     .select('id, name, date')
     .eq('club_id', profile.club_id)
     .order('date', { ascending: false });
 
-  const eventIds = (events ?? []).map((e) => e.id);
-  const eventMap = new Map((events ?? []).map((e) => [e.id, e]));
+  // RPC paginata — DB fa tutto: join, dedup, ricerca, paginazione
+  const { data: rows, error } = await admin.rpc('get_crm_contacts', {
+    p_club_id:  profile.club_id,
+    p_search:   query,
+    p_event_id: eventFilter || null,
+    p_limit:    PAGE_SIZE,
+    p_offset:   offset,
+  });
 
-  // Step 2: get tickets for those events
-  const { data: tickets } = eventIds.length > 0
-    ? await admin
-        .from('tickets')
-        .select('id, created_at, user_id, event_id')
-        .in('event_id', eventIds)
-        .order('created_at', { ascending: false })
-    : { data: null };
+  const contacts = (rows ?? []).map((r: any) => ({
+    id:         r.ticket_id,
+    created_at: r.created_at,
+    profiles:   { id: r.user_id,   name: r.user_name, email: r.user_email, marketing_consent: true },
+    events:     { id: r.event_id,  name: r.event_name, date: r.event_date },
+  }));
 
-  // Step 3: fetch profiles with marketing_consent = true for those users
-  const userIds = [...new Set((tickets ?? []).map((t: any) => t.user_id))];
-  const { data: profiles } = userIds.length > 0
-    ? await admin
-        .from('profiles')
-        .select('id, name, email, marketing_consent')
-        .in('id', userIds)
-        .eq('marketing_consent', true)
-    : { data: null };
-
-  const profileMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
-
-  const normalized = (tickets ?? [])
-    .filter((t: any) => profileMap.has(t.user_id) && eventMap.has(t.event_id))
-    .map((t: any) => ({
-      id: t.id as string,
-      created_at: t.created_at as string,
-      profiles: profileMap.get(t.user_id),
-      events: eventMap.get(t.event_id),
-    }));
+  const totalCount: number = rows?.[0]?.total_count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
     <div>
@@ -64,8 +62,13 @@ export default async function CrmPage() {
         <p className="text-slate-400 mt-1">{t.clubCrm.subtitle}</p>
       </div>
       <CrmTable
-        contacts={normalized as any}
+        contacts={contacts}
         events={events ?? []}
+        totalCount={totalCount}
+        totalPages={totalPages}
+        currentPage={page}
+        currentQuery={query}
+        currentEvent={eventFilter}
       />
     </div>
   );
