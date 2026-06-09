@@ -335,13 +335,6 @@ export default function TicketScreen() {
 
         </View>
 
-        <View style={styles.disclaimer}>
-          <Ionicons name="information-circle-outline" size={14} color={Colors.textMuted} />
-          <Text style={styles.disclaimerText}>
-            {t('ticket_detail.disclaimer_text')}
-          </Text>
-        </View>
-
         {ticket.extras && ticket.extras.length > 0 && (() => {
           const extrasTotal = ticket.extras!.reduce((s, e) => s + e.unitDeposit * e.quantity, 0);
           return (
@@ -370,6 +363,13 @@ export default function TicketScreen() {
             </View>
           );
         })()}
+
+        <View style={styles.disclaimer}>
+          <Ionicons name="information-circle-outline" size={14} color={Colors.textMuted} />
+          <Text style={styles.disclaimerText}>
+            {t('ticket_detail.disclaimer_text')}
+          </Text>
+        </View>
 
       </ScrollView>
 
