@@ -262,6 +262,7 @@ export default function CheckoutScreen() {
         user_id: userId,
         quantity: String(quantity),
         includes_drink: String(ticket?.includesDrink ?? false),
+        event_date: event!.date,
       };
       if (ticket) metadata.ticket_type_id = ticket.id;
       if (tableId) {

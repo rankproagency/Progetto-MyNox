@@ -2,6 +2,22 @@ const http = require('http');
 const https = require('https');
 const crypto = require('crypto');
 
+function getEffectiveTicketPrice(price, priceTiers, eventDate) {
+  if (!Array.isArray(priceTiers) || priceTiers.length === 0) return Number(price);
+  const now = new Date();
+  const base = new Date(eventDate + 'T00:00:00');
+  for (const tier of priceTiers) {
+    const parts = (tier.until || '').split(':').map(Number);
+    if (parts.length < 2) continue;
+    const [hh, mm] = parts;
+    const t = new Date(base);
+    if (hh < 12) t.setDate(t.getDate() + 1);
+    t.setHours(hh, mm, 0, 0);
+    if (now <= t) return Number(tier.price);
+  }
+  return Number(price);
+}
+
 const PORT = process.env.PORT || 3001;
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -509,7 +525,7 @@ const server = http.createServer(async (req, res) => {
   if (req.url === '/create-free-ticket') {
     try {
       const { metadata = {} } = body;
-      const { event_id, user_id, ticket_type_id, table_id, table_name, quantity: qty, includes_drink, extras: extrasStr, promo_id } = metadata;
+      const { event_id, user_id, ticket_type_id, table_id, table_name, quantity: qty, includes_drink, extras: extrasStr, promo_id, event_date } = metadata;
       const quantity = parseInt(qty ?? '1', 10);
       const includesDrink = includes_drink === 'true';
       const parsedExtras = (() => { try { return extrasStr ? JSON.parse(extrasStr) : []; } catch { return []; } })();
@@ -517,11 +533,14 @@ const server = http.createServer(async (req, res) => {
       // M4: verifica server-side che ticket, tavolo ed extras siano effettivamente gratuiti.
       if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
         if (ticket_type_id) {
-          const tt = await callSupabaseGet(`/rest/v1/ticket_types?id=eq.${encodeURIComponent(ticket_type_id)}&select=price`);
-          if (Array.isArray(tt) && tt.length > 0 && Number(tt[0].price) > 0) {
-            res.writeHead(403, CORS_HEADERS);
-            res.end(JSON.stringify({ error: 'Biglietto non gratuito.' }));
-            return;
+          const tt = await callSupabaseGet(`/rest/v1/ticket_types?id=eq.${encodeURIComponent(ticket_type_id)}&select=price,price_tiers`);
+          if (Array.isArray(tt) && tt.length > 0) {
+            const effectivePrice = getEffectiveTicketPrice(tt[0].price, tt[0].price_tiers, event_date || '');
+            if (effectivePrice > 0) {
+              res.writeHead(403, CORS_HEADERS);
+              res.end(JSON.stringify({ error: 'Biglietto non gratuito.' }));
+              return;
+            }
           }
         }
         if (table_id) {
