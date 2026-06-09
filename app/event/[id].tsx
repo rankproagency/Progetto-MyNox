@@ -274,17 +274,6 @@ export default function EventScreen() {
               )}
               <View style={styles.extrasModalBtns}>
                 <TouchableOpacity
-                  style={styles.extrasModalSkip}
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    setOrderedExtras({});
-                    setExtrasModalVisible(false);
-                    router.push({ pathname: '/checkout', params: { eventId: event.id, ticketId: '', tableId: selectedTable?.id ?? '', tableName: tableName.trim(), qty: '1', extras: '' } });
-                  }}
-                >
-                  <Text style={styles.extrasModalSkipText}>{t('extras.skip')}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
                   style={styles.extrasModalConfirm}
                   activeOpacity={0.85}
                   onPress={() => {
@@ -296,6 +285,17 @@ export default function EventScreen() {
                 >
                   <Text style={styles.extrasModalConfirmText}>{t('extras.confirm')}</Text>
                   <Ionicons name="arrow-forward" size={16} color={Colors.white} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.extrasModalSkip}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setOrderedExtras({});
+                    setExtrasModalVisible(false);
+                    router.push({ pathname: '/checkout', params: { eventId: event.id, ticketId: '', tableId: selectedTable?.id ?? '', tableName: tableName.trim(), qty: '1', extras: '' } });
+                  }}
+                >
+                  <Text style={styles.extrasModalSkipText}>{t('extras.skip')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1267,17 +1267,14 @@ const styles = StyleSheet.create({
   },
   extrasModalTotalLabel: { fontSize: 13, color: Colors.textSecondary },
   extrasModalTotalAmount: { fontSize: 16, fontFamily: Font.bold, color: Colors.accent },
-  extrasModalBtns: { flexDirection: 'row', gap: 10 },
+  extrasModalBtns: { gap: 10 },
   extrasModalSkip: {
-    flex: 1, paddingVertical: 14, borderRadius: 14,
-    backgroundColor: Colors.surfaceElevated,
-    borderWidth: 1, borderColor: Colors.border,
-    alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 12, alignItems: 'center', justifyContent: 'center',
   },
-  extrasModalSkipText: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.textMuted },
+  extrasModalSkipText: { fontSize: 14, fontFamily: Font.medium, color: Colors.textMuted },
   extrasModalConfirm: {
-    flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    paddingVertical: 14, borderRadius: 14,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 15, borderRadius: 14,
     backgroundColor: Colors.accent,
     shadowColor: Colors.accent, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8,
   },
