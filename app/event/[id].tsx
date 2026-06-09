@@ -636,12 +636,6 @@ export default function EventScreen() {
                       <Text style={styles.expandMapBtnText}>{t('event.table_open_map')}</Text>
                     </TouchableOpacity>
                   </View>
-                  {availableExtras.length > 0 && (
-                    <View style={styles.extrasBadgeHint}>
-                      <Ionicons name="sparkles-outline" size={11} color={Colors.accent} />
-                      <Text style={styles.extrasBadgeHintText}>{t('extras.select_table_hint')}</Text>
-                    </View>
-                  )}
                   <TableMap
                     tables={event.tables}
                     selected={selectedTable}
