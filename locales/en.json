@@ -270,7 +270,9 @@
     "deposit_each": "deposit each",
     "remaining": "remaining",
     "out_of_stock": "Out of stock",
-    "select_table_hint": "Select a table to add extras"
+    "select_table_hint": "✦ Extras available — add them at checkout",
+    "skip": "Skip",
+    "confirm": "Continue"
   },
 
   "checkout": {

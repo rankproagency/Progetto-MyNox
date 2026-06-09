@@ -270,7 +270,9 @@
     "deposit_each": "caparra cad.",
     "remaining": "rimasti",
     "out_of_stock": "Esaurito",
-    "select_table_hint": "Seleziona un tavolo per aggiungere extras"
+    "select_table_hint": "✦ Extras disponibili — aggiungili al checkout",
+    "skip": "Salta",
+    "confirm": "Continua"
   },
 
   "checkout": {

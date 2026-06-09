@@ -79,6 +79,7 @@ export default function EventScreen() {
   const [orderedExtras, setOrderedExtras] = useState<Record<string, number>>({});
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [floorPlanModalVisible, setFloorPlanModalVisible] = useState(false);
+  const [extrasModalVisible, setExtrasModalVisible] = useState(false);
 
   const availableExtras = (event?.extras ?? []).filter((e) => e.isAvailable);
   const extrasDeposit = availableExtras.reduce((sum, e) => sum + (orderedExtras[e.id] ?? 0) * e.deposit, 0);
@@ -204,6 +205,101 @@ export default function EventScreen() {
               />
             </View>
           </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Modal extras — bottom sheet dopo "Compra ora" */}
+      <Modal visible={extrasModalVisible} transparent animationType="slide" statusBarTranslucent>
+        <View style={styles.extrasModalOverlay}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={() => setExtrasModalVisible(false)} />
+          <View style={[styles.extrasModalSheet, { paddingBottom: insets.bottom + 16 }]}>
+            {/* Handle */}
+            <View style={styles.extrasModalHandle} />
+
+            {/* Header */}
+            <View style={styles.extrasModalHeader}>
+              <View>
+                <Text style={styles.extrasModalTitle}>{t('extras.section_title')}</Text>
+                <Text style={styles.extrasModalSub}>{selectedTable?.label} · {t('extras.section_subtitle')}</Text>
+              </View>
+              <TouchableOpacity onPress={() => setExtrasModalVisible(false)} style={styles.extrasModalCloseBtn}>
+                <Ionicons name="close" size={18} color={Colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Lista extras */}
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 340 }}>
+              {availableExtras.map((extra) => {
+                const qty = orderedExtras[extra.id] ?? 0;
+                const effectiveMax = extra.availableStock !== null ? extra.availableStock : 99;
+                const isOutOfStock = extra.availableStock !== null && extra.availableStock <= 0;
+                const isLowStock = extra.availableStock !== null && extra.availableStock > 0 && extra.availableStock <= 3;
+                return (
+                  <View key={extra.id} style={[styles.extraRow, isOutOfStock && { opacity: 0.45 }]}>
+                    <View style={styles.extraInfo}>
+                      <Text style={styles.extraName}>{extra.label}</Text>
+                      <Text style={styles.extraPrice}>€{extra.deposit.toFixed(2)} {t('extras.deposit_label')} · {t('extras.rest_in_venue')}</Text>
+                      {isOutOfStock && <Text style={styles.extraStockOut}>{t('extras.out_of_stock')}</Text>}
+                      {isLowStock && <Text style={styles.extraStockLow}>{extra.availableStock} {t('extras.remaining')}</Text>}
+                    </View>
+                    <View style={styles.extraQty}>
+                      <TouchableOpacity
+                        style={[styles.qtyBtn, (qty <= 0 || isOutOfStock) && styles.qtyBtnDisabled]}
+                        disabled={qty <= 0 || isOutOfStock}
+                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setOrderedExtras((prev) => ({ ...prev, [extra.id]: Math.max(0, (prev[extra.id] ?? 0) - 1) })); }}
+                      >
+                        <Ionicons name="remove" size={16} color={qty > 0 && !isOutOfStock ? Colors.accent : Colors.textMuted} />
+                      </TouchableOpacity>
+                      <Text style={[styles.qtyValue, qty > 0 && { color: Colors.accent }]}>{qty}</Text>
+                      <TouchableOpacity
+                        style={[styles.qtyBtn, (qty >= effectiveMax || isOutOfStock) && styles.qtyBtnDisabled]}
+                        disabled={qty >= effectiveMax || isOutOfStock}
+                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setOrderedExtras((prev) => ({ ...prev, [extra.id]: Math.min(effectiveMax, (prev[extra.id] ?? 0) + 1) })); }}
+                      >
+                        <Ionicons name="add" size={16} color={qty >= effectiveMax || isOutOfStock ? Colors.textMuted : Colors.accent} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })}
+            </ScrollView>
+
+            {/* CTA */}
+            <View style={styles.extrasModalCta}>
+              {extrasDeposit > 0 && (
+                <View style={styles.extrasModalTotal}>
+                  <Text style={styles.extrasModalTotalLabel}>{t('extras.deposit_label')}</Text>
+                  <Text style={styles.extrasModalTotalAmount}>+€{extrasDeposit.toFixed(2)}</Text>
+                </View>
+              )}
+              <View style={styles.extrasModalBtns}>
+                <TouchableOpacity
+                  style={styles.extrasModalSkip}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setOrderedExtras({});
+                    setExtrasModalVisible(false);
+                    router.push({ pathname: '/checkout', params: { eventId: event.id, ticketId: '', tableId: selectedTable?.id ?? '', tableName: tableName.trim(), qty: '1', extras: '' } });
+                  }}
+                >
+                  <Text style={styles.extrasModalSkipText}>{t('extras.skip')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.extrasModalConfirm}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    const orderedList = availableExtras.filter((e) => (orderedExtras[e.id] ?? 0) > 0).map((e) => ({ extraId: e.id, label: e.label, quantity: orderedExtras[e.id], unitDeposit: e.deposit }));
+                    setExtrasModalVisible(false);
+                    router.push({ pathname: '/checkout', params: { eventId: event.id, ticketId: '', tableId: selectedTable?.id ?? '', tableName: tableName.trim(), qty: '1', extras: orderedList.length > 0 ? JSON.stringify(orderedList) : '' } });
+                  }}
+                >
+                  <Text style={styles.extrasModalConfirmText}>{t('extras.confirm')}</Text>
+                  <Ionicons name="arrow-forward" size={16} color={Colors.white} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
         </View>
       </Modal>
 
@@ -532,7 +628,7 @@ export default function EventScreen() {
                   <View style={styles.tableSectionHeader}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.sectionSubtitle}>{t('event.table_deposit_only')}</Text>
-                      {availableExtras.length > 0 && !selectedTable && (
+                      {availableExtras.length > 0 && (
                         <View style={styles.extrasBadgeHint}>
                           <Ionicons name="sparkles-outline" size={11} color={Colors.accent} />
                           <Text style={styles.extrasBadgeHintText}>{t('extras.select_table_hint')}</Text>
@@ -554,66 +650,6 @@ export default function EventScreen() {
                     onSelect={(tbl) => { setSelectedTable(tbl); if (!tbl) setTableName(''); }}
                     floorPlanUrl={event.floorPlanUrl}
                   />
-
-                  {/* Extras & Upsell — visibili solo dopo aver selezionato un tavolo */}
-                  {availableExtras.length > 0 && selectedTable && (
-                    <View style={styles.extrasSection}>
-                      <View style={styles.extrasSectionHeader}>
-                        <Ionicons name="sparkles" size={15} color={Colors.accent} />
-                        <Text style={styles.extrasSectionTitle}>{t('extras.section_title')}</Text>
-                      </View>
-                      <Text style={styles.extrasSectionSub}>{t('extras.section_subtitle')}</Text>
-                      {availableExtras.map((extra) => {
-                        const qty = orderedExtras[extra.id] ?? 0;
-                        return (
-                          (() => {
-                            const effectiveMax = extra.availableStock !== null ? extra.availableStock : 99;
-                            const isOutOfStock = extra.availableStock !== null && extra.availableStock <= 0;
-                            const isLowStock = extra.availableStock !== null && extra.availableStock > 0 && extra.availableStock <= 3;
-                            return (
-                              <View key={extra.id} style={[styles.extraRow, isOutOfStock && { opacity: 0.5 }]}>
-                                <View style={styles.extraInfo}>
-                                  <Text style={styles.extraName}>{extra.label}</Text>
-                                  <Text style={styles.extraPrice}>
-                                    €{extra.deposit.toFixed(2)} {t('extras.deposit_label')} · {t('extras.rest_in_venue')}
-                                  </Text>
-                                  {isOutOfStock && (
-                                    <Text style={styles.extraStockOut}>{t('extras.out_of_stock')}</Text>
-                                  )}
-                                  {isLowStock && (
-                                    <Text style={styles.extraStockLow}>{extra.availableStock} {t('extras.remaining')}</Text>
-                                  )}
-                                </View>
-                                <View style={styles.extraQty}>
-                                  <TouchableOpacity
-                                    style={[styles.qtyBtn, (qty <= 0 || isOutOfStock) && styles.qtyBtnDisabled]}
-                                    disabled={qty <= 0 || isOutOfStock}
-                                    onPress={() => {
-                                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                      setOrderedExtras((prev) => ({ ...prev, [extra.id]: Math.max(0, (prev[extra.id] ?? 0) - 1) }));
-                                    }}
-                                  >
-                                    <Ionicons name="remove" size={16} color={qty > 0 && !isOutOfStock ? Colors.accent : Colors.textMuted} />
-                                  </TouchableOpacity>
-                                  <Text style={[styles.qtyValue, qty > 0 && { color: Colors.accent }]}>{qty}</Text>
-                                  <TouchableOpacity
-                                    style={[styles.qtyBtn, (qty >= effectiveMax || isOutOfStock) && styles.qtyBtnDisabled]}
-                                    disabled={qty >= effectiveMax || isOutOfStock}
-                                    onPress={() => {
-                                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                      setOrderedExtras((prev) => ({ ...prev, [extra.id]: Math.min(effectiveMax, (prev[extra.id] ?? 0) + 1) }));
-                                    }}
-                                  >
-                                    <Ionicons name="add" size={16} color={qty >= effectiveMax || isOutOfStock ? Colors.textMuted : Colors.accent} />
-                                  </TouchableOpacity>
-                                </View>
-                              </View>
-                            );
-                          })()
-                        );
-                      })}
-                    </View>
-                  )}
                 </>
               )}
             </>
@@ -705,6 +741,10 @@ export default function EventScreen() {
                       { text: t('event.auth_sign_in_btn'), onPress: () => router.push('/login') },
                     ]
                   );
+                  return;
+                }
+                if (bookingMode === 'table' && selectedTable && availableExtras.length > 0) {
+                  setExtrasModalVisible(true);
                   return;
                 }
                 const orderedList = availableExtras
@@ -1192,7 +1232,58 @@ const styles = StyleSheet.create({
     color: Colors.accent,
   },
 
-  // Extras & Upsell
+  // Extras modal
+  extrasModalOverlay: {
+    flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  extrasModalSheet: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    borderWidth: 1, borderColor: Colors.border,
+    paddingHorizontal: 20, paddingTop: 12,
+  },
+  extrasModalHandle: {
+    width: 36, height: 4, borderRadius: 2,
+    backgroundColor: Colors.border, alignSelf: 'center', marginBottom: 16,
+  },
+  extrasModalHeader: {
+    flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  extrasModalTitle: { fontSize: 18, fontFamily: Font.bold, color: Colors.textPrimary },
+  extrasModalSub: { fontSize: 12, color: Colors.textMuted, marginTop: 3 },
+  extrasModalCloseBtn: {
+    width: 32, height: 32, borderRadius: 10,
+    backgroundColor: Colors.surfaceElevated,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  extrasModalCta: { marginTop: 16 },
+  extrasModalTotal: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 10, paddingHorizontal: 14,
+    backgroundColor: Colors.accentBg,
+    borderRadius: 12, borderWidth: 1, borderColor: Colors.accentBorder,
+    marginBottom: 12,
+  },
+  extrasModalTotalLabel: { fontSize: 13, color: Colors.textSecondary },
+  extrasModalTotalAmount: { fontSize: 16, fontFamily: Font.bold, color: Colors.accent },
+  extrasModalBtns: { flexDirection: 'row', gap: 10 },
+  extrasModalSkip: {
+    flex: 1, paddingVertical: 14, borderRadius: 14,
+    backgroundColor: Colors.surfaceElevated,
+    borderWidth: 1, borderColor: Colors.border,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  extrasModalSkipText: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.textMuted },
+  extrasModalConfirm: {
+    flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 14, borderRadius: 14,
+    backgroundColor: Colors.accent,
+    shadowColor: Colors.accent, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8,
+  },
+  extrasModalConfirmText: { fontSize: 15, fontFamily: Font.bold, color: Colors.white },
+
+  // Extras & Upsell (legacy — non più usato nella pagina)
   extrasSection: { marginTop: 16, paddingBottom: 8 },
   extrasSectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
   extrasSectionTitle: { fontSize: 14, fontFamily: Font.bold, color: Colors.accent },
