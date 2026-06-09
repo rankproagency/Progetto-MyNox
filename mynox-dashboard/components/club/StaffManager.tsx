@@ -5,7 +5,7 @@ import { UserPlus, Trash2, LayoutGrid, BarChart3, Users, Sliders, ScanLine, Chec
 import type { ClubStaff, StaffPermissions } from '@/types';
 import { useLanguage } from '@/components/providers/I18nProvider';
 
-type PermKey = keyof Pick<ClubStaff, 'can_manage_events' | 'can_manage_tables' | 'can_view_analytics' | 'can_view_participants' | 'can_scan_tickets' | 'can_manage_promos'>;
+type PermKey = keyof Pick<ClubStaff, 'can_manage_events' | 'can_manage_tables' | 'can_view_analytics' | 'can_view_participants' | 'can_scan_tickets' | 'can_manage_promos' | 'can_access_crm' | 'can_manage_extras'>;
 
 interface Preset {
   id: string;
@@ -29,6 +29,8 @@ export default function StaffManager({ initialStaff }: Props) {
     { key: 'can_view_participants', label: t.staffManager.participantsList },
     { key: 'can_scan_tickets', label: t.staffManager.scanTickets },
     { key: 'can_manage_promos', label: t.staffManager.promoCodes },
+    { key: 'can_access_crm', label: t.staffManager.accessCrm },
+    { key: 'can_manage_extras', label: t.staffManager.manageExtras },
   ];
 
   const PRESETS: Preset[] = [
@@ -37,35 +39,35 @@ export default function StaffManager({ initialStaff }: Props) {
       label: t.staffManager.security,
       description: t.staffManager.scannerOnly,
       icon: ScanLine,
-      permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false, can_view_participants: false, can_scan_tickets: true, can_manage_promos: false },
+      permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false, can_view_participants: false, can_scan_tickets: true, can_manage_promos: false, can_access_crm: false, can_manage_extras: false },
     },
     {
       id: 'responsabile_sala',
       label: t.staffManager.roomManager,
       description: t.staffManager.tableManager,
       icon: LayoutGrid,
-      permissions: { can_manage_events: false, can_manage_tables: true, can_view_analytics: false, can_view_participants: true, can_scan_tickets: true, can_manage_promos: false },
+      permissions: { can_manage_events: false, can_manage_tables: true, can_view_analytics: false, can_view_participants: true, can_scan_tickets: true, can_manage_promos: false, can_access_crm: false, can_manage_extras: false },
     },
     {
       id: 'gestore_eventi',
       label: t.staffManager.eventManager,
       description: t.staffManager.manageEvents,
       icon: BarChart3,
-      permissions: { can_manage_events: true, can_manage_tables: false, can_view_analytics: true, can_view_participants: true, can_scan_tickets: false, can_manage_promos: true },
+      permissions: { can_manage_events: true, can_manage_tables: false, can_view_analytics: true, can_view_participants: true, can_scan_tickets: false, can_manage_promos: true, can_access_crm: true, can_manage_extras: true },
     },
     {
       id: 'full',
       label: t.staffManager.fullAccess,
       description: t.staffManager.allPermissions,
       icon: Users,
-      permissions: { can_manage_events: true, can_manage_tables: true, can_view_analytics: true, can_view_participants: true, can_scan_tickets: true, can_manage_promos: true },
+      permissions: { can_manage_events: true, can_manage_tables: true, can_view_analytics: true, can_view_participants: true, can_scan_tickets: true, can_manage_promos: true, can_access_crm: true, can_manage_extras: true },
     },
     {
       id: 'custom',
       label: t.staffManager.custom,
       description: t.staffManager.configureManual,
       icon: Sliders,
-      permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false, can_view_participants: false, can_scan_tickets: false, can_manage_promos: false },
+      permissions: { can_manage_events: false, can_manage_tables: false, can_view_analytics: false, can_view_participants: false, can_scan_tickets: false, can_manage_promos: false, can_access_crm: false, can_manage_extras: false },
     },
   ];
 
@@ -79,6 +81,8 @@ export default function StaffManager({ initialStaff }: Props) {
     can_view_participants: false,
     can_scan_tickets: false,
     can_manage_promos: false,
+    can_access_crm: false,
+    can_manage_extras: false,
   });
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState('');

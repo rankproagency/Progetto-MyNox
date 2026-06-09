@@ -1,4 +1,4 @@
-import { getProfile } from '@/lib/auth';
+import { getProfile, getStaffPermissions } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { getT } from '@/lib/i18n-server';
 import { redirect } from 'next/navigation';
@@ -6,7 +6,13 @@ import ExtrasManager from '@/components/club/ExtrasManager';
 
 export default async function ExtrasPage() {
   const [profile, t] = await Promise.all([getProfile(), getT()]);
-  if (!profile?.club_id || profile.role !== 'club_admin') redirect('/club/dashboard');
+  if (!profile?.club_id) redirect('/club/dashboard');
+
+  const isOwner = profile.role === 'club_admin';
+  if (!isOwner) {
+    const perms = await getStaffPermissions(profile.id, profile.club_id);
+    if (!perms?.can_manage_extras) redirect('/club/dashboard');
+  }
 
   const supabase = await createClient();
   const { data: extras } = await supabase

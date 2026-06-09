@@ -7,6 +7,8 @@ export interface StaffPermissions {
   can_view_participants: boolean;
   can_scan_tickets: boolean;
   can_manage_promos: boolean;
+  can_access_crm: boolean;
+  can_manage_extras: boolean;
 }
 
 export interface ClubStaff {
@@ -20,6 +22,8 @@ export interface ClubStaff {
   can_view_participants: boolean;
   can_scan_tickets: boolean;
   can_manage_promos: boolean;
+  can_access_crm: boolean;
+  can_manage_extras: boolean;
   created_at: string;
   profiles?: { name: string; email: string };
 }

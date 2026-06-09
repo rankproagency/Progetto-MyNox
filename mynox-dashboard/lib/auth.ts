@@ -20,7 +20,7 @@ export async function getStaffPermissions(userId: string, clubId: string): Promi
   const admin = createAdminClient();
   const { data } = await admin
     .from('club_staff')
-    .select('can_manage_events, can_manage_tables, can_view_analytics, can_view_participants, can_scan_tickets, can_manage_promos')
+    .select('can_manage_events, can_manage_tables, can_view_analytics, can_view_participants, can_scan_tickets, can_manage_promos, can_access_crm, can_manage_extras')
     .eq('user_id', userId)
     .eq('club_id', clubId)
     .single();
@@ -35,6 +35,8 @@ export const FULL_PERMISSIONS: StaffPermissions = {
   can_view_participants: true,
   can_scan_tickets: true,
   can_manage_promos: true,
+  can_access_crm: true,
+  can_manage_extras: true,
 };
 
 export function getRoleRedirect(role: Role): string {

@@ -18,7 +18,7 @@ export default async function CrmPage({ searchParams }: Props) {
   const isOwner = profile.role === 'club_admin';
   if (!isOwner) {
     const perms = await getStaffPermissions(profile.id, profile.club_id);
-    if (!perms?.can_view_participants) redirect('/club/dashboard');
+    if (!perms?.can_access_crm) redirect('/club/dashboard');
   }
 
   const params = await searchParams;

@@ -40,9 +40,9 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/club/venue', labelKey: 'venue', icon: Map, permission: 'can_manage_tables' },
   { href: '/club/analytics', labelKey: 'analytics', icon: BarChart3, permission: 'can_view_analytics' },
   { href: '/club/scan', labelKey: 'scanner', icon: ScanLine, permission: 'can_scan_tickets', staffOnly: true },
-  { href: '/club/extras', labelKey: 'extras', icon: Sparkles, ownerOnly: true },
+  { href: '/club/extras', labelKey: 'extras', icon: Sparkles, permission: 'can_manage_extras' },
   { href: '/club/promo', labelKey: 'promo', icon: Tag, permission: 'can_manage_promos' },
-  { href: '/club/crm', labelKey: 'crm', icon: BookUser, permission: 'can_view_participants' },
+  { href: '/club/crm', labelKey: 'crm', icon: BookUser, permission: 'can_access_crm' },
   { href: '/club/staff', labelKey: 'staff', icon: Users, ownerOnly: true },
   { href: '/club/settings', labelKey: 'settings', icon: Settings, ownerOnly: true },
 ];
