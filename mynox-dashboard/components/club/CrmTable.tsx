@@ -4,6 +4,7 @@ import { useCallback, useTransition, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Search, Download, Copy, Check, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/components/providers/I18nProvider';
+import { getAllCrmEmails } from '@/app/(club)/club/crm/actions';
 
 type Contact = {
   id: string;
@@ -34,6 +35,7 @@ export default function CrmTable({
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
   const [copied, setCopied] = useState(false);
+  const [copyLoading, setCopyLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function navigate(overrides: Record<string, string>) {
@@ -65,13 +67,17 @@ export default function CrmTable({
     URL.revokeObjectURL(url);
   }
 
-  const copyEmails = useCallback(() => {
-    const emails = contacts.map((c) => c.profiles.email).join(', ');
-    navigator.clipboard.writeText(emails).then(() => {
+  const copyEmails = useCallback(async () => {
+    setCopyLoading(true);
+    try {
+      const emails = await getAllCrmEmails(currentQuery, currentEvent);
+      await navigator.clipboard.writeText(emails.join(', '));
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }, [contacts]);
+      setTimeout(() => setCopied(false), 2500);
+    } finally {
+      setCopyLoading(false);
+    }
+  }, [currentQuery, currentEvent]);
 
   const from = (currentPage - 1) * 50 + 1;
   const to = Math.min(currentPage * 50, totalCount);
@@ -112,10 +118,14 @@ export default function CrmTable({
           </span>
           <button
             onClick={copyEmails}
-            disabled={contacts.length === 0}
+            disabled={totalCount === 0 || copyLoading}
             className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:border-purple-500/50 bg-white/3 hover:bg-white/6 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition-all"
           >
-            {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+            {copyLoading
+              ? <Loader2 size={14} className="animate-spin" />
+              : copied
+              ? <Check size={14} className="text-green-400" />
+              : <Copy size={14} />}
             {copied ? (crm.emailsCopied ?? '✓ Copiate!') : (crm.copyEmails ?? 'Copia email')}
           </button>
           <button
