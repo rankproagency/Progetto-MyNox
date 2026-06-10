@@ -602,7 +602,7 @@ export default function CheckoutScreen() {
             </View>
             <Text style={styles.ageCheckLabel}>
               {t('checkout.terms_confirm_prefix')}
-              <Text style={[styles.ageCheckBold, { color: Colors.accent }]} onPress={() => require('expo-router').router.push('/terms')}>
+              <Text style={[styles.ageCheckBold, { color: Colors.accent }]} onPress={() => router.push('/terms')}>
                 {t('checkout.terms_confirm_link')}
               </Text>
               {t('checkout.terms_confirm_suffix')}
