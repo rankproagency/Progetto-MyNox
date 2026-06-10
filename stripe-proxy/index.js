@@ -121,6 +121,28 @@ function callSupabase(path, body) { return supabaseRequest('POST', path, body); 
 function callSupabaseGet(path) { return supabaseRequest('GET', path, null); }
 function callSupabasePatch(path, body) { return supabaseRequest('PATCH', path, body); }
 
+async function verifyJwtUserId(authHeader) {
+  if (!authHeader || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+  if (!token) return null;
+  try {
+    const userData = await new Promise((resolve, reject) => {
+      const url = new URL(SUPABASE_URL + '/auth/v1/user');
+      const req = https.request({
+        hostname: url.hostname, path: url.pathname, method: 'GET',
+        headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': `Bearer ${token}` },
+      }, (res) => {
+        let data = '';
+        res.on('data', (c) => data += c);
+        res.on('end', () => { try { resolve(JSON.parse(data)); } catch { resolve({}); } });
+      });
+      req.on('error', reject);
+      req.end();
+    });
+    return userData.id ?? null;
+  } catch { return null; }
+}
+
 function supabaseAuthRequest(path, body) {
   return new Promise((resolve, reject) => {
     const bodyStr = JSON.stringify(body);
@@ -292,10 +314,18 @@ const server = http.createServer(async (req, res) => {
     try {
       const { amount, base_amount_cents, promo_code, club_id, metadata = {} } = body;
 
+      // Verifica JWT: user_id nei metadata deve corrispondere al token
+      const jwtUserId = await verifyJwtUserId(req.headers['authorization']);
+      if (jwtUserId && metadata.user_id && jwtUserId !== metadata.user_id) {
+        res.writeHead(401, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Token non valido.' }));
+        return;
+      }
+
       let finalAmountCents;
       if (base_amount_cents != null) {
         const discountedBase = await applyPromo(base_amount_cents, promo_code, club_id);
-        const commission = Math.round(discountedBase * 0.08);
+        const commission = Math.round(discountedBase * 0.05);
         finalAmountCents = discountedBase + commission;
       } else {
         finalAmountCents = Math.round(amount);
@@ -526,6 +556,14 @@ const server = http.createServer(async (req, res) => {
     try {
       const { metadata = {} } = body;
       const { event_id, user_id, ticket_type_id, table_id, table_name, quantity: qty, includes_drink, extras: extrasStr, promo_id, event_date } = metadata;
+
+      // Verifica JWT: user_id nei metadata deve corrispondere al token
+      const jwtUserId = await verifyJwtUserId(req.headers['authorization']);
+      if (jwtUserId && user_id && jwtUserId !== user_id) {
+        res.writeHead(401, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Token non valido.' }));
+        return;
+      }
       const quantity = parseInt(qty ?? '1', 10);
       const includesDrink = includes_drink === 'true';
       const parsedExtras = (() => { try { return extrasStr ? JSON.parse(extrasStr) : []; } catch { return []; } })();

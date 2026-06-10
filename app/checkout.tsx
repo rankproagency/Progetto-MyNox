@@ -25,6 +25,7 @@ import { useStripe } from '@stripe/stripe-react-native';
 import { useEvents } from '../contexts/EventsContext';
 import { useAuth } from '../contexts/AuthContext';
 import { PriceTier } from '../types';
+import { supabase } from '../lib/supabase';
 
 function getEffectivePrice(price: number, priceTiers: PriceTier[], eventDate: string): number {
   if (!priceTiers.length) return price;
@@ -132,6 +133,7 @@ export default function CheckoutScreen() {
   const [paymentPending, setPaymentPending] = useState(false);
   const [paying, setPaying] = useState(false);
   const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [termsConfirmed, setTermsConfirmed] = useState(false);
 
   const hasDob = !!user?.dateOfBirth;
   const userAge = getUserAge(user?.dateOfBirth);
@@ -256,6 +258,9 @@ export default function CheckoutScreen() {
         return;
       }
 
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token ?? '';
+
       // 1. Crea PaymentIntent tramite Edge Function
       const metadata: Record<string, string> = {
         event_id: event!.id,
@@ -279,7 +284,7 @@ export default function CheckoutScreen() {
         // Biglietto gratuito — bypass Stripe
         const freeRes = await fetchWithTimeout(`${PROXY_URL}/create-free-ticket`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) },
           body: JSON.stringify({ metadata }),
         });
         const freeJson = await freeRes.json() as { tickets?: any[]; error?: string };
@@ -294,7 +299,7 @@ export default function CheckoutScreen() {
         const rawBaseCents = Math.round((ticketSubtotal + tableDeposit + extrasTotal) * 100);
         const fnRes = await fetchWithTimeout(`${PROXY_URL}/create-payment-intent`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) },
           body: JSON.stringify({
             base_amount_cents: rawBaseCents,
             promo_code: appliedPromoCode ?? undefined,
@@ -579,7 +584,7 @@ export default function CheckoutScreen() {
           ) : null}
         </View>}
 
-        {/* Disclaimer */}
+        {/* Disclaimer + T&C checkbox */}
         <View style={styles.section}>
           <View style={styles.disclaimer}>
             <Ionicons name="warning-outline" size={16} color={Colors.textMuted} />
@@ -587,6 +592,22 @@ export default function CheckoutScreen() {
               {t('checkout.disclaimer_text')}
             </Text>
           </View>
+          <TouchableOpacity
+            style={[styles.ageCheckRow, { marginTop: 12 }, !termsConfirmed && styles.ageCheckRowError]}
+            activeOpacity={0.7}
+            onPress={() => { Haptics.selectionAsync(); setTermsConfirmed((v) => !v); }}
+          >
+            <View style={[styles.ageCheckbox, termsConfirmed && styles.ageCheckboxChecked]}>
+              {termsConfirmed && <Ionicons name="checkmark" size={12} color={Colors.white} />}
+            </View>
+            <Text style={styles.ageCheckLabel}>
+              {t('checkout.terms_confirm_prefix')}
+              <Text style={[styles.ageCheckBold, { color: Colors.accent }]} onPress={() => require('expo-router').router.push('/terms')}>
+                {t('checkout.terms_confirm_link')}
+              </Text>
+              {t('checkout.terms_confirm_suffix')}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* DOB mancante — blocco acquisto con rimando al profilo */}
@@ -638,10 +659,10 @@ export default function CheckoutScreen() {
 
       <View style={styles.ctaContainer}>
         <TouchableOpacity
-          style={[styles.ctaButton, (paying || !hasDob || (needsAgeConfirm && !ageConfirmed)) && { opacity: 0.5 }]}
+          style={[styles.ctaButton, (paying || !hasDob || !termsConfirmed || (needsAgeConfirm && !ageConfirmed)) && { opacity: 0.5 }]}
           activeOpacity={0.85}
           onPress={handlePay}
-          disabled={paying || !hasDob || (needsAgeConfirm && !ageConfirmed)}
+          disabled={paying || !hasDob || !termsConfirmed || (needsAgeConfirm && !ageConfirmed)}
         >
           {paying ? (
             <ActivityIndicator size="small" color={Colors.white} />
