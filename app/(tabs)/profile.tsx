@@ -27,6 +27,7 @@ import { GENRE_CONFIG } from '../../constants/genres';
 import { Genre } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES } from '../../lib/i18n';
+import { useTabBarScroll } from '../../contexts/TabBarContext';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -36,6 +37,7 @@ export default function ProfileScreen() {
   const { favoriteIds, favoriteClubs } = useFavorites();
   const { events } = useEvents();
   const { t, i18n } = useTranslation();
+  const { onScroll } = useTabBarScroll();
 
   const displayName = user?.name ?? '—';
   const displayEmail = user?.email ?? '—';
@@ -116,7 +118,7 @@ export default function ProfileScreen() {
       />
       <SafeAreaView style={{ flex: 1 }}>
         <AppHeader />
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} onScroll={onScroll} scrollEventThrottle={16}>
 
           {/* Header premium */}
           <View style={styles.headerSection}>
@@ -411,7 +413,7 @@ const styles = StyleSheet.create({
     top: 0, left: 0, right: 0,
     height: 320,
   },
-  scroll: { paddingBottom: 40 },
+  scroll: { paddingBottom: 120 },
 
   // Header premium
   headerSection: {

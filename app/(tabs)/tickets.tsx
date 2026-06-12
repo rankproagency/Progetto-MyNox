@@ -14,6 +14,7 @@ import { useCountdown } from '../../hooks/useCountdown';
 import AppHeader from '../../components/AppHeader';
 import { useTranslation } from 'react-i18next';
 import { getLocale } from '../../lib/i18n';
+import { useTabBarScroll } from '../../contexts/TabBarContext';
 
 type Tab = 'future' | 'past';
 
@@ -62,6 +63,7 @@ export default function TicketsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const { tab: tabParam, t: tParam } = useLocalSearchParams<{ tab?: string; t?: string }>();
+  const { onScroll } = useTabBarScroll();
 
   const TAB_CONFIG: { key: Tab; label: string }[] = [
     { key: 'future', label: t('tickets.tab_future') },
@@ -233,6 +235,8 @@ export default function TicketsScreen() {
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -494,7 +498,7 @@ const styles = StyleSheet.create({
   tabBadgeText: { fontSize: 10, fontFamily: Font.bold, color: Colors.textMuted },
   tabBadgeTextActive: { color: Colors.white },
 
-  scroll: { padding: 20, paddingTop: 0, paddingBottom: 140 },
+  scroll: { padding: 20, paddingTop: 0, paddingBottom: 170 },
 
   // Ticket card
   ticketCard: {
@@ -580,7 +584,7 @@ const styles = StyleSheet.create({
 
   // Riscatta regalo — box floating sopra la tab bar
   claimBanner: {
-    position: 'absolute', left: 20, right: 20, bottom: 96,
+    position: 'absolute', left: 20, right: 20, bottom: 120,
     flexDirection: 'row', alignItems: 'center', gap: 10,
     paddingHorizontal: 16, paddingVertical: 12,
     borderRadius: 14,

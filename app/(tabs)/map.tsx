@@ -57,7 +57,7 @@ const DARK_MAP_STYLE = [
   { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#1e0f35' }] },
 ];
 
-const TAB_BAR_HEIGHT = 85;
+const TAB_BAR_HEIGHT = 110;
 const CLUB_LIST_HEIGHT = 100;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

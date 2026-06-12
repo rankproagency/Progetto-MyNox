@@ -20,6 +20,7 @@ import { Font } from '../../constants/typography';
 import EventListItem from '../../components/EventListItem';
 import { useRecentlyViewed } from '../../contexts/RecentlyViewedContext';
 import { useEvents } from '../../contexts/EventsContext';
+import { useTabBarScroll } from '../../contexts/TabBarContext';
 import AppHeader from '../../components/AppHeader';
 import { ALL_GENRES, GENRE_CONFIG } from '../../constants/genres';
 import { Genre } from '../../types';
@@ -132,6 +133,7 @@ export default function SearchScreen() {
   const [resetKey, setResetKey] = useState(0);
   const { recentIds, removeRecentlyViewed, clearRecentlyViewed } = useRecentlyViewed();
   const { events } = useEvents();
+  const { onScroll } = useTabBarScroll();
 
   // Quando si esce dalla schermata, resetta le posizioni di tutti gli item
   useFocusEffect(useCallback(() => {
@@ -197,7 +199,7 @@ export default function SearchScreen() {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" onScroll={onScroll} scrollEventThrottle={16}>
 
           {/* Risultati ricerca */}
           {filtered !== null ? (

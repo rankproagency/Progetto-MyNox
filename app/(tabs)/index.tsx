@@ -29,6 +29,7 @@ import TonightHero from '../../components/TonightHero';
 import { ALL_GENRES } from '../../constants/genres';
 import { useEvents } from '../../contexts/EventsContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabBarScroll } from '../../contexts/TabBarContext';
 import { Event, Genre } from '../../types';
 import AppHeader from '../../components/AppHeader';
 import HomeSkeletonLoader from '../../components/HomeSkeletonLoader';
@@ -151,6 +152,7 @@ export default function HomeScreen() {
   const locale = getLocale();
   const DAY_LABELS = i18n.language === 'en' ? DAY_LABELS_EN : DAY_LABELS_IT;
   const { musicGenres } = useAuth();
+  const { onScroll } = useTabBarScroll();
   const { events, isLoading: eventsLoading, hasError: eventsError, reload } = useEvents();
 
   const eventsByDay = getEventsByDayFromList(events);
@@ -561,6 +563,8 @@ export default function HomeScreen() {
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.accent} colors={[Colors.accent]} />
           }
@@ -680,7 +684,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   bgGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
-  scroll: { paddingBottom: 100 },
+  scroll: { paddingBottom: 120 },
 
   // Header
   header: {
