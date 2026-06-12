@@ -94,17 +94,81 @@ export default function ClubEventsTable({
         ))}
       </div>
 
-      {/* Table */}
-      <div className="bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
+      {/* Mobile cards */}
+      <div className="md:hidden bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
+        {displayList.length === 0 ? (
+          <div className="px-5 py-12 text-center text-slate-500">
+            {q
+              ? ce.noSearch
+              : tab === 'future'
+                ? (
+                  <div>
+                    <p className="font-medium text-slate-400 mb-1">{ce.noFuture}</p>
+                    <p className="text-xs mb-4">{ce.noFutureDesc}</p>
+                    <Link
+                      href="/club/events/new"
+                      className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                    >
+                      <Plus size={14} />
+                      {ce.createEvent}
+                    </Link>
+                  </div>
+                )
+                : ce.noPast}
+          </div>
+        ) : displayList.map((event, i) => {
+          const isPast = tab === 'past';
+          return (
+            <div
+              key={event.id}
+              className={`flex items-center gap-3 px-4 py-4 ${
+                i < displayList.length - 1 ? 'border-b border-white/5' : ''
+              } ${isPast ? 'opacity-60' : ''}`}
+            >
+              <div className="flex-1 min-w-0">
+                <Link
+                  href={`/club/events/${event.id}`}
+                  className={`font-medium text-sm truncate block ${isPast ? 'text-slate-300' : 'text-white hover:text-purple-400'} transition-colors`}
+                >
+                  {event.name}
+                </Link>
+                <p className="text-xs text-slate-400 mt-0.5 whitespace-nowrap">
+                  {new Date(event.date).toLocaleDateString(locale)} · {event.start_time}
+                </p>
+              </div>
+              <div className="shrink-0 flex items-center gap-2">
+                {isPast ? (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-slate-500/10 text-slate-500 border-slate-500/20">
+                    {ce.concluded}
+                  </span>
+                ) : (
+                  <>
+                    <PublishToggle eventId={event.id} isPublished={event.is_published} />
+                    <Link
+                      href={`/club/events/${event.id}/edit`}
+                      className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-2 py-1.5 rounded-lg transition-colors"
+                    >
+                      <Pencil size={12} />
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block bg-[#111118] border border-white/8 rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/8">
-              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{ce.colName}</th>
-              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{ce.colDate}</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{ce.colTickets}</th>
-              <th className="text-left px-5 py-3 text-slate-400 font-medium hidden md:table-cell">{ce.colRevenue}</th>
-              <th className="text-left px-3 md:px-5 py-3 text-slate-400 font-medium">{ce.colStatus}</th>
-              <th className="px-3 md:px-5 py-3" />
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">{ce.colName}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">{ce.colDate}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">{ce.colTickets}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">{ce.colRevenue}</th>
+              <th className="text-left px-5 py-3 text-slate-400 font-medium">{ce.colStatus}</th>
+              <th className="px-5 py-3" />
             </tr>
           </thead>
           <tbody>
@@ -139,7 +203,7 @@ export default function ClubEventsTable({
                     i === displayList.length - 1 ? 'border-b-0' : ''
                   } ${isPast ? 'opacity-60 hover:opacity-80' : 'hover:bg-white/3'}`}
                 >
-                  <td className={`px-3 md:px-5 py-4 font-medium ${isPast ? 'text-slate-300' : ''}`}>
+                  <td className={`px-5 py-4 font-medium ${isPast ? 'text-slate-300' : ''}`}>
                     <Link
                       href={`/club/events/${event.id}`}
                       className={`transition-colors ${isPast ? 'text-slate-300 hover:text-white' : 'text-white hover:text-purple-400'}`}
@@ -147,16 +211,16 @@ export default function ClubEventsTable({
                       {event.name}
                     </Link>
                   </td>
-                  <td className={`px-3 md:px-5 py-4 whitespace-nowrap ${isPast ? 'text-slate-400' : 'text-slate-300'}`}>
+                  <td className={`px-5 py-4 whitespace-nowrap ${isPast ? 'text-slate-400' : 'text-slate-300'}`}>
                     {new Date(event.date).toLocaleDateString(locale)} · {event.start_time}
                   </td>
-                  <td className={`px-5 py-4 hidden md:table-cell ${isPast ? 'text-slate-400' : 'text-slate-300'}`}>
+                  <td className={`px-5 py-4 ${isPast ? 'text-slate-400' : 'text-slate-300'}`}>
                     {event.tickets_sold}{event.capacity != null ? ` / ${event.capacity}` : ''}
                   </td>
-                  <td className={`px-5 py-4 font-semibold hidden md:table-cell ${isPast ? 'text-purple-400/70' : 'text-purple-400'}`}>
+                  <td className={`px-5 py-4 font-semibold ${isPast ? 'text-purple-400/70' : 'text-purple-400'}`}>
                     €{event.revenue.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
-                  <td className="px-3 md:px-5 py-4">
+                  <td className="px-5 py-4">
                     {isPast ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-slate-500/10 text-slate-500 border-slate-500/20">
                         {ce.concluded}
@@ -165,20 +229,18 @@ export default function ClubEventsTable({
                       <PublishToggle eventId={event.id} isPublished={event.is_published} />
                     )}
                   </td>
-                  <td className="px-3 py-4 text-right">
+                  <td className="px-5 py-4 text-right">
                     {isPast ? (
                       <span className="text-xs text-slate-600 select-none">—</span>
                     ) : (
                       <div className="flex items-center justify-end gap-2">
-                        <span className="hidden md:block">
-                          <DuplicateEventButton eventId={event.id} />
-                        </span>
+                        <DuplicateEventButton eventId={event.id} />
                         <Link
                           href={`/club/events/${event.id}/edit`}
-                          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-2 md:px-3 py-1.5 rounded-lg transition-colors"
+                          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg transition-colors"
                         >
                           <Pencil size={12} />
-                          <span className="hidden md:inline">{ce.edit}</span>
+                          {ce.edit}
                         </Link>
                       </div>
                     )}
