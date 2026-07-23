@@ -23,7 +23,7 @@ interface AuthCtx {
   isOnboarded: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, dateOfBirth: Date, marketingConsent?: boolean) => Promise<void>;
+  register: (name: string, email: string, password: string, dateOfBirth: Date, marketingConsent?: boolean) => Promise<{ requiresEmailConfirmation: boolean }>;
   loginWithGoogle: () => Promise<void>;
   logout: () => void;
   completeOnboarding: () => void;
@@ -42,7 +42,7 @@ const AuthContext = createContext<AuthCtx>({
   isOnboarded: false,
   isLoading: true,
   login: async () => {},
-  register: async () => {},
+  register: async () => ({ requiresEmailConfirmation: false }),
   loginWithGoogle: async () => {},
   logout: () => {},
   completeOnboarding: () => {},
@@ -209,7 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(async (name: string, email: string, password: string, dateOfBirth: Date, marketingConsent = false) => {
+  const register = useCallback(async (name: string, email: string, password: string, dateOfBirth: Date, marketingConsent = false): Promise<{ requiresEmailConfirmation: boolean }> => {
     setIsLoading(true);
     try {
       const birthdate = dateOfBirth.toISOString().split('T')[0];
@@ -222,7 +222,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsOnboarded(false);
       if (data.session) {
         await supabase.from('profiles').update({ date_of_birth: birthdate, marketing_consent: marketingConsent }).eq('id', data.session.user.id);
+        return { requiresEmailConfirmation: false };
       }
+      return { requiresEmailConfirmation: true };
     } finally {
       setIsLoading(false);
     }
