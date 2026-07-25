@@ -24,17 +24,17 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
   const rowPaddingVertical = collapsed.interpolate({
     inputRange: [0, 1],
-    outputRange: [10, 3],
+    outputRange: [10, 6],
   });
 
   const itemPaddingVertical = collapsed.interpolate({
     inputRange: [0, 1],
-    outputRange: [8, 3],
+    outputRange: [8, 5],
   });
 
   const sideMargin = collapsed.interpolate({
     inputRange: [0, 1],
-    outputRange: [20, 44],
+    outputRange: [20, 38],
   });
 
   return (
