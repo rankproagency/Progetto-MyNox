@@ -412,7 +412,15 @@ const styles = StyleSheet.create({
   },
   logoSection: { alignItems: 'center', paddingTop: 16, paddingBottom: 36 },
   logoImage: { width: 254, height: 72, marginBottom: 12 },
-  logoSub: { fontSize: 16, color: Colors.textSecondary, fontFamily: Font.medium },
+  logoSub: {
+    fontSize: 19,
+    color: Colors.accent,
+    fontFamily: Font.semiBold,
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(168,85,247,0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 14,
+  },
 
   form: { gap: 20, marginBottom: 32 },
   fieldGroup: { gap: 8 },
