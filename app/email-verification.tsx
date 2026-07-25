@@ -1,9 +1,9 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, AppState } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { supabase } from '../lib/supabase';
@@ -12,6 +12,20 @@ export default function EmailVerificationScreen() {
   const router = useRouter();
   const { email } = useLocalSearchParams<{ email: string }>();
   const [resending, setResending] = useState(false);
+  const appState = useRef(AppState.currentState);
+
+  useEffect(() => {
+    // Quando l'utente torna nell'app dopo aver cliccato il link email,
+    // controlla se la sessione è ora attiva e naviga automaticamente
+    const sub = AppState.addEventListener('change', async (nextState) => {
+      if (appState.current.match(/inactive|background/) && nextState === 'active') {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) router.replace('/');
+      }
+      appState.current = nextState;
+    });
+    return () => sub.remove();
+  }, []);
 
   async function handleResend() {
     if (!email) return;
