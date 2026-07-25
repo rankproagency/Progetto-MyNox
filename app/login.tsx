@@ -176,7 +176,7 @@ export default function LoginScreen() {
 
             {/* Google */}
             <TouchableOpacity
-              style={[styles.socialButton, googleLoading && styles.ctaDisabled]}
+              style={[styles.appleButton, googleLoading && styles.ctaDisabled]}
               activeOpacity={0.8}
               disabled={googleLoading}
               onPress={async () => {
@@ -192,11 +192,11 @@ export default function LoginScreen() {
               }}
             >
               {googleLoading ? (
-                <ActivityIndicator color={Colors.textPrimary} size="small" />
+                <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <>
                   <Ionicons name="logo-google" size={19} color="#EA4335" />
-                  <Text style={styles.socialText}>{t('login.continue_google')}</Text>
+                  <Text style={styles.appleText}>{t('login.continue_google')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -233,7 +233,15 @@ const styles = StyleSheet.create({
 
   logoSection: { alignItems: 'center', paddingTop: 60, paddingBottom: 32 },
   logoImage: { width: 254, height: 72, marginBottom: 12 },
-  logoSub: { fontSize: 16, color: Colors.textSecondary, fontFamily: Font.medium },
+  logoSub: {
+    fontSize: 19,
+    color: Colors.accent,
+    fontFamily: Font.semiBold,
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(168,85,247,0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 14,
+  },
 
   form: { gap: 20, marginBottom: 12 },
   fieldGroup: { gap: 8 },

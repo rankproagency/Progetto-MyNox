@@ -198,15 +198,15 @@ export default function RegisterScreen() {
               <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>{t('register.dob_label')}</Text>
                 <TouchableOpacity
-                  style={[styles.inputRow, styles.dateRow, styles.dateInputRow]}
+                  style={[styles.inputRow, styles.dateRow]}
                   onPress={() => { Haptics.selectionAsync(); setShowPicker(true); }}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="calendar-outline" size={18} color={Colors.accent} style={styles.inputIcon} />
+                  <Ionicons name="calendar-outline" size={18} color={Colors.textMuted} style={styles.inputIcon} />
                   <Text style={[styles.dateText, !dateOfBirth && styles.datePlaceholder]}>
                     {dateOfBirth ? formatDOB(dateOfBirth) : t('register.dob_placeholder')}
                   </Text>
-                  <Ionicons name="chevron-down" size={16} color={Colors.accent} />
+                  <Ionicons name="chevron-down" size={16} color={Colors.textMuted} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -405,7 +405,6 @@ const styles = StyleSheet.create({
   fieldError: { fontSize: 12, color: Colors.error, marginTop: 2 },
 
   dateRow: { paddingVertical: 14 },
-  dateInputRow: { borderColor: 'rgba(168,85,247,0.35)' },
   dateText: { flex: 1, fontSize: 15, color: Colors.textPrimary },
   datePlaceholder: { color: Colors.textMuted },
 
