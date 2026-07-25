@@ -274,7 +274,7 @@ export default function RegisterScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.socialButton, googleLoading && styles.ctaDisabled]}
+              style={[styles.darkSocialButton, googleLoading && styles.ctaDisabled]}
               activeOpacity={0.8}
               disabled={googleLoading}
               onPress={async () => {
@@ -290,11 +290,11 @@ export default function RegisterScreen() {
               }}
             >
               {googleLoading ? (
-                <ActivityIndicator color={Colors.textPrimary} size="small" />
+                <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <>
                   <Ionicons name="logo-google" size={19} color="#EA4335" />
-                  <Text style={styles.socialText}>{t('register.continue_google')}</Text>
+                  <Text style={styles.darkSocialText}>{t('register.continue_google')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.surface,
-    borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
+    borderRadius: 14, borderWidth: 1, borderColor: 'rgba(168,85,247,0.35)',
     paddingHorizontal: 14,
   },
   inputIcon: { marginRight: 10 },
@@ -441,13 +441,13 @@ const styles = StyleSheet.create({
   dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
   dividerText: { fontSize: 13, color: Colors.textMuted },
 
-  socialButton: {
+  darkSocialButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    backgroundColor: Colors.surface,
-    borderRadius: 16, borderWidth: 1, borderColor: Colors.border,
+    backgroundColor: '#000000',
+    borderRadius: 16, borderWidth: 1, borderColor: '#000000',
     paddingVertical: 15, marginBottom: 24,
   },
-  socialText: { fontSize: 15, fontFamily: Font.semiBold, color: Colors.textPrimary },
+  darkSocialText: { fontSize: 15, fontFamily: Font.semiBold, color: '#FFFFFF' },
 
   loginRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   loginText: { fontSize: 14, color: Colors.textSecondary },
