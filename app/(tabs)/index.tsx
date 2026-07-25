@@ -612,7 +612,6 @@ export default function HomeScreen() {
                   <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitleInline}>{t('home.section_for_you')}</Text>
                     <View style={styles.forYouBadge}>
-                      <Ionicons name="sparkles" size={12} color={Colors.accent} />
                       <Text style={styles.forYouText}>
                         {musicGenres.slice(0, 2).join(' · ')}
                       </Text>

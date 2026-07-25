@@ -487,15 +487,15 @@ export default function SearchScreen() {
                 </View>
               </View>
 
-              {/* Club nella tua città */}
+              {/* Scopri i Club */}
               {clubs.length > 0 && (
                 <View style={styles.section}>
                   <SectionHeader
-                    title="Club nella tua città"
-                    cta={clubs.length > 2 ? 'Vedi tutti' : undefined}
-                    onCta={() => {}}
+                    title="Scopri i Club"
+                    cta={clubs.length > 4 ? 'Vedi tutti' : undefined}
+                    onCta={() => router.push('/(tabs)/map')}
                   />
-                  {clubs.map((club) => (
+                  {clubs.slice(0, 4).map((club) => (
                     <ClubCard key={club.id} club={club} />
                   ))}
                 </View>
