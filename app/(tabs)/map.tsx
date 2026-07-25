@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getLocale } from '../../lib/i18n';
 import {
@@ -28,37 +28,40 @@ const PADOVA_REGION: Region = {
 };
 
 const DARK_MAP_STYLE = [
-  // Base quasi nera
-  { elementType: 'geometry', stylers: [{ color: '#07080f' }] },
+  // Base — blu-viola medio, leggibile in piena luce
+  { elementType: 'geometry', stylers: [{ color: '#1e2040' }] },
   { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#2e2040' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#07080f' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#c0b0e0' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#1e2040' }] },
+  // Paesaggio — strato distinto sopra il fondo
+  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#262848' }] },
   // Amministrative — nascoste
   { featureType: 'administrative', elementType: 'geometry', stylers: [{ visibility: 'off' }] },
-  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#4a3560' }] },
+  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#d4c8f0' }] },
   // POI — tutti nascosti
   { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-  // Strade secondarie — viola tenue
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1a1230' }] },
-  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#0f0a1e' }] },
-  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#4a3870' }] },
-  { featureType: 'road', elementType: 'labels.text.stroke', stylers: [{ color: '#07080f' }] },
+  // Strade secondarie
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#3d3468' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#302a58' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#a090cc' }] },
+  { featureType: 'road', elementType: 'labels.text.stroke', stylers: [{ color: '#1e2040' }] },
   // Strade principali — viola medio
-  { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#241540' }] },
-  { featureType: 'road.arterial', elementType: 'geometry.stroke', stylers: [{ color: '#160d28' }] },
-  // Autostrade — viola più luminoso
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#361858' }] },
-  { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#1e0e38' }] },
-  { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#8b55c0' }] },
+  { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#5e4590' }] },
+  { featureType: 'road.arterial', elementType: 'geometry.stroke', stylers: [{ color: '#4a3578' }] },
+  // Autostrade — viola pieno saturo
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#8850c8' }] },
+  { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#6535a0' }] },
+  { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#ecdcff' }] },
   // Transit — nascosto
   { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-  // Acqua — viola notte
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#04020e' }] },
-  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#1e0f35' }] },
+  // Acqua — scura per contrasto netto col suolo
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0c0f20' }] },
+  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#4060a8' }] },
 ];
 
 const TAB_BAR_HEIGHT = 110;
 const CLUB_LIST_HEIGHT = 100;
+const MAX_CHIPS = 8;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -117,7 +120,7 @@ function getMinPrice(event: Event): number | null {
 
 // ── ClubMarker ────────────────────────────────────────────────────────────────
 
-function ClubMarker({
+const ClubMarker = memo(function ClubMarker({
   club,
   isSelected,
   tonight,
@@ -126,19 +129,26 @@ function ClubMarker({
   club: Club;
   isSelected: boolean;
   tonight: boolean;
-  onPress: () => void;
+  onPress: (club: Club) => void;
 }) {
+  const { t } = useTranslation();
   const [imageLoaded, setImageLoaded] = useState(false);
+  const handlePress = useCallback(() => onPress(club), [club, onPress]);
 
   return (
     <Marker
       coordinate={{ latitude: club.latitude!, longitude: club.longitude! }}
-      onPress={onPress}
-      tracksViewChanges={!imageLoaded || tonight}
+      onPress={handlePress}
+      tracksViewChanges={!imageLoaded}
       anchor={{ x: 0.5, y: 1 }}
     >
       <View pointerEvents="none" style={styles.pinWrapper}>
-        {tonight && <PulsingBadge />}
+        {tonight && (
+          <View style={styles.pinBadge}>
+            <View style={styles.pinBadgeDot} />
+            <Text style={styles.pinBadgeText}>{t('map.badge_tonight')}</Text>
+          </View>
+        )}
         <View style={[styles.pinOuter, isSelected && styles.pinOuterSelected]}>
           {club.imageUrl ? (
             <Image
@@ -158,32 +168,7 @@ function ClubMarker({
       </View>
     </Marker>
   );
-}
-
-// ── PulsingBadge ─────────────────────────────────────────────────────────────
-
-function PulsingBadge() {
-  const { t } = useTranslation();
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.timing(scaleAnim, { toValue: 1.14, duration: 750, useNativeDriver: true }),
-        Animated.timing(scaleAnim, { toValue: 1, duration: 750, useNativeDriver: true }),
-      ])
-    );
-    anim.start();
-    return () => anim.stop();
-  }, []);
-
-  return (
-    <Animated.View style={[styles.pinBadge, { transform: [{ scale: scaleAnim }] }]}>
-      <View style={styles.pinBadgeDot} />
-      <Text style={styles.pinBadgeText}>{t('map.badge_tonight')}</Text>
-    </Animated.View>
-  );
-}
+});
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -201,13 +186,27 @@ export default function MapScreen() {
   const dragY = useRef(new Animated.Value(0)).current;
   const isSwipeClosing = useRef(false);
 
-  const mappableClubs = clubs.filter((c) => c.latitude != null && c.longitude != null);
-  const visibleClubs = tonightOnly
-    ? mappableClubs.filter((c) => {
-        const next = getNextEvent(c.id, events);
-        return next !== null && isTonight(next);
-      })
-    : mappableClubs;
+  // Mappa club→nextEvent calcolata una volta sola quando events/clubs cambiano
+  const nextEventByClub = useMemo(() => {
+    const map = new Map<string, Event | null>();
+    for (const club of clubs) {
+      map.set(club.id, getNextEvent(club.id, events));
+    }
+    return map;
+  }, [clubs, events]);
+
+  const mappableClubs = useMemo(
+    () => clubs.filter((c) => c.latitude != null && c.longitude != null),
+    [clubs]
+  );
+
+  const visibleClubs = useMemo(() => {
+    if (!tonightOnly) return mappableClubs;
+    return mappableClubs.filter((c) => {
+      const next = nextEventByClub.get(c.id) ?? null;
+      return next !== null && isTonight(next);
+    });
+  }, [mappableClubs, tonightOnly, nextEventByClub]);
 
   const showNoCoords = !isLoading && mappableClubs.length === 0 && clubs.length > 0;
   const showNoClubs = !isLoading && clubs.length === 0;
@@ -254,17 +253,12 @@ export default function MapScreen() {
     }
   }, [selectedClub]);
 
-  const cardSlide = cardAnim.interpolate({
+  const cardSlide = useRef(cardAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [320, 0],
-  });
+  })).current;
 
   // ── Swipe fluido ─────────────────────────────────────────────────────────────
-
-  function closeCard() {
-    dragY.setValue(0);
-    setSelectedClub(null);
-  }
 
   const swipePan = useRef(
     PanResponder.create({
@@ -297,7 +291,7 @@ export default function MapScreen() {
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
-  function handleMarkerPress(club: Club) {
+  const handleMarkerPress = useCallback((club: Club) => {
     setSelectedClub(club);
     mapRef.current?.animateToRegion(
       {
@@ -308,9 +302,14 @@ export default function MapScreen() {
       },
       450
     );
-  }
+  }, []);
 
-  function handleLocateMe() {
+  const closeCard = useCallback(() => {
+    dragY.setValue(0);
+    setSelectedClub(null);
+  }, []);
+
+  const handleLocateMe = useCallback(() => {
     if (!locationGranted) return;
     Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }).then((loc) => {
       const { latitude, longitude } = loc.coords;
@@ -320,7 +319,7 @@ export default function MapScreen() {
         600
       );
     });
-  }
+  }, [locationGranted]);
 
   return (
     <View style={styles.container}>
@@ -334,9 +333,11 @@ export default function MapScreen() {
         showsMyLocationButton={false}
         showsCompass={false}
         showsPointsOfInterest={false}
+        pitchEnabled={false}
+        rotateEnabled={false}
       >
         {visibleClubs.map((club) => {
-          const nextEvent = getNextEvent(club.id, events);
+          const nextEvent = nextEventByClub.get(club.id) ?? null;
           const tonight = nextEvent !== null && isTonight(nextEvent);
           const isSelected = selectedClub?.id === club.id;
 
@@ -346,7 +347,7 @@ export default function MapScreen() {
               club={club}
               isSelected={isSelected}
               tonight={tonight}
-              onPress={() => handleMarkerPress(club)}
+              onPress={handleMarkerPress}
             />
           );
         })}
@@ -440,60 +441,74 @@ export default function MapScreen() {
 
       {/* Lista orizzontale club */}
       {showClubList && (
-        <View style={[styles.clubListContainer, { bottom: TAB_BAR_HEIGHT }]}>
+        <View style={[styles.clubListContainer, { bottom: TAB_BAR_HEIGHT - 14 }]}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.clubListContent}
           >
-            {visibleClubs.map((club) => {
-              const nextEvent = getNextEvent(club.id, events);
-              const tonight = nextEvent !== null && isTonight(nextEvent);
-              const minPrice = nextEvent ? getMinPrice(nextEvent) : null;
+            {[...visibleClubs]
+              .sort((a, b) => {
+                const aTonight = (() => { const e = nextEventByClub.get(a.id); return e ? isTonight(e) : false; })();
+                const bTonight = (() => { const e = nextEventByClub.get(b.id); return e ? isTonight(e) : false; })();
+                if (aTonight !== bTonight) return aTonight ? -1 : 1;
+                return a.name.localeCompare(b.name);
+              })
+              .slice(0, MAX_CHIPS)
+              .map((club) => {
+                const nextEvent = nextEventByClub.get(club.id) ?? null;
+                const tonight = nextEvent !== null && isTonight(nextEvent);
+                const minPrice = nextEvent ? getMinPrice(nextEvent) : null;
 
-              return (
-                <TouchableOpacity
-                  key={club.id}
-                  style={[styles.clubChip, tonight && styles.clubChipTonight]}
-                  onPress={() => handleMarkerPress(club)}
-                  activeOpacity={0.85}
-                >
-                  {club.imageUrl ? (
-                    <Image source={{ uri: versionedImageUrl(club.imageUrl, club.updatedAt) }} style={styles.chipImage} contentFit="cover" cachePolicy="memory-disk" />
-                  ) : (
-                    <View style={[styles.chipImage, styles.chipImageFallback]}>
-                      <Ionicons name="musical-notes" size={16} color={Colors.accent} />
-                    </View>
-                  )}
-                  <View style={styles.chipInfo}>
-                    <Text style={styles.chipName} numberOfLines={1}>
-                      {club.name}
-                    </Text>
-                    {nextEvent ? (
-                      <View style={styles.chipEventRow}>
-                        <View
-                          style={[styles.chipDot, tonight && { backgroundColor: Colors.success }]}
-                        />
-                        <Text
-                          style={[styles.chipEventText, tonight && { color: Colors.success }]}
-                          numberOfLines={1}
-                        >
-                          {formatEventDate(nextEvent.date, t('map.badge_tonight'))}
-                        </Text>
-                      </View>
+                return (
+                  <TouchableOpacity
+                    key={club.id}
+                    style={[styles.clubChip, tonight && styles.clubChipTonight]}
+                    onPress={() => handleMarkerPress(club)}
+                    activeOpacity={0.85}
+                  >
+                    {club.imageUrl ? (
+                      <Image source={{ uri: versionedImageUrl(club.imageUrl, club.updatedAt) }} style={styles.chipImage} contentFit="cover" cachePolicy="memory-disk" />
                     ) : (
-                      <Text style={styles.chipNoEvent}>{t('map.no_event')}</Text>
+                      <View style={[styles.chipImage, styles.chipImageFallback]}>
+                        <Ionicons name="musical-notes" size={16} color={Colors.accent} />
+                      </View>
                     )}
-                    {minPrice !== null
-                      ? <Text style={styles.chipPrice}>{t('common.from_price')}€{minPrice}</Text>
-                      : nextEvent && nextEvent.ticketTypes.length === 0
-                        ? <Text style={[styles.chipPrice, { color: Colors.textMuted }]}>{t('common.free_entry')}</Text>
-                        : null
-                    }
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
+                    <View style={styles.chipInfo}>
+                      <Text style={styles.chipName} numberOfLines={1}>
+                        {club.name}
+                      </Text>
+                      {nextEvent ? (
+                        <View style={styles.chipEventRow}>
+                          <View
+                            style={[styles.chipDot, tonight && { backgroundColor: Colors.success }]}
+                          />
+                          <Text
+                            style={[styles.chipEventText, tonight && { color: Colors.success }]}
+                            numberOfLines={1}
+                          >
+                            {formatEventDate(nextEvent.date, t('map.badge_tonight'))}
+                          </Text>
+                        </View>
+                      ) : (
+                        <Text style={styles.chipNoEvent}>{t('map.no_event')}</Text>
+                      )}
+                      {minPrice !== null
+                        ? <Text style={styles.chipPrice}>{t('common.from_price')}€{minPrice}</Text>
+                        : nextEvent && nextEvent.ticketTypes.length === 0
+                          ? <Text style={[styles.chipPrice, { color: Colors.textMuted }]}>{t('common.free_entry')}</Text>
+                          : null
+                      }
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            {visibleClubs.length > MAX_CHIPS && (
+              <View style={styles.chipMore}>
+                <Text style={styles.chipMoreText}>+{visibleClubs.length - MAX_CHIPS}</Text>
+                <Text style={styles.chipMoreSub}>{t('common.others') ?? 'altri'}</Text>
+              </View>
+            )}
           </ScrollView>
           {/* Fade gradiente destra */}
           <LinearGradient
@@ -765,22 +780,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 10,
+    alignItems: 'center',
   },
   clubChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: 'rgba(7,8,15,0.92)',
-    borderRadius: 16,
+    backgroundColor: 'rgba(12,10,22,0.96)',
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'rgba(168,85,247,0.15)',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    width: 190,
+    width: 195,
   },
   clubChipTonight: {
     borderColor: Colors.accent,
-    backgroundColor: 'rgba(168,85,247,0.08)',
+    backgroundColor: 'rgba(168,85,247,0.10)',
   },
   clubListFade: {
     position: 'absolute',
@@ -814,6 +830,20 @@ const styles = StyleSheet.create({
   chipEventText: { fontSize: 11, fontFamily: Font.medium, color: Colors.textMuted, flex: 1 },
   chipNoEvent: { fontSize: 11, color: Colors.textMuted, fontFamily: Font.regular },
   chipPrice: { fontSize: 11, fontFamily: Font.semiBold, color: Colors.accent },
+  chipMore: {
+    width: 64,
+    height: 72,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(168,85,247,0.25)',
+    backgroundColor: 'rgba(168,85,247,0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 2,
+    flexShrink: 0,
+  },
+  chipMoreText: { fontSize: 18, fontFamily: Font.extraBold, color: Colors.accent },
+  chipMoreSub: { fontSize: 10, fontFamily: Font.medium, color: Colors.textMuted },
 
   // ── Pin ──────────────────────────────────────────────────────────────────────
   pinWrapper: { alignItems: 'center' },

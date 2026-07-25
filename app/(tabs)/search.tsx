@@ -26,15 +26,19 @@ import AppHeader from '../../components/AppHeader';
 import { ALL_GENRES, GENRE_CONFIG } from '../../constants/genres';
 import { Genre, Event } from '../../types';
 import { versionedImageUrl } from '../../lib/imageUrl';
+import { getLocale } from '../../lib/i18n';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const DELETE_BTN_WIDTH = 80;
 const ITEM_MARGIN_BOTTOM = 10;
-const TREND_CARD_WIDTH = Math.round(SCREEN_WIDTH * 0.55);
-const TREND_CARD_HEIGHT = 168;
-const GENRE_CARD_SIZE = Math.floor((SCREEN_WIDTH - 40 - 20) / 3);
+const TREND_CARD_WIDTH = Math.round(SCREEN_WIDTH * 0.54);
+const TREND_CARD_HEIGHT = 216;
+const GENRE_COLS = 3;
+const GENRE_GAP = 10;
+const GENRE_CARD_W = Math.floor((SCREEN_WIDTH - 40 - GENRE_GAP * (GENRE_COLS - 1)) / GENRE_COLS);
+const GENRE_CARD_H = Math.floor(GENRE_CARD_W * 0.72);
 
-// ─── Swipeable recent item (unchanged) ───────────────────────────────────────
+// ─── Swipeable recent item ────────────────────────────────────────────────────
 
 function SwipeableRecentItem({
   event, onDelete, resetKey,
@@ -118,39 +122,62 @@ const swipeStyles = StyleSheet.create({
   deleteBtnInner: { justifyContent: 'center', alignItems: 'center' },
 });
 
-// ─── Trending card (compact horizontal) ─────────────────────────────────────
+// ─── Trending card ────────────────────────────────────────────────────────────
 
 function TrendingCard({ event }: { event: Event }) {
   const router = useRouter();
   const { t } = useTranslation();
+  const scale = useRef(new Animated.Value(1)).current;
+  const onPressIn = () => Animated.timing(scale, { toValue: 0.96, duration: 100, useNativeDriver: true }).start();
+  const onPressOut = () => Animated.spring(scale, { toValue: 1, useNativeDriver: true, damping: 12, stiffness: 200 }).start();
+
   const hasTickets = event.ticketTypes.length > 0;
   const minPrice = hasTickets ? Math.min(...event.ticketTypes.map((tk) => tk.price)) : 0;
   const isSoldOut = hasTickets && event.ticketTypes.every((tk) => tk.available === 0);
 
+  const dateLabel = new Date(event.date).toLocaleDateString(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
+
   return (
-    <TouchableOpacity style={trendStyles.card} activeOpacity={0.82} onPress={() => router.push(`/event/${event.id}`)}>
-      <Image
-        source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }}
-        style={StyleSheet.absoluteFill}
-        contentFit="cover"
-        cachePolicy="memory-disk"
-      />
-      <LinearGradient
-        colors={['transparent', 'rgba(7,8,15,0.92)']}
-        locations={[0.25, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-      <View style={trendStyles.content}>
-        <Text style={trendStyles.club} numberOfLines={1}>{event.club?.name}</Text>
-        <Text style={trendStyles.name} numberOfLines={2}>{event.name}</Text>
-        {isSoldOut ? (
-          <Text style={trendStyles.soldOut}>{t('common.sold_out')}</Text>
-        ) : hasTickets ? (
-          <Text style={trendStyles.price}>{t('common.from_price')} €{minPrice}</Text>
-        ) : (
-          <Text style={trendStyles.free}>{t('common.free_entry')}</Text>
-        )}
-      </View>
+    <TouchableOpacity
+      activeOpacity={1}
+      onPress={() => router.push(`/event/${event.id}`)}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+    >
+      <Animated.View style={[trendStyles.card, { transform: [{ scale }] }]}>
+        <Image
+          source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+        />
+        <LinearGradient
+          colors={['transparent', 'rgba(10,5,20,0.50)', 'rgba(15,6,28,0.88)', 'rgba(18,7,32,0.99)']}
+          locations={[0, 0.28, 0.60, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+        {/* Content bottom */}
+        <View style={trendStyles.content}>
+          <Text style={trendStyles.club} numberOfLines={1}>{event.club?.name}</Text>
+          <Text style={trendStyles.name} numberOfLines={2}>{event.name}</Text>
+          <Text style={trendStyles.date}>{dateLabel}</Text>
+          <View style={trendStyles.bottomRow}>
+            {isSoldOut ? (
+              <View style={trendStyles.priceBadge}>
+                <Text style={[trendStyles.priceBadgeText, { color: Colors.error }]}>{t('common.sold_out')}</Text>
+              </View>
+            ) : hasTickets ? (
+              <View style={trendStyles.priceBadge}>
+                <Text style={trendStyles.priceBadgeText}>{t('common.from_price')} <Text style={trendStyles.priceValue}>€{minPrice}</Text></Text>
+              </View>
+            ) : (
+              <View style={trendStyles.priceBadge}>
+                <Text style={trendStyles.priceBadgeText}>{t('common.free_entry')}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Animated.View>
     </TouchableOpacity>
   );
 }
@@ -159,51 +186,103 @@ const trendStyles = StyleSheet.create({
   card: {
     width: TREND_CARD_WIDTH,
     height: TREND_CARD_HEIGHT,
-    borderRadius: 18,
+    borderRadius: 20,
     overflow: 'hidden',
     marginRight: 12,
     backgroundColor: Colors.surface,
   },
-  content: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 12 },
-  club: { fontSize: 10, fontFamily: Font.semiBold, color: Colors.accent, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 3 },
-  name: { fontSize: 14, fontFamily: Font.extraBold, color: Colors.white, lineHeight: 18, marginBottom: 5 },
-  price: { fontSize: 12, fontFamily: Font.semiBold, color: 'rgba(255,255,255,0.65)' },
-  soldOut: { fontSize: 12, fontFamily: Font.bold, color: Colors.error },
-  free: { fontSize: 12, fontFamily: Font.bold, color: Colors.textMuted },
+  content: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 14 },
+  club: {
+    fontSize: 10, fontFamily: Font.semiBold, color: Colors.accent,
+    textTransform: 'uppercase', letterSpacing: 0.9, marginBottom: 4,
+  },
+  name: {
+    fontSize: 17, fontFamily: Font.extraBold, color: Colors.white,
+    lineHeight: 21, marginBottom: 4, letterSpacing: 0.1,
+  },
+  date: { fontSize: 11, fontFamily: Font.medium, color: 'rgba(255,255,255,0.40)', marginBottom: 10 },
+  bottomRow: { flexDirection: 'row', alignItems: 'center' },
+  priceBadge: {
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+    paddingHorizontal: 10, paddingVertical: 4,
+  },
+  priceBadgeText: { fontSize: 12, fontFamily: Font.semiBold, color: 'rgba(255,255,255,0.65)' },
+  priceValue: { fontSize: 13, fontFamily: Font.extraBold, color: Colors.white },
 });
 
-// ─── Club pill (horizontal scroll) ──────────────────────────────────────────
+// ─── Club card (full-width featured) ─────────────────────────────────────────
 
-function ClubPill({ club }: { club: NonNullable<Event['club']> }) {
+function ClubCard({ club }: { club: NonNullable<Event['club']> }) {
   const router = useRouter();
   return (
-    <TouchableOpacity style={clubStyles.pill} activeOpacity={0.8} onPress={() => router.push(`/club/${club.id}`)}>
-      <View style={clubStyles.iconBox}>
-        <Ionicons name="business" size={18} color={Colors.accent} />
+    <TouchableOpacity
+      style={clubCardStyles.card}
+      activeOpacity={0.82}
+      onPress={() => router.push(`/club/${club.id}`)}
+    >
+      <LinearGradient
+        colors={['rgba(168,85,247,0.18)', 'rgba(168,85,247,0.04)']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <View style={clubCardStyles.iconBox}>
+        <Text style={clubCardStyles.initial}>{club.name.charAt(0).toUpperCase()}</Text>
       </View>
-      <View>
-        <Text style={clubStyles.name} numberOfLines={1}>{club.name}</Text>
-        <Text style={clubStyles.city}>{club.city}</Text>
+      <View style={clubCardStyles.info}>
+        <Text style={clubCardStyles.name}>{club.name}</Text>
+        <Text style={clubCardStyles.city}>{club.city}</Text>
       </View>
+      <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
     </TouchableOpacity>
   );
 }
 
-const clubStyles = StyleSheet.create({
-  pill: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
+const clubCardStyles = StyleSheet.create({
+  card: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
     backgroundColor: Colors.surface,
-    borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
-    paddingVertical: 11, paddingHorizontal: 12,
-    marginRight: 10, minWidth: 148,
+    borderRadius: 16, borderWidth: 1, borderColor: 'rgba(168,85,247,0.18)',
+    paddingVertical: 16, paddingHorizontal: 16,
+    marginBottom: 10, overflow: 'hidden',
   },
   iconBox: {
-    width: 36, height: 36, borderRadius: 10,
-    backgroundColor: Colors.accentBg,
+    width: 44, height: 44, borderRadius: 13,
+    backgroundColor: 'rgba(168,85,247,0.15)',
+    borderWidth: 1, borderColor: 'rgba(168,85,247,0.30)',
     justifyContent: 'center', alignItems: 'center',
   },
-  name: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.textPrimary },
-  city: { fontSize: 11, color: Colors.textMuted },
+  initial: { fontSize: 20, fontFamily: Font.extraBold, color: Colors.accent },
+  info: { flex: 1 },
+  name: { fontSize: 15, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 2 },
+  city: { fontSize: 12, fontFamily: Font.regular, color: Colors.textMuted },
+});
+
+// ─── Section header with optional CTA ────────────────────────────────────────
+
+function SectionHeader({ title, cta, onCta }: { title: string; cta?: string; onCta?: () => void }) {
+  return (
+    <View style={sectionHeaderStyles.row}>
+      <View style={sectionHeaderStyles.titleRow}>
+        <View style={sectionHeaderStyles.accent} />
+        <Text style={sectionHeaderStyles.title}>{title}</Text>
+      </View>
+      {cta && onCta && (
+        <TouchableOpacity onPress={onCta} activeOpacity={0.7}>
+          <Text style={sectionHeaderStyles.cta}>{cta}</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+const sectionHeaderStyles = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  accent: { width: 3, height: 14, borderRadius: 2, backgroundColor: Colors.accent },
+  title: { fontSize: 13, fontFamily: Font.extraBold, color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8 },
+  cta: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.accent },
 });
 
 // ─── Main screen ─────────────────────────────────────────────────────────────
@@ -212,6 +291,7 @@ export default function SearchScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   const { recentIds, removeRecentlyViewed, clearRecentlyViewed } = useRecentlyViewed();
   const { events } = useEvents();
@@ -259,16 +339,25 @@ export default function SearchScreen() {
       <SafeAreaView style={{ flex: 1 }}>
         <AppHeader />
 
-        {/* Search bar */}
+        {/* Search bar con focus state */}
         <View style={styles.searchBarWrapper}>
-          <View style={styles.searchBar}>
-            <Ionicons name="search" size={16} color={Colors.textMuted} />
+          <View style={[
+            styles.searchBar,
+            searchFocused && { borderColor: 'rgba(168,85,247,0.65)' },
+          ]}>
+            <Ionicons
+              name="search"
+              size={16}
+              color={searchFocused ? Colors.accent : Colors.textMuted}
+            />
             <TextInput
               style={styles.searchInput}
               placeholder={t('search.placeholder')}
               placeholderTextColor={Colors.textMuted}
               value={query}
               onChangeText={setQuery}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
               returnKeyType="search"
               autoCorrect={false}
             />
@@ -292,7 +381,7 @@ export default function SearchScreen() {
             <>
               {filteredClubs && filteredClubs.length > 0 && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>{t('search.section_clubs')}</Text>
+                  <SectionHeader title={t('search.section_clubs')} />
                   {filteredClubs.map((club) => (
                     <TouchableOpacity key={club.id} style={styles.clubRow} activeOpacity={0.8} onPress={() => router.push(`/club/${club.id}`)}>
                       <View style={styles.clubRowIcon}>
@@ -308,10 +397,10 @@ export default function SearchScreen() {
                 </View>
               )}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>
-                  {filtered.length} {filtered.length === 1 ? t('search.event_singular') : t('search.event_plural')}
-                  {trimmed ? ` ${t('search.results_for')} "${query}"` : ''}
-                </Text>
+                <SectionHeader title={
+                  `${filtered.length} ${filtered.length === 1 ? t('search.event_singular') : t('search.event_plural')}` +
+                  (trimmed ? ` ${t('search.results_for')} "${query}"` : '')
+                } />
                 {filtered.length === 0 ? (
                   <View style={styles.empty}>
                     <Ionicons name="search-outline" size={40} color={Colors.textMuted} />
@@ -330,8 +419,8 @@ export default function SearchScreen() {
               {recentEvents.length > 0 && (
                 <View style={styles.section}>
                   <View style={styles.sectionRow}>
-                    <Text style={styles.sectionTitle}>{t('search.section_recently_viewed')}</Text>
-                    <TouchableOpacity onPress={clearRecentlyViewed} activeOpacity={0.7}>
+                    <SectionHeader title={t('search.section_recently_viewed')} />
+                    <TouchableOpacity onPress={clearRecentlyViewed} activeOpacity={0.7} style={{ marginBottom: 14 }}>
                       <Text style={styles.clearAll}>{t('search.clear_all')}</Text>
                     </TouchableOpacity>
                   </View>
@@ -349,32 +438,46 @@ export default function SearchScreen() {
               {/* Di tendenza */}
               {trendingEvents.length > 0 && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Di tendenza</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.hScroll} contentContainerStyle={{ paddingRight: 20 }}>
-                    {trendingEvents.map((event) => (
-                      <TrendingCard key={event.id} event={event} />
-                    ))}
-                  </ScrollView>
+                  <SectionHeader
+                    title="Di tendenza"
+                    cta="Vedi tutti"
+                    onCta={() => router.push('/(tabs)')}
+                  />
+                  <View style={[styles.hScroll, { height: TREND_CARD_HEIGHT }]}>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      style={{ flex: 1 }}
+                      contentContainerStyle={{ paddingLeft: 20, paddingRight: 20 }}
+                    >
+                      {trendingEvents.map((event) => (
+                        <TrendingCard key={event.id} event={event} />
+                      ))}
+                    </ScrollView>
+                  </View>
                 </View>
               )}
 
               {/* Esplora per genere */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t('search.section_browse_by_genre')}</Text>
+                <SectionHeader title={t('search.section_browse_by_genre')} />
                 <View style={styles.genreGrid}>
                   {[...ALL_GENRES].sort().map((genre) => {
                     const cfg = GENRE_CONFIG[genre];
                     return (
                       <TouchableOpacity
                         key={genre}
-                        style={[styles.genreCard, { width: GENRE_CARD_SIZE, height: GENRE_CARD_SIZE }]}
+                        style={[styles.genreCard, {
+                          width: GENRE_CARD_W, height: GENRE_CARD_H,
+                          borderColor: cfg.color.replace(/[\d.]+\)$/, '0.30)'),
+                        }]}
                         activeOpacity={0.75}
                         onPress={() => setQuery(genre)}
                       >
                         <LinearGradient
-                          colors={[cfg.color.replace(/[\d.]+\)$/, '0.30)'), cfg.colorEnd]}
+                          colors={[cfg.color.replace(/[\d.]+\)$/, '0.72)'), cfg.colorEnd]}
                           start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
+                          end={{ x: 1.1, y: 1 }}
                           style={StyleSheet.absoluteFill}
                         />
                         <Text style={styles.genreCardText}>{genre}</Text>
@@ -387,12 +490,14 @@ export default function SearchScreen() {
               {/* Club nella tua città */}
               {clubs.length > 0 && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Club nella tua città</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.hScroll} contentContainerStyle={{ paddingRight: 20 }}>
-                    {clubs.map((club) => (
-                      <ClubPill key={club.id} club={club} />
-                    ))}
-                  </ScrollView>
+                  <SectionHeader
+                    title="Club nella tua città"
+                    cta={clubs.length > 2 ? 'Vedi tutti' : undefined}
+                    onCta={() => {}}
+                  />
+                  {clubs.map((club) => (
+                    <ClubCard key={club.id} club={club} />
+                  ))}
                 </View>
               )}
             </>
@@ -407,34 +512,34 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   bgGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
 
-  searchBarWrapper: { paddingHorizontal: 20, marginTop: 14, marginBottom: 16 },
+  // Search bar
+  searchBarWrapper: { paddingHorizontal: 20, marginTop: 14, marginBottom: 20 },
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: Colors.surface,
-    borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
+    borderRadius: 14, borderWidth: 1, borderColor: 'rgba(168,85,247,0.22)',
     paddingHorizontal: 14, paddingVertical: 13,
   },
   searchInput: { flex: 1, fontSize: 15, color: Colors.textPrimary, fontFamily: Font.regular },
 
-  scroll: { paddingHorizontal: 20, paddingBottom: 110 },
+  scroll: { paddingHorizontal: 20, paddingBottom: 120 },
   section: { marginBottom: 32 },
-  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  sectionTitle: { fontSize: 13, fontFamily: Font.extraBold, color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 },
-  clearAll: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.accent },
+  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  clearAll: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.accent, marginBottom: 14 },
 
-  hScroll: { marginHorizontal: -20, paddingLeft: 20 },
+  hScroll: { marginHorizontal: -20 },
 
-  // Genre grid — 3 colonne
-  genreGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  // Genre grid — 3 col landscape
+  genreGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: GENRE_GAP },
   genreCard: {
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.07)',
     overflow: 'hidden',
     justifyContent: 'flex-end',
     padding: 11,
   },
-  genreCardText: { fontSize: 13, fontFamily: Font.bold, color: Colors.textPrimary, letterSpacing: 0.1 },
+  genreCardText: { fontSize: 14, fontFamily: Font.extraBold, color: Colors.white, letterSpacing: 0.1 },
 
   // Club row (search results)
   clubRow: {
