@@ -16,6 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mynox.app",
+      "usesAppleSignIn": true,
       "config": {
         "googleMapsApiKey": "AIzaSyDF5qA-619vlZvpQm4HxwMotRg9LB5k-sM"
       },

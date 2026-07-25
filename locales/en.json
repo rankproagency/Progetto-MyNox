@@ -112,7 +112,8 @@
     "sign_up_link": "Sign up",
     "error_empty_fields": "Please enter your email and password.",
     "error_invalid_credentials": "Invalid credentials.",
-    "error_google_failed": "Google sign-in failed."
+    "error_google_failed": "Google sign-in failed.",
+    "error_apple_failed": "Apple sign-in failed."
   },
 
   "register": {

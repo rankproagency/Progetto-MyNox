@@ -112,7 +112,8 @@
     "sign_up_link": "Registrati",
     "error_empty_fields": "Inserisci email e password.",
     "error_invalid_credentials": "Credenziali non valide.",
-    "error_google_failed": "Accesso con Google fallito."
+    "error_google_failed": "Accesso con Google fallito.",
+    "error_apple_failed": "Accesso con Apple fallito."
   },
 
   "register": {

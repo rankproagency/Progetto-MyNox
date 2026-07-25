@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
+import * as AppleAuthentication from 'expo-apple-authentication';
 
 // Il Supabase client logga questo errore internamente prima di emettere SIGNED_OUT.
 // Il flusso è corretto (l'utente viene sloggato), ma l'overlay in dev è fuorviante.
@@ -25,6 +26,7 @@ interface AuthCtx {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, dateOfBirth: Date, marketingConsent?: boolean) => Promise<{ requiresEmailConfirmation: boolean }>;
   loginWithGoogle: () => Promise<void>;
+  loginWithApple: () => Promise<void>;
   logout: () => void;
   completeOnboarding: () => void;
   updateUser: (updates: Partial<Pick<AuthUser, 'name' | 'email'>>) => void;
@@ -44,6 +46,7 @@ const AuthContext = createContext<AuthCtx>({
   login: async () => {},
   register: async () => ({ requiresEmailConfirmation: false }),
   loginWithGoogle: async () => {},
+  loginWithApple: async () => {},
   logout: () => {},
   completeOnboarding: () => {},
   updateUser: () => {},
@@ -263,6 +266,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const loginWithApple = useCallback(async () => {
+    const credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+    });
+    if (!credential.identityToken) throw new Error('Apple Sign In: nessun identity token ricevuto');
+    const { error } = await supabase.auth.signInWithIdToken({
+      provider: 'apple',
+      token: credential.identityToken,
+    });
+    if (error) throw new Error(error.message);
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await supabase.auth.signOut();
@@ -334,7 +352,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user, isOnboarded, isLoading,
-      login, register, loginWithGoogle, logout, completeOnboarding,
+      login, register, loginWithGoogle, loginWithApple, logout, completeOnboarding,
       updateUser, updateDateOfBirth, deleteAccount, resetPassword, musicGenres, setMusicGenres,
       pauseSessionValidation, resumeSessionValidation,
     }}>

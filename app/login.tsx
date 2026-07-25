@@ -24,9 +24,10 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginScreen() {
   const router = useRouter(); // used for push('/register') and push('forgot-password')
-  const { login, loginWithGoogle, resetPassword, isLoading } = useAuth();
+  const { login, loginWithGoogle, loginWithApple, resetPassword, isLoading } = useAuth();
   const { t } = useTranslation();
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -203,12 +204,26 @@ export default function LoginScreen() {
 
             {/* Apple — sfondo nero obbligatorio per Apple HIG Sign in with Apple */}
             <TouchableOpacity
-              style={styles.appleButton}
+              style={[styles.appleButton, appleLoading && styles.ctaDisabled]}
               activeOpacity={0.8}
-              onPress={() => Alert.alert(t('login.continue_apple'), t('login.apple_coming_soon'))}
+              disabled={appleLoading}
+              onPress={async () => {
+                setAppleLoading(true);
+                try {
+                  await loginWithApple();
+                } catch (e: any) {
+                  if (e?.code !== 'ERR_REQUEST_CANCELED') {
+                    Alert.alert(t('common.error'), e.message ?? t('login.error_apple_failed'));
+                  }
+                } finally {
+                  setAppleLoading(false);
+                }
+              }}
             >
-              <Ionicons name="logo-apple" size={20} color="#FFFFFF" />
-              <Text style={styles.appleText}>{t('login.continue_apple')}</Text>
+              {appleLoading
+                ? <ActivityIndicator color="#FFFFFF" size="small" />
+                : <><Ionicons name="logo-apple" size={20} color="#FFFFFF" /><Text style={styles.appleText}>{t('login.continue_apple')}</Text></>
+              }
             </TouchableOpacity>
 
             {/* Register link */}

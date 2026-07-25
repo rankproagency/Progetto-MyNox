@@ -37,9 +37,10 @@ function formatDOB(date: Date): string {
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { register, loginWithGoogle, isLoading } = useAuth();
+  const { register, loginWithGoogle, loginWithApple, isLoading } = useAuth();
   const { t } = useTranslation();
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -301,12 +302,26 @@ export default function RegisterScreen() {
 
             {/* Apple — sfondo nero obbligatorio per Apple HIG Sign in with Apple */}
             <TouchableOpacity
-              style={styles.darkSocialButton}
+              style={[styles.darkSocialButton, appleLoading && styles.ctaDisabled]}
               activeOpacity={0.8}
-              onPress={() => Alert.alert(t('login.continue_apple'), t('login.apple_coming_soon'))}
+              disabled={appleLoading}
+              onPress={async () => {
+                setAppleLoading(true);
+                try {
+                  await loginWithApple();
+                } catch (e: any) {
+                  if (e?.code !== 'ERR_REQUEST_CANCELED') {
+                    Alert.alert(t('common.error'), e.message ?? t('login.error_apple_failed'));
+                  }
+                } finally {
+                  setAppleLoading(false);
+                }
+              }}
             >
-              <Ionicons name="logo-apple" size={20} color="#FFFFFF" />
-              <Text style={styles.darkSocialText}>{t('login.continue_apple')}</Text>
+              {appleLoading
+                ? <ActivityIndicator color="#FFFFFF" size="small" />
+                : <><Ionicons name="logo-apple" size={20} color="#FFFFFF" /><Text style={styles.darkSocialText}>{t('login.continue_apple')}</Text></>
+              }
             </TouchableOpacity>
 
             <View style={styles.loginRow}>
