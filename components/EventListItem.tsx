@@ -61,11 +61,9 @@ export default function EventListItem({ event }: Props) {
           <Text style={styles.club} numberOfLines={1}>{event.club?.name}</Text>
         </TouchableOpacity>
         <View style={styles.metaRow}>
-          <Ionicons name="calendar-outline" size={12} color={Colors.textMuted} />
-          <Text style={styles.time}> {formatDate(event.date)}</Text>
+          <Text style={styles.time}>{formatDate(event.date)}</Text>
           <Text style={styles.timeSep}>·</Text>
-          <Ionicons name="time-outline" size={12} color={Colors.textMuted} />
-          <Text style={styles.time}> {event.startTime}</Text>
+          <Text style={styles.time}>{event.startTime}</Text>
           <Text style={styles.timeSep}>·</Text>
           <Text style={[styles.time, event.minAge > 18 && { color: Colors.warning }]}>
             {event.minAge}+
@@ -162,11 +160,11 @@ const styles = StyleSheet.create({
   },
   time: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: Colors.textSecondary,
   },
   timeSep: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: Colors.textSecondary,
   },
   right: {
     alignItems: 'flex-end',

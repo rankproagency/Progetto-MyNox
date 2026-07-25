@@ -70,9 +70,7 @@ export default function EventCard({ event }: Props) {
 
         {/* Data in alto a sinistra */}
         <View style={styles.topRow}>
-          <View style={styles.dateBadge}>
-            <Text style={styles.dateBadgeText}>{formatDate(event.date)}</Text>
-          </View>
+          <Text style={styles.dateBadgeText}>{formatDate(event.date)}</Text>
         </View>
 
         {/* Contenuto in basso */}
@@ -160,19 +158,13 @@ const styles = StyleSheet.create({
     left: 14,
     right: 14,
   },
-  dateBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(7,8,15,0.55)',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-  },
   dateBadgeText: {
-    color: Colors.textSecondary,
-    fontSize: 11,
-    fontFamily: Font.semiBold,
+    color: Colors.white,
+    fontSize: 12,
+    fontFamily: Font.bold,
+    textShadowColor: 'rgba(0,0,0,0.95)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 10,
   },
   content: {
     position: 'absolute',
@@ -220,7 +212,7 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: 'rgba(255,255,255,0.65)',
     fontFamily: Font.medium,
   },
   priceRow: {
@@ -230,7 +222,7 @@ const styles = StyleSheet.create({
   },
   priceFrom: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: 'rgba(255,255,255,0.65)',
     fontFamily: Font.medium,
   },
   priceValue: {
