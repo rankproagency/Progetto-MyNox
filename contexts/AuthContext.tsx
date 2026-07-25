@@ -186,6 +186,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session) {
           await resolveOnboarded(session);
           await loadUserGenres(session.user.id);
+          // Primo accesso dopo conferma email: salva marketing_consent dai user_metadata al profilo.
+          // onboarded == null indica che l'utente non ha ancora completato l'onboarding (primo login).
+          const meta = session.user.user_metadata;
+          if (meta?.onboarded == null && meta?.marketing_consent !== undefined) {
+            await supabase.from('profiles')
+              .update({ marketing_consent: meta.marketing_consent })
+              .eq('id', session.user.id);
+          }
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
@@ -216,7 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { name, birthdate } },
+        options: { data: { name, birthdate, marketing_consent: marketingConsent } },
       });
       if (error) throw new Error(error.message);
       setIsOnboarded(false);
