@@ -83,11 +83,8 @@ export default function RegisterScreen() {
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      const { requiresEmailConfirmation } = await register(name.trim(), email.trim(), password, dateOfBirth, marketingConsent);
-      if (requiresEmailConfirmation) {
-        router.replace({ pathname: '/email-verification', params: { email: email.trim() } });
-      }
-      // if no confirmation required, navigation handled by _layout.tsx
+      await register(name.trim(), email.trim(), password, dateOfBirth, marketingConsent);
+      // navigation handled by _layout.tsx
     } catch (e: any) {
       Alert.alert(t('register.error_registration_failed'), e.message ?? t('common.retry'));
     }

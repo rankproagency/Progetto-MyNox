@@ -1,0 +1,202 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]: MYNOX
+      - generic [ref=e5]:
+        - link "Come funziona" [ref=e6] [cursor=pointer]:
+          - /url: "#come-funziona"
+        - link "Funzionalità" [ref=e7] [cursor=pointer]:
+          - /url: "#features"
+        - link "Per le discoteche" [ref=e8] [cursor=pointer]:
+          - /url: "#discoteche"
+      - link "Scarica l'app" [ref=e9] [cursor=pointer]:
+        - /url: "#download"
+  - main [ref=e10]:
+    - generic [ref=e11]:
+      - generic [ref=e14]: Ora disponibile a Padova
+      - heading "La discoteca, senza intermediari." [level=1] [ref=e15]
+      - paragraph [ref=e16]:
+        - text: Compra il biglietto in 3 secondi. Entra con un QR.
+        - text: Dimentica i PR, le liste su WhatsApp e le attese inutili.
+      - generic [ref=e17]:
+        - link "Scarica su App Store" [ref=e18] [cursor=pointer]:
+          - /url: "#download"
+          - img [ref=e20]
+          - generic [ref=e22]:
+            - generic [ref=e23]: Scarica su
+            - generic [ref=e24]: App Store
+        - link "Disponibile su Google Play" [ref=e25] [cursor=pointer]:
+          - /url: "#download"
+          - img [ref=e27]
+          - generic [ref=e29]:
+            - generic [ref=e30]: Disponibile su
+            - generic [ref=e31]: Google Play
+      - paragraph [ref=e32]: Gratis · Nessun abbonamento · iOS & Android
+      - generic [ref=e34]: Scopri
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - paragraph [ref=e39]: Come funziona
+        - heading "Dalla scelta all'ingresso. In meno di un minuto." [level=2] [ref=e40]:
+          - text: Dalla scelta all'ingresso.
+          - text: In meno di un minuto.
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - generic [ref=e43]: "01"
+          - generic [ref=e44]: "1"
+          - heading "Scegli la serata" [level=3] [ref=e45]
+          - paragraph [ref=e46]: Sfoglia gli eventi nelle discoteche della tua città. Filtri per giorno, genere, prezzo. Tutto in un'unica schermata.
+          - img [ref=e48]
+        - generic [ref=e50]:
+          - generic [ref=e51]: "02"
+          - generic [ref=e52]: "2"
+          - heading "Paga in 3 secondi" [level=3] [ref=e53]
+          - paragraph [ref=e54]: Apple Pay, Google Pay o carta. Zero form, zero attese. Confermi e il biglietto è già sul tuo telefono.
+          - img [ref=e56]
+        - generic [ref=e58]:
+          - generic [ref=e59]: "03"
+          - generic [ref=e60]: "3"
+          - heading "Entra con il QR" [level=3] [ref=e61]
+          - paragraph [ref=e62]: Il buttafuori scansiona il QR. Sei dentro. Se hai il free drink, hai un secondo QR da mostrare al bar.
+    - generic [ref=e64]:
+      - generic [ref=e65]:
+        - paragraph [ref=e66]: Funzionalità
+        - heading "Tutto quello che ti serve. Niente di superfluo." [level=2] [ref=e67]:
+          - text: Tutto quello che ti serve.
+          - text: Niente di superfluo.
+      - generic [ref=e68]:
+        - generic [ref=e69]:
+          - generic [ref=e70]: ⊘
+          - heading "Zero PR" [level=3] [ref=e71]
+          - paragraph [ref=e72]: Compri direttamente dall'app. Niente numeri su WhatsApp, niente link scaduti, niente "scrivimi stasera".
+        - generic [ref=e73]:
+          - generic [ref=e74]: 🍹
+          - heading "Free drink incluso" [level=3] [ref=e75]
+          - paragraph [ref=e76]: QR separato per il drink. Lo mostri al bar, viene segnato usato. Non può essere riusato. Zero fregature.
+        - generic [ref=e77]:
+          - generic [ref=e78]: ⏱
+          - heading "Prezzi a fasce orarie" [level=3] [ref=e79]
+          - paragraph [ref=e80]: Chi compra prima paga meno. I prezzi salgono man mano che si avvicina la serata.
+        - generic [ref=e81]:
+          - generic [ref=e82]: 📵
+          - heading "QR anche offline" [level=3] [ref=e83]
+          - paragraph [ref=e84]: Il biglietto è sul telefono. Se la connessione fa i capricci all'ingresso, il QR funziona lo stesso.
+        - generic [ref=e85]:
+          - generic [ref=e86]: 🛋
+          - heading "Prenota il tavolo" [level=3] [ref=e87]
+          - paragraph [ref=e88]: Caparra dall'app, resto in loco. Niente chiamate, niente conferme via WhatsApp.
+        - generic [ref=e89]:
+          - generic [ref=e90]: 🔒
+          - heading "Pagamenti sicuri" [level=3] [ref=e91]
+          - paragraph [ref=e92]: Stripe gestisce tutto. I tuoi dati di pagamento non passano mai per noi.
+    - generic [ref=e94]:
+      - generic [ref=e95]:
+        - paragraph [ref=e96]: Per le discoteche
+        - heading "Incassi prima ancora di aprire le porte." [level=2] [ref=e97]:
+          - text: Incassi prima ancora
+          - text: di aprire le porte.
+        - paragraph [ref=e98]: Con il sistema dei PR vieni pagato la sera — in cash, quello che il PR decide di passarti. Con MyNox incassi nel momento in cui qualcuno compra il biglietto. Se lo compra martedì per sabato, quei soldi sono già tuoi il martedì. Prima del DJ, prima delle bottiglie, prima di qualsiasi spesa.
+        - generic [ref=e99]:
+          - generic [ref=e100]:
+            - img [ref=e102]
+            - generic [ref=e104]: Analytics in tempo reale mentre sei in discoteca
+          - generic [ref=e105]:
+            - img [ref=e107]
+            - generic [ref=e109]: CRM clienti — costruisci la tua lista, fai marketing diretto
+          - generic [ref=e110]:
+            - img [ref=e112]
+            - generic [ref=e114]: Fasce orarie — riempi prima, incassi prima
+          - generic [ref=e115]:
+            - img [ref=e117]
+            - generic [ref=e119]: Niente cash che sparisce, niente liste su carta
+        - generic [ref=e120]:
+          - generic [ref=e121]:
+            - generic [ref=e122]: 5%
+            - generic [ref=e123]: Per biglietto. Nient'altro.
+          - generic [ref=e124]:
+            - generic [ref=e125]: 0€
+            - generic [ref=e126]: Costi fissi
+          - generic [ref=e127]:
+            - generic [ref=e128]: Live
+            - generic [ref=e129]: Analytics
+      - generic [ref=e130]:
+        - heading "Porta MyNox nel tuo locale" [level=3] [ref=e131]
+        - paragraph [ref=e132]: Compila il form, ti contattiamo entro 24 ore.
+        - generic [ref=e133]:
+          - generic [ref=e134]:
+            - generic [ref=e135]: Nome del locale *
+            - textbox "es. Altromondo Studios" [ref=e136]
+          - generic [ref=e137]:
+            - generic [ref=e138]: Città *
+            - textbox "es. Padova" [ref=e139]
+          - generic [ref=e140]:
+            - generic [ref=e141]: Email di contatto *
+            - textbox "info@iltuolocale.it" [ref=e142]
+          - generic [ref=e143]:
+            - generic [ref=e144]: Serate a settimana
+            - combobox [ref=e145]:
+              - option "Seleziona" [selected]
+              - option "1 serata"
+              - option "2 serate"
+              - option "3 o più serate"
+          - button "Richiedi accesso →" [ref=e146] [cursor=pointer]
+          - paragraph [ref=e147]:
+            - text: Ogni settimana che aspetti è una serata in cui
+            - text: stai finanziando tu il rischio, invece dei tuoi clienti.
+    - generic [ref=e149]:
+      - paragraph [ref=e150]: In espansione
+      - generic [ref=e151]:
+        - generic [ref=e152]: Padova
+        - generic [ref=e154]:
+          - text: Venezia
+          - generic [ref=e155]: Presto
+        - generic [ref=e156]:
+          - text: Verona
+          - generic [ref=e157]: Presto
+        - generic [ref=e158]:
+          - text: Milano
+          - generic [ref=e159]: Presto
+        - generic [ref=e160]:
+          - text: Bologna
+          - generic [ref=e161]: Presto
+        - generic [ref=e162]:
+          - text: Roma
+          - generic [ref=e163]: Presto
+    - generic [ref=e165]:
+      - paragraph [ref=e166]: Scarica
+      - heading "La notte inizia dall'app." [level=2] [ref=e167]:
+        - text: La notte inizia
+        - text: dall'app.
+      - paragraph [ref=e168]: Gratuita. Nessun abbonamento. iOS & Android.
+      - generic [ref=e169]:
+        - link "Scarica su App Store" [ref=e170] [cursor=pointer]:
+          - /url: "#"
+          - img [ref=e172]
+          - generic [ref=e174]:
+            - generic [ref=e175]: Scarica su
+            - generic [ref=e176]: App Store
+        - link "Disponibile su Google Play" [ref=e177] [cursor=pointer]:
+          - /url: "#"
+          - img [ref=e179]
+          - generic [ref=e181]:
+            - generic [ref=e182]: Disponibile su
+            - generic [ref=e183]: Google Play
+      - paragraph [ref=e184]: Presto disponibile · Registrati per essere notificato al lancio
+  - contentinfo [ref=e185]:
+    - generic [ref=e186]:
+      - generic [ref=e187]:
+        - generic [ref=e188]:
+          - generic [ref=e189]: MYNOX
+          - paragraph [ref=e190]: La discoteca, senza intermediari.
+        - generic [ref=e191]:
+          - link "Privacy Policy" [ref=e192] [cursor=pointer]:
+            - /url: /privacy
+          - link "Termini e Condizioni" [ref=e193] [cursor=pointer]:
+            - /url: /terms
+          - link "Contatti" [ref=e194] [cursor=pointer]:
+            - /url: mailto:mynoxsupport@gmail.com
+      - generic [ref=e195]:
+        - generic [ref=e196]: © 2026 MyNox. Tutti i diritti riservati.
+        - generic [ref=e197]: Padova, Italia · Pagamenti sicuri con Stripe
+  - button "Open Next.js Dev Tools" [ref=e203] [cursor=pointer]:
+    - img [ref=e204]
+  - alert [ref=e207]
