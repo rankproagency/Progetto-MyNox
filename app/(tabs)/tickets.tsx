@@ -14,7 +14,7 @@ import { useCountdown } from '../../hooks/useCountdown';
 import AppHeader from '../../components/AppHeader';
 import { useTranslation } from 'react-i18next';
 import { getLocale } from '../../lib/i18n';
-import { useTabBarScroll } from '../../contexts/TabBarContext';
+import { useTabBarScroll, useTabBarCollapsed } from '../../contexts/TabBarContext';
 
 type Tab = 'future' | 'past';
 
@@ -64,6 +64,12 @@ export default function TicketsScreen() {
   const { t } = useTranslation();
   const { tab: tabParam, t: tParam } = useLocalSearchParams<{ tab?: string; t?: string }>();
   const { onScroll } = useTabBarScroll();
+  const { collapsed } = useTabBarCollapsed();
+
+  const claimBannerBottom = collapsed.interpolate({
+    inputRange: [0, 1],
+    outputRange: [109, 93],
+  });
 
   const TAB_CONFIG: { key: Tab; label: string }[] = [
     { key: 'future', label: t('tickets.tab_future') },
@@ -266,11 +272,13 @@ export default function TicketsScreen() {
       </SafeAreaView>
 
       {/* Riscatta regalo — ancorato sopra la tab bar */}
-      <TouchableOpacity style={styles.claimBanner} onPress={() => setClaimModalOpen(true)} activeOpacity={0.8}>
-        <Ionicons name="gift-outline" size={15} color={Colors.accent} />
-        <Text style={styles.claimBannerText}>{t('tickets.claim_banner_text')}<Text style={{ color: Colors.accent, fontFamily: Font.semiBold }}>{t('tickets.claim_banner_link')}</Text></Text>
-        <Ionicons name="chevron-forward" size={13} color={Colors.accent} />
-      </TouchableOpacity>
+      <Animated.View style={[styles.claimBanner, { bottom: claimBannerBottom }]}>
+        <TouchableOpacity style={styles.claimBannerInner} onPress={() => setClaimModalOpen(true)} activeOpacity={0.8}>
+          <Ionicons name="gift-outline" size={15} color={Colors.accent} />
+          <Text style={styles.claimBannerText}>{t('tickets.claim_banner_text')}<Text style={{ color: Colors.accent, fontFamily: Font.semiBold }}>{t('tickets.claim_banner_link')}</Text></Text>
+          <Ionicons name="chevron-forward" size={13} color={Colors.accent} />
+        </TouchableOpacity>
+      </Animated.View>
 
       {/* Modal riscatta codice regalo */}
       <Modal visible={claimModalOpen} transparent animationType="fade" onRequestClose={() => setClaimModalOpen(false)}>
@@ -584,12 +592,15 @@ const styles = StyleSheet.create({
 
   // Riscatta regalo — box floating sopra la tab bar
   claimBanner: {
-    position: 'absolute', left: 20, right: 20, bottom: 120,
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: 16, paddingVertical: 12,
+    position: 'absolute', left: 20, right: 20,
     borderRadius: 14,
     borderWidth: 1, borderColor: Colors.accentBorder,
     backgroundColor: Colors.accentBg,
+    overflow: 'hidden',
+  },
+  claimBannerInner: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingHorizontal: 16, paddingVertical: 12,
   },
   claimBannerText: { fontSize: 13, fontFamily: Font.regular, color: Colors.textMuted, flex: 1 },
 

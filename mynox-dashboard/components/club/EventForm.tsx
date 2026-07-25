@@ -426,7 +426,17 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
             <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
           </label>
           {form.image_url && (
-            <img src={form.image_url} alt={ef.preview} className="w-full h-40 object-cover rounded-lg border border-white/10" />
+            <div className="relative group">
+              <img src={form.image_url} alt={ef.preview} className="w-full h-40 object-cover rounded-lg border border-white/10" />
+              <button
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, image_url: '' }))}
+                className="absolute top-2 right-2 flex items-center gap-1 bg-black/70 hover:bg-red-500/80 text-white text-xs font-medium px-2.5 py-1.5 rounded-lg border border-white/10 transition-colors"
+              >
+                <Trash2 size={12} />
+                Rimuovi
+              </button>
+            </div>
           )}
         </div>
       </Field>
@@ -555,8 +565,8 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
       ) : (
         <div className="bg-[#111118] border border-white/8 rounded-xl p-5 text-center">
           <p className="text-sm text-slate-500">{ef.noTables}</p>
-          <a href="/club/venue" className="text-xs text-purple-400 hover:text-purple-300 mt-1 inline-block">
-            {ef.goToVenue}
+          <a href="/club/venue" target="_blank" rel="noopener noreferrer" className="text-xs text-purple-400 hover:text-purple-300 mt-1 inline-block">
+            {ef.goToVenue} ↗
           </a>
         </div>
       )}
@@ -848,8 +858,8 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
       ) : (clubExtras !== undefined && clubExtras.length === 0) ? (
         <div className="bg-[#111118] border border-white/8 rounded-xl p-5 text-center">
           <p className="text-sm text-slate-500">{t.clubExtras.noEventExtras}</p>
-          <a href="/club/extras" className="text-xs text-purple-400 hover:text-purple-300 mt-1 inline-block">
-            {t.clubExtras.goToExtras}
+          <a href="/club/extras" target="_blank" rel="noopener noreferrer" className="text-xs text-purple-400 hover:text-purple-300 mt-1 inline-block">
+            {t.clubExtras.goToExtras} ↗
           </a>
         </div>
       ) : null}

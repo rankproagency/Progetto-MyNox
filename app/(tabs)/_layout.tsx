@@ -37,8 +37,18 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     outputRange: [20, 38],
   });
 
+  const highlightWidth = collapsed.interpolate({
+    inputRange: [0, 1],
+    outputRange: [60, 44],
+  });
+
+  const highlightHeight = collapsed.interpolate({
+    inputRange: [0, 1],
+    outputRange: [44, 32],
+  });
+
   return (
-    <Animated.View style={[styles.outerContainer, { bottom: insets.bottom + 12, left: sideMargin, right: sideMargin }]}>
+    <Animated.View style={[styles.outerContainer, { bottom: insets.bottom + 6, left: sideMargin, right: sideMargin }]}>
       <View style={styles.pill}>
         <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
         <Animated.View style={[styles.row, { paddingVertical: rowPaddingVertical }]}>
@@ -66,7 +76,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
                 activeOpacity={0.7}
               >
                 <Animated.View style={[styles.tabItemInner, { paddingVertical: itemPaddingVertical }]}>
-                  {isFocused && <View style={styles.activeHighlight} />}
+                  {isFocused && <Animated.View style={[styles.activeHighlight, { width: highlightWidth, height: highlightHeight }]} />}
                   <Ionicons
                     name={isFocused ? tab.activeIcon : tab.icon}
                     size={23}
@@ -125,9 +135,9 @@ const styles = StyleSheet.create({
   },
   activeHighlight: {
     position: 'absolute',
-    width: 46,
-    height: 36,
-    borderRadius: 18,
+    width: 60,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: Colors.accentBgMid,
   },
 });
