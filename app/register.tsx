@@ -274,7 +274,7 @@ export default function RegisterScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.darkSocialButton, googleLoading && styles.ctaDisabled]}
+              style={[styles.darkSocialButton, { marginBottom: 12 }, googleLoading && styles.ctaDisabled]}
               activeOpacity={0.8}
               disabled={googleLoading}
               onPress={async () => {
@@ -297,6 +297,16 @@ export default function RegisterScreen() {
                   <Text style={styles.darkSocialText}>{t('register.continue_google')}</Text>
                 </>
               )}
+            </TouchableOpacity>
+
+            {/* Apple — sfondo nero obbligatorio per Apple HIG Sign in with Apple */}
+            <TouchableOpacity
+              style={styles.darkSocialButton}
+              activeOpacity={0.8}
+              onPress={() => Alert.alert(t('login.continue_apple'), t('login.apple_coming_soon'))}
+            >
+              <Ionicons name="logo-apple" size={20} color="#FFFFFF" />
+              <Text style={styles.darkSocialText}>{t('login.continue_apple')}</Text>
             </TouchableOpacity>
 
             <View style={styles.loginRow}>

@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.surface,
-    borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
+    borderRadius: 14, borderWidth: 1, borderColor: 'rgba(168,85,247,0.35)',
     paddingHorizontal: 14,
   },
   inputIcon: { marginRight: 10 },
