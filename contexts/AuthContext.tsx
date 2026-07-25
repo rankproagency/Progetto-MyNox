@@ -224,7 +224,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { name, birthdate, marketing_consent: marketingConsent } },
+        options: {
+          data: { name, birthdate, marketing_consent: marketingConsent },
+          emailRedirectTo: 'https://mynox-landing.vercel.app/app-redirect',
+        },
       });
       if (error) throw new Error(error.message);
       setIsOnboarded(false);
