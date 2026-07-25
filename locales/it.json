@@ -90,7 +90,7 @@
   },
 
   "login": {
-    "welcome_back": "Bentornato",
+    "welcome_back": "La notte ti aspetta",
     "email_label": "Email",
     "email_placeholder": "email@esempio.com",
     "password_label": "Password",

@@ -201,14 +201,14 @@ export default function LoginScreen() {
               )}
             </TouchableOpacity>
 
-            {/* Apple */}
+            {/* Apple — sfondo nero obbligatorio per Apple HIG Sign in with Apple */}
             <TouchableOpacity
-              style={styles.socialButton}
+              style={styles.appleButton}
               activeOpacity={0.8}
               onPress={() => Alert.alert(t('login.continue_apple'), t('login.apple_coming_soon'))}
             >
-              <Ionicons name="logo-apple" size={20} color={Colors.textPrimary} />
-              <Text style={styles.socialText}>{t('login.continue_apple')}</Text>
+              <Ionicons name="logo-apple" size={20} color="#FFFFFF" />
+              <Text style={styles.appleText}>{t('login.continue_apple')}</Text>
             </TouchableOpacity>
 
             {/* Register link */}
@@ -284,6 +284,13 @@ const styles = StyleSheet.create({
     paddingVertical: 15, marginBottom: 12,
   },
   socialText: { fontSize: 15, fontFamily: Font.semiBold, color: Colors.textPrimary },
+  appleButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    backgroundColor: '#000000',
+    borderRadius: 16, borderWidth: 1, borderColor: '#000000',
+    paddingVertical: 15, marginBottom: 12,
+  },
+  appleText: { fontSize: 15, fontFamily: Font.semiBold, color: '#FFFFFF' },
 
   registerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 20 },
   registerText: { fontSize: 14, color: Colors.textSecondary },
