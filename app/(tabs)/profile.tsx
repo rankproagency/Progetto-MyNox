@@ -336,43 +336,56 @@ export default function ProfileScreen() {
           {/* Azioni account */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('profile.section_account')}</Text>
+
+            <Text style={styles.accountGroupLabel}>{t('profile.group_settings')}</Text>
             <AccountRow
               icon="person-outline"
+              iconBg="rgba(168,85,247,0.15)" iconColor={Colors.accent}
               label={t('profile.account_edit_profile')}
               onPress={() => router.push('/edit-profile')}
             />
             <AccountRow
               icon="notifications-outline"
+              iconBg="rgba(59,130,246,0.15)" iconColor="#60a5fa"
               label={t('profile.account_notifications')}
               onPress={handleNotifications}
             />
             <AccountRow
               icon="language-outline"
+              iconBg="rgba(20,184,166,0.15)" iconColor="#2dd4bf"
               label="Lingua"
               value={SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language)?.label ?? 'Italiano'}
               onPress={() => router.push('/language')}
             />
             <AccountRow
               icon="shield-outline"
+              iconBg="rgba(249,115,22,0.15)" iconColor="#fb923c"
               label={t('profile.account_privacy')}
               onPress={handlePrivacy}
             />
+
+            <Text style={styles.accountGroupLabel}>{t('profile.group_support')}</Text>
             <AccountRow
               icon="document-text-outline"
+              iconBg="rgba(148,163,184,0.12)" iconColor="#94a3b8"
               label={t('profile.account_terms')}
               onPress={handleTerms}
             />
             <AccountRow
               icon="help-circle-outline"
+              iconBg="rgba(34,197,94,0.12)" iconColor="#4ade80"
               label={t('profile.account_support')}
               onPress={handleSupport}
             />
-            <AccountRow
-              icon="log-out-outline"
-              label={t('profile.account_logout')}
-              danger
-              onPress={handleLogout}
-            />
+
+            <View style={{ marginTop: 8 }}>
+              <AccountRow
+                icon="log-out-outline"
+                label={t('profile.account_logout')}
+                danger
+                onPress={handleLogout}
+              />
+            </View>
           </View>
 
         </ScrollView>
@@ -386,17 +399,23 @@ function AccountRow({
   label,
   danger,
   value,
+  iconColor,
+  iconBg,
   onPress,
 }: {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   danger?: boolean;
   value?: string;
+  iconColor?: string;
+  iconBg?: string;
   onPress?: () => void;
 }) {
   return (
     <TouchableOpacity style={styles.accountRow} activeOpacity={0.8} onPress={onPress}>
-      <Ionicons name={icon} size={18} color={danger ? Colors.error : Colors.textSecondary} />
+      <View style={[styles.iconContainer, { backgroundColor: danger ? 'rgba(239,68,68,0.12)' : (iconBg ?? 'rgba(255,255,255,0.05)') }]}>
+        <Ionicons name={icon} size={16} color={danger ? Colors.error : (iconColor ?? Colors.textSecondary)} />
+      </View>
       <Text style={[styles.accountLabel, danger && styles.accountLabelDanger]}>{label}</Text>
       <View style={styles.accountRowRight}>
         {value && <Text style={styles.accountRowValue}>{value}</Text>}
@@ -630,11 +649,20 @@ const styles = StyleSheet.create({
   },
 
   // Account rows
+  accountGroupLabel: {
+    fontSize: 11, fontFamily: Font.semiBold, color: Colors.textMuted,
+    textTransform: 'uppercase', letterSpacing: 0.8,
+    marginTop: 16, marginBottom: 8, paddingHorizontal: 2,
+  },
   accountRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: Colors.surface,
     borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
     padding: 14, marginBottom: 8,
+  },
+  iconContainer: {
+    width: 32, height: 32, borderRadius: 9,
+    justifyContent: 'center', alignItems: 'center',
   },
   accountLabel: { flex: 1, fontSize: 14, fontFamily: Font.medium, color: Colors.textPrimary },
   accountLabelDanger: { color: Colors.error },

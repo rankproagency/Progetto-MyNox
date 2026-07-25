@@ -207,6 +207,8 @@
     "night_singular": "night",
     "night_plural": "nights",
     "section_account": "Account",
+    "group_settings": "Settings",
+    "group_support": "Support",
     "account_edit_profile": "Edit profile",
     "account_notifications": "Notifications",
     "account_privacy": "Privacy & security",

@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
   headerActions: { flexDirection: 'row', gap: 8 },
   iconBtn: {
     width: 40, height: 40, borderRadius: 12,
-    backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border,
+    backgroundColor: Colors.surface, borderWidth: 1, borderColor: 'rgba(168,85,247,0.35)',
     justifyContent: 'center', alignItems: 'center',
   },
   iconBtnActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
