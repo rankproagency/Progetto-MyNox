@@ -16,7 +16,7 @@ const SECTIONS = [
   },
   {
     title: '3. Finalità e base giuridica del trattamento',
-    body: `I tuoi dati vengono trattati per le seguenti finalità:\n\na) Esecuzione del contratto (art. 6(1)(b) GDPR): gestione dell'account, elaborazione degli acquisti, generazione e validazione dei biglietti QR, assistenza clienti.\n\nb) Adempimento di obblighi legali (art. 6(1)(c) GDPR): conservazione delle transazioni a fini fiscali e contabili, adempimenti normativi.\n\nc) Legittimo interesse (art. 6(1)(f) GDPR): prevenzione delle frodi, sicurezza della piattaforma, miglioramento del servizio tramite dati aggregati e anonimizzati.\n\nd) Consenso (art. 6(1)(a) GDPR): invio di comunicazioni promozionali e notifiche push relative a nuovi eventi o offerte. Il consenso è revocabile in qualsiasi momento.`,
+    body: `I tuoi dati vengono trattati per le seguenti finalità:\n\na) Esecuzione del contratto (art. 6(1)(b) GDPR): gestione dell'account, elaborazione degli acquisti, generazione e validazione dei biglietti QR, assistenza clienti.\n\nb) Adempimento di obblighi legali (art. 6(1)(c) GDPR): conservazione delle transazioni a fini fiscali e contabili, adempimenti normativi.\n\nc) Legittimo interesse (art. 6(1)(f) GDPR): prevenzione delle frodi, sicurezza della piattaforma, miglioramento del servizio tramite dati aggregati e anonimizzati.\n\nd) Consenso — comunicazioni promozionali di MyNox (art. 6(1)(a) GDPR): invio di comunicazioni promozionali e notifiche push relative a nuovi eventi o offerte di MyNox. Il consenso è revocabile in qualsiasi momento.\n\ne) Consenso — condivisione dati con le discoteche partner (art. 6(1)(a) GDPR): se hai prestato il consenso al marketing in fase di registrazione, MyNox condivide il tuo nome e indirizzo email con le discoteche partner per i cui eventi hai acquistato biglietti, affinché possano contattarti per comunicazioni promozionali sui propri eventi. Puoi revocare questo consenso in qualsiasi momento dalle impostazioni del profilo.`,
   },
   {
     title: '4. Periodo di conservazione',
@@ -27,23 +27,27 @@ const SECTIONS = [
     body: `MyNox si avvale di fornitori di servizi terzi che trattano i dati personali per nostro conto in qualità di Responsabili del Trattamento ai sensi dell'art. 28 GDPR:\n\n• Supabase Inc. (USA) — infrastruttura database e autenticazione. I dati sono ospitati su server in area UE (Francoforte). Trasferimento extra-UE regolato da Clausole Contrattuali Standard (SCC) approvate dalla Commissione Europea.\n\n• Stripe Inc. (USA) — elaborazione dei pagamenti. Stripe è certificato PCI-DSS Level 1. MyNox non conserva mai i dati della carta di credito. Trasferimento extra-UE regolato da SCC e dal framework EU-US Data Privacy Framework.\n\n• Render Inc. (USA) — infrastruttura server per il proxy di pagamento. Tutte le richieste di pagamento transitano attraverso un server Render prima di raggiungere Stripe. Trasferimento extra-UE regolato da Clausole Contrattuali Standard (SCC).\n\nL'elenco aggiornato dei Responsabili del Trattamento è disponibile su richiesta all'indirizzo mynoxsupport@gmail.com.`,
   },
   {
-    title: '6. Trasferimento dei dati extra-UE',
+    title: '6. Accesso ai dati da parte delle discoteche partner',
+    body: `Le discoteche partner di MyNox hanno accesso, tramite una dashboard B2B riservata, ai dati dei clienti che hanno acquistato biglietti per i loro eventi e che hanno prestato il consenso al marketing in fase di registrazione.\n\nI dati accessibili dalle discoteche sono limitati a:\n\n• Nome e cognome\n• Indirizzo email\n• Evento acquistato\n• Data di acquisto\n\nLe discoteche possono esportare tali dati in formato CSV e utilizzarli per inviare comunicazioni promozionali sui propri eventi. In questo contesto, ciascuna discoteca opera come titolare autonomo del trattamento ai sensi del GDPR ed è responsabile del proprio utilizzo dei dati.\n\nSe non hai prestato il consenso al marketing, i tuoi dati non sono visibili alle discoteche in nessun caso. Se desideri revocare il consenso, puoi farlo in qualsiasi momento dalle impostazioni del profilo nell'app.`,
+  },
+  {
+    title: '7. Trasferimento dei dati extra-UE',
     body: `Alcuni dei nostri fornitori (Supabase, Stripe, Render) hanno sede negli Stati Uniti. Il trasferimento dei tuoi dati verso tali paesi è garantito da adeguate salvaguardie ai sensi del GDPR, in particolare mediante l'adozione delle Clausole Contrattuali Standard (SCC) approvate dalla Commissione Europea con Decisione 2021/914/UE, e/o il ricorso al framework EU-US Data Privacy Framework, ove applicabile.`,
   },
   {
-    title: '7. I tuoi diritti (artt. 15–22 GDPR)',
+    title: '8. I tuoi diritti (artt. 15–22 GDPR)',
     body: `In qualità di interessato, hai i seguenti diritti:\n\n• Diritto di accesso (art. 15): ottenere conferma che siano in corso trattamenti di dati che ti riguardano e ricevere una copia degli stessi.\n\n• Diritto di rettifica (art. 16): correggere dati inesatti o incompleti.\n\n• Diritto alla cancellazione (art. 17): ottenere la cancellazione dei tuoi dati ("diritto all'oblio"), ove non sussistano obblighi di conservazione.\n\n• Diritto di limitazione (art. 18): limitare il trattamento dei tuoi dati in determinati casi.\n\n• Diritto alla portabilità (art. 20): ricevere i tuoi dati in formato strutturato e leggibile da dispositivo automatico.\n\n• Diritto di opposizione (art. 21): opporti al trattamento basato su legittimo interesse o per finalità di marketing diretto.\n\n• Diritto di non essere sottoposto a decisioni automatizzate (art. 22).\n\nPer esercitare i tuoi diritti, scrivi a mynoxsupport@gmail.com. Risponderemo entro 30 giorni. Hai inoltre il diritto di proporre reclamo all'Autorità Garante per la Protezione dei Dati Personali (www.garanteprivacy.it).`,
   },
   {
-    title: '8. Sicurezza dei dati',
+    title: '9. Sicurezza dei dati',
     body: `MyNox adotta misure tecniche e organizzative adeguate per proteggere i dati personali da accessi non autorizzati, perdita, distruzione o divulgazione accidentale, in conformità all'art. 32 GDPR. Tra queste: cifratura dei dati in transito (TLS), cifratura delle password, accesso ai dati limitato al personale autorizzato, monitoraggio continuo dell'infrastruttura.\n\nIn caso di violazione dei dati (data breach) che comporti un rischio per i diritti e le libertà degli interessati, provvederemo alla notifica all'Autorità Garante entro 72 ore e, ove necessario, ti informeremo direttamente.`,
   },
   {
-    title: '9. Minori',
+    title: '10. Minori',
     body: `MyNox è accessibile a partire dai 14 anni di età, in conformità con l'art. 2-quinquies del D.Lgs. 196/2003 (età minima per il consenso digitale in Italia). L'acquisto di biglietti ed eventi richiede la maggiore età (18 anni) o la conferma da parte di un adulto responsabile. Non raccogliamo consapevolmente dati personali di minori di 14 anni. Se veniamo a conoscenza di aver raccolto dati di un minore senza il consenso verificabile del titolare della responsabilità genitoriale, procederemo alla cancellazione immediata di tali dati. Se sei un genitore o tutore e ritieni che tuo figlio abbia fornito dati personali a MyNox, contattaci a mynoxsupport@gmail.com.`,
   },
   {
-    title: '10. Modifiche alla presente informativa',
+    title: '11. Modifiche alla presente informativa',
     body: `MyNox si riserva il diritto di modificare la presente informativa in qualsiasi momento. In caso di modifiche sostanziali, ti avviseremo tramite notifica in-app o via email con almeno 15 giorni di preavviso. L'uso continuato dell'app dopo tale termine costituisce accettazione delle modifiche.\n\nUltima modifica: maggio 2026 — Versione 1.0`,
   },
 ];
