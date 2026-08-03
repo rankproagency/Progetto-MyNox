@@ -17,6 +17,7 @@ export interface AuthUser {
   name: string;
   email: string;
   dateOfBirth?: string; // YYYY-MM-DD
+  marketingConsent: boolean;
 }
 
 interface AuthCtx {
@@ -31,6 +32,7 @@ interface AuthCtx {
   completeOnboarding: () => void;
   updateUser: (updates: Partial<Pick<AuthUser, 'name' | 'email'>>) => void;
   updateDateOfBirth: (dob: Date) => Promise<void>;
+  updateMarketingConsent: (value: boolean) => Promise<void>;
   deleteAccount: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   musicGenres: string[];
@@ -51,6 +53,7 @@ const AuthContext = createContext<AuthCtx>({
   completeOnboarding: () => {},
   updateUser: () => {},
   updateDateOfBirth: async () => {},
+  updateMarketingConsent: async () => {},
   deleteAccount: async () => {},
   resetPassword: async () => {},
   musicGenres: [],
@@ -73,6 +76,7 @@ function sessionToUser(session: Session): AuthUser {
     name: session.user.user_metadata?.name ?? session.user.email?.split('@')[0] ?? '',
     email: session.user.email ?? '',
     dateOfBirth: session.user.user_metadata?.birthdate ?? undefined,
+    marketingConsent: false,
   };
 }
 
@@ -90,14 +94,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { data } = await supabase
           .from('profiles')
-          .select('music_genres')
+          .select('music_genres, marketing_consent')
           .eq('id', userId)
           .maybeSingle();
-        if (data?.music_genres) {
-          setMusicGenresState(data.music_genres);
-        } else {
-          setMusicGenresState([]);
-        }
+        setMusicGenresState(data?.music_genres ?? []);
+        setUser((prev) => prev ? { ...prev, marketingConsent: data?.marketing_consent ?? false } : prev);
       } catch (_) {}
     }
 
@@ -316,6 +317,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser((prev) => prev ? { ...prev, dateOfBirth: birthdate } : prev);
   }, []);
 
+  const updateMarketingConsent = useCallback(async (value: boolean) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    await supabase.from('profiles').update({ marketing_consent: value }).eq('id', session.user.id);
+    setUser((prev) => prev ? { ...prev, marketingConsent: value } : prev);
+  }, []);
+
   const deleteAccount = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
@@ -353,7 +361,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{
       user, isOnboarded, isLoading,
       login, register, loginWithGoogle, loginWithApple, logout, completeOnboarding,
-      updateUser, updateDateOfBirth, deleteAccount, resetPassword, musicGenres, setMusicGenres,
+      updateUser, updateDateOfBirth, updateMarketingConsent, deleteAccount, resetPassword, musicGenres, setMusicGenres,
       pauseSessionValidation, resumeSessionValidation,
     }}>
       {children}

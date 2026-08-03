@@ -10,6 +10,7 @@ import {
   ScrollView,
   Modal,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
@@ -36,7 +37,7 @@ function formatDOB(date: Date): string {
 export default function EditProfileScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { user, updateUser, updateDateOfBirth, deleteAccount, musicGenres, setMusicGenres } = useAuth();
+  const { user, updateUser, updateDateOfBirth, updateMarketingConsent, deleteAccount, musicGenres, setMusicGenres } = useAuth();
   const [name, setName] = useState(user?.name ?? '');
   const [selectedGenres, setSelectedGenres] = useState<string[]>(musicGenres);
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -226,6 +227,26 @@ export default function EditProfileScreen() {
           )}
 
           <View style={styles.section}>
+            <Text style={styles.fieldLabel}>Consenso marketing</Text>
+            <View style={styles.marketingRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.marketingLabel}>Comunicazioni promozionali</Text>
+                <Text style={styles.marketingHint}>
+                  Permetti alle discoteche e a MyNox di inviarti offerte ed eventi in base ai tuoi acquisti.
+                </Text>
+              </View>
+              <Switch
+                value={user?.marketingConsent ?? false}
+                onValueChange={async (val) => {
+                  try { await updateMarketingConsent(val); } catch (_) {}
+                }}
+                trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(168,85,247,0.5)' }}
+                thumbColor={user?.marketingConsent ? '#a855f7' : '#64748b'}
+              />
+            </View>
+          </View>
+
+          <View style={styles.section}>
             <Text style={styles.fieldLabel}>{t('edit_profile.password_label')}</Text>
             <TouchableOpacity
               style={styles.changePasswordBtn}
@@ -371,6 +392,15 @@ const styles = StyleSheet.create({
   pickerTitle: { fontSize: 15, fontFamily: Font.bold, color: Colors.textPrimary },
   pickerConfirm: { fontSize: 15, fontFamily: Font.bold, color: Colors.accent },
   picker: { width: '100%', height: 200 },
+
+  marketingRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: Colors.surface, borderRadius: 14,
+    borderWidth: 1, borderColor: Colors.border,
+    paddingHorizontal: 16, paddingVertical: 14,
+  },
+  marketingLabel: { fontSize: 14, fontFamily: Font.medium, color: Colors.textPrimary, marginBottom: 3 },
+  marketingHint: { fontSize: 12, color: Colors.textMuted, lineHeight: 17 },
 
   dangerZone: { marginTop: 12, borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: 24 },
   dangerLabel: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.textMuted, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
