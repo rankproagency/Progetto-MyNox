@@ -33,7 +33,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { profile } = useProfile();
   const { tickets } = useTickets();
-  const { user, logout, musicGenres } = useAuth();
+  const { user, logout, deleteAccount, musicGenres } = useAuth();
   const { favoriteIds, favoriteClubs } = useFavorites();
   const { events } = useEvents();
   const { t, i18n } = useTranslation();
@@ -108,6 +108,40 @@ export default function ProfileScreen() {
     Linking.openSettings();
   }
 
+  function handleDeleteAccount() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    Alert.alert(
+      'Elimina account',
+      'Questa azione è irreversibile. Tutti i tuoi dati personali verranno eliminati entro 30 giorni, ad eccezione delle transazioni che devono essere conservate per obblighi fiscali. Vuoi procedere?',
+      [
+        { text: 'Annulla', style: 'cancel' },
+        {
+          text: 'Elimina definitivamente',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Sei sicuro?',
+              'Scrivi "ELIMINA" per confermare la cancellazione permanente del tuo account.',
+              [
+                { text: 'Annulla', style: 'cancel' },
+                {
+                  text: 'Conferma eliminazione',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      await deleteAccount();
+                    } catch {
+                      Alert.alert('Errore', 'Impossibile eliminare l\'account. Contatta il supporto: mynoxsupport@gmail.com');
+                    }
+                  },
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
+  }
 
   return (
     <View style={styles.outerContainer}>
@@ -378,6 +412,12 @@ export default function ProfileScreen() {
                 label={t('profile.account_logout')}
                 danger
                 onPress={handleLogout}
+              />
+              <AccountRow
+                icon="trash-outline"
+                label="Elimina account"
+                danger
+                onPress={handleDeleteAccount}
               />
             </View>
           </View>
