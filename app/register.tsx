@@ -218,15 +218,17 @@ export default function RegisterScreen() {
                   {privacyAccepted && <Ionicons name="checkmark" size={12} color={Colors.white} />}
                 </View>
               </TouchableOpacity>
-              <Text
-                style={styles.checkboxLabel}
-                onPress={() => { Haptics.selectionAsync(); setPrivacyAccepted((v) => !v); }}
-              >
-                {t('register.privacy_accept')}
-                <Text style={styles.checkboxLink} onPress={() => router.push('/privacy')}>
-                  {t('register.privacy_link')}
+              <View style={styles.checkboxTextRow}>
+                <Text
+                  style={styles.checkboxLabel}
+                  onPress={() => { Haptics.selectionAsync(); setPrivacyAccepted((v) => !v); }}
+                >
+                  {t('register.privacy_accept')}
                 </Text>
-              </Text>
+                <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/privacy')}>
+                  <Text style={styles.checkboxLink}>{t('register.privacy_link')}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             <View style={styles.checkboxRow}>
@@ -238,15 +240,17 @@ export default function RegisterScreen() {
                   {termsAccepted && <Ionicons name="checkmark" size={12} color={Colors.white} />}
                 </View>
               </TouchableOpacity>
-              <Text
-                style={styles.checkboxLabel}
-                onPress={() => { Haptics.selectionAsync(); setTermsAccepted((v) => !v); }}
-              >
-                {t('register.terms_accept')}
-                <Text style={styles.checkboxLink} onPress={() => router.push('/terms')}>
-                  {t('register.terms_link')}
+              <View style={styles.checkboxTextRow}>
+                <Text
+                  style={styles.checkboxLabel}
+                  onPress={() => { Haptics.selectionAsync(); setTermsAccepted((v) => !v); }}
+                >
+                  {t('register.terms_accept')}
                 </Text>
-              </Text>
+                <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/terms')}>
+                  <Text style={styles.checkboxLink}>{t('register.terms_link')}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             <TouchableOpacity
@@ -460,8 +464,11 @@ const styles = StyleSheet.create({
   checkboxChecked: {
     backgroundColor: Colors.accent, borderColor: Colors.accent,
   },
+  checkboxTextRow: {
+    flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center',
+  },
   checkboxLabel: {
-    flex: 1, fontSize: 12, color: Colors.textSecondary, lineHeight: 18,
+    fontSize: 12, color: Colors.textSecondary, lineHeight: 18,
   },
   checkboxLink: {
     color: Colors.accent, fontFamily: Font.semiBold,
