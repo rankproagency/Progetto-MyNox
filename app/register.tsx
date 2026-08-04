@@ -209,37 +209,45 @@ export default function RegisterScreen() {
               </View>
             </View>
 
-            <TouchableOpacity
-              style={styles.checkboxRow}
-              activeOpacity={0.7}
-              onPress={() => { Haptics.selectionAsync(); setPrivacyAccepted((v) => !v); }}
-            >
-              <View style={[styles.checkbox, privacyAccepted && styles.checkboxChecked]}>
-                {privacyAccepted && <Ionicons name="checkmark" size={12} color={Colors.white} />}
-              </View>
-              <Text style={styles.checkboxLabel}>
+            <View style={styles.checkboxRow}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => { Haptics.selectionAsync(); setPrivacyAccepted((v) => !v); }}
+              >
+                <View style={[styles.checkbox, privacyAccepted && styles.checkboxChecked]}>
+                  {privacyAccepted && <Ionicons name="checkmark" size={12} color={Colors.white} />}
+                </View>
+              </TouchableOpacity>
+              <Text
+                style={styles.checkboxLabel}
+                onPress={() => { Haptics.selectionAsync(); setPrivacyAccepted((v) => !v); }}
+              >
                 {t('register.privacy_accept')}
                 <Text style={styles.checkboxLink} onPress={() => router.push('/privacy')}>
                   {t('register.privacy_link')}
                 </Text>
               </Text>
-            </TouchableOpacity>
+            </View>
 
-            <TouchableOpacity
-              style={styles.checkboxRow}
-              activeOpacity={0.7}
-              onPress={() => { Haptics.selectionAsync(); setTermsAccepted((v) => !v); }}
-            >
-              <View style={[styles.checkbox, termsAccepted && styles.checkboxChecked]}>
-                {termsAccepted && <Ionicons name="checkmark" size={12} color={Colors.white} />}
-              </View>
-              <Text style={styles.checkboxLabel}>
+            <View style={styles.checkboxRow}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => { Haptics.selectionAsync(); setTermsAccepted((v) => !v); }}
+              >
+                <View style={[styles.checkbox, termsAccepted && styles.checkboxChecked]}>
+                  {termsAccepted && <Ionicons name="checkmark" size={12} color={Colors.white} />}
+                </View>
+              </TouchableOpacity>
+              <Text
+                style={styles.checkboxLabel}
+                onPress={() => { Haptics.selectionAsync(); setTermsAccepted((v) => !v); }}
+              >
                 {t('register.terms_accept')}
                 <Text style={styles.checkboxLink} onPress={() => router.push('/terms')}>
                   {t('register.terms_link')}
                 </Text>
               </Text>
-            </TouchableOpacity>
+            </View>
 
             <TouchableOpacity
               style={styles.checkboxRow}
