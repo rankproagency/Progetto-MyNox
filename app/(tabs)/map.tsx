@@ -8,7 +8,6 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { versionedImageUrl } from '../../lib/imageUrl';
-import { LinearGradient } from 'expo-linear-gradient';
 import MapView, { Marker, Region, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -510,14 +509,6 @@ export default function MapScreen() {
               </View>
             )}
           </ScrollView>
-          {/* Fade gradiente destra */}
-          <LinearGradient
-            colors={['transparent', 'rgba(7,8,15,0.95)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.clubListFade}
-            pointerEvents="none"
-          />
         </View>
       )}
 
@@ -797,14 +788,6 @@ const styles = StyleSheet.create({
   clubChipTonight: {
     borderColor: Colors.accent,
     backgroundColor: 'rgba(168,85,247,0.10)',
-  },
-  clubListFade: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: 48,
-    borderRadius: 0,
   },
   chipImage: {
     width: 44,
