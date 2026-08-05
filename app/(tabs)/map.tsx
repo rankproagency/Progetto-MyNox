@@ -525,7 +525,7 @@ export default function MapScreen() {
       <Animated.View
         style={[
           styles.card,
-          { bottom: TAB_BAR_HEIGHT, transform: [{ translateY: cardSlide }, { translateY: dragY }] },
+          { bottom: 0, transform: [{ translateY: cardSlide }, { translateY: dragY }] },
         ]}
         pointerEvents={selectedClub ? 'box-none' : 'none'}
       >
@@ -912,7 +912,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     paddingTop: 12,
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingBottom: TAB_BAR_HEIGHT + 4,
     gap: 14,
   },
   cardHandle: {
