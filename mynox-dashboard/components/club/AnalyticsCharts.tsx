@@ -17,7 +17,7 @@ const GENDER_COLORS: Record<string, string> = {
   donna: '#a855f7',
   uomo: '#7c3aed',
   'non-binary': '#6366f1',
-  'non-specificato': '#475569',
+  'non-specificato': '#6366f1',
 };
 
 interface Props {
