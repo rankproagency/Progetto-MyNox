@@ -28,7 +28,14 @@ import { Genre } from '../types';
 
 const { width } = Dimensions.get('window');
 const TOTAL_SLIDES = 3;
-const TOTAL_STEPS = TOTAL_SLIDES + 1;
+const TOTAL_STEPS = TOTAL_SLIDES + 2; // slides + generi + sesso
+
+const GENDER_OPTIONS = [
+  { value: 'donna', label: 'Donna' },
+  { value: 'uomo', label: 'Uomo' },
+  { value: 'non-binary', label: 'Non-binary' },
+  { value: 'non-specificato', label: 'Preferisco non dirlo' },
+];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SLIDE 0 — Discover
@@ -501,9 +508,10 @@ const st = StyleSheet.create({
 export default function OnboardingScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { completeOnboarding, setMusicGenres, updateDateOfBirth, user } = useAuth();
+  const { completeOnboarding, setMusicGenres, updateDateOfBirth, updateGender, user } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
+  const [selectedGender, setSelectedGender] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
 
   const MAX_DOB = new Date();
@@ -514,6 +522,7 @@ export default function OnboardingScreen() {
   const [dobSaving, setDobSaving] = useState(false);
 
   const isGenreStep = currentIndex === TOTAL_SLIDES;
+  const isGenderStep = currentIndex === TOTAL_SLIDES + 1;
 
   function toggleGenre(genre: Genre) {
     Haptics.selectionAsync();
@@ -524,8 +533,11 @@ export default function OnboardingScreen() {
 
   function goBack() {
     Haptics.selectionAsync();
-    if (isGenreStep) {
+    if (isGenderStep) {
+      setCurrentIndex(TOTAL_SLIDES);
+    } else if (isGenreStep) {
       setCurrentIndex(TOTAL_SLIDES - 1);
+      scrollRef.current?.scrollTo({ x: (TOTAL_SLIDES - 1) * width, animated: true });
     } else if (currentIndex > 0) {
       const prev = currentIndex - 1;
       setCurrentIndex(prev);
@@ -535,19 +547,22 @@ export default function OnboardingScreen() {
 
   function goNext() {
     Haptics.selectionAsync();
-    if (currentIndex < TOTAL_SLIDES - 1) {
+    if (isGenderStep) {
+      handleStart();
+    } else if (currentIndex < TOTAL_SLIDES - 1) {
       const next = currentIndex + 1;
       setCurrentIndex(next);
       scrollRef.current?.scrollTo({ x: next * width, animated: true });
     } else if (currentIndex === TOTAL_SLIDES - 1) {
       setCurrentIndex(TOTAL_SLIDES);
     } else {
-      handleStart();
+      setCurrentIndex(TOTAL_SLIDES + 1);
     }
   }
 
   async function finishOnboarding() {
     if (selectedGenres.length > 0) setMusicGenres(selectedGenres);
+    if (selectedGender) updateGender(selectedGender);
     completeOnboarding();
     router.replace(user ? '/(tabs)' : '/login');
   }
@@ -595,8 +610,10 @@ export default function OnboardingScreen() {
 
   const gradientIndex = Math.min(currentIndex, SLIDE_GRADIENTS.length - 1);
 
-  const ctaLabel = isGenreStep
+  const ctaLabel = isGenderStep
     ? t('onboarding.cta_start')
+    : isGenreStep
+    ? 'Continua'
     : currentIndex === TOTAL_SLIDES - 1
     ? t('onboarding.cta_choose_genres')
     : t('onboarding.cta_next');
@@ -665,7 +682,7 @@ export default function OnboardingScreen() {
         </View>
       </SafeAreaView>
 
-      {!isGenreStep ? (
+      {!isGenreStep && !isGenderStep ? (
         <ScrollView
           ref={scrollRef}
           horizontal
@@ -677,7 +694,7 @@ export default function OnboardingScreen() {
         >
           {SLIDE_COMPONENTS}
         </ScrollView>
-      ) : (
+      ) : isGenreStep ? (
         <View style={styles.genreStep}>
           <Text style={styles.genreTitle}>{t('onboarding.genre_step_title')}</Text>
           <Text style={styles.genreSubtitle}>
@@ -706,6 +723,33 @@ export default function OnboardingScreen() {
             )}
           </ScrollView>
         </View>
+      ) : (
+        <View style={styles.genderStep}>
+          <Text style={styles.genreTitle}>Come ti identifichi?</Text>
+          <Text style={styles.genreSubtitle}>
+            Questa informazione ci aiuta a migliorare l'esperienza dell'app e le statistiche per i club.
+          </Text>
+          <View style={styles.genderList}>
+            {GENDER_OPTIONS.map((opt) => {
+              const active = selectedGender === opt.value;
+              return (
+                <TouchableOpacity
+                  key={opt.value}
+                  style={[styles.genderRow, active && styles.genderRowActive]}
+                  onPress={() => { Haptics.selectionAsync(); setSelectedGender(opt.value); }}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.genderRadio, active && styles.genderRadioActive]}>
+                    {active && <View style={styles.genderRadioDot} />}
+                  </View>
+                  <Text style={[styles.genderLabel, active && styles.genderLabelActive]}>
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
       )}
 
       <View style={styles.dots}>
@@ -731,11 +775,19 @@ export default function OnboardingScreen() {
           />
         </TouchableOpacity>
 
-        {(!isGenreStep || selectedGenres.length === 0) && (
+        {(!isGenreStep && !isGenderStep) && (
           <TouchableOpacity style={styles.skipButton} onPress={handleStart} activeOpacity={0.7}>
-            <Text style={styles.skipText}>
-              {isGenreStep ? t('onboarding.skip_for_now') : t('onboarding.skip_intro')}
-            </Text>
+            <Text style={styles.skipText}>{t('onboarding.skip_intro')}</Text>
+          </TouchableOpacity>
+        )}
+        {(isGenreStep && selectedGenres.length === 0) && (
+          <TouchableOpacity style={styles.skipButton} onPress={() => setCurrentIndex(TOTAL_SLIDES + 1)} activeOpacity={0.7}>
+            <Text style={styles.skipText}>{t('onboarding.skip_for_now')}</Text>
+          </TouchableOpacity>
+        )}
+        {isGenderStep && !selectedGender && (
+          <TouchableOpacity style={styles.skipButton} onPress={handleStart} activeOpacity={0.7}>
+            <Text style={styles.skipText}>{t('onboarding.skip_for_now')}</Text>
           </TouchableOpacity>
         )}
       </SafeAreaView>
@@ -785,6 +837,33 @@ const styles = StyleSheet.create({
     textAlign: 'center', marginTop: 20,
     fontSize: 13, color: Colors.accent, fontFamily: Font.bold,
   },
+
+  genderStep: { flex: 1, paddingHorizontal: 24, paddingTop: 16 },
+  genderList: { marginTop: 8, gap: 12 },
+  genderRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 16,
+    backgroundColor: Colors.surface, borderRadius: 16,
+    borderWidth: 1.5, borderColor: Colors.border,
+    paddingHorizontal: 20, paddingVertical: 18,
+  },
+  genderRowActive: {
+    borderColor: Colors.accent,
+    backgroundColor: 'rgba(168,85,247,0.08)',
+  },
+  genderRadio: {
+    width: 22, height: 22, borderRadius: 11,
+    borderWidth: 2, borderColor: Colors.border,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  genderRadioActive: { borderColor: Colors.accent },
+  genderRadioDot: {
+    width: 10, height: 10, borderRadius: 5,
+    backgroundColor: Colors.accent,
+  },
+  genderLabel: {
+    fontSize: 16, fontFamily: Font.medium, color: Colors.textSecondary,
+  },
+  genderLabelActive: { color: Colors.textPrimary, fontFamily: Font.bold },
 
   dobOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.6)' },
   dobSheet: {

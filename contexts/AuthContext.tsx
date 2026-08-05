@@ -18,6 +18,7 @@ export interface AuthUser {
   email: string;
   dateOfBirth?: string; // YYYY-MM-DD
   marketingConsent: boolean;
+  gender?: string;
 }
 
 interface AuthCtx {
@@ -33,6 +34,7 @@ interface AuthCtx {
   updateUser: (updates: Partial<Pick<AuthUser, 'name' | 'email'>>) => void;
   updateDateOfBirth: (dob: Date) => Promise<void>;
   updateMarketingConsent: (value: boolean) => Promise<void>;
+  updateGender: (gender: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   musicGenres: string[];
@@ -54,6 +56,7 @@ const AuthContext = createContext<AuthCtx>({
   updateUser: () => {},
   updateDateOfBirth: async () => {},
   updateMarketingConsent: async () => {},
+  updateGender: async () => {},
   deleteAccount: async () => {},
   resetPassword: async () => {},
   musicGenres: [],
@@ -94,11 +97,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { data } = await supabase
           .from('profiles')
-          .select('music_genres, marketing_consent')
+          .select('music_genres, marketing_consent, gender')
           .eq('id', userId)
           .maybeSingle();
         setMusicGenresState(data?.music_genres ?? []);
-        setUser((prev) => prev ? { ...prev, marketingConsent: data?.marketing_consent ?? false } : prev);
+        setUser((prev) => prev ? { ...prev, marketingConsent: data?.marketing_consent ?? false, gender: data?.gender ?? undefined } : prev);
       } catch (_) {}
     }
 
@@ -317,6 +320,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser((prev) => prev ? { ...prev, dateOfBirth: birthdate } : prev);
   }, []);
 
+  const updateGender = useCallback(async (gender: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    await supabase.from('profiles').update({ gender }).eq('id', session.user.id);
+    setUser((prev) => prev ? { ...prev, gender } : prev);
+  }, []);
+
   const updateMarketingConsent = useCallback(async (value: boolean) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
@@ -361,7 +371,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{
       user, isOnboarded, isLoading,
       login, register, loginWithGoogle, loginWithApple, logout, completeOnboarding,
-      updateUser, updateDateOfBirth, updateMarketingConsent, deleteAccount, resetPassword, musicGenres, setMusicGenres,
+      updateUser, updateDateOfBirth, updateMarketingConsent, updateGender, deleteAccount, resetPassword, musicGenres, setMusicGenres,
       pauseSessionValidation, resumeSessionValidation,
     }}>
       {children}
