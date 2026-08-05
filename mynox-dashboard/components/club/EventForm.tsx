@@ -266,28 +266,30 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
     // Salva tipi biglietto: upsert intelligente che preserva sold_quantity
     const validTickets = ticketTypes.filter((tk) => tk.label.trim() && tk.price);
     if (eventId) {
-      // Elimina solo i tipi rimossi dall'utente (non tutti)
       const keepIds = validTickets.filter((tk) => tk.id).map((tk) => tk.id!);
-      if (keepIds.length > 0) {
-        await supabase.from('ticket_types').delete().eq('event_id', eventId).not('id', 'in', `(${keepIds.join(',')})`);
-      } else {
-        // Nessun ticket esistente da mantenere — elimina tutti per questo evento
-        await supabase.from('ticket_types').delete().eq('event_id', eventId);
-      }
-
-      // Aggiorna quelli esistenti (preserva sold_quantity)
-      for (const tk of validTickets.filter((tk) => tk.id)) {
-        await supabase.from('ticket_types').update({
-          label: tk.label.trim(),
-          price: parseFloat(tk.price),
-          total_quantity: tk.total_quantity ? parseInt(tk.total_quantity) : null,
-          includes_drink: tk.includes_drink,
-          price_tiers: tk.price_tiers.filter((t) => t.until && t.price).map((t) => ({ until: t.until, price: parseFloat(t.price) })),
-        }).eq('id', tk.id!);
-      }
-
-      // Inserisce i nuovi (senza id)
+      const existingTickets = validTickets.filter((tk) => tk.id);
       const newTickets = validTickets.filter((tk) => !tk.id);
+
+      const mapTiers = (tk: TicketTypeRow) =>
+        tk.price_tiers.filter((t) => t.until && t.price).map((t) => ({ until: t.until, price: parseFloat(t.price) }));
+
+      // Delete rimossi + update esistenti in parallelo
+      await Promise.all([
+        keepIds.length > 0
+          ? supabase.from('ticket_types').delete().eq('event_id', eventId).not('id', 'in', `(${keepIds.join(',')})`)
+          : supabase.from('ticket_types').delete().eq('event_id', eventId),
+        ...existingTickets.map((tk) =>
+          supabase.from('ticket_types').update({
+            label: tk.label.trim(),
+            price: parseFloat(tk.price),
+            total_quantity: tk.total_quantity ? parseInt(tk.total_quantity) : null,
+            includes_drink: tk.includes_drink,
+            price_tiers: mapTiers(tk),
+          }).eq('id', tk.id!)
+        ),
+      ]);
+
+      // Insert nuovi dopo il delete (evita conflitti)
       if (newTickets.length > 0) {
         const { error: ticketError } = await supabase.from('ticket_types').insert(
           newTickets.map((tk) => ({
@@ -297,35 +299,38 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
             total_quantity: tk.total_quantity ? parseInt(tk.total_quantity) : null,
             sold_quantity: 0,
             includes_drink: tk.includes_drink,
-            price_tiers: tk.price_tiers.filter((t) => t.until && t.price).map((t) => ({ until: t.until, price: parseFloat(t.price) })),
+            price_tiers: mapTiers(tk),
           }))
         );
         if (ticketError) { setError(ef.saveTicketsError + ' ' + ticketError.message); setLoading(false); return; }
       }
     }
 
-    // Salva tavoli evento (con prezzi specifici per questo evento)
+    // Tavoli ed extras in parallelo (indipendenti tra loro)
+    const phase3: Promise<any>[] = [];
+
     if (eventId && eventTables.length > 0) {
-      await supabase.from('tables').delete().eq('event_id', eventId);
-      const { error: tablesError } = await supabase.from('tables').insert(
-        eventTables.map((et) => {
-          const clubTable = clubTables?.find((ct) => ct.id === et.clubTableId);
-          return {
-            event_id: eventId,
-            club_table_id: et.clubTableId,
-            label: et.label,
-            capacity: et.capacity,
-            deposit: et.deposit ? parseFloat(et.deposit) : 0,
-            is_available: et.isAvailable,
-            pos_x: clubTable?.posX ?? null,
-            pos_y: clubTable?.posY ?? null,
-          };
-        })
-      );
-      if (tablesError) { setError(ef.saveTablesError + ' ' + tablesError.message); setLoading(false); return; }
+      phase3.push((async () => {
+        await supabase.from('tables').delete().eq('event_id', eventId);
+        const { error: tablesError } = await supabase.from('tables').insert(
+          eventTables.map((et) => {
+            const clubTable = clubTables?.find((ct) => ct.id === et.clubTableId);
+            return {
+              event_id: eventId,
+              club_table_id: et.clubTableId,
+              label: et.label,
+              capacity: et.capacity,
+              deposit: et.deposit ? parseFloat(et.deposit) : 0,
+              is_available: et.isAvailable,
+              pos_x: clubTable?.posX ?? null,
+              pos_y: clubTable?.posY ?? null,
+            };
+          })
+        );
+        if (tablesError) throw new Error(tablesError.message);
+      })());
     }
 
-    // Salva extras evento via Server Action (bypassa RLS)
     if (eventId && eventExtras.length > 0) {
       const activeExtras = eventExtras
         .filter((ee) => ee.isAvailable)
@@ -335,12 +340,21 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
           deposit: parseFloat(ee.deposit) || 0,
           totalStock: ee.totalStock !== '' ? parseInt(ee.totalStock) : null,
         }));
-      await saveEventExtras(eventId, activeExtras);
+      phase3.push(saveEventExtras(eventId, activeExtras));
+    }
+
+    if (phase3.length > 0) {
+      try {
+        await Promise.all(phase3);
+      } catch (e: any) {
+        setError(e.message ?? ef.saveTablesError);
+        setLoading(false);
+        return;
+      }
     }
 
     setLoading(false);
     router.push('/club/events');
-    router.refresh();
   }
 
   async function handleDelete() {
