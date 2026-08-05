@@ -228,11 +228,12 @@ const styles = StyleSheet.create({
   lineupText: {
     fontSize: 12,
     fontFamily: Font.semiBold,
-    color: Colors.textSecondary,
+    color: 'rgba(255,255,255,0.65)',
   },
   timeText: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: 'rgba(255,255,255,0.65)',
+    fontFamily: Font.medium,
   },
   priceButton: {
     flexDirection: 'row',
