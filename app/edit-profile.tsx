@@ -34,12 +34,21 @@ function formatDOB(date: Date): string {
 }
 
 
+const GENDER_OPTIONS = [
+  { value: 'donna', label: 'Donna' },
+  { value: 'uomo', label: 'Uomo' },
+  { value: 'non-binary', label: 'Non-binary' },
+  { value: 'non-specificato', label: 'Preferisco non dirlo' },
+];
+
 export default function EditProfileScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { user, updateUser, updateDateOfBirth, updateMarketingConsent, deleteAccount, musicGenres, setMusicGenres } = useAuth();
+  const { user, updateUser, updateDateOfBirth, updateMarketingConsent, updateGender, deleteAccount, musicGenres, setMusicGenres } = useAuth();
   const [name, setName] = useState(user?.name ?? '');
   const [selectedGenres, setSelectedGenres] = useState<string[]>(musicGenres);
+  const [selectedGender, setSelectedGender] = useState(user?.gender ?? '');
+  const [showGenderPicker, setShowGenderPicker] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
 
   const MAX_DOB = new Date();
@@ -73,6 +82,7 @@ export default function EditProfileScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     updateUser({ name: name.trim() });
     setMusicGenres(selectedGenres);
+    if (selectedGender !== (user?.gender ?? '')) updateGender(selectedGender);
     router.back();
   }
 
@@ -192,6 +202,54 @@ export default function EditProfileScreen() {
               </TouchableOpacity>
             )}
           </View>
+
+          {/* Genere */}
+          <View style={styles.section}>
+            <Text style={styles.fieldLabel}>Genere</Text>
+            <TouchableOpacity
+              style={styles.changePasswordBtn}
+              activeOpacity={0.8}
+              onPress={() => { Haptics.selectionAsync(); setShowGenderPicker(true); }}
+            >
+              <Ionicons name="person-outline" size={16} color={Colors.textSecondary} />
+              <Text style={[styles.changePasswordText, !selectedGender && { color: Colors.textMuted }]}>
+                {selectedGender ? GENDER_OPTIONS.find((o) => o.value === selectedGender)?.label ?? selectedGender : 'Seleziona genere'}
+              </Text>
+              <Ionicons name="chevron-down" size={14} color={Colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Picker modal genere */}
+          {showGenderPicker && (
+            <Modal transparent animationType="slide" onRequestClose={() => setShowGenderPicker(false)}>
+              <TouchableOpacity style={styles.pickerOverlay} activeOpacity={1} onPress={() => setShowGenderPicker(false)} />
+              <View style={styles.pickerSheet}>
+                <View style={styles.pickerHandle} />
+                <View style={styles.pickerHeader}>
+                  <TouchableOpacity onPress={() => setShowGenderPicker(false)}>
+                    <Text style={styles.pickerCancel}>{t('edit_profile.dob_modal_cancel')}</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.pickerTitle}>Genere</Text>
+                  <View style={{ width: 60 }} />
+                </View>
+                {GENDER_OPTIONS.map((opt) => {
+                  const active = selectedGender === opt.value;
+                  return (
+                    <TouchableOpacity
+                      key={opt.value}
+                      style={styles.genderSheetRow}
+                      activeOpacity={0.7}
+                      onPress={() => { Haptics.selectionAsync(); setSelectedGender(opt.value); setShowGenderPicker(false); }}
+                    >
+                      <Text style={[styles.genderSheetLabel, active && styles.genderSheetLabelActive]}>{opt.label}</Text>
+                      {active && <Ionicons name="checkmark" size={16} color={Colors.accent} />}
+                    </TouchableOpacity>
+                  );
+                })}
+                <View style={{ height: 24 }} />
+              </View>
+            </Modal>
+          )}
 
           {/* Picker modal DOB */}
           {showDobPicker && (
@@ -401,6 +459,14 @@ const styles = StyleSheet.create({
   },
   marketingLabel: { fontSize: 14, fontFamily: Font.medium, color: Colors.textPrimary, marginBottom: 3 },
   marketingHint: { fontSize: 12, color: Colors.textMuted, lineHeight: 17 },
+
+  genderSheetRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 24, paddingVertical: 16,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  genderSheetLabel: { fontSize: 15, fontFamily: Font.medium, color: Colors.textSecondary },
+  genderSheetLabelActive: { color: Colors.textPrimary, fontFamily: Font.semiBold },
 
   dangerZone: { marginTop: 12, borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: 24 },
   dangerLabel: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.textMuted, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },

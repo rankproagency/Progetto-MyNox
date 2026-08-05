@@ -6,10 +6,25 @@ import {
 } from 'recharts';
 import { useLanguage } from '@/components/providers/I18nProvider';
 
+const GENDER_LABELS: Record<string, string> = {
+  donna: 'Donna',
+  uomo: 'Uomo',
+  'non-binary': 'Non-binary',
+  'non-specificato': 'Non specificato',
+};
+
+const GENDER_COLORS: Record<string, string> = {
+  donna: '#a855f7',
+  uomo: '#7c3aed',
+  'non-binary': '#6366f1',
+  'non-specificato': '#475569',
+};
+
 interface Props {
   salesByEvent: { name: string; venduti: number; capacita: number }[];
   revenueData: { mese: string; ricavi: number }[] | null;
   tablesByEvent: { name: string; prenotati: number; disponibili: number }[];
+  genderData: { gender: string; count: number; percentage: number }[];
 }
 
 const tooltipStyle = {
@@ -20,7 +35,7 @@ const tooltipStyle = {
   fontSize: 12,
 };
 
-export default function AnalyticsCharts({ salesByEvent, revenueData, tablesByEvent }: Props) {
+export default function AnalyticsCharts({ salesByEvent, revenueData, tablesByEvent, genderData }: Props) {
   const { t } = useLanguage();
   return (
     <div className="space-y-6">
@@ -78,6 +93,36 @@ export default function AnalyticsCharts({ salesByEvent, revenueData, tablesByEve
               <Bar dataKey="disponibili" name={t.analyticsCharts.available} fill="rgba(168,85,247,0.2)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
+        )}
+      </div>
+
+      {/* Distribuzione per genere */}
+      <div className="bg-[#111118] border border-white/8 rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-white mb-1">{t.analyticsCharts.genderDistribution}</h2>
+        <p className="text-xs text-slate-500 mb-6">{t.analyticsCharts.genderBuyers}</p>
+        {genderData.length === 0 ? (
+          <EmptyChart label={t.analyticsCharts.noData} />
+        ) : (
+          <div className="space-y-4">
+            {genderData.map(({ gender, count, percentage }) => {
+              const label = GENDER_LABELS[gender] ?? gender;
+              const color = GENDER_COLORS[gender] ?? '#a855f7';
+              return (
+                <div key={gender}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm text-slate-300">{label}</span>
+                    <span className="text-sm font-semibold text-white">{percentage}% <span className="text-xs text-slate-500 font-normal">({count})</span></span>
+                  </div>
+                  <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${percentage}%`, backgroundColor: color }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>

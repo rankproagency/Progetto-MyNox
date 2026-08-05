@@ -21,12 +21,13 @@ async function getAnalyticsData(clubId: string, locale = 'it-IT') {
 
   let tickets: any[] = [];
   let availableTables: any[] = [];
+  let genderData: { gender: string; count: number; percentage: number }[] = [];
   const capacityByEvent: Record<string, number> = {};
   if (eventIds.length > 0) {
     const [{ data: ticketsData }, { data: tablesData }, { data: ticketTypesData }] = await Promise.all([
       supabase
         .from('tickets')
-        .select('event_id, created_at, status, price_paid, ticket_types(price)')
+        .select('user_id, event_id, created_at, status, price_paid, ticket_types(price)')
         .in('event_id', eventIds)
         .in('status', ['valid', 'used'])
         .order('created_at', { ascending: true }),
@@ -43,6 +44,29 @@ async function getAnalyticsData(clubId: string, locale = 'it-IT') {
     availableTables = tablesData ?? [];
     for (const tt of ticketTypesData ?? []) {
       capacityByEvent[tt.event_id] = (capacityByEvent[tt.event_id] ?? 0) + (tt.total_quantity ?? 0);
+    }
+
+    const uniqueUserIds = [...new Set(
+      tickets.filter((t: any) => t.ticket_types !== null && t.user_id).map((t: any) => t.user_id)
+    )];
+    if (uniqueUserIds.length > 0) {
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('gender')
+        .in('id', uniqueUserIds);
+      const counts: Record<string, number> = {};
+      (profilesData ?? []).forEach((p: any) => {
+        const g = p.gender ?? 'non-specificato';
+        counts[g] = (counts[g] ?? 0) + 1;
+      });
+      const total = Object.values(counts).reduce((a, b) => a + b, 0);
+      genderData = Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([gender, count]) => ({
+          gender,
+          count,
+          percentage: total > 0 ? Math.round((count / total) * 100) : 0,
+        }));
     }
   }
 
@@ -131,6 +155,7 @@ async function getAnalyticsData(clubId: string, locale = 'it-IT') {
     revenuePct: pct(currentRevenue, prevRevenue),
     ticketsPct: pct(currentTickets, prevTickets),
     totalTableRevenue, avgTablesPerEvent, avgTableRevenuePerEvent, tablesByEvent,
+    genderData,
   };
 }
 
@@ -231,6 +256,7 @@ export default async function ClubAnalyticsPage() {
         salesByEvent={data.salesByEvent}
         revenueData={canViewRevenue ? data.revenueData : null}
         tablesByEvent={data.tablesByEvent}
+        genderData={data.genderData}
       />
     </div>
   );

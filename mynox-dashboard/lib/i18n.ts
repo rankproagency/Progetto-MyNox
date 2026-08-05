@@ -302,6 +302,8 @@ export const translations = {
       sold: 'Venduti', capacity: 'Capacità',
       booked: 'Prenotati', available: 'Disponibili',
       noData: 'Nessun dato disponibile ancora.',
+      genderDistribution: 'Distribuzione per genere',
+      genderBuyers: 'Basata sugli acquirenti di biglietti che hanno indicato il proprio genere.',
     },
     eventsTable: {
       searchPlaceholder: 'Cerca per nome evento…',
@@ -678,6 +680,8 @@ export const translations = {
       sold: 'Sold', capacity: 'Capacity',
       booked: 'Booked', available: 'Available',
       noData: 'No data available yet.',
+      genderDistribution: 'Gender distribution',
+      genderBuyers: 'Based on ticket buyers who indicated their gender.',
     },
     eventsTable: {
       searchPlaceholder: 'Search by event name…',
