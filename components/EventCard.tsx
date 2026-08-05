@@ -188,6 +188,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     letterSpacing: 0.2,
     lineHeight: 26,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
   },
   bottomRow: {
     flexDirection: 'row',

@@ -35,7 +35,8 @@ export default function TonightHero({ event }: Props) {
     >
       <Image source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }} style={styles.image} contentFit="cover" cachePolicy="memory-disk" />
       <LinearGradient
-        colors={['rgba(7,8,15,0.1)', 'rgba(7,8,15,0.45)', 'rgba(7,8,15,0.97)']}
+        colors={['transparent', 'transparent', 'rgba(7,8,15,0.55)', 'rgba(7,8,15,0.97)']}
+        locations={[0, 0.38, 0.65, 1]}
         style={StyleSheet.absoluteFill}
       />
 
@@ -194,6 +195,9 @@ const styles = StyleSheet.create({
     color: Colors.white,
     marginBottom: 10,
     letterSpacing: 0.2,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
   },
   genreRow: {
     flexDirection: 'row',
