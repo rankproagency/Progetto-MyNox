@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyNox — Piano Margini</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #07080f; color: #f8fafc; padding: 40px 24px; }
+  h1 { font-size: 28px; font-weight: 800; color: #a855f7; margin-bottom: 4px; }
+  .subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 40px; }
+
+  .section { margin-bottom: 48px; }
+  .section-title { font-size: 18px; font-weight: 700; color: #f8fafc; margin-bottom: 6px; }
+  .section-sub { font-size: 13px; color: #64748b; margin-bottom: 16px; }
+
+  /* Fase badge */
+  .fase { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 10px; }
+  .fase-1 { background: rgba(168,85,247,0.15); color: #a855f7; border: 1px solid rgba(168,85,247,0.3); }
+  .fase-2 { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+  .fase-3 { background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid rgba(34,197,94,0.25); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: rgba(168,85,247,0.1); color: #94a3b8; font-weight: 600; text-align: right; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  th:first-child { text-align: left; }
+  td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); text-align: right; color: #cbd5e1; }
+  td:first-child { text-align: left; font-weight: 600; color: #f8fafc; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .positive { color: #4ade80; font-weight: 700; }
+  .warning { color: #fb923c; font-weight: 700; }
+  .negative { color: #f87171; font-weight: 700; }
+  .accent { color: #a855f7; }
+  .muted { color: #475569; }
+
+  .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 20px; margin-bottom: 16px; overflow-x: auto; }
+
+  .note { background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.2); border-radius: 10px; padding: 14px 18px; font-size: 13px; color: #c4b5fd; margin-top: 12px; line-height: 1.6; }
+  .note-warning { background: rgba(251,146,60,0.08); border-color: rgba(251,146,60,0.25); color: #fed7aa; }
+  .note-red { background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.25); color: #fca5a5; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .stat { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 16px; }
+  .stat-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .stat-value { font-size: 22px; font-weight: 800; }
+  .stat-sub { font-size: 11px; color: #475569; margin-top: 3px; }
+
+  hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 48px 0; }
+
+  .formula { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 12px 16px; font-family: monospace; font-size: 12px; color: #94a3b8; line-height: 1.8; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<h1>MyNox — Piano Margini</h1>
+<p class="subtitle">Analisi commissioni per fase di crescita · Carte EU · IVA esclusa</p>
+
+<!-- FORMULA -->
+<div class="section">
+  <div class="section-title">Logica di calcolo</div>
+  <div class="section-sub">Come si calcola il netto MyNox per ogni biglietto</div>
+  <div class="formula">
+Commissione cliente  = max(% × prezzo, minimo)<br>
+Cliente paga         = prezzo biglietto + commissione<br>
+Stripe processing    = 1.5% × (cliente paga) + €0.25  [carta EU]<br>
+Stripe transfer      = 0.25% × (prezzo biglietto) + €0.10<br>
+─────────────────────────────────────────────────────<br>
+Netto MyNox          = commissione − Stripe processing − Stripe transfer<br>
+Club riceve          = prezzo biglietto intero (costo club: €0)
+  </div>
+</div>
+
+<hr>
+
+<!-- FASE 1 -->
+<div class="section">
+  <span class="fase fase-1">Fase 1 — Lancio · mese 0→6</span>
+  <div class="section-title">5% con minimo €1.00</div>
+  <div class="section-sub">Obiettivo: acquisire i primi 5-10 club a Padova</div>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Prezzo biglietto</th>
+          <th>Comm. cliente</th>
+          <th>Cliente paga</th>
+          <th>Stripe proc.</th>
+          <th>Stripe transfer</th>
+          <th>Netto MyNox</th>
+          <th>Margine eff.</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>€5.00</td><td>€1.00 <span class="muted">(min)</span></td><td>€6.00</td><td>€0.34</td><td>€0.11</td><td class="positive">€0.55</td><td class="positive">11.0%</td></tr>
+        <tr><td>€8.00</td><td>€1.00 <span class="muted">(min)</span></td><td>€9.00</td><td>€0.39</td><td>€0.12</td><td class="positive">€0.49</td><td class="positive">6.1%</td></tr>
+        <tr><td>€10.00</td><td>€1.00 <span class="muted">(min)</span></td><td>€11.00</td><td>€0.42</td><td>€0.13</td><td class="positive">€0.45</td><td class="positive">4.5%</td></tr>
+        <tr><td>€15.00</td><td>€1.00 <span class="muted">(min)</span></td><td>€16.00</td><td>€0.49</td><td>€0.14</td><td class="positive">€0.37</td><td class="positive">2.5%</td></tr>
+        <tr><td>€20.00</td><td>€1.00 <span class="muted">(5%=min)</span></td><td>€21.00</td><td>€0.57</td><td>€0.15</td><td class="positive">€0.28</td><td class="positive">1.4%</td></tr>
+        <tr><td>€30.00</td><td>€1.50 <span class="muted">(5%)</span></td><td>€31.50</td><td>€0.72</td><td>€0.18</td><td class="positive">€0.60</td><td class="positive">2.0%</td></tr>
+        <tr><td>€50.00</td><td>€2.50 <span class="muted">(5%)</span></td><td>€52.50</td><td>€1.04</td><td>€0.23</td><td class="positive">€1.23</td><td class="positive">2.5%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note">Il minimo €1.00 garantisce margine positivo su qualsiasi prezzo di biglietto. La soglia critica senza minimo sarebbe €10.73 — sotto, si perde denaro.</div>
+</div>
+
+<!-- FASE 2 -->
+<div class="section">
+  <span class="fase fase-2">Fase 2 — Crescita · mese 6→18</span>
+  <div class="section-title">7% con minimo €1.20</div>
+  <div class="section-sub">Obiettivo: espansione città, aumento volumi</div>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Prezzo biglietto</th>
+          <th>Comm. cliente</th>
+          <th>Cliente paga</th>
+          <th>Stripe proc.</th>
+          <th>Stripe transfer</th>
+          <th>Netto MyNox</th>
+          <th>Margine eff.</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>€5.00</td><td>€1.20 <span class="muted">(min)</span></td><td>€6.20</td><td>€0.34</td><td>€0.11</td><td class="positive">€0.75</td><td class="positive">15.0%</td></tr>
+        <tr><td>€8.00</td><td>€1.20 <span class="muted">(min)</span></td><td>€9.20</td><td>€0.39</td><td>€0.12</td><td class="positive">€0.69</td><td class="positive">8.6%</td></tr>
+        <tr><td>€10.00</td><td>€1.20 <span class="muted">(min)</span></td><td>€11.20</td><td>€0.42</td><td>€0.13</td><td class="positive">€0.65</td><td class="positive">6.5%</td></tr>
+        <tr><td>€15.00</td><td>€1.20 <span class="muted">(min)</span></td><td>€16.20</td><td>€0.49</td><td>€0.14</td><td class="positive">€0.57</td><td class="positive">3.8%</td></tr>
+        <tr><td>€20.00</td><td>€1.40 <span class="muted">(7%)</span></td><td>€21.40</td><td>€0.57</td><td>€0.15</td><td class="positive">€0.68</td><td class="positive">3.4%</td></tr>
+        <tr><td>€30.00</td><td>€2.10 <span class="muted">(7%)</span></td><td>€32.10</td><td>€0.73</td><td>€0.18</td><td class="positive">€1.19</td><td class="positive">4.0%</td></tr>
+        <tr><td>€50.00</td><td>€3.50 <span class="muted">(7%)</span></td><td>€53.50</td><td>€1.05</td><td>€0.23</td><td class="positive">€2.22</td><td class="positive">4.4%</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- FASE 3 -->
+<div class="section">
+  <span class="fase fase-3">Fase 3 — Maturità · mese 18+</span>
+  <div class="section-title">10% con minimo €1.50</div>
+  <div class="section-sub">Obiettivo: margini sani, brand consolidato</div>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Prezzo biglietto</th>
+          <th>Comm. cliente</th>
+          <th>Cliente paga</th>
+          <th>Stripe proc.</th>
+          <th>Stripe transfer</th>
+          <th>Netto MyNox</th>
+          <th>Margine eff.</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>€5.00</td><td>€1.50 <span class="muted">(min)</span></td><td>€6.50</td><td>€0.35</td><td>€0.11</td><td class="positive">€1.04</td><td class="positive">20.8%</td></tr>
+        <tr><td>€8.00</td><td>€1.50 <span class="muted">(min)</span></td><td>€9.50</td><td>€0.39</td><td>€0.12</td><td class="positive">€0.99</td><td class="positive">12.4%</td></tr>
+        <tr><td>€10.00</td><td>€1.50 <span class="muted">(min)</span></td><td>€11.50</td><td>€0.42</td><td>€0.13</td><td class="positive">€0.95</td><td class="positive">9.5%</td></tr>
+        <tr><td>€15.00</td><td>€1.50 <span class="muted">(min)</span></td><td>€16.50</td><td>€0.50</td><td>€0.14</td><td class="positive">€0.86</td><td class="positive">5.7%</td></tr>
+        <tr><td>€20.00</td><td>€2.00 <span class="muted">(10%)</span></td><td>€22.00</td><td>€0.58</td><td>€0.15</td><td class="positive">€1.27</td><td class="positive">6.4%</td></tr>
+        <tr><td>€30.00</td><td>€3.00 <span class="muted">(10%)</span></td><td>€33.00</td><td>€0.75</td><td>€0.18</td><td class="positive">€2.07</td><td class="positive">6.9%</td></tr>
+        <tr><td>€50.00</td><td>€5.00 <span class="muted">(10%)</span></td><td>€55.00</td><td>€1.08</td><td>€0.23</td><td class="positive">€3.69</td><td class="positive">7.4%</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<hr>
+
+<!-- SCENARI SPECIALI -->
+<div class="section">
+  <div class="section-title">Scenari speciali</div>
+  <div class="section-sub">Casi particolari da tenere in mente — biglietto €20</div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Scenario</th>
+          <th>Fase 1 (5%)</th>
+          <th>Fase 2 (7%)</th>
+          <th>Fase 3 (10%)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Carta EU (standard)</td><td class="positive">+€0.28</td><td class="positive">+€0.68</td><td class="positive">+€1.27</td></tr>
+        <tr><td>Carta non-EU (turista)</td><td class="warning">+€0.08</td><td class="positive">+€0.47</td><td class="positive">+€1.05</td></tr>
+        <tr><td>3 biglietti in 1 transazione</td><td class="positive">+€1.07</td><td class="positive">+€2.22</td><td class="positive">+€3.97</td></tr>
+        <tr><td>Evento annullato (senza clausola club)</td><td class="negative">−€0.57</td><td class="negative">−€0.57</td><td class="negative">−€0.58</td></tr>
+        <tr><td>Evento annullato (con clausola club)</td><td class="muted">~€0.00</td><td class="muted">~€0.00</td><td class="muted">~€0.00</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note note-warning">
+    <strong>Carta non-EU in Fase 1:</strong> margine di soli €0.08 su €20. Accettabile in lancio, ma da monitorare. In Fase 2 il problema si risolve automaticamente con la commissione più alta.
+  </div>
+  <div class="note note-red" style="margin-top:10px;">
+    <strong>Rimborsi:</strong> Stripe trattiene la fee di elaborazione anche sui rimborsi (~€0.57 su €20). Inserire nel contratto con i club che in caso di annullamento le spese Stripe non recuperabili sono a carico dell'organizzatore.
+  </div>
+</div>
+
+<hr>
+
+<!-- SIMULAZIONE SERATA -->
+<div class="section">
+  <div class="section-title">Simulazione serata tipo — 200 biglietti a €20</div>
+  <div class="section-sub">Scenario realistico per una discoteca media a Padova</div>
+
+  <div class="grid">
+    <div class="stat">
+      <div class="stat-label">Fase 1 · Lancio</div>
+      <div class="stat-value positive">€56</div>
+      <div class="stat-sub">netto MyNox a serata</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Fase 2 · Crescita</div>
+      <div class="stat-value" style="color:#818cf8;">€136</div>
+      <div class="stat-sub">netto MyNox a serata</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Fase 3 · Maturità</div>
+      <div class="stat-value positive" style="color:#4ade80;">€254</div>
+      <div class="stat-sub">netto MyNox a serata</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Club risparmia vs TicketSMS</div>
+      <div class="stat-value accent">€300</div>
+      <div class="stat-sub">€1.50/ticket × 200 ticket</div>
+    </div>
+  </div>
+
+  <div class="note">
+    Con 5 club attivi che fanno 2 serate a settimana con 200 biglietti in media: <strong>Fase 1 →  ~€2.800/mese · Fase 2 → ~€6.800/mese · Fase 3 → ~€12.700/mese</strong>
+  </div>
+</div>
+
+<hr>
+
+<!-- CONFRONTO CONCORRENTI -->
+<div class="section">
+  <div class="section-title">Confronto con la concorrenza</div>
+  <div class="section-sub">Costo totale pagato da cliente + club · biglietto €20</div>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Piattaforma</th>
+          <th>Costo al cliente</th>
+          <th>Costo al club</th>
+          <th>Totale estratto</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>TicketSMS</td><td>~€1.50–3.00 (commissione)</td><td>€1.50 a biglietto</td><td class="negative">~€3.00–4.50</td></tr>
+        <tr><td>TicketOne</td><td>~15% (~€3.00)</td><td>variabile</td><td class="negative">€3.00+</td></tr>
+        <tr><td>Dice / RA</td><td>~10–15% (~€2.00–3.00)</td><td>variabile</td><td class="negative">€2.00–3.00</td></tr>
+        <tr><td><strong>MyNox Fase 1</strong></td><td><strong>€1.00 (5%)</strong></td><td><strong>€0</strong></td><td class="positive"><strong>€1.00</strong></td></tr>
+        <tr><td><strong>MyNox Fase 3</strong></td><td><strong>€2.00 (10%)</strong></td><td><strong>€0</strong></td><td class="positive"><strong>€2.00</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note">MyNox in Fase 3 (maturità) estrae meno o uguale rispetto ai competitor già in Fase 1. Il vantaggio competitivo non è solo nel lancio — è strutturale.</div>
+</div>
+
+</body>
+</html>
