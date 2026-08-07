@@ -209,9 +209,11 @@ export default function CheckoutScreen() {
   const tableDeposit = table?.deposit ?? 0;
   const extrasTotal = parsedExtras.reduce((sum, e) => sum + e.quantity * e.unitDeposit, 0);
   const base = isTableOnly ? tableDeposit + extrasTotal : discountedSubtotal + tableDeposit + extrasTotal;
-  // 5% on tickets+extras only, 0% on table deposits
+  // 5% min €1.00 on tickets+extras only, 0% on table deposits
   const commissionable = isTableOnly ? extrasTotal : discountedSubtotal + extrasTotal;
-  const commission = parseFloat((commissionable * 0.05).toFixed(2));
+  const commission = commissionable > 0
+    ? parseFloat((Math.max(commissionable * 0.05, 1.00)).toFixed(2))
+    : 0;
   const total = parseFloat((base + commission).toFixed(2));
 
   async function handleApplyPromo() {

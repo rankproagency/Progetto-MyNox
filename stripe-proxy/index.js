@@ -325,7 +325,9 @@ const server = http.createServer(async (req, res) => {
       let finalAmountCents;
       if (base_amount_cents != null) {
         const discountedBase = await applyPromo(base_amount_cents, promo_code, club_id);
-        const commission = Math.round(discountedBase * 0.05);
+        const commission = discountedBase > 0
+          ? Math.max(Math.round(discountedBase * 0.05), 100)
+          : 0;
         finalAmountCents = discountedBase + commission;
       } else {
         finalAmountCents = Math.round(amount);
