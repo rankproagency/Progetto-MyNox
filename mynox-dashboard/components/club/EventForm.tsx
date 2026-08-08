@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Plus, Trash2, Mic2, Music } from 'lucide-react';
 import { useLanguage } from '@/components/providers/I18nProvider';
-import { saveEventExtras } from '@/app/(club)/club/events/actions';
 
 interface PerformerRow {
   name: string;
@@ -14,19 +13,12 @@ interface PerformerRow {
 
 const GENRES = ['Techno', 'House', 'Deep House', 'Latin', 'Hip-Hop', 'Pop', 'R&B', 'Reggaeton', 'Commercial'];
 
-interface PriceTier {
-  until: string;
-  price: string;
-}
-
 interface TicketTypeRow {
   id?: string;
   label: string;
   price: string;
   total_quantity: string;
   includes_drink: boolean;
-  sold_quantity?: number;
-  price_tiers: PriceTier[];
 }
 
 interface ClubTableData {
@@ -45,6 +37,10 @@ interface EventTableRow {
   deposit: string;
   defaultDeposit: number;
   isAvailable: boolean;
+  minimumSpend: string;
+  showMinimumSpend: boolean;
+  zoneLabel: string;
+  zoneColor: string;
 }
 
 interface ClubExtraData {
@@ -60,7 +56,6 @@ interface EventExtraRow {
   deposit: string;
   defaultDeposit: number;
   isAvailable: boolean;
-  totalStock: string; // '' = illimitato
 }
 
 interface EventFormProps {
@@ -101,6 +96,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
     start_time: event?.start_time ?? '',
     end_time: event?.end_time ?? '',
     dress_code: event?.dress_code ?? '',
+    capacity: event?.capacity?.toString() ?? '',
     image_url: event?.image_url ?? '',
     genres: event?.genres ?? [] as string[],
     is_published: event?.is_published ?? false,
@@ -112,7 +108,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
   );
 
   const [ticketTypes, setTicketTypes] = useState<TicketTypeRow[]>(
-    initialTicketTypes ?? [{ label: '', price: '', total_quantity: '', includes_drink: true, price_tiers: [] }]
+    initialTicketTypes ?? [{ label: '', price: '', total_quantity: '', includes_drink: true }]
   );
 
   const defaultEventTables = (clubTables ?? []).map((ct) => ({
@@ -122,6 +118,10 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
     deposit: String(ct.defaultDeposit),
     defaultDeposit: ct.defaultDeposit,
     isAvailable: true,
+    minimumSpend: '',
+    showMinimumSpend: false,
+    zoneLabel: '',
+    zoneColor: '#a855f7',
   }));
 
   const [eventTables, setEventTables] = useState<EventTableRow[]>(
@@ -137,7 +137,6 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
     deposit: String(ce.deposit),
     defaultDeposit: ce.deposit,
     isAvailable: true,
-    totalStock: '5',
   }));
 
   const [eventExtras, setEventExtras] = useState<EventExtraRow[]>(
@@ -194,7 +193,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
   }
 
   function addTicketType() {
-    setTicketTypes((prev) => [...prev, { label: '', price: '', total_quantity: '', includes_drink: true, price_tiers: [] }]);
+    setTicketTypes((prev) => [...prev, { label: '', price: '', total_quantity: '', includes_drink: true }]);
   }
 
   function removeTicketType(index: number) {
@@ -203,27 +202,6 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
 
   function updateTicketType(index: number, field: keyof TicketTypeRow, value: string | boolean) {
     setTicketTypes((prev) => prev.map((tk, i) => i === index ? { ...tk, [field]: value } : tk));
-  }
-
-  function addTier(ticketIndex: number) {
-    setTicketTypes((prev) => prev.map((tk, i) => i === ticketIndex
-      ? { ...tk, price_tiers: [...tk.price_tiers, { until: '', price: '' }] }
-      : tk
-    ));
-  }
-
-  function removeTier(ticketIndex: number, tierIndex: number) {
-    setTicketTypes((prev) => prev.map((tk, i) => i === ticketIndex
-      ? { ...tk, price_tiers: tk.price_tiers.filter((_, j) => j !== tierIndex) }
-      : tk
-    ));
-  }
-
-  function updateTier(ticketIndex: number, tierIndex: number, field: keyof PriceTier, value: string) {
-    setTicketTypes((prev) => prev.map((tk, i) => i === ticketIndex
-      ? { ...tk, price_tiers: tk.price_tiers.map((tier, j) => j === tierIndex ? { ...tier, [field]: value } : tier) }
-      : tk
-    ));
   }
 
   async function handleSubmit(publish: boolean) {
@@ -245,6 +223,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
       start_time: form.start_time,
       end_time: form.end_time || null,
       dress_code: form.dress_code || null,
+      capacity: form.capacity ? parseInt(form.capacity) : null,
       image_url: form.image_url || null,
       genres: form.genres,
       performers: performers.filter((p) => p.name.trim()),
@@ -263,98 +242,67 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
       eventId = data.id;
     }
 
-    // Salva tipi biglietto: upsert intelligente che preserva sold_quantity
+    // Salva tipi biglietto: elimina i vecchi e reinserisci
     const validTickets = ticketTypes.filter((tk) => tk.label.trim() && tk.price);
-    if (eventId) {
-      const keepIds = validTickets.filter((tk) => tk.id).map((tk) => tk.id!);
-      const existingTickets = validTickets.filter((tk) => tk.id);
-      const newTickets = validTickets.filter((tk) => !tk.id);
+    if (validTickets.length > 0 && eventId) {
+      await supabase.from('ticket_types').delete().eq('event_id', eventId);
+      const { error: ticketError } = await supabase.from('ticket_types').insert(
+        validTickets.map((tk) => ({
+          event_id: eventId,
+          label: tk.label.trim(),
+          price: parseFloat(tk.price),
+          total_quantity: tk.total_quantity ? parseInt(tk.total_quantity) : null,
+          sold_quantity: 0,
+          includes_drink: tk.includes_drink,
+        }))
+      );
+      if (ticketError) { setError(ef.saveTicketsError + ' ' + ticketError.message); setLoading(false); return; }
+    }
 
-      const mapTiers = (tk: TicketTypeRow) =>
-        tk.price_tiers.filter((t) => t.until && t.price).map((t) => ({ until: t.until, price: parseFloat(t.price) }));
-
-      // Delete rimossi + update esistenti in parallelo
-      await Promise.all([
-        keepIds.length > 0
-          ? supabase.from('ticket_types').delete().eq('event_id', eventId).not('id', 'in', `(${keepIds.join(',')})`)
-          : supabase.from('ticket_types').delete().eq('event_id', eventId),
-        ...existingTickets.map((tk) =>
-          supabase.from('ticket_types').update({
-            label: tk.label.trim(),
-            price: parseFloat(tk.price),
-            total_quantity: tk.total_quantity ? parseInt(tk.total_quantity) : null,
-            includes_drink: tk.includes_drink,
-            price_tiers: mapTiers(tk),
-          }).eq('id', tk.id!)
-        ),
-      ]);
-
-      // Insert nuovi dopo il delete (evita conflitti)
-      if (newTickets.length > 0) {
-        const { error: ticketError } = await supabase.from('ticket_types').insert(
-          newTickets.map((tk) => ({
+    // Salva tavoli evento (con prezzi specifici per questo evento)
+    if (eventId && eventTables.length > 0) {
+      await supabase.from('tables').delete().eq('event_id', eventId);
+      const { error: tablesError } = await supabase.from('tables').insert(
+        eventTables.map((et) => {
+          const clubTable = clubTables?.find((ct) => ct.id === et.clubTableId);
+          return {
             event_id: eventId,
-            label: tk.label.trim(),
-            price: parseFloat(tk.price),
-            total_quantity: tk.total_quantity ? parseInt(tk.total_quantity) : null,
-            sold_quantity: 0,
-            includes_drink: tk.includes_drink,
-            price_tiers: mapTiers(tk),
+            club_table_id: et.clubTableId,
+            label: et.label,
+            capacity: et.capacity,
+            deposit: et.deposit ? parseFloat(et.deposit) : 0,
+            is_available: et.isAvailable,
+            pos_x: clubTable?.posX ?? null,
+            pos_y: clubTable?.posY ?? null,
+            zone_label: et.zoneLabel || null,
+            zone_color: et.zoneLabel ? et.zoneColor : null,
+            minimum_spend: et.showMinimumSpend && et.minimumSpend ? parseFloat(et.minimumSpend) : null,
+          };
+        })
+      );
+      if (tablesError) { setError(ef.saveTablesError + ' ' + tablesError.message); setLoading(false); return; }
+    }
+
+    // Salva extras evento
+    if (eventId && eventExtras.length > 0) {
+      await supabase.from('event_extras').delete().eq('event_id', eventId);
+      const activeExtras = eventExtras.filter((ee) => ee.isAvailable);
+      if (activeExtras.length > 0) {
+        await supabase.from('event_extras').insert(
+          activeExtras.map((ee) => ({
+            event_id: eventId,
+            club_extra_id: ee.clubExtraId,
+            label: ee.label,
+            deposit: parseFloat(ee.deposit) || 0,
+            is_available: true,
           }))
         );
-        if (ticketError) { setError(ef.saveTicketsError + ' ' + ticketError.message); setLoading(false); return; }
-      }
-    }
-
-    // Tavoli ed extras in parallelo (indipendenti tra loro)
-    const phase3: Promise<any>[] = [];
-
-    if (eventId && eventTables.length > 0) {
-      phase3.push((async () => {
-        await supabase.from('tables').delete().eq('event_id', eventId);
-        const { error: tablesError } = await supabase.from('tables').insert(
-          eventTables.map((et) => {
-            const clubTable = clubTables?.find((ct) => ct.id === et.clubTableId);
-            return {
-              event_id: eventId,
-              club_table_id: et.clubTableId,
-              label: et.label,
-              capacity: et.capacity,
-              deposit: et.deposit ? parseFloat(et.deposit) : 0,
-              is_available: et.isAvailable,
-              pos_x: clubTable?.posX ?? null,
-              pos_y: clubTable?.posY ?? null,
-            };
-          })
-        );
-        if (tablesError) throw new Error(tablesError.message);
-      })());
-    }
-
-    if (eventId && eventExtras.length > 0) {
-      const activeExtras = eventExtras
-        .filter((ee) => ee.isAvailable)
-        .map((ee) => ({
-          clubExtraId: ee.clubExtraId,
-          label: ee.label,
-          deposit: parseFloat(ee.deposit) || 0,
-          totalStock: ee.totalStock !== '' ? parseInt(ee.totalStock) : null,
-        }));
-      phase3.push(saveEventExtras(eventId, activeExtras));
-    }
-
-    if (phase3.length > 0) {
-      try {
-        await Promise.all(phase3);
-      } catch (e: any) {
-        setError(e.message ?? ef.saveTablesError);
-        setLoading(false);
-        return;
       }
     }
 
     setLoading(false);
     router.push('/club/events');
+    router.refresh();
   }
 
   async function handleDelete() {
@@ -422,15 +370,27 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
         </Field>
       </div>
 
-      {/* Dress code */}
-      <Field label={ef.fieldDressCode}>
-        <input
-          value={form.dress_code}
-          onChange={(e) => setForm({ ...form, dress_code: e.target.value })}
-          placeholder="es. Elegante"
-          className={inputClass}
-        />
-      </Field>
+      {/* Capienza e dress code */}
+      <div className="grid grid-cols-2 gap-4">
+        <Field label={ef.fieldCapacity}>
+          <input
+            type="number"
+            min="1"
+            value={form.capacity}
+            onChange={(e) => setForm({ ...form, capacity: e.target.value })}
+            placeholder="es. 500"
+            className={inputClass}
+          />
+        </Field>
+        <Field label={ef.fieldDressCode}>
+          <input
+            value={form.dress_code}
+            onChange={(e) => setForm({ ...form, dress_code: e.target.value })}
+            placeholder="es. Elegante"
+            className={inputClass}
+          />
+        </Field>
+      </div>
 
       {/* Immagine copertina */}
       <Field label={ef.fieldCoverImage}>
@@ -440,17 +400,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
             <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
           </label>
           {form.image_url && (
-            <div className="relative group">
-              <img src={form.image_url} alt={ef.preview} className="w-full h-40 object-cover rounded-lg border border-white/10" />
-              <button
-                type="button"
-                onClick={() => setForm((prev) => ({ ...prev, image_url: '' }))}
-                className="absolute top-2 right-2 flex items-center gap-1 bg-black/70 hover:bg-red-500/80 text-white text-xs font-medium px-2.5 py-1.5 rounded-lg border border-white/10 transition-colors"
-              >
-                <Trash2 size={12} />
-                Rimuovi
-              </button>
-            </div>
+            <img src={form.image_url} alt={ef.preview} className="w-full h-40 object-cover rounded-lg border border-white/10" />
           )}
         </div>
       </Field>
@@ -539,39 +489,113 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
           {/* Lista tavoli */}
           <div className="space-y-2">
             {eventTables.map((et, i) => (
-              <div key={et.clubTableId} className={`flex items-center gap-3 bg-[#111118] border rounded-lg px-4 py-3 transition-colors ${
+              <div key={et.clubTableId} className={`bg-[#111118] border rounded-xl transition-colors overflow-hidden ${
                 !et.isAvailable ? 'opacity-50 border-white/5' : 'border-white/8'
               }`}>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{et.label}</p>
-                  <p className="text-xs text-slate-500">{et.capacity} {ef.seats}</p>
+                {/* Barra zona colorata */}
+                <div className="h-0.5 w-full" style={{ backgroundColor: et.zoneColor || '#a855f7' }} />
+
+                <div className="px-4 py-3 space-y-3">
+                  {/* Riga principale */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{et.label}</p>
+                      <p className="text-xs text-slate-500">{et.capacity} {ef.seats}</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-xs text-slate-500">€</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={customizeTables ? et.deposit : et.defaultDeposit}
+                        disabled={!customizeTables}
+                        onChange={(e) => setEventTables((prev) =>
+                          prev.map((row, idx) => idx === i ? { ...row, deposit: e.target.value } : row)
+                        )}
+                        className="w-20 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors text-right disabled:opacity-40 disabled:cursor-not-allowed"
+                      />
+                    </div>
+                    <label className={`flex items-center gap-1.5 shrink-0 ${customizeTables ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}>
+                      <input
+                        type="checkbox"
+                        checked={et.isAvailable}
+                        disabled={!customizeTables}
+                        onChange={(e) => setEventTables((prev) =>
+                          prev.map((row, idx) => idx === i ? { ...row, isAvailable: e.target.checked } : row)
+                        )}
+                        className="w-3.5 h-3.5 rounded accent-purple-500"
+                      />
+                      <span className="text-xs text-slate-500">{ef.active}</span>
+                    </label>
+                  </div>
+
+                  {/* Zona + Minimum spend */}
+                  {customizeTables && (
+                    <div className="flex flex-wrap items-center gap-3 pt-1 border-t border-white/5">
+                      {/* Zona */}
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className="text-xs text-slate-500 shrink-0">Zona</span>
+                        <input
+                          type="text"
+                          placeholder="es. VIP, Centrale…"
+                          value={et.zoneLabel}
+                          onChange={(e) => setEventTables((prev) =>
+                            prev.map((row, idx) => idx === i ? { ...row, zoneLabel: e.target.value } : row)
+                          )}
+                          className="flex-1 min-w-0 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500/60 transition-colors"
+                        />
+                        {/* Color picker zone */}
+                        <div className="flex items-center gap-1 shrink-0">
+                          {['#a855f7', '#3b82f6', '#f59e0b', '#10b981', '#f43f5e', '#06b6d4'].map((c) => (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => setEventTables((prev) =>
+                                prev.map((row, idx) => idx === i ? { ...row, zoneColor: c } : row)
+                              )}
+                              className="w-5 h-5 rounded-full border-2 transition-all"
+                              style={{
+                                backgroundColor: c,
+                                borderColor: et.zoneColor === c ? '#fff' : 'transparent',
+                                transform: et.zoneColor === c ? 'scale(1.2)' : 'scale(1)',
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Minimum spend */}
+                      <label className="flex items-center gap-2 shrink-0 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={et.showMinimumSpend}
+                          onChange={(e) => setEventTables((prev) =>
+                            prev.map((row, idx) => idx === i ? { ...row, showMinimumSpend: e.target.checked, minimumSpend: e.target.checked ? row.minimumSpend : '' } : row)
+                          )}
+                          className="w-3.5 h-3.5 rounded accent-purple-500"
+                        />
+                        <span className="text-xs text-slate-500">Min. spesa</span>
+                        {et.showMinimumSpend && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-slate-500">€</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="10"
+                              placeholder="300"
+                              value={et.minimumSpend}
+                              onChange={(e) => setEventTables((prev) =>
+                                prev.map((row, idx) => idx === i ? { ...row, minimumSpend: e.target.value } : row)
+                              )}
+                              className="w-20 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500/60 transition-colors text-right"
+                            />
+                          </div>
+                        )}
+                      </label>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-xs text-slate-500">€</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={customizeTables ? et.deposit : et.defaultDeposit}
-                    disabled={!customizeTables}
-                    onChange={(e) => setEventTables((prev) =>
-                      prev.map((row, idx) => idx === i ? { ...row, deposit: e.target.value } : row)
-                    )}
-                    className="w-20 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors text-right disabled:opacity-40 disabled:cursor-not-allowed"
-                  />
-                </div>
-                <label className={`flex items-center gap-1.5 shrink-0 ${customizeTables ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}>
-                  <input
-                    type="checkbox"
-                    checked={et.isAvailable}
-                    disabled={!customizeTables}
-                    onChange={(e) => setEventTables((prev) =>
-                      prev.map((row, idx) => idx === i ? { ...row, isAvailable: e.target.checked } : row)
-                    )}
-                    className="w-3.5 h-3.5 rounded accent-purple-500"
-                  />
-                  <span className="text-xs text-slate-500">{ef.active}</span>
-                </label>
               </div>
             ))}
           </div>
@@ -579,8 +603,8 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
       ) : (
         <div className="bg-[#111118] border border-white/8 rounded-xl p-5 text-center">
           <p className="text-sm text-slate-500">{ef.noTables}</p>
-          <a href="/club/venue" target="_blank" rel="noopener noreferrer" className="text-xs text-purple-400 hover:text-purple-300 mt-1 inline-block">
-            {ef.goToVenue} ↗
+          <a href="/club/venue" className="text-xs text-purple-400 hover:text-purple-300 mt-1 inline-block">
+            {ef.goToVenue}
           </a>
         </div>
       )}
@@ -736,54 +760,6 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
                 </button>
               )}
             </div>
-
-            {/* Fasce orarie */}
-            <div className="pt-1 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500">Fasce orarie</span>
-                <button
-                  type="button"
-                  onClick={() => addTier(index)}
-                  className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 transition-colors"
-                >
-                  <Plus size={11} />
-                  Aggiungi fascia
-                </button>
-              </div>
-              {ticket.price_tiers.length > 0 && (
-                <div className="space-y-1.5">
-                  {ticket.price_tiers.map((tier, tierIndex) => (
-                    <div key={tierIndex} className="flex items-center gap-2">
-                      <span className="text-xs text-slate-500 shrink-0">entro</span>
-                      <input
-                        type="time"
-                        value={tier.until}
-                        onChange={(e) => updateTier(index, tierIndex, 'until', e.target.value)}
-                        className="w-28 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500/60 transition-colors"
-                      />
-                      <span className="text-xs text-slate-500 shrink-0">→ €</span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={tier.price}
-                        onChange={(e) => updateTier(index, tierIndex, 'price', e.target.value)}
-                        placeholder="0"
-                        className="w-20 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeTier(index, tierIndex)}
-                        className="text-slate-600 hover:text-red-400 transition-colors shrink-0"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-                  ))}
-                  <p className="text-xs text-slate-600">Prezzo base (dopo l&apos;ultima fascia): €{ticket.price || '—'}</p>
-                </div>
-              )}
-            </div>
           </div>
         ))}
       </div>
@@ -815,13 +791,6 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
               {customizeExtras ? ef.resetDefault : ef.editForEvent}
             </button>
           </div>
-          {/* Header colonne */}
-          <div className="flex items-center gap-3 px-4 pb-1">
-            <div className="flex-1" />
-            <span className="text-xs text-slate-600 w-20 text-right">€ caparra</span>
-            <span className="text-xs text-slate-600 w-16 text-right">{t.clubExtras.stockLabel}</span>
-            <span className="text-xs text-slate-600 w-14 text-center">{ef.active}</span>
-          </div>
           <div className="space-y-2">
             {eventExtras.map((ee, i) => (
               <div key={ee.clubExtraId} className={`flex items-center gap-3 bg-[#111118] border rounded-lg px-4 py-3 transition-colors ${
@@ -830,8 +799,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-white truncate">{ee.label}</p>
                 </div>
-                {/* Caparra */}
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <span className="text-xs text-slate-500">€</span>
                   <input
                     type="number" min="0" step="0.01"
@@ -840,30 +808,20 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
                     onChange={(e) => setEventExtras((prev) =>
                       prev.map((row, idx) => idx === i ? { ...row, deposit: e.target.value } : row)
                     )}
-                    className="w-16 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none focus:border-purple-500/60 text-right disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="w-20 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors text-right disabled:opacity-40 disabled:cursor-not-allowed"
                   />
                 </div>
-                {/* Stock serata */}
-                <input
-                  type="number" min="0"
-                  value={ee.totalStock}
-                  placeholder={t.clubExtras.stockPlaceholder}
-                  onChange={(e) => setEventExtras((prev) =>
-                    prev.map((row, idx) => idx === i ? { ...row, totalStock: e.target.value } : row)
-                  )}
-                  title={t.clubExtras.stockLabel}
-                  className="w-16 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 text-right"
-                />
-                {/* Attivo */}
-                <label className="flex items-center justify-center w-14 shrink-0 cursor-pointer">
+                <label className={`flex items-center gap-1.5 shrink-0 ${customizeExtras ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}>
                   <input
                     type="checkbox"
                     checked={ee.isAvailable}
+                    disabled={!customizeExtras}
                     onChange={(e) => setEventExtras((prev) =>
                       prev.map((row, idx) => idx === i ? { ...row, isAvailable: e.target.checked } : row)
                     )}
                     className="w-3.5 h-3.5 rounded accent-purple-500"
                   />
+                  <span className="text-xs text-slate-500">{ef.active}</span>
                 </label>
               </div>
             ))}
@@ -872,8 +830,8 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
       ) : (clubExtras !== undefined && clubExtras.length === 0) ? (
         <div className="bg-[#111118] border border-white/8 rounded-xl p-5 text-center">
           <p className="text-sm text-slate-500">{t.clubExtras.noEventExtras}</p>
-          <a href="/club/extras" target="_blank" rel="noopener noreferrer" className="text-xs text-purple-400 hover:text-purple-300 mt-1 inline-block">
-            {t.clubExtras.goToExtras} ↗
+          <a href="/club/extras" className="text-xs text-purple-400 hover:text-purple-300 mt-1 inline-block">
+            {t.clubExtras.goToExtras}
           </a>
         </div>
       ) : null}
