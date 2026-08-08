@@ -113,42 +113,50 @@ export default function TableMap({ tables, selected, onSelect, floorPlanUrl }: P
           const top = table.posY! * mapHeight - TABLE_SIZE / 2;
           const zoneColor = table.zone_color ?? Colors.accent;
 
-          const btnBg = isOccupied
-            ? 'rgba(239,68,68,0.08)'
-            : isSelected
-            ? Colors.accent
-            : 'rgba(34,197,94,0.10)';
-          const btnBorder = isOccupied
-            ? 'rgba(239,68,68,0.45)'
-            : isSelected
-            ? Colors.accent
-            : 'rgba(34,197,94,0.55)';
+          const btnBg = isSelected
+            ? hexToRgba(zoneColor, 0.85)
+            : hexToRgba(zoneColor, 0.18);
+          const btnBorder = isSelected
+            ? zoneColor
+            : hexToRgba(zoneColor, 0.6);
 
           return (
             <TouchableOpacity
               key={table.id}
               style={[
                 styles.tableBtn,
-                { left, top, backgroundColor: btnBg, borderColor: btnBorder, borderWidth: isSelected ? 2 : 1.5 },
-                isOccupied && styles.tableBtnOccupied,
+                {
+                  left, top,
+                  backgroundColor: isOccupied ? hexToRgba(zoneColor, 0.07) : btnBg,
+                  borderColor: isOccupied ? hexToRgba(zoneColor, 0.25) : btnBorder,
+                  borderWidth: isSelected ? 2.5 : 1.5,
+                  opacity: isOccupied ? 0.6 : 1,
+                },
               ]}
               onPress={() => handlePress(table)}
               activeOpacity={isOccupied ? 1 : 0.75}
             >
               <Text
                 style={[styles.tableZoneInner, {
-                  color: isOccupied
-                    ? 'rgba(239,68,68,0.7)'
-                    : isSelected
-                    ? Colors.white
-                    : zoneColor,
+                  color: isSelected ? Colors.white : isOccupied ? hexToRgba(zoneColor, 0.4) : Colors.white,
                 }]}
                 numberOfLines={2}
                 adjustsFontSizeToFit
               >
                 {table.zone_label ?? table.label}
               </Text>
-              {isOccupied && <View style={styles.tableXOverlay}><Text style={styles.tableXText}>✕</Text></View>}
+
+              {/* Dot disponibilità — angolo in alto a destra */}
+              <View style={[
+                styles.availDot,
+                { backgroundColor: isOccupied ? '#ef4444' : '#22c55e' },
+              ]} />
+
+              {isOccupied && (
+                <View style={styles.tableXOverlay}>
+                  <Text style={styles.tableXText}>✕</Text>
+                </View>
+              )}
             </TouchableOpacity>
           );
         })}
@@ -156,9 +164,11 @@ export default function TableMap({ tables, selected, onSelect, floorPlanUrl }: P
 
       {/* Legenda */}
       <View style={styles.legend}>
-        <LegendDot color="rgba(34,197,94,0.12)" borderColor="rgba(34,197,94,0.55)" label={t('table_map.available')} />
-        <LegendDot color={Colors.accent} borderColor={Colors.accent} label={t('table_map.selected')} />
-        <LegendDot color="rgba(239,68,68,0.08)" borderColor="rgba(239,68,68,0.45)" label={t('table_map.occupied')} />
+        {zones.map((z) => (
+          <LegendDot key={z.label} color={hexToRgba(z.color, 0.18)} borderColor={hexToRgba(z.color, 0.6)} label={z.label} />
+        ))}
+        <LegendDot color="rgba(34,197,94,0.15)" borderColor="rgba(34,197,94,0.6)" label={t('table_map.available')} isDot dotColor="#22c55e" />
+        <LegendDot color="rgba(239,68,68,0.08)" borderColor="rgba(239,68,68,0.3)" label={t('table_map.occupied')} isDot dotColor="#ef4444" />
       </View>
 
       {/* Card tavolo selezionato */}
@@ -290,10 +300,16 @@ function TableCards({
 
 // ─── Legend Dot ───────────────────────────────────────────────────────────────
 
-function LegendDot({ color, borderColor, label }: { color: string; borderColor: string; label: string }) {
+function LegendDot({ color, borderColor, label, isDot, dotColor }: {
+  color: string; borderColor: string; label: string; isDot?: boolean; dotColor?: string;
+}) {
   return (
     <View style={styles.legendItem}>
-      <View style={[styles.legendDot, { backgroundColor: color, borderColor }]} />
+      <View style={[styles.legendDot, { backgroundColor: color, borderColor }]}>
+        {isDot && dotColor && (
+          <View style={[styles.legendInnerDot, { backgroundColor: dotColor }]} />
+        )}
+      </View>
       <Text style={styles.legendLabel}>{label}</Text>
     </View>
   );
@@ -344,11 +360,15 @@ const styles = StyleSheet.create({
     width: TABLE_SIZE, height: TABLE_SIZE, borderRadius: TABLE_SIZE / 2,
     justifyContent: 'center', alignItems: 'center', gap: 1,
   },
-  tableBtnOccupied: { opacity: 0.7 },
   tableZoneInner: {
     fontSize: 11, fontFamily: Font.bold,
     textAlign: 'center', paddingHorizontal: 4,
     letterSpacing: 0.2,
+  },
+  availDot: {
+    position: 'absolute', top: 2, right: 2,
+    width: 9, height: 9, borderRadius: 5,
+    borderWidth: 1.5, borderColor: '#07080f',
   },
   tableXOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -359,7 +379,8 @@ const styles = StyleSheet.create({
   // Legend
   legend: { flexDirection: 'row', gap: 14, marginTop: 12, flexWrap: 'wrap' },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  legendDot: { width: 12, height: 12, borderRadius: 6, borderWidth: 1.5 },
+  legendDot: { width: 12, height: 12, borderRadius: 6, borderWidth: 1.5, justifyContent: 'center', alignItems: 'center' },
+  legendInnerDot: { width: 5, height: 5, borderRadius: 3 },
   legendLabel: { fontSize: 11, color: Colors.textMuted, fontFamily: Font.regular },
 
   // Selected card
