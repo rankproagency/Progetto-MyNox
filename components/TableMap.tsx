@@ -111,18 +111,18 @@ export default function TableMap({ tables, selected, onSelect, floorPlanUrl }: P
           const isOccupied = !table.available;
           const left = table.posX! * MAP_WIDTH - TABLE_SIZE / 2;
           const top = table.posY! * mapHeight - TABLE_SIZE / 2;
-          const zoneColor = table.zone_color ?? '#22c55e';
+          const zoneColor = table.zone_color ?? Colors.accent;
 
           const btnBg = isOccupied
             ? 'rgba(239,68,68,0.08)'
             : isSelected
             ? Colors.accent
-            : hexToRgba(zoneColor, 0.12);
+            : 'rgba(34,197,94,0.10)';
           const btnBorder = isOccupied
             ? 'rgba(239,68,68,0.45)'
             : isSelected
             ? Colors.accent
-            : hexToRgba(zoneColor, 0.65);
+            : 'rgba(34,197,94,0.55)';
 
           return (
             <TouchableOpacity
@@ -135,7 +135,7 @@ export default function TableMap({ tables, selected, onSelect, floorPlanUrl }: P
               onPress={() => handlePress(table)}
               activeOpacity={isOccupied ? 1 : 0.75}
             >
-              {table.zone_label && !isOccupied && !isSelected && (
+              {table.zone_label && !isOccupied && (
                 <Text style={[styles.tableZoneBadge, { color: zoneColor, backgroundColor: Colors.background }]} numberOfLines={1}>
                   {table.zone_label.length > 3 ? table.zone_label.slice(0, 3) : table.zone_label}
                 </Text>
@@ -143,18 +143,18 @@ export default function TableMap({ tables, selected, onSelect, floorPlanUrl }: P
               <Ionicons
                 name="people"
                 size={13}
-                color={isOccupied ? 'rgba(239,68,68,0.6)' : isSelected ? Colors.white : hexToRgba(zoneColor, 0.85)}
+                color={isOccupied ? 'rgba(239,68,68,0.6)' : isSelected ? Colors.white : 'rgba(34,197,94,0.7)'}
               />
               {table.capacity != null && (
                 <Text style={[styles.tableCapacity, {
-                  color: isOccupied ? 'rgba(239,68,68,0.7)' : isSelected ? Colors.white : hexToRgba(zoneColor, 0.9),
+                  color: isOccupied ? 'rgba(239,68,68,0.7)' : isSelected ? Colors.white : 'rgba(34,197,94,0.9)',
                 }]}>
                   {table.capacity}
                 </Text>
               )}
               <Text
                 style={[styles.tableLabel, {
-                  color: isOccupied ? 'rgba(239,68,68,0.5)' : isSelected ? 'rgba(255,255,255,0.8)' : hexToRgba(zoneColor, 0.6),
+                  color: isOccupied ? 'rgba(239,68,68,0.5)' : isSelected ? 'rgba(255,255,255,0.8)' : 'rgba(34,197,94,0.6)',
                 }]}
                 numberOfLines={1}
               >
@@ -168,12 +168,7 @@ export default function TableMap({ tables, selected, onSelect, floorPlanUrl }: P
 
       {/* Legenda */}
       <View style={styles.legend}>
-        {zones.length > 0
-          ? zones.map((z) => (
-              <LegendDot key={z.label} color={hexToRgba(z.color, 0.12)} borderColor={hexToRgba(z.color, 0.6)} label={z.label} />
-            ))
-          : <LegendDot color="rgba(34,197,94,0.12)" borderColor="rgba(34,197,94,0.55)" label={t('table_map.available')} />
-        }
+        <LegendDot color="rgba(34,197,94,0.12)" borderColor="rgba(34,197,94,0.55)" label={t('table_map.available')} />
         <LegendDot color={Colors.accent} borderColor={Colors.accent} label={t('table_map.selected')} />
         <LegendDot color="rgba(239,68,68,0.08)" borderColor="rgba(239,68,68,0.45)" label={t('table_map.occupied')} />
       </View>
