@@ -128,7 +128,9 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
     initialEventTables ?? defaultEventTables
   );
   const [customizeTables, setCustomizeTables] = useState(
-    !!initialEventTables && initialEventTables.some((et) => et.deposit !== String(et.defaultDeposit))
+    !!initialEventTables && initialEventTables.some((et) =>
+      et.deposit !== String(et.defaultDeposit) || !!et.zoneLabel || et.showMinimumSpend
+    )
   );
 
   const defaultEventExtras = (clubExtras ?? []).map((ce) => ({
@@ -530,9 +532,8 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
                     </label>
                   </div>
 
-                  {/* Zona + Minimum spend */}
-                  {customizeTables && (
-                    <div className="flex flex-wrap items-center gap-3 pt-1 border-t border-white/5">
+                  {/* Zona + Minimum spend — sempre visibili */}
+                  <div className="flex flex-wrap items-center gap-3 pt-1 border-t border-white/5">
                       {/* Zona */}
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <span className="text-xs text-slate-500 shrink-0">Zona</span>
@@ -594,7 +595,6 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
                         )}
                       </label>
                     </div>
-                  )}
                 </div>
               </div>
             ))}
