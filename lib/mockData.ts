@@ -37,8 +37,10 @@ export const MOCK_EVENTS: Event[] = [
     ],
     performers: [],
     tables: [
-      { id: 'tb1', eventId: '1', label: 'Tavolo Standard 4 pax', capacity: 4, deposit: 60, available: true },
-      { id: 'tb2', eventId: '1', label: 'Tavolo VIP 6 pax', capacity: 6, deposit: 120, available: true },
+      { id: 'tb1', eventId: '1', label: 'T1', capacity: 4, deposit: 60, available: true, zone_label: 'Standard', zone_color: '#3b82f6', minimum_spend: 200 },
+      { id: 'tb2', eventId: '1', label: 'T2', capacity: 4, deposit: 60, available: true, zone_label: 'Standard', zone_color: '#3b82f6', minimum_spend: 200 },
+      { id: 'tb3x', eventId: '1', label: 'T3', capacity: 6, deposit: 120, available: true, zone_label: 'VIP', zone_color: '#a855f7', minimum_spend: 500 },
+      { id: 'tb4x', eventId: '1', label: 'T4', capacity: 6, deposit: 120, available: false, zone_label: 'VIP', zone_color: '#a855f7', minimum_spend: 500 },
     ],
   },
   {
@@ -65,7 +67,8 @@ export const MOCK_EVENTS: Event[] = [
     ],
     performers: [],
     tables: [
-      { id: 'tb3', eventId: '2', label: 'Tavolo 4 pax', capacity: 4, deposit: 50, available: true },
+      { id: 'tb3', eventId: '2', label: 'T1', capacity: 4, deposit: 50, available: true, zone_label: 'Laterale', zone_color: '#f59e0b', minimum_spend: 150 },
+      { id: 'tb3b', eventId: '2', label: 'T2', capacity: 8, deposit: 150, available: true, zone_label: 'VIP', zone_color: '#a855f7', minimum_spend: 600 },
     ],
   },
   {

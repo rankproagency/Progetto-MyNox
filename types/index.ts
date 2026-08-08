@@ -79,13 +79,16 @@ export interface Table {
   id: string;
   eventId: string;
   label: string;
-  capacity: number;
+  capacity?: number;
   deposit: number;
+  minimum_spend?: number;
   available: boolean;
   posX?: number;
   posY?: number;
   section?: string;
   tableNumber?: number;
+  zone_label?: string;
+  zone_color?: string;
 }
 
 export interface EventExtra {
