@@ -53,13 +53,16 @@ function rowToEvent(row: any): Event {
       id: t.id,
       eventId: row.id,
       label: t.label,
-      capacity: t.capacity,
+      capacity: t.capacity ?? undefined,
       deposit: Number(t.deposit),
+      minimum_spend: t.minimum_spend != null ? Number(t.minimum_spend) : undefined,
       available: t.is_available,
       posX: pos?.pos_x ?? t.pos_x ?? undefined,
       posY: pos?.pos_y ?? t.pos_y ?? undefined,
-      section: t.section ?? 'Standard',
+      section: t.section ?? undefined,
       tableNumber: t.table_number ?? undefined,
+      zone_label: t.zone_label ?? undefined,
+      zone_color: t.zone_color ?? undefined,
     };
   });
 
