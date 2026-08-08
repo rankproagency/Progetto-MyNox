@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next';
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const MAP_WIDTH = SCREEN_WIDTH - 40;
 const DEFAULT_MAP_HEIGHT = MAP_WIDTH * 1.18;
-const TABLE_SIZE = 48;
+const TABLE_SIZE = 38;
 
 interface Props {
   tables: Table[];
