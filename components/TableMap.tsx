@@ -135,30 +135,18 @@ export default function TableMap({ tables, selected, onSelect, floorPlanUrl }: P
               onPress={() => handlePress(table)}
               activeOpacity={isOccupied ? 1 : 0.75}
             >
-              {table.zone_label && !isOccupied && (
-                <Text style={[styles.tableZoneBadge, { color: zoneColor, backgroundColor: Colors.background }]} numberOfLines={1}>
-                  {table.zone_label.length > 3 ? table.zone_label.slice(0, 3) : table.zone_label}
-                </Text>
-              )}
-              <Ionicons
-                name="people"
-                size={13}
-                color={isOccupied ? 'rgba(239,68,68,0.6)' : isSelected ? Colors.white : 'rgba(34,197,94,0.7)'}
-              />
-              {table.capacity != null && (
-                <Text style={[styles.tableCapacity, {
-                  color: isOccupied ? 'rgba(239,68,68,0.7)' : isSelected ? Colors.white : 'rgba(34,197,94,0.9)',
-                }]}>
-                  {table.capacity}
-                </Text>
-              )}
               <Text
-                style={[styles.tableLabel, {
-                  color: isOccupied ? 'rgba(239,68,68,0.5)' : isSelected ? 'rgba(255,255,255,0.8)' : 'rgba(34,197,94,0.6)',
+                style={[styles.tableZoneInner, {
+                  color: isOccupied
+                    ? 'rgba(239,68,68,0.7)'
+                    : isSelected
+                    ? Colors.white
+                    : zoneColor,
                 }]}
-                numberOfLines={1}
+                numberOfLines={2}
+                adjustsFontSizeToFit
               >
-                {table.label}
+                {table.zone_label ?? table.label}
               </Text>
               {isOccupied && <View style={styles.tableXOverlay}><Text style={styles.tableXText}>✕</Text></View>}
             </TouchableOpacity>
@@ -357,15 +345,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', gap: 1,
   },
   tableBtnOccupied: { opacity: 0.7 },
-  tableZoneBadge: {
-    position: 'absolute', top: -8,
-    fontSize: 7, fontFamily: Font.bold,
-    paddingHorizontal: 3, borderRadius: 3, letterSpacing: 0.3,
-  },
-  tableCapacity: { fontSize: 15, fontFamily: Font.extraBold, lineHeight: 17 },
-  tableLabel: {
-    fontSize: 7, fontFamily: Font.bold, lineHeight: 9,
-    maxWidth: TABLE_SIZE - 8, textAlign: 'center',
+  tableZoneInner: {
+    fontSize: 11, fontFamily: Font.bold,
+    textAlign: 'center', paddingHorizontal: 4,
+    letterSpacing: 0.2,
   },
   tableXOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
