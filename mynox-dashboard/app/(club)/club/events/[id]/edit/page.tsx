@@ -66,6 +66,10 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
       deposit: existing ? String(existing.deposit) : String(ct.defaultDeposit || ''),
       defaultDeposit: ct.defaultDeposit,
       isAvailable: existing ? existing.is_available : true,
+      zoneLabel: existing?.zone_label ?? '',
+      zoneColor: existing?.zone_color ?? '#a855f7',
+      minimumSpend: existing?.minimum_spend != null ? String(existing.minimum_spend) : '',
+      showMinimumSpend: existing?.minimum_spend != null,
     };
   });
 
