@@ -663,10 +663,12 @@ export default function EventScreen() {
                           const activeTier = getActiveTier(ticket.priceTiers, event.date);
                           return (
                             <>
-                              <Text style={styles.ticketPrice}>€{effectivePrice}</Text>
                               {activeTier && (
                                 <Text style={styles.ticketTierHint}>fino alle {activeTier.until}</Text>
                               )}
+                              <Text style={styles.ticketPrice}>
+                                {effectivePrice === 0 ? 'Gratis' : `€${effectivePrice}`}
+                              </Text>
                               {ticket.includesDrink && (
                                 <Text style={styles.ticketDrink}>{t('event.ticket_drink_extra')}</Text>
                               )}
@@ -1103,7 +1105,7 @@ const styles = StyleSheet.create({
   },
 
   // Sezione prenotazione
-  bookingSection: { paddingHorizontal: 20 },
+  bookingSection: { paddingHorizontal: 20, paddingTop: 28 },
   bookingLabel: {
     fontSize: 11, fontFamily: Font.bold, color: Colors.textMuted,
     textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12,
@@ -1141,7 +1143,7 @@ const styles = StyleSheet.create({
   ticketLabel: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.textPrimary },
   ticketAvailable: { fontSize: 11, color: Colors.textMuted, marginTop: 2 },
   ticketPrice: { fontSize: 16, fontFamily: Font.bold, color: Colors.accent },
-  ticketTierHint: { fontSize: 10, color: Colors.accent, marginTop: 1, opacity: 0.7 },
+  ticketTierHint: { fontSize: 11, color: Colors.accent, fontFamily: Font.semiBold, marginBottom: 2 },
   ticketDrink: { fontSize: 10, color: Colors.textMuted, marginTop: 1 },
   soldOut: { fontSize: 11, color: Colors.error, marginTop: 2 },
   disabledText: { color: Colors.textMuted },
