@@ -207,12 +207,18 @@ Non introdurre mai bianchi, grigi chiari o temi alternativi.
 | Schermata Biglietti + QR (ingresso + free drink) | ✅ Completato |
 | Schermata Profilo (stats, storico, preferenze) | ✅ Completato |
 | Restyling visual (blur tab bar, glow, pulse, gradient) | ✅ Completato |
-| Schema database Supabase | ⬜ Prossimo |
-| Supabase Auth (login/registrazione) | ⬜ Da fare |
-| Collegare dati reali (sostituire mock data) | ⬜ Da fare |
-| Integrazione Stripe | ⬜ Da fare |
-| Dashboard B2B discoteche | ⬜ Da fare |
-| MVP funzionante end-to-end | ⬜ In sviluppo |
+| Schema database Supabase | ✅ Completato |
+| Supabase Auth (login, registrazione, onboarding, reset password) | ✅ Completato |
+| Collegare dati reali (sostituire mock data) | ✅ Completato |
+| Stripe proxy (pagamenti biglietti, caparre tavoli, biglietti gratuiti) | ✅ Completato |
+| Dashboard B2B discoteche (eventi, tavoli, analytics, scanner, staff, promo) | ✅ Completato |
+| Piantina interattiva con zone, colori e minimum spend | ✅ Completato |
+| Logica commissioni definitiva (5% biglietti cliente, 10% caparre disco) | ✅ Completato |
+| Stripe Connect — divisione 90/10 caparre tavoli ed extra | ⬜ Da fare |
+| Switch Stripe da test a produzione | ⬜ Da fare |
+| Prima discoteca reale onboardata | ⬜ Da fare |
+| App Store (iOS) + Play Store (Android) submission | ⬜ Da fare |
+| MVP funzionante end-to-end in produzione | ⬜ Prossimo |
 
 ---
 
