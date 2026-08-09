@@ -72,6 +72,9 @@ export default function ClubVenueForm({ clubId, initialFloorPlanUrl, initialTabl
           pos_x: t.x,
           pos_y: t.y,
           default_deposit: t.deposit ?? 0,
+          zone_label: t.zoneLabel || null,
+          zone_color: t.zoneColor || null,
+          minimum_spend: t.showMinimumSpend && t.minimumSpend ? parseFloat(t.minimumSpend) : null,
         }))
       );
       if (tablesError) {

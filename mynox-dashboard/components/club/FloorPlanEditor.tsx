@@ -11,7 +11,13 @@ export interface TableMarker {
   deposit: number;
   x: number;
   y: number;
+  zoneLabel: string;
+  zoneColor: string;
+  minimumSpend: string;
+  showMinimumSpend: boolean;
 }
+
+const ZONE_COLORS = ['#a855f7', '#3b82f6', '#f59e0b', '#10b981', '#f43f5e', '#06b6d4'];
 
 interface Props {
   floorPlanUrl: string;
@@ -29,6 +35,10 @@ export default function FloorPlanEditor({ floorPlanUrl, tables, onChange }: Prop
   const [label, setLabel] = useState('');
   const [capacity, setCapacity] = useState('4');
   const [deposit, setDeposit] = useState('');
+  const [zoneLabel, setZoneLabel] = useState('');
+  const [zoneColor, setZoneColor] = useState('#a855f7');
+  const [minimumSpend, setMinimumSpend] = useState('');
+  const [showMinimumSpend, setShowMinimumSpend] = useState(false);
   const { t } = useLanguage();
   const fp = t.floorPlanEditor;
 
@@ -37,6 +47,10 @@ export default function FloorPlanEditor({ floorPlanUrl, tables, onChange }: Prop
     setLabel('');
     setCapacity('4');
     setDeposit('');
+    setZoneLabel('');
+    setZoneColor('#a855f7');
+    setMinimumSpend('');
+    setShowMinimumSpend(false);
   }
 
   function openEdit(table: TableMarker) {
@@ -44,6 +58,10 @@ export default function FloorPlanEditor({ floorPlanUrl, tables, onChange }: Prop
     setLabel(table.label);
     setCapacity(String(table.capacity));
     setDeposit(String(table.deposit));
+    setZoneLabel(table.zoneLabel);
+    setZoneColor(table.zoneColor || '#a855f7');
+    setMinimumSpend(table.minimumSpend);
+    setShowMinimumSpend(table.showMinimumSpend);
   }
 
   function handleContainerClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -67,6 +85,10 @@ export default function FloorPlanEditor({ floorPlanUrl, tables, onChange }: Prop
         deposit: parseFloat(deposit) || 0,
         x: formMode.x,
         y: formMode.y,
+        zoneLabel,
+        zoneColor,
+        minimumSpend,
+        showMinimumSpend,
       },
     ]);
     setFormMode(null);
@@ -77,7 +99,7 @@ export default function FloorPlanEditor({ floorPlanUrl, tables, onChange }: Prop
     onChange(
       tables.map((t) =>
         t.tempId === formMode.tempId
-          ? { ...t, label: label.trim(), capacity: parseInt(capacity) || 4, deposit: parseFloat(deposit) || 0 }
+          ? { ...t, label: label.trim(), capacity: parseInt(capacity) || 4, deposit: parseFloat(deposit) || 0, zoneLabel, zoneColor, minimumSpend, showMinimumSpend }
           : t
       )
     );
@@ -202,6 +224,10 @@ export default function FloorPlanEditor({ floorPlanUrl, tables, onChange }: Prop
           label={label} setLabel={setLabel}
           capacity={capacity} setCapacity={setCapacity}
           deposit={deposit} setDeposit={setDeposit}
+          zoneLabel={zoneLabel} setZoneLabel={setZoneLabel}
+          zoneColor={zoneColor} setZoneColor={setZoneColor}
+          minimumSpend={minimumSpend} setMinimumSpend={setMinimumSpend}
+          showMinimumSpend={showMinimumSpend} setShowMinimumSpend={setShowMinimumSpend}
           onConfirm={confirmAdd}
           onCancel={() => setFormMode(null)}
           confirmLabel={fp.addTable}
@@ -216,6 +242,10 @@ export default function FloorPlanEditor({ floorPlanUrl, tables, onChange }: Prop
           label={label} setLabel={setLabel}
           capacity={capacity} setCapacity={setCapacity}
           deposit={deposit} setDeposit={setDeposit}
+          zoneLabel={zoneLabel} setZoneLabel={setZoneLabel}
+          zoneColor={zoneColor} setZoneColor={setZoneColor}
+          minimumSpend={minimumSpend} setMinimumSpend={setMinimumSpend}
+          showMinimumSpend={showMinimumSpend} setShowMinimumSpend={setShowMinimumSpend}
           onConfirm={confirmEdit}
           onCancel={() => setFormMode(null)}
           confirmLabel={fp.saveChanges}
@@ -250,21 +280,29 @@ export default function FloorPlanEditor({ floorPlanUrl, tables, onChange }: Prop
 
 function TableForm({
   title, label, setLabel, capacity, setCapacity, deposit, setDeposit,
+  zoneLabel, setZoneLabel, zoneColor, setZoneColor,
+  minimumSpend, setMinimumSpend, showMinimumSpend, setShowMinimumSpend,
   onConfirm, onCancel, confirmLabel, onDelete, fp,
 }: {
   title: string;
   label: string; setLabel: (v: string) => void;
   capacity: string; setCapacity: (v: string) => void;
   deposit: string; setDeposit: (v: string) => void;
+  zoneLabel: string; setZoneLabel: (v: string) => void;
+  zoneColor: string; setZoneColor: (v: string) => void;
+  minimumSpend: string; setMinimumSpend: (v: string) => void;
+  showMinimumSpend: boolean; setShowMinimumSpend: (v: boolean) => void;
   onConfirm: () => void;
   onCancel: () => void;
   confirmLabel: string;
   onDelete?: () => void;
-  fp: { fieldTableName: string; fieldSeats: string; fieldDeposit: string; tableNamePlaceholder: string; cancel: string; delete: string };
+  fp: { fieldTableName: string; fieldSeats: string; fieldDeposit: string; tableNamePlaceholder: string; cancel: string; delete: string; fieldZoneLabel: string; fieldZoneColor: string; fieldMinSpend: string; fieldMinSpendToggle: string };
 }) {
   return (
-    <div data-form="true" className="bg-[#111118] border border-purple-500/30 rounded-xl p-4 space-y-3">
+    <div data-form="true" className="bg-[#111118] border border-purple-500/30 rounded-xl p-4 space-y-4">
       <p className="text-sm font-semibold text-white">{title}</p>
+
+      {/* Campi base */}
       <div className="grid grid-cols-3 gap-3">
         <div>
           <label className="block text-xs text-slate-500 mb-1">{fp.fieldTableName}</label>
@@ -300,6 +338,59 @@ function TableForm({
           />
         </div>
       </div>
+
+      {/* Zona */}
+      <div className="border-t border-white/6 pt-3 space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">{fp.fieldZoneLabel}</label>
+            <input
+              value={zoneLabel}
+              onChange={(e) => setZoneLabel(e.target.value)}
+              placeholder="VIP, Standard, Laterale…"
+              className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-500 mb-2">{fp.fieldZoneColor}</label>
+            <div className="flex items-center gap-2">
+              {ZONE_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setZoneColor(c)}
+                  style={{ backgroundColor: c }}
+                  className={`w-6 h-6 rounded-full transition-transform ${zoneColor === c ? 'ring-2 ring-white ring-offset-1 ring-offset-[#111118] scale-110' : 'opacity-60 hover:opacity-100'}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Minimum spend */}
+        <div>
+          <label className="flex items-center gap-2 cursor-pointer w-fit">
+            <input
+              type="checkbox"
+              checked={showMinimumSpend}
+              onChange={(e) => setShowMinimumSpend(e.target.checked)}
+              className="w-3.5 h-3.5 accent-purple-500"
+            />
+            <span className="text-xs text-slate-400">{fp.fieldMinSpendToggle}</span>
+          </label>
+          {showMinimumSpend && (
+            <input
+              type="number"
+              min="0"
+              value={minimumSpend}
+              onChange={(e) => setMinimumSpend(e.target.value)}
+              placeholder="500"
+              className="mt-2 w-40 bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors"
+            />
+          )}
+        </div>
+      </div>
+
       <div className="flex items-center gap-2">
         <button
           type="button"

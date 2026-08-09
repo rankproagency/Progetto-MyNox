@@ -60,6 +60,10 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
     posX: t.pos_x,
     posY: t.pos_y,
     defaultDeposit: t.default_deposit ?? 0,
+    zoneLabel: t.zone_label ?? '',
+    zoneColor: t.zone_color ?? '#a855f7',
+    minimumSpend: t.minimum_spend != null ? String(t.minimum_spend) : '',
+    showMinimumSpend: t.minimum_spend != null,
   }));
 
   const initialEventTables = mappedClubTables.map((ct: any) => {
@@ -74,10 +78,10 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
       deposit: existing ? String(existing.deposit) : String(ct.defaultDeposit || ''),
       defaultDeposit: ct.defaultDeposit,
       isAvailable: existing ? existing.is_available : true,
-      zoneLabel: existing?.zone_label ?? '',
-      zoneColor: existing?.zone_color ?? '#a855f7',
-      minimumSpend: existing?.minimum_spend != null ? String(existing.minimum_spend) : '',
-      showMinimumSpend: existing?.minimum_spend != null,
+      zoneLabel: existing?.zone_label ?? ct.zoneLabel,
+      zoneColor: existing?.zone_color ?? ct.zoneColor,
+      minimumSpend: existing?.minimum_spend != null ? String(existing.minimum_spend) : ct.minimumSpend,
+      showMinimumSpend: existing?.minimum_spend != null || ct.showMinimumSpend,
     };
   });
 

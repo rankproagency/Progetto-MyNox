@@ -35,6 +35,10 @@ export default async function NewEventPage() {
         clubTables={(clubTables ?? []).map((t: any) => ({
           id: t.id, label: t.label, capacity: t.capacity,
           posX: t.pos_x, posY: t.pos_y, defaultDeposit: t.default_deposit ?? 0,
+          zoneLabel: t.zone_label ?? '',
+          zoneColor: t.zone_color ?? '#a855f7',
+          minimumSpend: t.minimum_spend != null ? String(t.minimum_spend) : '',
+          showMinimumSpend: t.minimum_spend != null,
         }))}
         clubExtras={(clubExtras ?? []).map((e: any) => ({
           id: e.id, name: e.name, description: e.description, deposit: e.deposit,

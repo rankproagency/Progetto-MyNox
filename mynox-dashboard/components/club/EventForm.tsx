@@ -34,6 +34,10 @@ interface ClubTableData {
   posX: number;
   posY: number;
   defaultDeposit: number;
+  zoneLabel: string;
+  zoneColor: string;
+  minimumSpend: string;
+  showMinimumSpend: boolean;
 }
 
 interface EventTableRow {
@@ -124,10 +128,10 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
     deposit: String(ct.defaultDeposit),
     defaultDeposit: ct.defaultDeposit,
     isAvailable: true,
-    minimumSpend: '',
-    showMinimumSpend: false,
-    zoneLabel: '',
-    zoneColor: '#a855f7',
+    minimumSpend: ct.minimumSpend ?? '',
+    showMinimumSpend: ct.showMinimumSpend ?? false,
+    zoneLabel: ct.zoneLabel ?? '',
+    zoneColor: ct.zoneColor || '#a855f7',
   }));
 
   const [eventTables, setEventTables] = useState<EventTableRow[]>(

@@ -38,6 +38,10 @@ export default async function VenuePage() {
           deposit: t.default_deposit ?? 0,
           x: t.pos_x,
           y: t.pos_y,
+          zoneLabel: t.zone_label ?? '',
+          zoneColor: t.zone_color ?? '#a855f7',
+          minimumSpend: t.minimum_spend != null ? String(t.minimum_spend) : '',
+          showMinimumSpend: t.minimum_spend != null,
         }))}
       />
     </div>
