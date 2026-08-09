@@ -100,7 +100,7 @@ function RootNavigator() {
     // reset-password gestisce il proprio token via Linking.getInitialURL() e non
     // deve essere reindirizzata dal layout — né prima che setSession() completi
     // (sessione null), né dopo (sessione recovery attiva ma flusso ancora in corso).
-    const publicScreens = ['privacy', 'terms'];
+    const publicScreens = ['privacy', 'terms', 'email-verification', 'auth'];
     const authOnlyScreens = ['onboarding', 'login', 'register', 'reset-password'];
     const inAuthScreen = authOnlyScreens.includes(segment0 ?? '');
     if (publicScreens.includes(segment0 ?? '')) return;

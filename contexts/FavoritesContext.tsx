@@ -7,6 +7,7 @@ export interface FavoriteClub {
   name: string;
   imageUrl: string;
   city: string;
+  updatedAt?: string;
 }
 
 interface FavoritesCtx {
