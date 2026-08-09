@@ -415,36 +415,6 @@ export default function EventScreen() {
             <Text style={styles.infoClubName}>{event.club?.name}</Text>
           </TouchableOpacity>
 
-          {event.club?.address && (
-            <TouchableOpacity
-              style={styles.infoAddressRow}
-              activeOpacity={0.75}
-              onPress={() => {
-                const query = encodeURIComponent(event.club!.address);
-                Linking.openURL(`https://maps.apple.com/?q=${query}`);
-              }}
-            >
-              <Ionicons name="location-outline" size={13} color={Colors.textMuted} />
-              <Text style={styles.infoAddressText}>{event.club.address}</Text>
-            </TouchableOpacity>
-          )}
-
-          <View style={styles.infoMetaRow}>
-            <Ionicons name="calendar-outline" size={13} color={Colors.textMuted} />
-            <Text style={styles.infoMetaText}>{formatDate(event.date)}</Text>
-            <Text style={styles.infoMetaDot}>·</Text>
-            <Ionicons name="time-outline" size={13} color={Colors.textMuted} />
-            <Text style={styles.infoMetaText}>
-              {event.endTime ? `${event.startTime} – ${event.endTime}` : event.startTime}
-            </Text>
-            <Text style={styles.infoMetaDot}>·</Text>
-            <Text style={styles.infoMetaText}>{event.dressCode}</Text>
-            <Text style={styles.infoMetaDot}>·</Text>
-            <Text style={[styles.infoMetaText, event.minAge < 18 && { color: Colors.warning }]}>
-              {event.minAge}+
-            </Text>
-          </View>
-
           {event.genres.length > 0 && (
             <View style={styles.infoGenres}>
               {event.genres.map((g) => {
@@ -460,6 +430,49 @@ export default function EventScreen() {
               })}
             </View>
           )}
+
+          {/* Info rows — stile Shotgun */}
+          <View style={styles.infoRows}>
+            {/* Data e orario */}
+            <View style={styles.infoRow}>
+              <Ionicons name="calendar-outline" size={18} color={Colors.textMuted} style={styles.infoRowIcon} />
+              <Text style={styles.infoRowText}>
+                <Text style={styles.infoRowAccent}>{formatDate(event.date)}</Text>
+                {'  '}
+                <Text style={styles.infoRowStrong}>
+                  {event.endTime ? `${event.startTime} – ${event.endTime}` : event.startTime}
+                </Text>
+              </Text>
+            </View>
+
+            {event.club?.address && (
+              <>
+                <View style={styles.infoRowDivider} />
+                <TouchableOpacity
+                  style={styles.infoRow}
+                  activeOpacity={0.75}
+                  onPress={() => {
+                    const query = encodeURIComponent(event.club!.address);
+                    Linking.openURL(`https://maps.apple.com/?q=${query}`);
+                  }}
+                >
+                  <Ionicons name="location-outline" size={18} color={Colors.textMuted} style={styles.infoRowIcon} />
+                  <Text style={[styles.infoRowText, styles.infoRowStrong]} numberOfLines={2}>{event.club.address}</Text>
+                  <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
+                </TouchableOpacity>
+              </>
+            )}
+
+            <View style={styles.infoRowDivider} />
+            <View style={styles.infoRow}>
+              <Ionicons name="shirt-outline" size={18} color={Colors.textMuted} style={styles.infoRowIcon} />
+              <Text style={styles.infoRowText}>
+                <Text style={styles.infoRowStrong}>{event.dressCode}</Text>
+                {'  ·  '}
+                <Text style={[styles.infoRowStrong, event.minAge < 18 && { color: Colors.warning }]}>{event.minAge}+</Text>
+              </Text>
+            </View>
+          </View>
         </View>
 
         {/* Contenuto principale — non renderizzato se vuoto */}
@@ -925,25 +938,45 @@ const styles = StyleSheet.create({
     lineHeight: 30, marginBottom: 10, letterSpacing: 0.2,
   },
   infoClubName: {
-    fontSize: 17, fontFamily: Font.bold, color: Colors.accent, marginBottom: 6,
-  },
-  infoAddressRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 14,
-  },
-  infoAddressText: {
-    fontSize: 13, color: Colors.textMuted, fontFamily: Font.regular,
-  },
-  infoMetaRow: {
-    flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 14,
-  },
-  infoMetaText: {
-    fontSize: 14, fontFamily: Font.semiBold, color: Colors.textPrimary,
-  },
-  infoMetaDot: {
-    fontSize: 14, color: 'rgba(255,255,255,0.25)',
+    fontSize: 17, fontFamily: Font.bold, color: Colors.accent, marginBottom: 10,
   },
   infoGenres: {
-    flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginBottom: 4,
+    flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginBottom: 16,
+  },
+  infoRows: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    gap: 12,
+  },
+  infoRowIcon: {
+    width: 20,
+    textAlign: 'center',
+  },
+  infoRowDivider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginLeft: 32,
+  },
+  infoRowText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: Font.regular,
+    color: Colors.textSecondary,
+  },
+  infoRowAccent: {
+    fontSize: 14,
+    fontFamily: Font.semiBold,
+    color: Colors.accent,
+  },
+  infoRowStrong: {
+    fontSize: 14,
+    fontFamily: Font.semiBold,
+    color: Colors.textPrimary,
   },
 
   // Contenuto principale
