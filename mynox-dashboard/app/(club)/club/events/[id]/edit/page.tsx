@@ -30,18 +30,26 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
 
   if (!event) notFound();
 
-  const initialTicketTypes = (ticketTypes ?? []).map((t: any) => ({
-    id: t.id,
-    label: t.label,
-    price: String(t.price),
-    total_quantity: String(t.total_quantity ?? ''),
-    includes_drink: t.includes_drink,
-    sold_quantity: t.sold_quantity ?? 0,
-    price_tiers: (t.price_tiers ?? []).map((tier: any) => ({
-      until: tier.until ?? '',
-      price: String(tier.price ?? ''),
-    })),
-  }));
+  const seen = new Set<string>();
+  const initialTicketTypes = (ticketTypes ?? [])
+    .filter((t: any) => {
+      const key = `${t.label}|${t.price}|${t.includes_drink}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .map((t: any) => ({
+      id: t.id,
+      label: t.label,
+      price: String(t.price),
+      total_quantity: String(t.total_quantity ?? ''),
+      includes_drink: t.includes_drink,
+      sold_quantity: t.sold_quantity ?? 0,
+      price_tiers: (t.price_tiers ?? []).map((tier: any) => ({
+        until: tier.until ?? '',
+        price: String(tier.price ?? ''),
+      })),
+    }));
 
   // Costruisci la lista tavoli per questo evento: usa quelli esistenti se ci sono,
   // altrimenti usa i tavoli del locale come default

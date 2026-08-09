@@ -40,3 +40,13 @@ yarn-error.*
 /ios
 /android
 supabase/.temp/
+
+# debug / tool artifacts (non committare mai)
+.playwright-mcp/
+.claude/
+landing-*.png
+landing-conversion.png
+landing-current.png
+landing-full.png
+landing-hero.png
+navbar-logo*.png

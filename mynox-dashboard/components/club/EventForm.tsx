@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Plus, Trash2, Mic2, Music } from 'lucide-react';
+import { Plus, Trash2, Mic2, Music, Clock } from 'lucide-react';
 import { useLanguage } from '@/components/providers/I18nProvider';
 
 interface PerformerRow {
@@ -13,12 +13,18 @@ interface PerformerRow {
 
 const GENRES = ['Techno', 'House', 'Deep House', 'Latin', 'Hip-Hop', 'Pop', 'R&B', 'Reggaeton', 'Commercial'];
 
+interface PriceTier {
+  until: string;
+  price: string;
+}
+
 interface TicketTypeRow {
   id?: string;
   label: string;
   price: string;
   total_quantity: string;
   includes_drink: boolean;
+  price_tiers: PriceTier[];
 }
 
 interface ClubTableData {
@@ -108,7 +114,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
   );
 
   const [ticketTypes, setTicketTypes] = useState<TicketTypeRow[]>(
-    initialTicketTypes ?? [{ label: '', price: '', total_quantity: '', includes_drink: true }]
+    initialTicketTypes ?? [{ label: '', price: '', total_quantity: '', includes_drink: true, price_tiers: [] }]
   );
 
   const defaultEventTables = (clubTables ?? []).map((ct) => ({
@@ -195,7 +201,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
   }
 
   function addTicketType() {
-    setTicketTypes((prev) => [...prev, { label: '', price: '', total_quantity: '', includes_drink: true }]);
+    setTicketTypes((prev) => [...prev, { label: '', price: '', total_quantity: '', includes_drink: true, price_tiers: [] }]);
   }
 
   function removeTicketType(index: number) {
@@ -204,6 +210,27 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
 
   function updateTicketType(index: number, field: keyof TicketTypeRow, value: string | boolean) {
     setTicketTypes((prev) => prev.map((tk, i) => i === index ? { ...tk, [field]: value } : tk));
+  }
+
+  function addTier(ticketIndex: number) {
+    setTicketTypes((prev) => prev.map((tk, i) => i === ticketIndex
+      ? { ...tk, price_tiers: [...tk.price_tiers, { until: '', price: '' }] }
+      : tk
+    ));
+  }
+
+  function removeTier(ticketIndex: number, tierIndex: number) {
+    setTicketTypes((prev) => prev.map((tk, i) => i === ticketIndex
+      ? { ...tk, price_tiers: tk.price_tiers.filter((_, j) => j !== tierIndex) }
+      : tk
+    ));
+  }
+
+  function updateTier(ticketIndex: number, tierIndex: number, field: keyof PriceTier, value: string) {
+    setTicketTypes((prev) => prev.map((tk, i) => i === ticketIndex
+      ? { ...tk, price_tiers: tk.price_tiers.map((tier, j) => j === tierIndex ? { ...tier, [field]: value } : tier) }
+      : tk
+    ));
   }
 
   async function handleSubmit(publish: boolean) {
@@ -256,6 +283,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
           total_quantity: tk.total_quantity ? parseInt(tk.total_quantity) : null,
           sold_quantity: 0,
           includes_drink: tk.includes_drink,
+          price_tiers: tk.price_tiers.filter((t) => t.until && t.price).map((t) => ({ until: t.until, price: parseFloat(t.price) })),
         }))
       );
       if (ticketError) { setError(ef.saveTicketsError + ' ' + ticketError.message); setLoading(false); return; }
@@ -758,6 +786,56 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
                 >
                   <Trash2 size={14} />
                 </button>
+              )}
+            </div>
+            {/* Fasce orarie prezzo */}
+            <div className="border-t border-white/5 pt-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-500 flex items-center gap-1">
+                  <Clock size={12} /> Fasce orarie (opzionale)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => addTier(index)}
+                  className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
+                >
+                  <Plus size={12} /> Aggiungi fascia
+                </button>
+              </div>
+              {ticket.price_tiers.length > 0 && (
+                <div className="space-y-2">
+                  {ticket.price_tiers.map((tier, tierIndex) => (
+                    <div key={tierIndex} className="flex items-center gap-2">
+                      <input
+                        type="time"
+                        value={tier.until}
+                        onChange={(e) => updateTier(index, tierIndex, 'until', e.target.value)}
+                        className={`${inputClass} flex-1`}
+                      />
+                      <span className="text-slate-500 text-xs shrink-0">fino alle →</span>
+                      <div className="relative flex-1">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">€</span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={tier.price}
+                          onChange={(e) => updateTier(index, tierIndex, 'price', e.target.value)}
+                          placeholder="0"
+                          className={`${inputClass} pl-7`}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeTier(index, tierIndex)}
+                        className="text-red-400 hover:text-red-300 transition-colors shrink-0"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  <p className="text-xs text-slate-600">Prezzo base (dopo l&apos;ultima fascia): €{ticket.price || '—'}</p>
+                </div>
               )}
             </div>
           </div>
