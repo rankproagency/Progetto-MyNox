@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Plus, Trash2, Mic2, Music, Clock } from 'lucide-react';
+import { Plus, Trash2, Mic2, Music } from 'lucide-react';
 import { useLanguage } from '@/components/providers/I18nProvider';
 
 interface PerformerRow {
@@ -788,43 +788,39 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
                 </button>
               )}
             </div>
-            {/* Fasce orarie prezzo */}
-            <div className="border-t border-white/5 pt-3 space-y-2">
+            {/* Fasce orarie */}
+            <div className="pt-1 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500 flex items-center gap-1">
-                  <Clock size={12} /> Fasce orarie (opzionale)
-                </span>
+                <span className="text-xs text-slate-500">Fasce orarie</span>
                 <button
                   type="button"
                   onClick={() => addTier(index)}
-                  className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
+                  className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 transition-colors"
                 >
-                  <Plus size={12} /> Aggiungi fascia
+                  <Plus size={11} />
+                  Aggiungi fascia
                 </button>
               </div>
               {ticket.price_tiers.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {ticket.price_tiers.map((tier, tierIndex) => (
                     <div key={tierIndex} className="flex items-center gap-2">
+                      <span className="text-xs text-slate-500 shrink-0">entro</span>
                       <input
                         type="time"
                         value={tier.until}
                         onChange={(e) => updateTier(index, tierIndex, 'until', e.target.value)}
-                        className={`${inputClass} flex-1`}
+                        className="w-28 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500/60 transition-colors"
                       />
-                      <span className="text-slate-500 text-xs shrink-0">fino alle →</span>
-                      <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">€</span>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={tier.price}
-                          onChange={(e) => updateTier(index, tierIndex, 'price', e.target.value)}
-                          placeholder="0"
-                          className={`${inputClass} pl-7`}
-                        />
-                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={tier.price}
+                        onChange={(e) => updateTier(index, tierIndex, 'price', e.target.value)}
+                        placeholder="0"
+                        className="w-20 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors"
+                      />
                       <button
                         type="button"
                         onClick={() => removeTier(index, tierIndex)}
