@@ -109,6 +109,7 @@ export default function EventScreen() {
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [floorPlanModalVisible, setFloorPlanModalVisible] = useState(false);
   const [extrasModalVisible, setExtrasModalVisible] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
 
   const availableExtras = (event?.extras ?? []).filter((e) => e.isAvailable);
   const extrasDeposit = availableExtras.reduce((sum, e) => sum + (orderedExtras[e.id] ?? 0) * e.deposit, 0);
@@ -481,7 +482,25 @@ export default function EventScreen() {
 
             {/* Descrizione */}
             {!!event.description && (
-              <Text style={styles.descriptionText}>{event.description}</Text>
+              <>
+                <Text style={styles.descriptionLabel}>Descrizione</Text>
+                <Text style={styles.descriptionText} numberOfLines={descExpanded ? undefined : 4}>
+                  {event.description}
+                </Text>
+                {event.description.length > 150 && (
+                  <TouchableOpacity
+                    onPress={() => setDescExpanded((v) => !v)}
+                    activeOpacity={0.7}
+                    style={styles.descExpandBtn}
+                  >
+                    <Ionicons
+                      name={descExpanded ? 'chevron-up' : 'chevron-down'}
+                      size={18}
+                      color={Colors.textMuted}
+                    />
+                  </TouchableOpacity>
+                )}
+              </>
             )}
 
             {/* Lineup */}
@@ -1008,9 +1027,23 @@ const styles = StyleSheet.create({
   genreTagText: { fontSize: 12, fontFamily: Font.bold, color: Colors.accent },
 
   // Description
+  descriptionLabel: {
+    fontSize: 13,
+    fontFamily: Font.bold,
+    color: Colors.textPrimary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 10,
+  },
   descriptionText: {
-    fontSize: 14, color: Colors.textSecondary,
+    fontSize: 14,
+    color: Colors.textSecondary,
     lineHeight: 22,
+  },
+  descExpandBtn: {
+    alignItems: 'center',
+    paddingTop: 10,
+    paddingBottom: 2,
   },
 
   // Lineup
@@ -1068,9 +1101,8 @@ const styles = StyleSheet.create({
 
   // Separatore zona acquisto
   bookingDivider: {
-    marginHorizontal: 20,
-    marginTop: 24,
-    marginBottom: 24,
+    marginTop: 28,
+    marginBottom: 0,
     height: 1,
     backgroundColor: Colors.border,
   },
