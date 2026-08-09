@@ -1211,7 +1211,7 @@ const styles = StyleSheet.create({
   bookingToggleText: {
     fontSize: 15,
     fontFamily: Font.semiBold,
-    color: Colors.textMuted,
+    color: Colors.textSecondary,
   },
   bookingToggleTextActive: {
     color: Colors.accent,
