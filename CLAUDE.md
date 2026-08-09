@@ -144,9 +144,13 @@ Non introdurre mai bianchi, grigi chiari o temi alternativi.
 - Caparre non rimborsabili (stessa logica del biglietto)
 
 ### Commissione servizio
-- 5% sui biglietti e sugli extra
-- 0% sulle caparre dei tavoli (da concordare con le discoteche)
-- Calcolata e mostrata nel checkout
+- **Biglietti e extra:** 5% pagato dal cliente (aggiunto sopra al prezzo)
+- **Caparre tavoli:** 10% pagato dalla discoteca, non dal cliente
+  - Cliente paga la caparra piena (es. €100)
+  - Discoteca incassa il 90% (es. €90), MyNox trattiene il 10% (es. €10)
+  - Implementato via Stripe Connect: trasferimento automatico al conto della disco
+  - Vantaggioso per la disco rispetto a un PR (che costa molto di più per tavolo)
+- Commissione biglietti calcolata e mostrata nel checkout
 
 ### Selezione città
 - Implementata nella Home — città selezionata mostrata nell'header con chevron
