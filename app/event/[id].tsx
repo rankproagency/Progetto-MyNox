@@ -447,24 +447,20 @@ export default function EventScreen() {
             </View>
 
             {event.club?.address && (
-              <>
-                <View style={styles.infoRowDivider} />
-                <TouchableOpacity
-                  style={styles.infoRow}
-                  activeOpacity={0.75}
-                  onPress={() => {
-                    const query = encodeURIComponent(event.club!.address);
-                    Linking.openURL(`https://maps.apple.com/?q=${query}`);
-                  }}
-                >
-                  <Ionicons name="location-outline" size={18} color={Colors.textMuted} style={styles.infoRowIcon} />
-                  <Text style={[styles.infoRowText, styles.infoRowStrong]} numberOfLines={2}>{event.club.address}</Text>
-                  <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
-                </TouchableOpacity>
-              </>
+              <TouchableOpacity
+                style={styles.infoRow}
+                activeOpacity={0.75}
+                onPress={() => {
+                  const query = encodeURIComponent(event.club!.address);
+                  Linking.openURL(`https://maps.apple.com/?q=${query}`);
+                }}
+              >
+                <Ionicons name="location-outline" size={18} color={Colors.textMuted} style={styles.infoRowIcon} />
+                <Text style={[styles.infoRowText, styles.infoRowStrong]} numberOfLines={2}>{event.club.address}</Text>
+                <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
+              </TouchableOpacity>
             )}
 
-            <View style={styles.infoRowDivider} />
             <View style={styles.infoRow}>
               <Ionicons name="shirt-outline" size={18} color={Colors.textMuted} style={styles.infoRowIcon} />
               <Text style={styles.infoRowText}>
@@ -963,8 +959,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginBottom: 16,
   },
   infoRows: {
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    marginTop: 4,
   },
   infoRow: {
     flexDirection: 'row',
@@ -1101,7 +1096,7 @@ const styles = StyleSheet.create({
 
   // Separatore zona acquisto
   bookingDivider: {
-    marginTop: 28,
+    marginTop: 36,
     marginBottom: 0,
     height: 1,
     backgroundColor: Colors.border,
