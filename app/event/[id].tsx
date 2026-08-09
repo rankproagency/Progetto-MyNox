@@ -542,28 +542,28 @@ export default function EventScreen() {
             )
           ) : (
             <>
-              {/* Segment control — solo se ci sono tavoli */}
+              {/* Tab underline — solo se ci sono tavoli */}
               {hasTables && hasTickets && (
                 <View style={styles.bookingToggle}>
                   <TouchableOpacity
-                    style={[styles.bookingToggleBtn, bookingMode === 'ticket' && styles.bookingToggleActive]}
+                    style={styles.bookingToggleBtn}
                     onPress={() => { Haptics.selectionAsync(); switchMode('ticket'); }}
-                    activeOpacity={0.8}
+                    activeOpacity={0.7}
                   >
-                    <Ionicons name="ticket-outline" size={15} color={bookingMode === 'ticket' ? Colors.white : Colors.textMuted} />
                     <Text style={[styles.bookingToggleText, bookingMode === 'ticket' && styles.bookingToggleTextActive]}>
                       {t('event.booking_mode_ticket')}
                     </Text>
+                    {bookingMode === 'ticket' && <View style={styles.bookingToggleUnderline} />}
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.bookingToggleBtn, bookingMode === 'table' && styles.bookingToggleActive]}
+                    style={styles.bookingToggleBtn}
                     onPress={() => { Haptics.selectionAsync(); switchMode('table'); }}
-                    activeOpacity={0.8}
+                    activeOpacity={0.7}
                   >
-                    <Ionicons name="grid-outline" size={15} color={bookingMode === 'table' ? Colors.white : Colors.textMuted} />
                     <Text style={[styles.bookingToggleText, bookingMode === 'table' && styles.bookingToggleTextActive]}>
                       {t('event.booking_mode_table')}
                     </Text>
+                    {bookingMode === 'table' && <View style={styles.bookingToggleUnderline} />}
                   </TouchableOpacity>
                 </View>
               )}
@@ -1198,32 +1198,32 @@ const styles = StyleSheet.create({
   // Booking mode toggle
   bookingToggle: {
     flexDirection: 'row',
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 4,
-    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    marginBottom: 20,
   },
   bookingToggleBtn: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 7,
-    paddingVertical: 11,
-    borderRadius: 10,
-  },
-  bookingToggleActive: {
-    backgroundColor: Colors.accent,
+    paddingBottom: 12,
+    position: 'relative',
   },
   bookingToggleText: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: Font.semiBold,
     color: Colors.textMuted,
   },
   bookingToggleTextActive: {
-    color: Colors.white,
+    color: Colors.accent,
+  },
+  bookingToggleUnderline: {
+    position: 'absolute',
+    bottom: -1,
+    left: 16,
+    right: 16,
+    height: 2,
+    backgroundColor: Colors.accent,
+    borderRadius: 1,
   },
 
   // Table name input
