@@ -391,21 +391,18 @@ export default function EventScreen() {
 
       <ScrollView ref={scrollRef} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-        {/* Hero — locandina verticale intera */}
-        <View style={styles.hero}>
-          <Image
-            source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }}
-            style={styles.heroImage}
-            contentFit="cover"
-            cachePolicy="memory-disk"
-          />
-          {/* Gradient: scuro in alto per i pulsanti, fade in basso per la transizione */}
-          <LinearGradient
-            colors={['rgba(7,8,15,0.6)', 'transparent', 'transparent', 'rgba(7,8,15,0.85)']}
-            locations={[0, 0.25, 0.72, 1]}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          />
+        {/* Hero — locandina contenuta con glow */}
+        <View style={[styles.heroWrapper, { paddingTop: insets.top + 58 }]}>
+          <View style={styles.heroCard}>
+            <View style={styles.heroCardInner}>
+              <Image
+                source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }}
+                style={styles.heroImage}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+              />
+            </View>
+          </View>
         </View>
 
         {/* Info evento */}
@@ -875,9 +872,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
 
-  // Hero — locandina portrait
-  hero: { width, height: width * 1.35, position: 'relative', backgroundColor: Colors.background },
-  heroImage: { ...StyleSheet.absoluteFillObject },
+  // Hero — locandina contenuta con glow viola
+  heroWrapper: {
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+    alignItems: 'center',
+  },
+  heroCard: {
+    width: '100%',
+    borderRadius: 18,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.55,
+    shadowRadius: 28,
+    elevation: 20,
+  },
+  heroCardInner: {
+    borderRadius: 18,
+    overflow: 'hidden',
+  },
+  heroImage: {
+    width: '100%',
+    aspectRatio: 3 / 4,
+  },
   heroTopRight: { flexDirection: 'row', gap: 8 },
   backButton: {
     width: 38, height: 38, borderRadius: 12,
