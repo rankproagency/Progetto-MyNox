@@ -109,6 +109,7 @@ export default function EventScreen() {
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [floorPlanModalVisible, setFloorPlanModalVisible] = useState(false);
   const [extrasModalVisible, setExtrasModalVisible] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
 
   const availableExtras = (event?.extras ?? []).filter((e) => e.isAvailable);
   const extrasDeposit = availableExtras.reduce((sum, e) => sum + (orderedExtras[e.id] ?? 0) * e.deposit, 0);
@@ -424,8 +425,9 @@ export default function EventScreen() {
                 Linking.openURL(`https://maps.apple.com/?q=${query}`);
               }}
             >
-              <Ionicons name="location-outline" size={13} color={Colors.textMuted} />
+              <Ionicons name="location" size={13} color={Colors.accent} />
               <Text style={styles.infoAddressText}>{event.club.address}</Text>
+              <Ionicons name="map-outline" size={12} color={Colors.accent} style={{ marginLeft: 2 }} />
             </TouchableOpacity>
           )}
 
@@ -468,13 +470,25 @@ export default function EventScreen() {
 
             {/* Descrizione */}
             {!!event.description && (
-              <Text style={styles.descriptionText}>{event.description}</Text>
+              <>
+                <Text style={styles.blockLabel}>{t('event.description_label')}</Text>
+                <Text style={styles.descriptionText} numberOfLines={descExpanded ? undefined : 3}>
+                  {event.description}
+                </Text>
+                {event.description.length > 120 && (
+                  <TouchableOpacity onPress={() => setDescExpanded((v) => !v)} activeOpacity={0.7} style={styles.descReadMore}>
+                    <Text style={styles.descReadMoreText}>
+                      {descExpanded ? t('event.description_collapse') : t('event.description_expand')}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                {event.lineup.length === 0 && (event.performers?.length ?? 0) === 0 ? null : <View style={styles.divider} />}
+              </>
             )}
 
             {/* Lineup */}
             {event.lineup.length > 0 && (
               <>
-                {!!event.description && <View style={styles.divider} />}
                 <Text style={styles.blockLabel}>{t('event.lineup_label')}</Text>
                 {event.lineup.map((artist, i) => (
                   <View key={artist.name} style={[styles.lineupRow, i > 0 && styles.lineupRowBorder]}>
@@ -929,9 +943,13 @@ const styles = StyleSheet.create({
   },
   infoAddressRow: {
     flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 14,
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.surface,
+    borderRadius: 8, borderWidth: 1, borderColor: Colors.border,
+    paddingHorizontal: 10, paddingVertical: 7,
   },
   infoAddressText: {
-    fontSize: 13, color: Colors.textMuted, fontFamily: Font.regular,
+    fontSize: 13, color: Colors.textSecondary, fontFamily: Font.medium,
   },
   infoMetaRow: {
     flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 14,
@@ -977,8 +995,10 @@ const styles = StyleSheet.create({
   // Description
   descriptionText: {
     fontSize: 14, color: Colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: 22, fontStyle: 'italic',
   },
+  descReadMore: { marginTop: 6 },
+  descReadMoreText: { fontSize: 13, color: Colors.accent, fontFamily: Font.semiBold },
 
   // Lineup
   lineupRow: {
