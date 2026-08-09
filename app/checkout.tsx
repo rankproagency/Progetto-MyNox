@@ -531,7 +531,7 @@ export default function CheckoutScreen() {
             )}
 
             <View style={styles.divider} />
-            <Row label={t('checkout.service_fee')} value={`€${commission}`} muted />
+            {commission > 0 && <Row label={t('checkout.service_fee')} value={`€${commission}`} muted />}
             <Row label={t('checkout.total')} value={`€${total}`} bold />
           </View>
         </View>
