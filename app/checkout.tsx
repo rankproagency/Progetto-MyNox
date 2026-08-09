@@ -209,8 +209,9 @@ export default function CheckoutScreen() {
   const tableDeposit = table?.deposit ?? 0;
   const extrasTotal = parsedExtras.reduce((sum, e) => sum + e.quantity * e.unitDeposit, 0);
   const base = isTableOnly ? tableDeposit + extrasTotal : discountedSubtotal + tableDeposit + extrasTotal;
-  // 5% min €1.00 on tickets+extras only, 0% on table deposits
-  const commissionable = isTableOnly ? extrasTotal : discountedSubtotal + extrasTotal;
+  // 5% min €1.00 on tickets only — paid by customer
+  // Extras and table deposits: 10% paid by club server-side, customer pays face value
+  const commissionable = ticket ? discountedSubtotal : 0;
   const commission = commissionable > 0
     ? parseFloat((Math.max(commissionable * 0.05, 1.00)).toFixed(2))
     : 0;
