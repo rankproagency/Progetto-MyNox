@@ -398,7 +398,7 @@ export default function EventScreen() {
               <Image
                 source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }}
                 style={styles.heroImage}
-                contentFit="contain"
+                contentFit="cover"
                 cachePolicy="memory-disk"
               />
             </View>
