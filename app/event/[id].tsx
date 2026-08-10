@@ -567,18 +567,21 @@ export default function EventScreen() {
             >
               <View style={styles.mapContainer}>
                 {mapCoords && (
-                  <MapView
-                    style={styles.mapView}
-                    initialRegion={{ ...mapCoords, latitudeDelta: 0.008, longitudeDelta: 0.008 }}
-                    scrollEnabled={false}
-                    zoomEnabled={false}
-                    pitchEnabled={false}
-                    rotateEnabled={false}
-                    userInterfaceStyle="dark"
-                    pointerEvents="none"
-                  >
-                    <Marker coordinate={mapCoords} pinColor={Colors.accent} />
-                  </MapView>
+                  <View style={styles.mapViewWrapper}>
+                    <MapView
+                      style={styles.mapView}
+                      initialRegion={{ ...mapCoords, latitudeDelta: 0.008, longitudeDelta: 0.008 }}
+                      scrollEnabled={false}
+                      zoomEnabled={false}
+                      pitchEnabled={false}
+                      rotateEnabled={false}
+                      userInterfaceStyle="dark"
+                      pointerEvents="none"
+                    >
+                      <Marker coordinate={mapCoords} pinColor={Colors.accent} />
+                    </MapView>
+                    <View style={styles.mapDarkOverlay} pointerEvents="none" />
+                  </View>
                 )}
                 <View style={styles.mapOverlayBottom}>
                   <Ionicons name="location" size={13} color={Colors.accent} />
@@ -1191,9 +1194,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  mapView: {
+  mapViewWrapper: {
     width: '100%',
     height: 160,
+    position: 'relative',
+  },
+  mapView: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  mapDarkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(7,8,15,0.45)',
   },
   mapOverlayBottom: {
     flexDirection: 'row',
