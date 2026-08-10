@@ -59,7 +59,6 @@ function getActiveTier(priceTiers: PriceTier[], eventDate: string): PriceTier | 
   return null;
 }
 import TableMap from '../../components/TableMap';
-import MapView, { Marker } from 'react-native-maps';
 import { useFavorites } from '../../contexts/FavoritesContext';
 import { useRecentlyViewed } from '../../contexts/RecentlyViewedContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -531,49 +530,6 @@ export default function EventScreen() {
               </>
             )}
 
-          </View>
-        )}
-
-        {/* Mappa location */}
-        {event.club?.address && (
-          <View style={styles.mapSection}>
-            <Text style={styles.mapLabel}>Dove</Text>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => {
-                const query = encodeURIComponent(event.club!.address);
-                Linking.openURL(`https://maps.apple.com/?q=${query}`);
-              }}
-            >
-              <View style={styles.mapContainer}>
-                {event.club.latitude && event.club.longitude && (
-                  <MapView
-                    style={styles.mapView}
-                    initialRegion={{
-                      latitude: event.club.latitude,
-                      longitude: event.club.longitude,
-                      latitudeDelta: 0.008,
-                      longitudeDelta: 0.008,
-                    }}
-                    scrollEnabled={false}
-                    zoomEnabled={false}
-                    pitchEnabled={false}
-                    rotateEnabled={false}
-                    pointerEvents="none"
-                  >
-                    <Marker
-                      coordinate={{ latitude: event.club.latitude, longitude: event.club.longitude }}
-                      pinColor={Colors.accent}
-                    />
-                  </MapView>
-                )}
-                <View style={styles.mapOverlayBottom}>
-                  <Ionicons name="location" size={13} color={Colors.accent} />
-                  <Text style={styles.mapAddressText} numberOfLines={1}>{event.club.address}</Text>
-                  <Ionicons name="chevron-forward" size={12} color={Colors.textMuted} />
-                </View>
-              </View>
-            </TouchableOpacity>
           </View>
         )}
 
@@ -1156,47 +1112,6 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%', borderRadius: 3,
-  },
-
-  // Mappa location
-  mapSection: {
-    paddingHorizontal: 20,
-    paddingTop: 28,
-    paddingBottom: 4,
-  },
-  mapLabel: {
-    fontSize: 13,
-    fontFamily: Font.bold,
-    color: Colors.textPrimary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 12,
-  },
-  mapContainer: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  mapView: {
-    width: '100%',
-    height: 160,
-  },
-  mapOverlayBottom: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: Colors.surfaceElevated,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  mapAddressText: {
-    flex: 1,
-    fontSize: 13,
-    fontFamily: Font.medium,
-    color: Colors.textSecondary,
   },
 
   // Separatore zona acquisto
