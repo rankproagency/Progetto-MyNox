@@ -583,11 +583,6 @@ export default function EventScreen() {
                     <View style={styles.mapDarkOverlay} pointerEvents="none" />
                   </View>
                 )}
-                <View style={styles.mapOverlayBottom}>
-                  <Ionicons name="location" size={13} color={Colors.accent} />
-                  <Text style={styles.mapAddressText} numberOfLines={1}>{event.club.address}</Text>
-                  <Ionicons name="chevron-forward" size={12} color={Colors.textMuted} />
-                </View>
               </View>
             </TouchableOpacity>
           </View>
