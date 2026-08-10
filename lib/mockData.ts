@@ -14,7 +14,7 @@ export const MOCK_EVENTS: Event[] = [
   {
     id: '1',
     clubId: 'club1',
-    club: { id: 'club1', name: 'Altromondo Studios', city: 'Padova', imageUrl: '', address: 'Via Interporto, Padova' },
+    club: { id: 'club1', name: 'Altromondo Studios', city: 'Padova', imageUrl: '', address: 'Via Interporto, Padova', latitude: 45.3952, longitude: 11.9105 },
     name: 'NEXUS — Techno Night',
     date: '2026-04-11',
     startTime: '23:00',
@@ -46,7 +46,7 @@ export const MOCK_EVENTS: Event[] = [
   {
     id: '2',
     clubId: 'club2',
-    club: { id: 'club2', name: 'Byblos Club', city: 'Padova', imageUrl: '', address: 'Via Roma 12, Padova' },
+    club: { id: 'club2', name: 'Byblos Club', city: 'Padova', imageUrl: '', address: 'Via Roma 12, Padova', latitude: 45.4072, longitude: 11.8762 },
     name: 'TROPICANA — Latin Vibes',
     date: '2026-04-11',
     startTime: '22:30',
@@ -74,7 +74,7 @@ export const MOCK_EVENTS: Event[] = [
   {
     id: '3',
     clubId: 'club3',
-    club: { id: 'club3', name: 'New Age Club', city: 'Padova', imageUrl: '', address: 'Via Venezia 5, Padova' },
+    club: { id: 'club3', name: 'New Age Club', city: 'Padova', imageUrl: '', address: 'Via Venezia 5, Padova', latitude: 45.4148, longitude: 11.8834 },
     name: 'ECLIPSE — House & Deep',
     date: '2026-04-12',
     startTime: '23:30',
@@ -101,7 +101,7 @@ export const MOCK_EVENTS: Event[] = [
   {
     id: '4',
     clubId: 'club1',
-    club: { id: 'club1', name: 'Altromondo Studios', city: 'Padova', imageUrl: '', address: 'Via Interporto, Padova' },
+    club: { id: 'club1', name: 'Altromondo Studios', city: 'Padova', imageUrl: '', address: 'Via Interporto, Padova', latitude: 45.3952, longitude: 11.9105 },
     name: 'VOID — Industrial Techno',
     date: '2026-04-12',
     startTime: '00:00',
@@ -128,7 +128,7 @@ export const MOCK_EVENTS: Event[] = [
   {
     id: '5',
     clubId: 'club2',
-    club: { id: 'club2', name: 'Byblos Club', city: 'Padova', imageUrl: '', address: 'Via Roma 12, Padova' },
+    club: { id: 'club2', name: 'Byblos Club', city: 'Padova', imageUrl: '', address: 'Via Roma 12, Padova', latitude: 45.4072, longitude: 11.8762 },
     name: 'NEON — Pop & RnB',
     date: '2026-04-18',
     startTime: '22:00',
@@ -153,7 +153,7 @@ export const MOCK_EVENTS: Event[] = [
   {
     id: '6',
     clubId: 'club3',
-    club: { id: 'club3', name: 'New Age Club', city: 'Padova', imageUrl: '', address: 'Via Venezia 5, Padova' },
+    club: { id: 'club3', name: 'New Age Club', city: 'Padova', imageUrl: '', address: 'Via Venezia 5, Padova', latitude: 45.4148, longitude: 11.8834 },
     name: 'REQUIEM — Special Edition',
     date: '2026-04-19',
     startTime: '23:00',
