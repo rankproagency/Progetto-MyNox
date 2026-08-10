@@ -535,7 +535,7 @@ export default function EventScreen() {
         )}
 
         {/* Mappa location */}
-        {event.club?.latitude && event.club?.longitude && (
+        {event.club?.address && (
           <View style={styles.mapSection}>
             <Text style={styles.mapLabel}>Dove</Text>
             <TouchableOpacity
@@ -546,25 +546,27 @@ export default function EventScreen() {
               }}
             >
               <View style={styles.mapContainer}>
-                <MapView
-                  style={styles.mapView}
-                  initialRegion={{
-                    latitude: event.club.latitude!,
-                    longitude: event.club.longitude!,
-                    latitudeDelta: 0.008,
-                    longitudeDelta: 0.008,
-                  }}
-                  scrollEnabled={false}
-                  zoomEnabled={false}
-                  pitchEnabled={false}
-                  rotateEnabled={false}
-                  pointerEvents="none"
-                >
-                  <Marker
-                    coordinate={{ latitude: event.club.latitude!, longitude: event.club.longitude! }}
-                    pinColor={Colors.accent}
-                  />
-                </MapView>
+                {event.club.latitude && event.club.longitude && (
+                  <MapView
+                    style={styles.mapView}
+                    initialRegion={{
+                      latitude: event.club.latitude,
+                      longitude: event.club.longitude,
+                      latitudeDelta: 0.008,
+                      longitudeDelta: 0.008,
+                    }}
+                    scrollEnabled={false}
+                    zoomEnabled={false}
+                    pitchEnabled={false}
+                    rotateEnabled={false}
+                    pointerEvents="none"
+                  >
+                    <Marker
+                      coordinate={{ latitude: event.club.latitude, longitude: event.club.longitude }}
+                      pinColor={Colors.accent}
+                    />
+                  </MapView>
+                )}
                 <View style={styles.mapOverlayBottom}>
                   <Ionicons name="location" size={13} color={Colors.accent} />
                   <Text style={styles.mapAddressText} numberOfLines={1}>{event.club.address}</Text>
