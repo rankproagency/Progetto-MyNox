@@ -21,6 +21,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { getColors } from 'react-native-image-colors';
 import { useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useTranslation } from 'react-i18next';
@@ -110,6 +111,22 @@ export default function EventScreen() {
   const [floorPlanModalVisible, setFloorPlanModalVisible] = useState(false);
   const [extrasModalVisible, setExtrasModalVisible] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
+  const [posterGlow, setPosterGlow] = useState('#ffffff');
+
+  useEffect(() => {
+    if (!event?.imageUrl) return;
+    getColors(versionedImageUrl(event.imageUrl, event.updatedAt), {
+      fallback: '#ffffff',
+      cache: true,
+      key: event.imageUrl,
+    }).then((colors) => {
+      const color =
+        colors.platform === 'ios' ? colors.primary :
+        colors.platform === 'android' ? colors.dominant :
+        '#ffffff';
+      setPosterGlow(color ?? '#ffffff');
+    }).catch(() => {});
+  }, [event?.imageUrl]);
 
   const availableExtras = (event?.extras ?? []).filter((e) => e.isAvailable);
   const extrasDeposit = availableExtras.reduce((sum, e) => sum + (orderedExtras[e.id] ?? 0) * e.deposit, 0);
@@ -393,7 +410,7 @@ export default function EventScreen() {
 
         {/* Hero — locandina contenuta con glow */}
         <View style={[styles.heroWrapper, { paddingTop: insets.top + 58 }]}>
-          <View style={styles.heroCard}>
+          <View style={[styles.heroCard, { shadowColor: posterGlow }]}>
             <View style={styles.heroCardInner}>
               <Image
                 source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }}
