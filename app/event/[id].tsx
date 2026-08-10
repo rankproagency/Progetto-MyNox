@@ -881,10 +881,10 @@ const styles = StyleSheet.create({
   heroCard: {
     width: '100%',
     borderRadius: 18,
-    shadowColor: Colors.accent,
+    shadowColor: '#ffffff',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.55,
-    shadowRadius: 28,
+    shadowOpacity: 0.22,
+    shadowRadius: 22,
     elevation: 20,
   },
   heroCardInner: {
