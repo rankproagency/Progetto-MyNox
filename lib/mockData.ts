@@ -35,7 +35,12 @@ export const MOCK_EVENTS: Event[] = [
       { id: 't2', eventId: '1', label: 'Uomo', gender: 'male', price: 15, priceTiers: [], isUnlimited: false, includesDrink: true, available: 80 },
       { id: 't3', eventId: '1', label: 'Early Bird', gender: 'any', price: 8, priceTiers: [], isUnlimited: false, includesDrink: true, available: 20 },
     ],
-    performers: [],
+    performers: [
+      { name: 'KOSMIK', role: 'dj' },
+      { name: 'PHASE ERROR', role: 'dj' },
+      { name: 'DRVG CVLTVRE', role: 'dj' },
+      { name: 'SARA VEGA', role: 'vocalist' },
+    ],
     tables: [
       { id: 'tb1', eventId: '1', label: 'T1', capacity: 4, deposit: 60, available: true, zone_label: 'Standard', zone_color: '#3b82f6', minimum_spend: 200 },
       { id: 'tb2', eventId: '1', label: 'T2', capacity: 4, deposit: 60, available: true, zone_label: 'Standard', zone_color: '#3b82f6', minimum_spend: 200 },

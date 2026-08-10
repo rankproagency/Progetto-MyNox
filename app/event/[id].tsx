@@ -487,11 +487,36 @@ export default function EventScreen() {
                 <Text style={[styles.infoRowStrong, event.minAge < 18 && { color: Colors.warning }]}>{event.minAge}+</Text>
               </Text>
             </View>
+
+            {(event.performers?.length ?? 0) > 0 && (() => {
+              const djs = event.performers.filter((p) => p.role === 'dj');
+              const vocalists = event.performers.filter((p) => p.role === 'vocalist');
+              return (
+                <>
+                  {djs.length > 0 && (
+                    <View style={styles.infoRow}>
+                      <Ionicons name="musical-notes-outline" size={18} color={Colors.textMuted} style={styles.infoRowIcon} />
+                      <Text style={styles.infoRowText}>
+                        <Text style={styles.infoRowStrong}>{djs.map((p) => p.name).join('  ·  ')}</Text>
+                      </Text>
+                    </View>
+                  )}
+                  {vocalists.length > 0 && (
+                    <View style={styles.infoRow}>
+                      <Ionicons name="mic-outline" size={18} color={Colors.textMuted} style={styles.infoRowIcon} />
+                      <Text style={styles.infoRowText}>
+                        <Text style={styles.infoRowStrong}>{vocalists.map((p) => p.name).join('  ·  ')}</Text>
+                      </Text>
+                    </View>
+                  )}
+                </>
+              );
+            })()}
           </View>
         </View>
 
         {/* Contenuto principale — non renderizzato se vuoto */}
-        {(!!event.description || event.lineup.length > 0 || (event.performers?.length ?? 0) > 0) && (
+        {(!!event.description || event.lineup.length > 0) && (
           <View style={styles.content}>
 
             {/* Descrizione */}
@@ -532,24 +557,6 @@ export default function EventScreen() {
               </>
             )}
 
-            {/* Performers */}
-            {(event.performers?.length ?? 0) > 0 && (
-              <>
-                <View style={styles.divider} />
-                <View style={styles.performersGrid}>
-                  {event.performers.map((p, i) => (
-                    <View key={i} style={styles.performerChip}>
-                      <View style={[styles.performerBadge, p.role === 'vocalist' && styles.performerBadgeVocalist]}>
-                        <Text style={[styles.performerBadgeText, p.role === 'vocalist' && styles.performerBadgeTextVocalist]}>
-                          {p.role === 'dj' ? 'DJ' : 'VOCALIST'}
-                        </Text>
-                      </View>
-                      <Text style={styles.performerName}>{p.name}</Text>
-                    </View>
-                  ))}
-                </View>
-              </>
-            )}
 
           </View>
         )}
@@ -1133,22 +1140,6 @@ const styles = StyleSheet.create({
   },
   lineupName: { fontSize: 14, fontFamily: Font.bold, color: Colors.textPrimary },
 
-  // Performers
-  performersGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  performerChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: Colors.surface,
-    borderRadius: 10, borderWidth: 1, borderColor: Colors.border,
-    paddingHorizontal: 12, paddingVertical: 9,
-  },
-  performerBadge: {
-    backgroundColor: Colors.accentBg,
-    borderRadius: 5, paddingHorizontal: 6, paddingVertical: 2,
-  },
-  performerBadgeVocalist: { backgroundColor: 'rgba(236,72,153,0.15)' },
-  performerBadgeText: { fontSize: 9, fontFamily: Font.extraBold, color: Colors.accent, letterSpacing: 0.5 },
-  performerBadgeTextVocalist: { color: '#ec4899' },
-  performerName: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.textPrimary },
 
   // Sold counter
   soldRow: {
