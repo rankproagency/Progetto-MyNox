@@ -574,6 +574,7 @@ export default function EventScreen() {
                     zoomEnabled={false}
                     pitchEnabled={false}
                     rotateEnabled={false}
+                    userInterfaceStyle="dark"
                     pointerEvents="none"
                   >
                     <Marker coordinate={mapCoords} pinColor={Colors.accent} />
