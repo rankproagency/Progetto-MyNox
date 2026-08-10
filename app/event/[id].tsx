@@ -398,7 +398,7 @@ export default function EventScreen() {
               <Image
                 source={{ uri: versionedImageUrl(event.imageUrl, event.updatedAt) }}
                 style={styles.heroImage}
-                contentFit="cover"
+                contentFit="contain"
                 cachePolicy="memory-disk"
               />
             </View>
@@ -881,15 +881,16 @@ const styles = StyleSheet.create({
   heroCard: {
     width: '100%',
     borderRadius: 18,
-    shadowColor: '#ffffff',
+    shadowColor: Colors.accent,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.22,
-    shadowRadius: 22,
+    shadowOpacity: 0.5,
+    shadowRadius: 24,
     elevation: 20,
   },
   heroCardInner: {
     borderRadius: 18,
     overflow: 'hidden',
+    backgroundColor: Colors.background,
   },
   heroImage: {
     width: '100%',
