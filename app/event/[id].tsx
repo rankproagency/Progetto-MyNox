@@ -596,12 +596,6 @@ export default function EventScreen() {
               {/* Prevendita */}
               {bookingMode === 'ticket' && (
                 <>
-                  {hasTickets && event.ticketTypes.every((tk) => tk.includesDrink) && (
-                    <View style={styles.drinkBadge}>
-                      <Ionicons name="wine-outline" size={13} color={Colors.accent} />
-                      <Text style={styles.drinkBadgeText}>{t('event.every_ticket_includes_drink')}</Text>
-                    </View>
-                  )}
                   {/* Scarsità */}
                   {showScarcity && (
                     <View style={styles.scarcityBox}>
@@ -675,6 +669,12 @@ export default function EventScreen() {
                       </View>
                     </TouchableOpacity>
                   ))}
+                  {hasTickets && event.ticketTypes.every((tk) => tk.includesDrink) && (
+                    <View style={styles.drinkBadge}>
+                      <Ionicons name="wine-outline" size={13} color={Colors.accent} />
+                      <Text style={styles.drinkBadgeText}>{t('event.every_ticket_includes_drink')}</Text>
+                    </View>
+                  )}
                   {selectedTicket && (
                     <View style={styles.qtyRow}>
                       <Text style={styles.qtyLabel}>{t('event.how_many_tickets')}</Text>
