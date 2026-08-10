@@ -1204,7 +1204,7 @@ const styles = StyleSheet.create({
   },
   mapDarkOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(7,8,15,0.45)',
+    backgroundColor: 'rgba(7,8,15,0.30)',
   },
   mapOverlayBottom: {
     flexDirection: 'row',
