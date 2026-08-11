@@ -742,6 +742,9 @@ export default function EventScreen() {
                       activeOpacity={0.8}
                     >
                       <View style={styles.ticketLeft}>
+                        <View style={[styles.radio, selectedTicket?.id === ticket.id && styles.radioActive]}>
+                          {selectedTicket?.id === ticket.id && <View style={styles.radioDot} />}
+                        </View>
                         <Text style={styles.ticketLabel}>{ticket.label}</Text>
                       </View>
                       <View style={styles.ticketRight}>
@@ -1287,7 +1290,14 @@ const styles = StyleSheet.create({
     borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
     padding: 14, marginBottom: 8,
   },
-  ticketSelected: { borderColor: Colors.accent, borderLeftWidth: 3, backgroundColor: 'rgba(168,85,247,0.07)' },
+  ticketSelected: { borderColor: Colors.accent, backgroundColor: 'rgba(168,85,247,0.07)' },
+  radio: {
+    width: 18, height: 18, borderRadius: 9,
+    borderWidth: 1.5, borderColor: Colors.textMuted,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  radioActive: { borderColor: Colors.accent },
+  radioDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.accent },
   ticketDisabled: { opacity: 0.4 },
   noTableOption: { borderColor: Colors.border },
   ticketLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
