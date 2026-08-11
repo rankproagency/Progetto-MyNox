@@ -608,7 +608,7 @@ const server = http.createServer(async (req, res) => {
       // M4: verifica server-side che ticket, tavolo ed extras siano effettivamente gratuiti.
       if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
         if (ticket_type_id) {
-          const tt = await callSupabaseGet(`/rest/v1/ticket_types?id=eq.${encodeURIComponent(ticket_type_id)}&select=price,price_tiers,max_per_account`);
+          const tt = await callSupabaseGet(`/rest/v1/ticket_types?id=eq.${encodeURIComponent(ticket_type_id)}&select=price,price_tiers`);
           if (Array.isArray(tt) && tt.length > 0) {
             const effectivePrice = getEffectiveTicketPrice(tt[0].price, tt[0].price_tiers, event_date || '');
             if (effectivePrice > 0) {
@@ -616,18 +616,15 @@ const server = http.createServer(async (req, res) => {
               res.end(JSON.stringify({ error: 'Biglietto non gratuito.' }));
               return;
             }
-            // Limite massimo per account
-            if (tt[0].max_per_account != null) {
-              const existing = await callSupabaseGet(
-                `/rest/v1/tickets?user_id=eq.${encodeURIComponent(user_id)}&ticket_type_id=eq.${encodeURIComponent(ticket_type_id)}&status=not.in.(cancelled,refunded)&select=id`
-              );
-              const existingCount = Array.isArray(existing) ? existing.length : 0;
-              if (existingCount + quantity > tt[0].max_per_account) {
-                const remaining = Math.max(0, tt[0].max_per_account - existingCount);
-                res.writeHead(409, CORS_HEADERS);
-                res.end(JSON.stringify({ error: `Limite raggiunto: puoi acquistare al massimo ${tt[0].max_per_account} bigliett${tt[0].max_per_account === 1 ? 'o' : 'i'} di questo tipo per account.${remaining > 0 ? ` Puoi acquistarne ancora ${remaining}.` : ''}` }));
-                return;
-              }
+            // Biglietti gratuiti: max 1 per account
+            const existing = await callSupabaseGet(
+              `/rest/v1/tickets?user_id=eq.${encodeURIComponent(user_id)}&ticket_type_id=eq.${encodeURIComponent(ticket_type_id)}&select=id`
+            );
+            const existingCount = Array.isArray(existing) ? existing.length : 0;
+            if (existingCount + quantity > 1) {
+              res.writeHead(409, CORS_HEADERS);
+              res.end(JSON.stringify({ error: 'Puoi riscattare al massimo 1 biglietto omaggio di questo tipo per account.' }));
+              return;
             }
           }
         }

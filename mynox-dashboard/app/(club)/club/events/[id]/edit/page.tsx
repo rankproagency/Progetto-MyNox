@@ -43,7 +43,6 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
       label: t.label,
       price: String(t.price),
       total_quantity: String(t.total_quantity ?? ''),
-      max_per_account: t.max_per_account != null ? String(t.max_per_account) : '',
       includes_drink: t.includes_drink,
       sold_quantity: t.sold_quantity ?? 0,
       price_tiers: (t.price_tiers ?? []).map((tier: any) => ({

@@ -164,8 +164,9 @@ export default function EventScreen() {
   function maxBuyable(ticket: typeof selectedTicket): number {
     if (!ticket) return 0;
     const purchased = alreadyPurchasedCount(ticket.id);
-    const remaining = ticket.maxPerAccount != null ? Math.max(0, ticket.maxPerAccount - purchased) : 10;
-    return Math.min(ticket.available, remaining, 10);
+    const isFree = ticket.price === 0 && ticket.priceTiers.length === 0;
+    const cap = ticket.maxPerAccount ?? (isFree ? 1 : 10);
+    return Math.min(ticket.available, Math.max(0, cap - purchased), 10);
   }
 
   useFocusEffect(useCallback(() => {

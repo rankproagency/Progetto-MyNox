@@ -357,7 +357,7 @@ export const translations = {
       saveDraft: 'Salva come bozza', publishEvent: 'Pubblica evento',
       saveChanges: 'Salva modifiche', setDraft: 'Metti in bozza',
       dangerZone: 'Zona pericolosa', deleteEvent: 'Elimina evento definitivamente',
-      colTicketName: 'Nome biglietto', colTicketPrice: 'Prezzo (€)', colTicketQty: 'Quantità disponibile', colMaxPerAccount: 'Max per account',
+      colTicketName: 'Nome biglietto', colTicketPrice: 'Prezzo (€)', colTicketQty: 'Quantità disponibile',
     },
     participantsTable: {
       colName: 'Nome', colEmail: 'Email', colTicketType: 'Tipo biglietto',
@@ -739,7 +739,7 @@ export const translations = {
       saveDraft: 'Save as draft', publishEvent: 'Publish event',
       saveChanges: 'Save changes', setDraft: 'Set to draft',
       dangerZone: 'Danger zone', deleteEvent: 'Delete event permanently',
-      colTicketName: 'Ticket name', colTicketPrice: 'Price (€)', colTicketQty: 'Available quantity', colMaxPerAccount: 'Max per account',
+      colTicketName: 'Ticket name', colTicketPrice: 'Price (€)', colTicketQty: 'Available quantity',
     },
     participantsTable: {
       colName: 'Name', colEmail: 'Email', colTicketType: 'Ticket type',
