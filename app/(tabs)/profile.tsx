@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
 
   // Sections
   section: { paddingHorizontal: 20, marginBottom: 28 },
-  sectionTitle: { fontSize: 16, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 14 },
+  sectionTitle: { fontSize: 16, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 20 },
   subSectionTitle: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.textMuted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.6 },
 
   // Generi
@@ -641,7 +641,7 @@ const styles = StyleSheet.create({
   accountGroupLabel: {
     fontSize: 11, fontFamily: Font.semiBold, color: Colors.textMuted,
     textTransform: 'uppercase', letterSpacing: 0.8,
-    marginTop: 16, marginBottom: 8, paddingHorizontal: 2,
+    marginTop: 4, marginBottom: 8, paddingHorizontal: 2,
   },
   accountRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
