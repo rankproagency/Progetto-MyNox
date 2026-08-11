@@ -13,6 +13,7 @@ import {
   Platform,
   Alert,
   Keyboard,
+  Animated,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { versionedImageUrl } from '../../lib/imageUrl';
@@ -99,6 +100,8 @@ export default function EventScreen() {
 
   const scrollRef = useRef<ScrollView>(null);
   const tableNameRef = useRef<View>(null);
+  const ticketSectionY = useRef(0);
+  const ticketHighlight = useRef(new Animated.Value(0)).current;
   const hasTables = (event?.tables?.length ?? 0) > 0;
   const hasTickets = (event?.ticketTypes?.length ?? 0) > 0;
   const [bookingMode, setBookingMode] = useState<'ticket' | 'table'>(hasTickets ? 'ticket' : 'table');
@@ -628,7 +631,10 @@ export default function EventScreen() {
               </View>
             )
           ) : (
-            <>
+            <Animated.View
+              onLayout={(e) => { ticketSectionY.current = e.nativeEvent.layout.y; }}
+              style={{ backgroundColor: ticketHighlight.interpolate({ inputRange: [0, 1], outputRange: ['transparent', 'rgba(168,85,247,0.10)'] }), borderRadius: 16 }}
+            >
               {/* Tab underline — solo se ci sono tavoli */}
               {hasTables && hasTickets && (
                 <View style={styles.bookingToggle}>
@@ -785,6 +791,7 @@ export default function EventScreen() {
                 </>
               )}
             </>
+            </Animated.View>
           )}
         </View>
 
@@ -859,11 +866,19 @@ export default function EventScreen() {
               )}
             </View>
             <TouchableOpacity
-              style={[styles.ctaButton, (!selectedTicket && !selectedTable || (!!selectedTable && !tableName.trim())) && styles.ctaDisabled]}
+              style={[styles.ctaButton, (!!selectedTable && !tableName.trim()) && styles.ctaDisabled]}
               activeOpacity={0.85}
-              disabled={!selectedTicket && !selectedTable || (!!selectedTable && !tableName.trim())}
+              disabled={!!selectedTable && !tableName.trim()}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                if (!selectedTicket && !selectedTable) {
+                  scrollRef.current?.scrollTo({ y: ticketSectionY.current - 20, animated: true });
+                  Animated.sequence([
+                    Animated.timing(ticketHighlight, { toValue: 1, duration: 200, useNativeDriver: false }),
+                    Animated.timing(ticketHighlight, { toValue: 0, duration: 600, useNativeDriver: false }),
+                  ]).start();
+                  return;
+                }
                 if (!user) {
                   Alert.alert(
                     t('event.auth_required_title'),
