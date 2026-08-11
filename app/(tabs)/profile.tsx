@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
   },
   avatarInitial: { fontSize: 40, fontFamily: Font.extraBold, color: Colors.white },
   name: { fontSize: 22, fontFamily: Font.extraBold, color: Colors.textPrimary, marginBottom: 4 },
-  email: { fontSize: 13, color: Colors.textSecondary, marginBottom: 4 },
+  email: { fontSize: 13, color: Colors.textSecondary, marginBottom: 20 },
   since: { fontSize: 12, color: Colors.textMuted, marginBottom: 20 },
 
   // Stats inline
