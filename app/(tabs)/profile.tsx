@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
 
   // Sections
   section: { paddingHorizontal: 20, marginBottom: 28 },
-  sectionTitle: { fontSize: 16, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 20 },
+  sectionTitle: { fontSize: 16, fontFamily: Font.bold, color: Colors.textPrimary, marginBottom: 10 },
   subSectionTitle: { fontSize: 12, fontFamily: Font.semiBold, color: Colors.textMuted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.6 },
 
   // Generi
