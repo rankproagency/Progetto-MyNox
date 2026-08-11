@@ -121,13 +121,18 @@ export default function TicketScreen() {
                 <Text style={[styles.toggleText, activeQR === 'entry' && styles.toggleTextActive]}>{t('ticket_detail.toggle_entry')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.toggleBtn, activeQR === 'drink' && styles.toggleActive]}
-                onPress={() => { Haptics.selectionAsync(); setActiveQR('drink'); }}
+                style={[styles.toggleBtn, activeQR === 'drink' && styles.toggleActive, ticket.status !== 'used' && styles.toggleDisabled]}
+                onPress={() => {
+                  if (ticket.status !== 'used') return;
+                  Haptics.selectionAsync();
+                  setActiveQR('drink');
+                }}
+                activeOpacity={ticket.status !== 'used' ? 1 : 0.7}
               >
                 <Ionicons
-                  name="wine-outline"
+                  name={ticket.status !== 'used' ? 'lock-closed-outline' : 'wine-outline'}
                   size={14}
-                  color={activeQR === 'drink' ? Colors.white : Colors.textMuted}
+                  color={Colors.textMuted}
                   style={{ marginRight: 4 }}
                 />
                 <Text style={[styles.toggleText, activeQR === 'drink' && styles.toggleTextActive]}>{t('ticket_detail.toggle_drink')}</Text>
@@ -226,69 +231,79 @@ export default function TicketScreen() {
               </>
             ) : ticket.type === 'ticket' && ticket.drinkQrCode ? (
               <>
-                <View style={[styles.qrWrapper, ticket.drinkUsed && styles.qrUsed]}>
-                  <QRCode
-                    value={ticket.drinkQrCode}
-                    size={210}
-                    backgroundColor="white"
-                    color={ticket.drinkUsed ? '#aaa' : 'black'}
-                  />
-                  {ticket.drinkUsed && (
-                    <View style={styles.usedOverlay}>
-                      <Text style={styles.usedText}>{t('ticket_detail.used_overlay')}</Text>
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.qrLabel}>
-                  {ticket.drinkUsed ? t('ticket_detail.qr_drink_already_used') : t('ticket_detail.qr_label_drink')}
-                </Text>
-                {ticket.drinkUsed ? (
-                  <View style={[styles.usedBadge, { marginBottom: 8 }]}>
-                    <Ionicons name="close-circle" size={14} color={Colors.error} />
-                    <Text style={styles.usedBadgeText}>{t('ticket_detail.status_drink_used')}</Text>
+                {ticket.status !== 'used' ? (
+                  <View style={styles.drinkLocked}>
+                    <Ionicons name="lock-closed" size={40} color={Colors.textMuted} />
+                    <Text style={styles.drinkLockedTitle}>{t('ticket_detail.drink_locked_title')}</Text>
+                    <Text style={styles.drinkLockedBody}>{t('ticket_detail.drink_locked_body')}</Text>
                   </View>
                 ) : (
-                  <View style={[styles.validBadge, { marginBottom: 8 }]}>
-                    <Ionicons name="checkmark-circle" size={14} color={Colors.success} />
-                    <Text style={styles.validText}>{t('ticket_detail.status_drink_available')}</Text>
-                  </View>
-                )}
-                {!ticket.drinkUsed && isEventToday && (
                   <>
-                    <TouchableOpacity
-                      style={styles.baristaBtm}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                        Alert.alert(
-                          t('ticket_detail.barista_confirm_title'),
-                          t('ticket_detail.barista_confirm_body'),
-                          [
-                            {
-                              text: t('ticket_detail.barista_confirm_btn'),
-                              style: 'destructive',
-                              onPress: async () => {
-                                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                                try {
-                                  await markDrinkUsed(ticket.id);
-                                } catch {
-                                  Alert.alert(t('common.error'), t('ticket_detail.barista_error'));
-                                }
-                              },
-                            },
-                            { text: t('common.cancel'), style: 'cancel' },
-                          ]
-                        );
-                      }}
-                    >
-                      <Ionicons name="checkmark" size={16} color={Colors.white} />
-                      <Text style={styles.baristaText}>{t('ticket_detail.barista_mark_used')}</Text>
-                    </TouchableOpacity>
-                    <View style={styles.actionDisclaimer}>
-                      <Ionicons name="warning-outline" size={12} color={Colors.warning} />
-                      <Text style={styles.actionDisclaimerText}>
-                        {t('ticket_detail.barista_disclaimer')}
-                      </Text>
+                    <View style={[styles.qrWrapper, ticket.drinkUsed && styles.qrUsed]}>
+                      <QRCode
+                        value={ticket.drinkQrCode}
+                        size={210}
+                        backgroundColor="white"
+                        color={ticket.drinkUsed ? '#aaa' : 'black'}
+                      />
+                      {ticket.drinkUsed && (
+                        <View style={styles.usedOverlay}>
+                          <Text style={styles.usedText}>{t('ticket_detail.used_overlay')}</Text>
+                        </View>
+                      )}
                     </View>
+                    <Text style={styles.qrLabel}>
+                      {ticket.drinkUsed ? t('ticket_detail.qr_drink_already_used') : t('ticket_detail.qr_label_drink')}
+                    </Text>
+                    {ticket.drinkUsed ? (
+                      <View style={[styles.usedBadge, { marginBottom: 8 }]}>
+                        <Ionicons name="close-circle" size={14} color={Colors.error} />
+                        <Text style={styles.usedBadgeText}>{t('ticket_detail.status_drink_used')}</Text>
+                      </View>
+                    ) : (
+                      <View style={[styles.validBadge, { marginBottom: 8 }]}>
+                        <Ionicons name="checkmark-circle" size={14} color={Colors.success} />
+                        <Text style={styles.validText}>{t('ticket_detail.status_drink_available')}</Text>
+                      </View>
+                    )}
+                    {!ticket.drinkUsed && isEventToday && (
+                      <>
+                        <TouchableOpacity
+                          style={styles.baristaBtm}
+                          onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                            Alert.alert(
+                              t('ticket_detail.barista_confirm_title'),
+                              t('ticket_detail.barista_confirm_body'),
+                              [
+                                {
+                                  text: t('ticket_detail.barista_confirm_btn'),
+                                  style: 'destructive',
+                                  onPress: async () => {
+                                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                                    try {
+                                      await markDrinkUsed(ticket.id);
+                                    } catch {
+                                      Alert.alert(t('common.error'), t('ticket_detail.barista_error'));
+                                    }
+                                  },
+                                },
+                                { text: t('common.cancel'), style: 'cancel' },
+                              ]
+                            );
+                          }}
+                        >
+                          <Ionicons name="checkmark" size={16} color={Colors.white} />
+                          <Text style={styles.baristaText}>{t('ticket_detail.barista_mark_used')}</Text>
+                        </TouchableOpacity>
+                        <View style={styles.actionDisclaimer}>
+                          <Ionicons name="warning-outline" size={12} color={Colors.warning} />
+                          <Text style={styles.actionDisclaimerText}>
+                            {t('ticket_detail.barista_disclaimer')}
+                          </Text>
+                        </View>
+                      </>
+                    )}
                   </>
                 )}
               </>
@@ -434,8 +449,15 @@ const styles = StyleSheet.create({
     borderRadius: 10, alignItems: 'center', justifyContent: 'center',
   },
   toggleActive: { backgroundColor: Colors.accent },
+  toggleDisabled: { opacity: 0.4 },
   toggleText: { fontSize: 14, fontFamily: Font.semiBold, color: Colors.textMuted },
   toggleTextActive: { color: Colors.white },
+  drinkLocked: {
+    alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 48, paddingHorizontal: 24, gap: 16,
+  },
+  drinkLockedTitle: { fontSize: 18, fontFamily: Font.bold, color: Colors.textPrimary, textAlign: 'center' },
+  drinkLockedBody: { fontSize: 13, color: Colors.textMuted, textAlign: 'center', lineHeight: 20 },
 
   tableCardHeader: {
     flexDirection: 'row',

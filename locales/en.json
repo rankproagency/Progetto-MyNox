@@ -382,6 +382,8 @@
     "not_found": "Ticket not found",
     "toggle_entry": "Entry",
     "toggle_drink": "Free drink",
+    "drink_locked_title": "Enter first",
+    "drink_locked_body": "The free drink can be redeemed inside the venue, after the bouncer has validated your ticket.",
     "table_bottle_service": "Bottle service",
     "capacity_label": "seats",
     "qr_label_entry": "Show this QR to the bouncer",

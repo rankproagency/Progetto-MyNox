@@ -382,6 +382,8 @@
     "not_found": "Biglietto non trovato",
     "toggle_entry": "Ingresso",
     "toggle_drink": "Free drink",
+    "drink_locked_title": "Entra prima",
+    "drink_locked_body": "Il free drink si riscatta all'interno del locale, dopo che la sicurezza ha convalidato il tuo biglietto.",
     "table_bottle_service": "Bottle service",
     "capacity_label": "posti",
     "qr_label_entry": "Mostra questo QR alla sicurezza",
