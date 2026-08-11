@@ -165,7 +165,7 @@ export default function EventScreen() {
     if (!ticket) return 0;
     const purchased = alreadyPurchasedCount(ticket.id);
     const isFree = ticket.price === 0 && ticket.priceTiers.length === 0;
-    const cap = ticket.maxPerAccount ?? (isFree ? 1 : 10);
+    const cap = ticket.maxPerAccount ?? (isFree ? 5 : 10);
     return Math.min(ticket.available, Math.max(0, cap - purchased), 10);
   }
 

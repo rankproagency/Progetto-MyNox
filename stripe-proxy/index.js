@@ -621,9 +621,9 @@ const server = http.createServer(async (req, res) => {
               `/rest/v1/tickets?user_id=eq.${encodeURIComponent(user_id)}&ticket_type_id=eq.${encodeURIComponent(ticket_type_id)}&select=id`
             );
             const existingCount = Array.isArray(existing) ? existing.length : 0;
-            if (existingCount + quantity > 1) {
+            if (existingCount + quantity > 5) {
               res.writeHead(409, CORS_HEADERS);
-              res.end(JSON.stringify({ error: 'Puoi riscattare al massimo 1 biglietto omaggio di questo tipo per account.' }));
+              res.end(JSON.stringify({ error: 'Puoi riscattare al massimo 5 biglietti omaggio di questo tipo per account.' }));
               return;
             }
           }
