@@ -111,8 +111,22 @@ export default function EventScreen() {
 
   const scrollRef = useRef<ScrollView>(null);
   const tableNameRef = useRef<View>(null);
-  const ticketSectionY = useRef(0);
+  const ticketSectionRef = useRef<View>(null);
   const ticketHighlight = useRef(new Animated.Value(0)).current;
+
+  function scrollToTickets() {
+    ticketSectionRef.current?.measureLayout(
+      scrollRef.current?.getScrollableNode() as any,
+      (_x: number, y: number) => {
+        scrollRef.current?.scrollTo({ y: y - 20, animated: true });
+        Animated.sequence([
+          Animated.timing(ticketHighlight, { toValue: 1, duration: 200, useNativeDriver: false }),
+          Animated.timing(ticketHighlight, { toValue: 0, duration: 700, useNativeDriver: false }),
+        ]).start();
+      },
+      () => {}
+    );
+  }
   const hasTables = (event?.tables?.length ?? 0) > 0;
   const hasTickets = (event?.ticketTypes?.length ?? 0) > 0;
   const [bookingMode, setBookingMode] = useState<'ticket' | 'table'>(hasTickets ? 'ticket' : 'table');
@@ -643,7 +657,7 @@ export default function EventScreen() {
             )
           ) : (
             <Animated.View
-              onLayout={(e) => { ticketSectionY.current = e.nativeEvent.layout.y; }}
+              ref={ticketSectionRef as any}
               style={{ backgroundColor: ticketHighlight.interpolate({ inputRange: [0, 1], outputRange: ['transparent', 'rgba(168,85,247,0.10)'] }), borderRadius: 16 }}
             >
               {/* Tab underline — solo se ci sono tavoli */}
@@ -873,11 +887,13 @@ export default function EventScreen() {
                   <Text style={styles.ctaTotal}>€{total}</Text>
                 </>
               ) : (
-                <Text style={styles.ctaHint}>
-                  {bookingMode === 'ticket'
-                    ? t('event.select_ticket_hint')
-                    : t('event.select_table_hint')}
-                </Text>
+                <TouchableOpacity activeOpacity={0.7} onPress={scrollToTickets}>
+                  <Text style={styles.ctaHint}>
+                    {bookingMode === 'ticket'
+                      ? t('event.select_ticket_hint')
+                      : t('event.select_table_hint')}
+                  </Text>
+                </TouchableOpacity>
               )}
             </View>
             <TouchableOpacity
@@ -887,11 +903,7 @@ export default function EventScreen() {
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 if (!selectedTicket && !selectedTable) {
-                  scrollRef.current?.scrollTo({ y: ticketSectionY.current - 20, animated: true });
-                  Animated.sequence([
-                    Animated.timing(ticketHighlight, { toValue: 1, duration: 200, useNativeDriver: false }),
-                    Animated.timing(ticketHighlight, { toValue: 0, duration: 600, useNativeDriver: false }),
-                  ]).start();
+                  scrollToTickets();
                   return;
                 }
                 if (!user) {
