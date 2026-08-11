@@ -259,9 +259,9 @@
     "claim_error_generic": "Impossibile riscattare il codice",
     "claim_success_title": "🎁 Biglietto ricevuto!",
     "claim_success_body": "Il biglietto è stato aggiunto ai tuoi biglietti.",
-    "gift_message_intro": "Ti mando un posto per questa serata.",
-    "gift_message_code_label": "Il tuo codice:",
-    "gift_message_cta": "Scarica MyNox → Biglietti → Riscatta regalo."
+    "gift_message_intro": "Ti regalo un biglietto per questa serata 🖤",
+    "gift_message_code_label": "🎟 Il tuo codice regalo:",
+    "gift_message_cta": "Apri MyNox → Biglietti → Riscatta regalo\nSe non hai l'app, scaricala su App Store o Google Play."
   },
 
   "extras": {

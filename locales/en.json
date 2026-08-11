@@ -259,9 +259,9 @@
     "claim_error_generic": "Unable to redeem the code",
     "claim_success_title": "🎁 Ticket received!",
     "claim_success_body": "The ticket has been added to your tickets.",
-    "gift_message_intro": "I'm sending you a spot for this night out.",
-    "gift_message_code_label": "Your code:",
-    "gift_message_cta": "Download MyNox → Tickets → Redeem gift."
+    "gift_message_intro": "I'm gifting you a ticket for tonight 🖤",
+    "gift_message_code_label": "🎟 Your gift code:",
+    "gift_message_cta": "Open MyNox → Tickets → Redeem gift\nIf you don't have the app, download it on the App Store or Google Play."
   },
 
   "extras": {

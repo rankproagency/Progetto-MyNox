@@ -97,12 +97,14 @@ export default function TicketsScreen() {
 
   function buildGiftMessage(ticket: MockTicket, code: string): string {
     return (
-      `MYNOX ✦\n\n` +
+      `✦ MYNOX ✦\n` +
+      `―――――――――――――――\n\n` +
       `${t('tickets.gift_message_intro')}\n\n` +
-      `${ticket.eventName.toUpperCase()}\n` +
+      `*${ticket.eventName.toUpperCase()}*\n` +
       `📍 ${ticket.clubName}  ·  ${ticket.date}  ·  ${ticket.startTime}\n\n` +
       `${t('tickets.gift_message_code_label')}\n` +
-      `[ ${code} ]\n\n` +
+      `*[ ${code} ]*\n\n` +
+      `―――――――――――――――\n` +
       `${t('tickets.gift_message_cta')}`
     );
   }
