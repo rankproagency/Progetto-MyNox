@@ -14,6 +14,7 @@ import {
   Alert,
   Keyboard,
   Animated,
+  findNodeHandle,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { versionedImageUrl } from '../../lib/imageUrl';
@@ -115,8 +116,10 @@ export default function EventScreen() {
   const ticketHighlight = useRef(new Animated.Value(0)).current;
 
   function scrollToTickets() {
-    ticketSectionRef.current?.measureLayout(
-      scrollRef.current?.getScrollableNode() as any,
+    const node = findNodeHandle(scrollRef.current);
+    if (!node || !ticketSectionRef.current) return;
+    ticketSectionRef.current.measureLayout(
+      node,
       (_x: number, y: number) => {
         scrollRef.current?.scrollTo({ y: y - 20, animated: true });
         Animated.sequence([
@@ -667,9 +670,9 @@ export default function EventScreen() {
             )
           ) : (
             <Animated.View
-              ref={ticketSectionRef as any}
               style={{ backgroundColor: ticketHighlight.interpolate({ inputRange: [0, 1], outputRange: ['transparent', 'rgba(168,85,247,0.10)'] }), borderRadius: 16 }}
             >
+            <View ref={ticketSectionRef}>
               {/* Tab underline — solo se ci sono tavoli */}
               {hasTables && hasTickets && (
                 <View style={styles.bookingToggle}>
@@ -825,6 +828,7 @@ export default function EventScreen() {
                   />
                 </>
               )}
+            </View>
             </Animated.View>
           )}
         </View>
