@@ -505,6 +505,41 @@ const server = http.createServer(async (req, res) => {
 
       const gift = claimed[0];
 
+      // Controllo età: recupera min_age evento e data di nascita del ricevente
+      const [ticketRows, profileRows] = await Promise.all([
+        callSupabaseGet(`/rest/v1/tickets?id=eq.${gift.ticket_id}&select=event_id,events(min_age)`),
+        callSupabaseGet(`/rest/v1/profiles?id=eq.${claimer_id}&select=date_of_birth`),
+      ]);
+
+      const minAge = ticketRows?.[0]?.events?.min_age ?? 0;
+      const dob = profileRows?.[0]?.date_of_birth;
+
+      if (minAge > 0) {
+        if (!dob) {
+          await callSupabasePatch(
+            `/rest/v1/gift_codes?code=eq.${encodeURIComponent(code)}`,
+            { status: 'pending', claimed_by: null, claimed_at: null }
+          );
+          res.writeHead(403, CORS_HEADERS);
+          res.end(JSON.stringify({ error: 'Aggiungi la tua data di nascita nel profilo per riscattare questo biglietto.' }));
+          return;
+        }
+        const dobDate = new Date(dob);
+        const now = new Date();
+        let age = now.getFullYear() - dobDate.getFullYear();
+        const m = now.getMonth() - dobDate.getMonth();
+        if (m < 0 || (m === 0 && now.getDate() < dobDate.getDate())) age--;
+        if (age < minAge) {
+          await callSupabasePatch(
+            `/rest/v1/gift_codes?code=eq.${encodeURIComponent(code)}`,
+            { status: 'pending', claimed_by: null, claimed_at: null }
+          );
+          res.writeHead(403, CORS_HEADERS);
+          res.end(JSON.stringify({ error: `Questo biglietto è riservato ai ${minAge}+. Non puoi riscattarlo.` }));
+          return;
+        }
+      }
+
       // Trasferisci il biglietto al nuovo proprietario
       await callSupabasePatch(`/rest/v1/tickets?id=eq.${gift.ticket_id}`, { user_id: claimer_id, status: 'valid' });
 

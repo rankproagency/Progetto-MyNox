@@ -137,7 +137,8 @@ export default function CheckoutScreen() {
 
   const hasDob = !!user?.dateOfBirth;
   const userAge = getUserAge(user?.dateOfBirth);
-  const needsAgeConfirm = hasDob && userAge !== null && userAge < 18;
+  const isTooYoung = hasDob && userAge !== null && !!event && userAge < event.minAge;
+  const needsAgeConfirm = hasDob && userAge !== null && userAge < 18 && !isTooYoung;
 
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
@@ -631,7 +632,7 @@ export default function CheckoutScreen() {
           </View>
         )}
 
-        {/* Conferma maggiore età — solo per utenti under 18 con DOB impostata */}
+        {/* Consenso genitore — minorenne con capacità contrattuale (evento ok, ma < 18) */}
         {needsAgeConfirm && (
           <View style={styles.section}>
             <TouchableOpacity
@@ -645,8 +646,22 @@ export default function CheckoutScreen() {
               <Text style={styles.ageCheckLabel}>
                 {t('checkout.age_confirm_label')}
                 <Text style={styles.ageCheckBold}>{t('checkout.age_confirm_bold')}</Text>
+                {t('checkout.age_confirm_suffix')}
               </Text>
             </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Blocco età — utente troppo giovane per questo evento */}
+        {isTooYoung && (
+          <View style={styles.section}>
+            <View style={styles.tooYoungBanner}>
+              <Ionicons name="lock-closed-outline" size={18} color={Colors.error} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.tooYoungTitle}>{t('checkout.too_young_title', { minAge: event!.minAge })}</Text>
+                <Text style={styles.tooYoungText}>{t('checkout.too_young_text', { minAge: event!.minAge })}</Text>
+              </View>
+            </View>
           </View>
         )}
 
@@ -662,10 +677,10 @@ export default function CheckoutScreen() {
 
       <View style={styles.ctaContainer}>
         <TouchableOpacity
-          style={[styles.ctaButton, (paying || !hasDob || !termsConfirmed || (needsAgeConfirm && !ageConfirmed)) && { opacity: 0.5 }]}
+          style={[styles.ctaButton, (paying || !hasDob || !termsConfirmed || isTooYoung || (needsAgeConfirm && !ageConfirmed)) && { opacity: 0.5 }]}
           activeOpacity={0.85}
           onPress={handlePay}
-          disabled={paying || !hasDob || !termsConfirmed || (needsAgeConfirm && !ageConfirmed)}
+          disabled={paying || !hasDob || !termsConfirmed || isTooYoung || (needsAgeConfirm && !ageConfirmed)}
         >
           {paying ? (
             <ActivityIndicator size="small" color={Colors.white} />
@@ -810,6 +825,14 @@ const styles = StyleSheet.create({
   dobMissingTitle: { fontSize: 13, fontFamily: Font.bold, color: '#f59e0b', marginBottom: 3 },
   dobMissingText: { fontSize: 12, color: Colors.textMuted, lineHeight: 18 },
   dobMissingLink: { color: '#f59e0b', fontFamily: Font.semiBold },
+  tooYoungBanner: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 12,
+    backgroundColor: 'rgba(239,68,68,0.08)',
+    borderRadius: 12, borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)',
+    padding: 14,
+  },
+  tooYoungTitle: { fontSize: 13, fontFamily: Font.bold, color: Colors.error, marginBottom: 3 },
+  tooYoungText: { fontSize: 12, color: Colors.textMuted, lineHeight: 18 },
 
   ageCheckRow: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,

@@ -81,6 +81,17 @@ export default function EventScreen() {
   const { events, isLoading, hasError, reload } = useEvents();
   const event = events.find((e) => e.id === id);
 
+  const userAge: number | null = (() => {
+    if (!user?.dateOfBirth) return null;
+    const dob = new Date(user.dateOfBirth);
+    const now = new Date();
+    let age = now.getFullYear() - dob.getFullYear();
+    const m = now.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
+    return age;
+  })();
+  const isTooYoung = userAge !== null && !!event && userAge < event.minAge;
+
   useEffect(() => {
     if (id) addRecentlyViewed(id);
   }, [id]);
@@ -790,7 +801,6 @@ export default function EventScreen() {
                   />
                 </>
               )}
-            </>
             </Animated.View>
           )}
         </View>
@@ -804,6 +814,11 @@ export default function EventScreen() {
           <View style={[styles.ctaButton, styles.ctaDisabled]}>
             <Ionicons name="time-outline" size={16} color={Colors.textMuted} />
             <Text style={[styles.ctaText, { color: Colors.textMuted }]}>{t('event.event_ended')}</Text>
+          </View>
+        ) : isTooYoung ? (
+          <View style={[styles.ctaButton, styles.ctaDisabled]}>
+            <Ionicons name="lock-closed-outline" size={16} color={Colors.textMuted} />
+            <Text style={[styles.ctaText, { color: Colors.textMuted }]}>Evento {event.minAge}+</Text>
           </View>
         ) : !hasTickets && !hasTables ? null : isSoldOut ? (
           event.doorEntryAvailable ? (

@@ -81,6 +81,7 @@ interface EventFormProps {
     start_time: string;
     end_time: string | null;
     dress_code: string | null;
+    min_age: number | -1;
     capacity: number;
     genres: string[];
     performers: PerformerRow[];
@@ -106,6 +107,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
     start_time: event?.start_time ?? '',
     end_time: event?.end_time ?? '',
     dress_code: event?.dress_code ?? '',
+    min_age: event?.min_age ?? -1,
     capacity: event?.capacity?.toString() ?? '',
     image_url: event?.image_url ?? '',
     genres: event?.genres ?? [] as string[],
@@ -241,6 +243,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
     if (!form.name.trim()) { setError(ef.nameRequired); return; }
     if (!form.date) { setError(ef.dateRequired); return; }
     if (!form.start_time) { setError(ef.startTimeRequired); return; }
+    if (form.min_age === -1) { setError(ef.minAgeRequired); return; }
     const incompleteTicket = ticketTypes.find((tk) => (tk.label.trim() || tk.price) && !tk.total_quantity);
     if (incompleteTicket) { setError(ef.availableRequired); return; }
 
@@ -256,6 +259,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
       start_time: form.start_time,
       end_time: form.end_time || null,
       dress_code: form.dress_code || null,
+      min_age: form.min_age === -1 ? 0 : form.min_age,
       capacity: form.capacity ? parseInt(form.capacity) : null,
       image_url: form.image_url || null,
       genres: form.genres,
@@ -423,6 +427,20 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
             placeholder="es. Elegante"
             className={inputClass}
           />
+        </Field>
+        <Field label={`${ef.fieldMinAge} *`}>
+          <select
+            value={form.min_age}
+            onChange={(e) => setForm({ ...form, min_age: parseInt(e.target.value) })}
+            className={inputClass}
+            required
+          >
+            <option value={-1} disabled>Seleziona...</option>
+            <option value={0}>{ef.freeAccess}</option>
+            <option value={14}>14+</option>
+            <option value={16}>16+</option>
+            <option value={18}>18+</option>
+          </select>
         </Field>
       </div>
 

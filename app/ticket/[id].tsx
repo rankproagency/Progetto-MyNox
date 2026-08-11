@@ -221,44 +221,6 @@ export default function TicketScreen() {
                       <Ionicons name="checkmark-circle" size={14} color={Colors.success} />
                       <Text style={styles.validText}>{t('ticket_detail.status_valid')}</Text>
                     </View>
-                    {isEventToday && !isPast && (
-                      <>
-                        <TouchableOpacity
-                          style={styles.bouncerBtn}
-                          onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                            Alert.alert(
-                              t('ticket_detail.bouncer_confirm_title'),
-                              t('ticket_detail.bouncer_confirm_body'),
-                              [
-                                {
-                                  text: t('ticket_detail.bouncer_confirm_btn'),
-                                  style: 'destructive',
-                                  onPress: async () => {
-                                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                                    try {
-                                      await markTicketUsed(ticket.id);
-                                    } catch {
-                                      Alert.alert(t('common.error'), t('ticket_detail.bouncer_error'));
-                                    }
-                                  },
-                                },
-                                { text: t('common.cancel'), style: 'cancel' },
-                              ]
-                            );
-                          }}
-                        >
-                          <Ionicons name="shield-checkmark-outline" size={16} color={Colors.white} />
-                          <Text style={styles.bouncerBtnText}>{t('ticket_detail.bouncer_mark_used')}</Text>
-                        </TouchableOpacity>
-                        <View style={styles.actionDisclaimer}>
-                          <Ionicons name="warning-outline" size={12} color={Colors.warning} />
-                          <Text style={styles.actionDisclaimerText}>
-                            {t('ticket_detail.bouncer_disclaimer')}
-                          </Text>
-                        </View>
-                      </>
-                    )}
                   </>
                 )}
               </>
