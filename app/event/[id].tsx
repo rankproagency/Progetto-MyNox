@@ -163,6 +163,16 @@ export default function EventScreen() {
   const availableExtras = (event?.extras ?? []).filter((e) => e.isAvailable);
   const extrasDeposit = availableExtras.reduce((sum, e) => sum + (orderedExtras[e.id] ?? 0) * e.deposit, 0);
 
+  function alreadyPurchasedCount(ticketTypeId: string): number {
+    return tickets.filter((tk) => tk.ticketTypeId === ticketTypeId).length;
+  }
+  function maxBuyable(ticket: typeof selectedTicket): number {
+    if (!ticket) return 0;
+    const purchased = alreadyPurchasedCount(ticket.id);
+    const remaining = ticket.maxPerAccount != null ? Math.max(0, ticket.maxPerAccount - purchased) : 10;
+    return Math.min(ticket.available, remaining, 10);
+  }
+
   useFocusEffect(useCallback(() => {
     return () => {
       setOrderedExtras({});
@@ -781,11 +791,11 @@ export default function EventScreen() {
                         </TouchableOpacity>
                         <Text style={styles.qtyValue}>{ticketQty}</Text>
                         <TouchableOpacity
-                          style={[styles.qtyBtn, ticketQty >= Math.min(selectedTicket.available, 10) && styles.qtyBtnDisabled]}
+                          style={[styles.qtyBtn, ticketQty >= maxBuyable(selectedTicket) && styles.qtyBtnDisabled]}
                           onPress={() => setTicketQty((q) => Math.min(selectedTicket.available, 10, q + 1))}
-                          disabled={ticketQty >= Math.min(selectedTicket.available, 10)}
+                          disabled={ticketQty >= maxBuyable(selectedTicket)}
                         >
-                          <Ionicons name="add" size={18} color={ticketQty >= Math.min(selectedTicket.available, 10) ? Colors.textMuted : Colors.textPrimary} />
+                          <Ionicons name="add" size={18} color={ticketQty >= maxBuyable(selectedTicket) ? Colors.textMuted : Colors.textPrimary} />
                         </TouchableOpacity>
                       </View>
                     </View>

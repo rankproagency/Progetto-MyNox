@@ -23,6 +23,7 @@ interface TicketTypeRow {
   label: string;
   price: string;
   total_quantity: string;
+  max_per_account: string;
   includes_drink: boolean;
   price_tiers: PriceTier[];
 }
@@ -120,7 +121,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
   );
 
   const [ticketTypes, setTicketTypes] = useState<TicketTypeRow[]>(
-    initialTicketTypes ?? [{ label: '', price: '', total_quantity: '', includes_drink: true, price_tiers: [] }]
+    initialTicketTypes ?? [{ label: '', price: '', total_quantity: '', max_per_account: '', includes_drink: true, price_tiers: [] }]
   );
 
   const defaultEventTables = (clubTables ?? []).map((ct) => ({
@@ -207,7 +208,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
   }
 
   function addTicketType() {
-    setTicketTypes((prev) => [...prev, { label: '', price: '', total_quantity: '', includes_drink: true, price_tiers: [] }]);
+    setTicketTypes((prev) => [...prev, { label: '', price: '', total_quantity: '', max_per_account: '', includes_drink: true, price_tiers: [] }]);
   }
 
   function removeTicketType(index: number) {
@@ -289,6 +290,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
           label: tk.label.trim(),
           price: parseFloat(tk.price),
           total_quantity: tk.total_quantity ? parseInt(tk.total_quantity) : null,
+          max_per_account: tk.max_per_account ? parseInt(tk.max_per_account) : null,
           sold_quantity: 0,
           includes_drink: tk.includes_drink,
           price_tiers: tk.price_tiers.filter((t) => t.until && t.price).map((t) => ({ until: t.until, price: parseFloat(t.price) })),
@@ -786,6 +788,17 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
                   value={ticket.total_quantity}
                   onChange={(e) => updateTicketType(index, 'total_quantity', e.target.value)}
                   placeholder="es. 200"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-500 mb-1">{ef.colMaxPerAccount}</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={ticket.max_per_account}
+                  onChange={(e) => updateTicketType(index, 'max_per_account', e.target.value)}
+                  placeholder="es. 2"
                   className={inputClass}
                 />
               </div>

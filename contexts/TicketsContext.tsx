@@ -31,6 +31,7 @@ export interface MockTicket {
   imageUrl?: string;
   eventImageUrl?: string;
   extras?: OrderedExtra[];
+  ticketTypeId?: string;
 }
 
 interface TicketsCtx {
@@ -87,6 +88,7 @@ function dbRowToMockTicket(row: any): MockTicket {
     tableCapacity: tbl?.capacity ?? undefined,
     tableSection: tbl?.section ?? undefined,
     pricePaid: row.price_paid ?? 0,
+    ticketTypeId: row.ticket_type_id ?? undefined,
     qrCode: row.qr_code,
     drinkQrCode: row.drink_qr_code ?? undefined,
     drinkUsed: row.drink_used ?? false,

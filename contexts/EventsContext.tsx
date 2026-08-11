@@ -40,6 +40,7 @@ function rowToEvent(row: any): Event {
     includesDrink: t.includes_drink,
     isUnlimited: t.total_quantity === null,
     available: t.total_quantity === null ? 999 : Math.max(0, t.total_quantity - (t.sold_quantity ?? 0)),
+    maxPerAccount: t.max_per_account ?? undefined,
   }));
 
   // Build position lookup from club_tables (keyed by label)

@@ -73,6 +73,7 @@ export interface TicketType {
   includesDrink: boolean;
   available: number;
   isUnlimited: boolean;
+  maxPerAccount?: number;
 }
 
 export interface Table {
