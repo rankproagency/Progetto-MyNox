@@ -192,15 +192,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session ? sessionToUser(session) : null);
         if (session) {
           await resolveOnboarded(session);
-          await loadUserGenres(session.user.id);
-          // Primo accesso dopo conferma email: salva marketing_consent dai user_metadata al profilo.
-          // onboarded == null indica che l'utente non ha ancora completato l'onboarding (primo login).
+          // Primo accesso dopo conferma email: scrivi marketing_consent sul profilo PRIMA
+          // di loadUserGenres, altrimenti loadUserGenres legge il vecchio valore (false).
           const meta = session.user.user_metadata;
           if (meta?.onboarded == null && meta?.marketing_consent !== undefined) {
             await supabase.from('profiles')
               .update({ marketing_consent: meta.marketing_consent })
               .eq('id', session.user.id);
           }
+          await loadUserGenres(session.user.id);
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);

@@ -518,7 +518,7 @@ export default function EventScreen() {
               <Text style={styles.infoRowText}>
                 <Text style={styles.infoRowStrong}>{event.dressCode}</Text>
                 {'  ·  '}
-                <Text style={[styles.infoRowStrong, event.minAge < 18 && { color: Colors.warning }]}>{event.minAge}+</Text>
+                <Text style={styles.infoRowStrong}>{event.minAge}+</Text>
               </Text>
             </View>
 
