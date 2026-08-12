@@ -693,6 +693,9 @@ const styles = StyleSheet.create({
   headerLogo: { width: 90, height: 26, marginBottom: 8 },
   citySelector: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: 'rgba(168,85,247,0.08)',
+    borderWidth: 1, borderColor: 'rgba(168,85,247,0.2)',
+    borderRadius: 20, paddingHorizontal: 9, paddingVertical: 4,
   },
   citySelectorText: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.textSecondary },
   headerActions: { flexDirection: 'row', gap: 8 },
