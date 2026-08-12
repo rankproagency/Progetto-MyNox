@@ -1,7 +1,6 @@
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
-import { useRef, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -25,19 +24,6 @@ export default function TonightHero({ event, isLive }: Props) {
   const { t } = useTranslation();
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const livePulse = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    if (!isLive) return;
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.timing(livePulse, { toValue: 0.35, duration: 700, useNativeDriver: true }),
-        Animated.timing(livePulse, { toValue: 1, duration: 700, useNativeDriver: true }),
-      ])
-    );
-    anim.start();
-    return () => anim.stop();
-  }, [isLive]);
   const hasTickets = event.ticketTypes.length > 0;
   const minPrice = hasTickets ? Math.min(...event.ticketTypes.map((t) => t.price)) : 0;
   const isSoldOut = hasTickets && event.ticketTypes.every((t) => t.available === 0);
@@ -60,7 +46,7 @@ export default function TonightHero({ event, isLive }: Props) {
       <View style={styles.topRow}>
         {isLive ? (
           <View style={styles.liveBadge}>
-            <Animated.View style={[styles.liveDot, { opacity: livePulse }]} />
+            <View style={styles.liveDot} />
             <Text style={styles.liveText}>Live</Text>
           </View>
         ) : <View />}
