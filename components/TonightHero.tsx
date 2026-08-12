@@ -19,9 +19,10 @@ const { width } = Dimensions.get('window');
 interface Props {
   event: Event;
   isLive?: boolean;
+  cardWidth?: number;
 }
 
-export default function TonightHero({ event, isLive }: Props) {
+export default function TonightHero({ event, isLive, cardWidth }: Props) {
   const { t } = useTranslation();
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -44,9 +45,13 @@ export default function TonightHero({ event, isLive }: Props) {
   const isSoldOut = hasTickets && event.ticketTypes.every((t) => t.available === 0);
   const firstArtist = event.lineup[0];
 
+  const containerStyle = cardWidth
+    ? [styles.container, { width: cardWidth, marginHorizontal: 0, marginRight: 14 }]
+    : styles.container;
+
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={containerStyle}
       activeOpacity={0.92}
       onPress={() => router.push(`/event/${event.id}`)}
     >

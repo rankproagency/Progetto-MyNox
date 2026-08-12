@@ -26,6 +26,8 @@ import { Font } from '../../constants/typography';
 import EventCard from '../../components/EventCard';
 import EventListItem from '../../components/EventListItem';
 import TonightHero from '../../components/TonightHero';
+
+const TONIGHT_CARD_WIDTH = Math.round(RNDimensions.get('window').width * 0.86);
 import { ALL_GENRES } from '../../constants/genres';
 import { useEvents } from '../../contexts/EventsContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -625,14 +627,30 @@ export default function HomeScreen() {
             </View>
           ) : (
             <>
-              {/* Oggi */}
+              {/* Stasera */}
               {todayEvents.length > 0 && (
                 <>
                   <Text style={styles.sectionTitle}>{t('home.section_tonight')}</Text>
-                  <TonightHero event={todayEvents[0]} isLive={isEventLive(todayEvents[0])} />
-                  {todayEvents.slice(1).map((e) => (
-                    <EventListItem key={e.id} event={e} isLive={isEventLive(e)} />
-                  ))}
+                  {todayEvents.length === 1 ? (
+                    <TonightHero event={todayEvents[0]} isLive={isEventLive(todayEvents[0])} />
+                  ) : (
+                    <FlatList
+                      data={todayEvents}
+                      keyExtractor={(item) => item.id}
+                      renderItem={({ item }) => (
+                        <TonightHero
+                          event={item}
+                          isLive={isEventLive(item)}
+                          cardWidth={TONIGHT_CARD_WIDTH}
+                        />
+                      )}
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.tonightCarousel}
+                      snapToInterval={TONIGHT_CARD_WIDTH + 14}
+                      decelerationRate="fast"
+                    />
+                  )}
                 </>
               )}
 
@@ -773,6 +791,7 @@ const styles = StyleSheet.create({
   forYouText: { fontSize: 11, fontFamily: Font.semiBold, color: Colors.accent },
   sectionSpacing: { marginTop: 28 },
   carouselContainer: { paddingLeft: 20, paddingRight: 6 },
+  tonightCarousel: { paddingLeft: 20, paddingRight: 6, paddingBottom: 28 },
   dayGroup: { paddingHorizontal: 20, marginBottom: 8 },
   dayHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   dayLabel: {
