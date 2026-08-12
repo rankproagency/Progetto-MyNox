@@ -15,9 +15,10 @@ import { formatMinAge } from '../lib/formatAge';
 
 interface Props {
   event: Event;
+  isLive?: boolean;
 }
 
-export default function EventListItem({ event }: Props) {
+export default function EventListItem({ event, isLive }: Props) {
   const { t } = useTranslation();
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -53,6 +54,12 @@ export default function EventListItem({ event }: Props) {
         {isSoldOut && !atDoor && (
           <View style={styles.soldOverlay}>
             <Text style={styles.soldOverlayText}>SOLD</Text>
+          </View>
+        )}
+        {isLive && (
+          <View style={styles.liveBadge}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>Live</Text>
           </View>
         )}
       </View>
@@ -130,6 +137,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  liveBadge: {
+    position: 'absolute', bottom: 4, left: 4,
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    backgroundColor: 'rgba(239,68,68,0.88)',
+    paddingHorizontal: 5, paddingVertical: 2, borderRadius: 6,
+  },
+  liveDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: '#fff' },
+  liveText: { fontSize: 9, fontFamily: Font.bold, color: '#fff', letterSpacing: 0.3 },
   soldOverlayText: {
     fontSize: 9,
     fontFamily: Font.black,

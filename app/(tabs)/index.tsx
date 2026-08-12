@@ -227,8 +227,11 @@ export default function HomeScreen() {
   }
 
   const yesterday = toDateKey(new Date(Date.now() - 86400000));
-  const liveEvent = filteredEvents.find((e) => (e.date === today || e.date === yesterday) && isEventLive(e)) ?? null;
-  const tonightEvent = filteredEvents.find((e) => e.date === today && isAvailable(e) && !isEventLive(e)) ?? null;
+  const todayEvents = [
+    ...filteredEvents.filter((e) => (e.date === today || e.date === yesterday) && isEventLive(e)),
+    ...filteredEvents.filter((e) => e.date === today && isAvailable(e) && !isEventLive(e))
+      .sort((a, b) => a.startTime.localeCompare(b.startTime)),
+  ];
 
   const recommended = musicGenres.length > 0
     ? filteredEvents.filter((e) =>
@@ -622,21 +625,16 @@ export default function HomeScreen() {
             </View>
           ) : (
             <>
-              {/* Live ora / Stasera */}
-              {liveEvent ? (
+              {/* Oggi */}
+              {todayEvents.length > 0 && (
                 <>
-                  <View style={styles.liveSectionHeader}>
-                    <View style={styles.liveSectionDot} />
-                    <Text style={styles.liveSectionTitle}>{t('home.section_live')}</Text>
-                  </View>
-                  <TonightHero event={liveEvent} />
+                  <Text style={styles.sectionTitle}>{t('home.section_today')}</Text>
+                  <TonightHero event={todayEvents[0]} />
+                  {todayEvents.slice(1).map((e) => (
+                    <EventListItem key={e.id} event={e} isLive={isEventLive(e)} />
+                  ))}
                 </>
-              ) : tonightEvent ? (
-                <>
-                  <Text style={styles.sectionTitle}>{t('home.section_tonight')}</Text>
-                  <TonightHero event={tonightEvent} />
-                </>
-              ) : null}
+              )}
 
               {/* Carousel contestuale: "Per te" se ha generi, "In evidenza" altrimenti */}
               {recommended.length > 0 ? (
