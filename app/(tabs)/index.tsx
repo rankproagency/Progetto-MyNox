@@ -628,7 +628,7 @@ export default function HomeScreen() {
               {/* Oggi */}
               {todayEvents.length > 0 && (
                 <>
-                  <Text style={styles.sectionTitle}>{t('home.section_today')}</Text>
+                  <Text style={styles.sectionTitle}>{t('home.section_tonight')}</Text>
                   <TonightHero event={todayEvents[0]} />
                   {todayEvents.slice(1).map((e) => (
                     <EventListItem key={e.id} event={e} isLive={isEventLive(e)} />
