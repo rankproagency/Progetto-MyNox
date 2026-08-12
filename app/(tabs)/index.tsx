@@ -229,7 +229,7 @@ export default function HomeScreen() {
   const yesterday = toDateKey(new Date(Date.now() - 86400000));
   const todayEvents = [
     ...filteredEvents.filter((e) => (e.date === today || e.date === yesterday) && isEventLive(e)),
-    ...filteredEvents.filter((e) => e.date === today && isAvailable(e) && !isEventLive(e))
+    ...filteredEvents.filter((e) => e.date === today && !isEventLive(e))
       .sort((a, b) => a.startTime.localeCompare(b.startTime)),
   ];
 
