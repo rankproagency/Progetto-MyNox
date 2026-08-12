@@ -281,7 +281,7 @@ export default function HomeScreen() {
                   }}
                 >
                   <View style={styles.cityLeft}>
-                    <Ionicons name={city.id === 'all' ? 'globe-outline' : 'location-sharp'} size={16} color={city.available ? Colors.accent : Colors.textMuted} />
+                    <Ionicons name="location-sharp" size={16} color={city.available ? Colors.accent : Colors.textMuted} />
                     <Text style={[styles.cityName, !city.available && styles.cityNameMuted]}>{city.name}</Text>
                     {!city.available && (
                       <View style={styles.comingSoonBadge}>
@@ -496,7 +496,7 @@ export default function HomeScreen() {
               resizeMode="contain"
             />
             <TouchableOpacity style={styles.citySelector} onPress={() => setCityModalOpen(true)} activeOpacity={0.8}>
-              <Ionicons name={selectedCity.id === 'all' ? 'globe-outline' : 'location-sharp'} size={10} color={Colors.accent} />
+              <Ionicons name="location-sharp" size={10} color={Colors.accent} />
               <Text style={styles.citySelectorText}>{selectedCity.name}</Text>
               <Ionicons name="chevron-down" size={10} color={Colors.textMuted} />
             </TouchableOpacity>
