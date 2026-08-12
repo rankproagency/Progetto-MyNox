@@ -492,9 +492,9 @@ export default function HomeScreen() {
               resizeMode="contain"
             />
             <TouchableOpacity style={styles.citySelector} onPress={() => setCityModalOpen(true)} activeOpacity={0.8}>
-              <Ionicons name="location-sharp" size={12} color={Colors.accent} />
+              <Ionicons name="location-sharp" size={10} color={Colors.accent} />
               <Text style={styles.citySelectorText}>{selectedCity.name}</Text>
-              <Ionicons name="chevron-down" size={12} color={Colors.textMuted} />
+              <Ionicons name="chevron-down" size={10} color={Colors.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -692,12 +692,12 @@ const styles = StyleSheet.create({
   },
   headerLogo: { width: 90, height: 26, marginBottom: 8 },
   citySelector: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
+    flexDirection: 'row', alignItems: 'center', gap: 3,
     backgroundColor: 'rgba(168,85,247,0.08)',
     borderWidth: 1, borderColor: 'rgba(168,85,247,0.2)',
-    borderRadius: 20, paddingHorizontal: 9, paddingVertical: 4,
+    borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2,
   },
-  citySelectorText: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.textSecondary },
+  citySelectorText: { fontSize: 11, fontFamily: Font.semiBold, color: Colors.textSecondary },
   headerActions: { flexDirection: 'row', gap: 8 },
   iconBtn: {
     width: 40, height: 40, borderRadius: 12,
