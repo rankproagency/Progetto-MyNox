@@ -692,9 +692,12 @@ const styles = StyleSheet.create({
   },
   headerLogo: { width: 90, height: 26, marginBottom: 8 },
   citySelector: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: 'rgba(168,85,247,0.08)',
+    borderWidth: 1, borderColor: 'rgba(168,85,247,0.2)',
+    borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5,
   },
-  citySelectorText: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.textSecondary },
+  citySelectorText: { fontSize: 13, fontFamily: Font.semiBold, color: Colors.textPrimary },
   headerActions: { flexDirection: 'row', gap: 8 },
   iconBtn: {
     width: 40, height: 40, borderRadius: 12,
