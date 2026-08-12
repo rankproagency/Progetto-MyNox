@@ -37,6 +37,7 @@ import HomeSkeletonLoader from '../../components/HomeSkeletonLoader';
 const CARD_WIDTH = Math.round(RNDimensions.get('window').width * 0.70);
 
 const CITIES = [
+  { id: 'all', name: 'Tutte', available: true },
   { id: 'padova', name: 'Padova', available: true },
   { id: 'venezia', name: 'Venezia', available: false },
   { id: 'verona', name: 'Verona', available: false },
@@ -198,7 +199,10 @@ export default function HomeScreen() {
   const today = toDateKey(new Date());
   const hasActiveFilters = maxPrice !== null || onlyAvailable || selectedGenres.length > 0 || ageFilter !== 'all';
 
-  const filteredEvents = applyFilters(events, maxPrice, onlyAvailable, selectedGenres, ageFilter);
+  const cityEvents = selectedCity.id === 'all'
+    ? events
+    : events.filter((e) => e.club?.city?.toLowerCase() === selectedCity.name.toLowerCase());
+  const filteredEvents = applyFilters(cityEvents, maxPrice, onlyAvailable, selectedGenres, ageFilter);
   const filteredEventsByDay = getEventsByDayFromList(filteredEvents);
 
   const isAvailable = (e: (typeof filteredEvents)[number]) =>
@@ -277,7 +281,7 @@ export default function HomeScreen() {
                   }}
                 >
                   <View style={styles.cityLeft}>
-                    <Ionicons name="location-sharp" size={16} color={city.available ? Colors.accent : Colors.textMuted} />
+                    <Ionicons name={city.id === 'all' ? 'globe-outline' : 'location-sharp'} size={16} color={city.available ? Colors.accent : Colors.textMuted} />
                     <Text style={[styles.cityName, !city.available && styles.cityNameMuted]}>{city.name}</Text>
                     {!city.available && (
                       <View style={styles.comingSoonBadge}>
@@ -492,7 +496,7 @@ export default function HomeScreen() {
               resizeMode="contain"
             />
             <TouchableOpacity style={styles.citySelector} onPress={() => setCityModalOpen(true)} activeOpacity={0.8}>
-              <Ionicons name="location-sharp" size={10} color={Colors.accent} />
+              <Ionicons name={selectedCity.id === 'all' ? 'globe-outline' : 'location-sharp'} size={10} color={Colors.accent} />
               <Text style={styles.citySelectorText}>{selectedCity.name}</Text>
               <Ionicons name="chevron-down" size={10} color={Colors.textMuted} />
             </TouchableOpacity>
