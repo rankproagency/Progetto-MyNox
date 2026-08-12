@@ -40,12 +40,9 @@ export default function TonightHero({ event }: Props) {
         style={StyleSheet.absoluteFill}
       />
 
-      {/* Top row: badge + heart */}
+      {/* Top row: heart */}
       <View style={styles.topRow}>
-        <View style={styles.tonightBadge}>
-          <View style={styles.liveDot} />
-          <Text style={styles.tonightText}>{t('home.section_tonight').toUpperCase()}</Text>
-        </View>
+        <View />
         <TouchableOpacity
           style={styles.heartButton}
           onPress={() => {

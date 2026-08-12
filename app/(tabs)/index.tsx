@@ -228,9 +228,7 @@ export default function HomeScreen() {
 
   const yesterday = toDateKey(new Date(Date.now() - 86400000));
   const liveEvent = filteredEvents.find((e) => (e.date === today || e.date === yesterday) && isEventLive(e)) ?? null;
-  const tonightEvent = !liveEvent
-    ? (filteredEvents.find((e) => e.date === today && isAvailable(e)) ?? null)
-    : null;
+  const tonightEvent = filteredEvents.find((e) => e.date === today && isAvailable(e) && !isEventLive(e)) ?? null;
 
   const recommended = musicGenres.length > 0
     ? filteredEvents.filter((e) =>
