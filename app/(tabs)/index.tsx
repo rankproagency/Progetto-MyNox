@@ -25,7 +25,6 @@ import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
 import EventCard from '../../components/EventCard';
 import EventListItem from '../../components/EventListItem';
-import TonightHero from '../../components/TonightHero';
 import { ALL_GENRES } from '../../constants/genres';
 import { useEvents } from '../../contexts/EventsContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -625,14 +624,20 @@ export default function HomeScreen() {
             </View>
           ) : (
             <>
-              {/* Oggi */}
+              {/* Stasera */}
               {todayEvents.length > 0 && (
                 <>
                   <Text style={styles.sectionTitle}>{t('home.section_tonight')}</Text>
-                  <TonightHero event={todayEvents[0]} isLive={isEventLive(todayEvents[0])} />
-                  {todayEvents.slice(1).map((e) => (
-                    <EventListItem key={e.id} event={e} isLive={isEventLive(e)} />
-                  ))}
+                  <FlatList
+                    data={todayEvents}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => <EventCard event={item} />}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.carouselContainer}
+                    snapToInterval={CARD_WIDTH + 14}
+                    decelerationRate="fast"
+                  />
                 </>
               )}
 
