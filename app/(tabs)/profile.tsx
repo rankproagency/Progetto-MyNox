@@ -272,8 +272,15 @@ export default function ProfileScreen() {
           {/* Serate passate — memory card */}
           {pastTickets.length > 0 && (() => {
             const sorted = [...pastTickets].sort((a, b) => b.rawDate.localeCompare(a.rawDate));
-            const thumbs = sorted.filter((t) => t.eventImageUrl).slice(0, 3);
-            const bgImage = sorted.find((t) => t.eventImageUrl)?.eventImageUrl;
+            const seenEvents = new Set<string>();
+            const uniqueSorted = sorted.filter((t) => {
+              const key = t.eventId ?? t.eventImageUrl ?? '';
+              if (seenEvents.has(key)) return false;
+              seenEvents.add(key);
+              return true;
+            });
+            const thumbs = uniqueSorted.filter((t) => t.eventImageUrl).slice(0, 3);
+            const bgImage = uniqueSorted.find((t) => t.eventImageUrl)?.eventImageUrl;
 
             return (
               <View style={styles.section}>
