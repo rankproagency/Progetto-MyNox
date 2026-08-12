@@ -59,6 +59,7 @@ export default function ProfileScreen() {
   const pastTickets = tickets.filter(isTicketPast);
   const eventsAttended = new Set(pastTickets.map((t) => t.eventId).filter(Boolean)).size;
   const uniqueClubs = new Set(pastTickets.map((t) => t.clubName).filter(Boolean)).size;
+  const tablesOrganized = tickets.filter((t) => t.type === 'table').length;
 
   function isEventPast(event: typeof events[number]): boolean {
     const date = new Date(event.date);
@@ -162,10 +163,18 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 style={styles.statItem}
                 activeOpacity={0.8}
-                onPress={() => router.push('/(tabs)/tickets')}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  router.push(tablesOrganized > 0 ? '/(tabs)/tickets' : '/(tabs)/events');
+                }}
               >
-                <Text style={styles.statValue}>{tickets.length}</Text>
-                <Text style={styles.statLabel}>{t('profile.stat_tickets')}</Text>
+                <Text style={[styles.statValue, tablesOrganized === 0 && { color: Colors.textMuted }]}>
+                  {tablesOrganized}
+                </Text>
+                <Text style={styles.statLabel}>{t('profile.stat_tables')}</Text>
+                {tablesOrganized === 0 && (
+                  <Text style={styles.statCta}>✦ {t('profile.stat_tables_cta')}</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -492,6 +501,14 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.textMuted,
     textAlign: 'center',
+  },
+  statCta: {
+    fontSize: 10,
+    fontFamily: Font.semiBold,
+    color: Colors.accent,
+    textAlign: 'center',
+    marginTop: 4,
+    letterSpacing: 0.3,
   },
   statDivider: {
     width: 1,
