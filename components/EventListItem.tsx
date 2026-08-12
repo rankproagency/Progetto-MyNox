@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Image } from 'expo-image';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getLocale } from '../lib/i18n';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,6 +24,19 @@ export default function EventListItem({ event, isLive }: Props) {
   const { isFavorite, toggleFavorite } = useFavorites();
   const scale = useRef(new Animated.Value(1)).current;
   const heartScale = useRef(new Animated.Value(1)).current;
+  const livePulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!isLive) return;
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(livePulse, { toValue: 0.3, duration: 700, useNativeDriver: true }),
+        Animated.timing(livePulse, { toValue: 1, duration: 700, useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [isLive]);
 
   const onPressIn = () => Animated.timing(scale, { toValue: 0.97, duration: 100, useNativeDriver: true }).start();
   const onPressOut = () => Animated.spring(scale, { toValue: 1, useNativeDriver: true, damping: 12, stiffness: 200 }).start();
@@ -58,7 +71,7 @@ export default function EventListItem({ event, isLive }: Props) {
         )}
         {isLive && (
           <View style={styles.liveBadge}>
-            <View style={styles.liveDot} />
+            <Animated.View style={[styles.liveDot, { opacity: livePulse }]} />
             <Text style={styles.liveText}>Live</Text>
           </View>
         )}
