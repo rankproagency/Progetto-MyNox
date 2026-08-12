@@ -11,6 +11,7 @@ import { Font } from '../constants/typography';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { GENRE_CONFIG } from '../constants/genres';
 import { versionedImageUrl } from '../lib/imageUrl';
+import { formatMinAge } from '../lib/formatAge';
 
 const { width } = Dimensions.get('window');
 
@@ -96,7 +97,7 @@ export default function TonightHero({ event }: Props) {
             )}
             <Text style={styles.timeText}>· {event.startTime}</Text>
             <Text style={[styles.timeText, event.minAge > 18 && { color: Colors.warning }]}>
-              · {event.minAge}+
+              · {formatMinAge(event.minAge)}
             </Text>
           </View>
           {isSoldOut ? (

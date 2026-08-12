@@ -67,6 +67,7 @@ import { useRecentlyViewed } from '../../contexts/RecentlyViewedContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTickets } from '../../contexts/TicketsContext';
 import { scheduleFavoriteReminder, cancelFavoriteReminder } from '../../hooks/useNotifications';
+import { formatMinAge } from '../../lib/formatAge';
 
 const { width } = Dimensions.get('window');
 
@@ -518,7 +519,7 @@ export default function EventScreen() {
               <Text style={styles.infoRowText}>
                 <Text style={styles.infoRowStrong}>{event.dressCode}</Text>
                 {'  ·  '}
-                <Text style={styles.infoRowStrong}>{event.minAge}+</Text>
+                <Text style={styles.infoRowStrong}>{formatMinAge(event.minAge)}</Text>
               </Text>
             </View>
 
@@ -839,7 +840,7 @@ export default function EventScreen() {
         ) : isTooYoung ? (
           <View style={[styles.ctaButton, styles.ctaDisabled]}>
             <Ionicons name="lock-closed-outline" size={16} color={Colors.textMuted} />
-            <Text style={[styles.ctaText, { color: Colors.textMuted }]}>Evento {event.minAge}+</Text>
+            <Text style={[styles.ctaText, { color: Colors.textMuted }]}>Evento {formatMinAge(event.minAge)}</Text>
           </View>
         ) : !hasTickets && !hasTables ? null : isSoldOut ? (
           event.doorEntryAvailable ? (

@@ -11,6 +11,7 @@ import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { versionedImageUrl } from '../lib/imageUrl';
+import { formatMinAge } from '../lib/formatAge';
 
 interface Props {
   event: Event;
@@ -66,7 +67,7 @@ export default function EventListItem({ event }: Props) {
           <Text style={styles.time}>{event.startTime}</Text>
           <Text style={styles.timeSep}>·</Text>
           <Text style={[styles.time, event.minAge > 18 && { color: Colors.warning }]}>
-            {event.minAge}+
+            {formatMinAge(event.minAge)}
           </Text>
         </View>
       </View>

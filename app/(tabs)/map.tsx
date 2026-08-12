@@ -17,6 +17,7 @@ import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
 import { useEvents } from '../../contexts/EventsContext';
 import { useClubs } from '../../contexts/ClubsContext';
+import { formatMinAge } from '../../lib/formatAge';
 import { Club, Event } from '../../types';
 
 const PADOVA_REGION: Region = {
@@ -606,7 +607,7 @@ function ClubCard({
               </View>
               <View style={styles.eventMetaRow}>
                 <Text style={[styles.ageText, nextEvent.minAge > 18 && { color: Colors.warning }]}>
-                  {nextEvent.minAge}+
+                  {formatMinAge(nextEvent.minAge)}
                 </Text>
                 {minPrice !== null ? (
                   <View style={styles.priceBadge}>
