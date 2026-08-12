@@ -7,7 +7,7 @@ import {
   Animated,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getLocale } from '../lib/i18n';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -29,12 +29,45 @@ interface Props {
   event: Event;
 }
 
+function isEventLive(event: Event): boolean {
+  const now = new Date();
+  const [startH, startM] = event.startTime.split(':').map(Number);
+  const base = new Date(event.date + 'T00:00:00');
+  const startDt = new Date(base);
+  startDt.setHours(startH, startM, 0, 0);
+  let endDt: Date;
+  if (event.endTime) {
+    const [endH, endM] = event.endTime.split(':').map(Number);
+    endDt = new Date(base);
+    if (endH < 12) endDt.setDate(endDt.getDate() + 1);
+    endDt.setHours(endH, endM, 0, 0);
+  } else {
+    endDt = new Date(startDt.getTime() + 5 * 60 * 60 * 1000);
+  }
+  return now >= startDt && now < endDt;
+}
+
 export default function EventCard({ event }: Props) {
   const { t } = useTranslation();
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
   const scale = useRef(new Animated.Value(1)).current;
   const heartScale = useRef(new Animated.Value(1)).current;
+  const livePulse = useRef(new Animated.Value(1)).current;
+
+  const live = isEventLive(event);
+
+  useEffect(() => {
+    if (!live) return;
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(livePulse, { toValue: 0.3, duration: 700, useNativeDriver: true }),
+        Animated.timing(livePulse, { toValue: 1, duration: 700, useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [live]);
 
   const onPressIn = () => Animated.timing(scale, { toValue: 0.96, duration: 100, useNativeDriver: true }).start();
   const onPressOut = () => Animated.spring(scale, { toValue: 1, useNativeDriver: true, damping: 12, stiffness: 200 }).start();
@@ -70,7 +103,14 @@ export default function EventCard({ event }: Props) {
 
         {/* Data in alto a sinistra */}
         <View style={styles.topRow}>
-          <Text style={styles.dateBadgeText}>{formatDate(event.date)}</Text>
+          {live ? (
+            <View style={styles.liveBadge}>
+              <Animated.View style={[styles.liveDot, { opacity: livePulse }]} />
+              <Text style={styles.liveText}>Live</Text>
+            </View>
+          ) : (
+            <Text style={styles.dateBadgeText}>{formatDate(event.date)}</Text>
+          )}
         </View>
 
         {/* Contenuto in basso */}
@@ -165,6 +205,20 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.95)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 10,
+  },
+  liveBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: 'rgba(239,68,68,0.85)',
+    paddingHorizontal: 9, paddingVertical: 4,
+    borderRadius: 20, alignSelf: 'flex-start',
+  },
+  liveDot: {
+    width: 6, height: 6, borderRadius: 3,
+    backgroundColor: Colors.white,
+  },
+  liveText: {
+    color: Colors.white, fontSize: 11,
+    fontFamily: Font.bold, letterSpacing: 0.5,
   },
   content: {
     position: 'absolute',

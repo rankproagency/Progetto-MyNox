@@ -208,7 +208,29 @@ export default function HomeScreen() {
   const isAvailable = (e: (typeof filteredEvents)[number]) =>
     e.ticketTypes.length === 0 || e.ticketTypes.some((t) => t.available > 0);
 
-  const tonightEvent = filteredEvents.find((e) => e.date === today && isAvailable(e)) ?? null;
+  function isEventLive(e: (typeof filteredEvents)[number]): boolean {
+    const now = new Date();
+    const [startH, startM] = e.startTime.split(':').map(Number);
+    const base = new Date(e.date + 'T00:00:00');
+    const startDt = new Date(base);
+    startDt.setHours(startH, startM, 0, 0);
+    let endDt: Date;
+    if (e.endTime) {
+      const [endH, endM] = e.endTime.split(':').map(Number);
+      endDt = new Date(base);
+      if (endH < 12) endDt.setDate(endDt.getDate() + 1);
+      endDt.setHours(endH, endM, 0, 0);
+    } else {
+      endDt = new Date(startDt.getTime() + 5 * 60 * 60 * 1000);
+    }
+    return now >= startDt && now < endDt;
+  }
+
+  const yesterday = toDateKey(new Date(Date.now() - 86400000));
+  const liveEvent = filteredEvents.find((e) => (e.date === today || e.date === yesterday) && isEventLive(e)) ?? null;
+  const tonightEvent = !liveEvent
+    ? (filteredEvents.find((e) => e.date === today && isAvailable(e)) ?? null)
+    : null;
 
   const recommended = musicGenres.length > 0
     ? filteredEvents.filter((e) =>
@@ -602,13 +624,21 @@ export default function HomeScreen() {
             </View>
           ) : (
             <>
-              {/* Stasera */}
-              {tonightEvent && (
+              {/* Live ora / Stasera */}
+              {liveEvent ? (
+                <>
+                  <View style={styles.liveSectionHeader}>
+                    <View style={styles.liveSectionDot} />
+                    <Text style={styles.liveSectionTitle}>{t('home.section_live')}</Text>
+                  </View>
+                  <TonightHero event={liveEvent} />
+                </>
+              ) : tonightEvent ? (
                 <>
                   <Text style={styles.sectionTitle}>{t('home.section_tonight')}</Text>
                   <TonightHero event={tonightEvent} />
                 </>
-              )}
+              ) : null}
 
               {/* Carousel contestuale: "Per te" se ha generi, "In evidenza" altrimenti */}
               {recommended.length > 0 ? (
@@ -737,6 +767,9 @@ const styles = StyleSheet.create({
   },
   sectionTitleInline: { fontSize: 18, fontFamily: Font.extraBold, color: Colors.textPrimary },
   sectionTitle: { fontSize: 18, fontFamily: Font.extraBold, color: Colors.textPrimary, paddingHorizontal: 20, marginBottom: 14 },
+  liveSectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, marginBottom: 14 },
+  liveSectionDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444' },
+  liveSectionTitle: { fontSize: 18, fontFamily: Font.extraBold, color: Colors.textPrimary },
   forYouBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: Colors.accentBg, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4,
