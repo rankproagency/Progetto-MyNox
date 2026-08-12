@@ -17,9 +17,10 @@ const { width } = Dimensions.get('window');
 
 interface Props {
   event: Event;
+  isLive?: boolean;
 }
 
-export default function TonightHero({ event }: Props) {
+export default function TonightHero({ event, isLive }: Props) {
   const { t } = useTranslation();
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -41,9 +42,14 @@ export default function TonightHero({ event }: Props) {
         style={StyleSheet.absoluteFill}
       />
 
-      {/* Top row: heart */}
+      {/* Top row: live badge + heart */}
       <View style={styles.topRow}>
-        <View />
+        {isLive ? (
+          <View style={styles.liveBadge}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>Live</Text>
+          </View>
+        ) : <View />}
         <TouchableOpacity
           style={styles.heartButton}
           onPress={() => {
@@ -157,9 +163,18 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     gap: 6,
   },
+  liveBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: 'rgba(239,68,68,0.88)',
+    borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5,
+  },
   liveDot: {
     width: 6, height: 6, borderRadius: 3,
-    backgroundColor: Colors.accent,
+    backgroundColor: Colors.white,
+  },
+  liveText: {
+    fontSize: 11, fontFamily: Font.extraBold,
+    color: Colors.white, letterSpacing: 1,
   },
   tonightText: {
     fontSize: 11,
