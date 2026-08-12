@@ -700,6 +700,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(168,85,247,0.08)',
     borderWidth: 1, borderColor: 'rgba(168,85,247,0.2)',
     borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2,
+    alignSelf: 'flex-start',
   },
   citySelectorText: { fontSize: 11, fontFamily: Font.semiBold, color: Colors.textSecondary, lineHeight: 14, includeFontPadding: false },
   headerActions: { flexDirection: 'row', gap: 8 },
