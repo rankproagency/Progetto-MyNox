@@ -171,7 +171,7 @@ export default function ProfileScreen() {
           {musicGenres.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{t('profile.section_genres')}</Text>
-              <View style={styles.genresList}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.genresList}>
                 {musicGenres.map((genre) => {
                   const cfg = GENRE_CONFIG[genre as Genre];
                   const bg = cfg ? cfg.color.replace(/[\d.]+\)$/, '0.10)') : Colors.accentBg;
@@ -183,7 +183,7 @@ export default function ProfileScreen() {
                     </View>
                   );
                 })}
-              </View>
+              </ScrollView>
             </View>
           )}
 
@@ -512,9 +512,8 @@ const styles = StyleSheet.create({
   // Generi
   genresList: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 8,
-    justifyContent: 'center',
+    paddingVertical: 2,
   },
   genreTag: {
     borderRadius: 20,
