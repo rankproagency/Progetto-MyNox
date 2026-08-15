@@ -514,6 +514,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    justifyContent: 'center',
   },
   genreTag: {
     borderRadius: 20,
