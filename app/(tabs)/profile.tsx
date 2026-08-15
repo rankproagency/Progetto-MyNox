@@ -160,22 +160,10 @@ export default function ProfileScreen() {
 
               <View style={styles.statDivider} />
 
-              <TouchableOpacity
-                style={styles.statItem}
-                activeOpacity={0.8}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  router.push(tablesOrganized > 0 ? '/(tabs)/tickets' : '/(tabs)/events');
-                }}
-              >
-                <Text style={[styles.statValue, tablesOrganized === 0 && { color: Colors.textMuted }]}>
-                  {tablesOrganized}
-                </Text>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{tablesOrganized}</Text>
                 <Text style={styles.statLabel}>{t('profile.stat_tables')}</Text>
-                {tablesOrganized === 0 && (
-                  <Text style={styles.statCta}>✦ {t('profile.stat_tables_cta')}</Text>
-                )}
-              </TouchableOpacity>
+              </View>
             </View>
           </View>
 
