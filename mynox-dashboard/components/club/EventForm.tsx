@@ -452,7 +452,16 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
             <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
           </label>
           {form.image_url && (
-            <img src={form.image_url} alt={ef.preview} className="w-full h-40 object-cover rounded-lg border border-white/10" />
+            <div className="relative rounded-lg overflow-hidden border border-white/10">
+              <img src={form.image_url} alt={ef.preview} className="w-full object-contain max-h-72" />
+              <button
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, image_url: '' }))}
+                className="absolute top-2 right-2 bg-black/60 hover:bg-red-600/80 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+              >
+                Rimuovi
+              </button>
+            </div>
           )}
         </div>
       </Field>
