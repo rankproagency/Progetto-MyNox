@@ -183,6 +183,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
     const { data } = supabase.storage.from('event-images').getPublicUrl(path);
     setForm((prev) => ({ ...prev, image_url: data.publicUrl }));
     setUploading(false);
+    e.target.value = '';
   }
 
   function toggleGenre(genre: string) {
