@@ -306,6 +306,7 @@ export default function CheckoutScreen() {
           headers: { 'Content-Type': 'application/json', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) },
           body: JSON.stringify({
             base_amount_cents: rawBaseCents,
+            ticket_subtotal_cents: Math.round(ticketSubtotal * 100),
             promo_code: appliedPromoCode ?? undefined,
             club_id: event?.clubId,
             metadata,

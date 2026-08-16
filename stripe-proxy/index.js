@@ -312,7 +312,7 @@ const server = http.createServer(async (req, res) => {
   // POST /create-payment-intent
   if (req.url === '/create-payment-intent' || req.url === '/functions/v1/create-payment-intent') {
     try {
-      const { amount, base_amount_cents, promo_code, club_id, metadata = {} } = body;
+      const { amount, base_amount_cents, ticket_subtotal_cents, promo_code, club_id, metadata = {} } = body;
 
       // Verifica JWT: user_id nei metadata deve corrispondere al token
       const jwtUserId = await verifyJwtUserId(req.headers['authorization']);
@@ -325,9 +325,14 @@ const server = http.createServer(async (req, res) => {
       let finalAmountCents;
       if (base_amount_cents != null) {
         const discountedBase = await applyPromo(base_amount_cents, promo_code, club_id);
-        const commission = discountedBase > 0
-          ? Math.max(Math.round(discountedBase * 0.05), 100)
-          : 0;
+        // 5% commission only on ticket portion — table deposits/extras are commission-free for the customer
+        const rawTicketCents = ticket_subtotal_cents ?? 0;
+        let commission = 0;
+        if (rawTicketCents > 0) {
+          const discountSaved = base_amount_cents - discountedBase;
+          const discountedTicketCents = Math.max(0, rawTicketCents - discountSaved);
+          commission = Math.max(Math.round(discountedTicketCents * 0.05), 100);
+        }
         finalAmountCents = discountedBase + commission;
       } else {
         finalAmountCents = Math.round(amount);
