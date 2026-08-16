@@ -84,9 +84,9 @@ async function getAnalyticsData(clubId: string, locale = 'it-IT') {
     const key = d.toLocaleDateString(locale, { month: 'short', year: '2-digit' });
     if (key in revenueByMonth) {
       const paid = t.price_paid ?? 0;
-      // Tickets: customer paid price+5% → club gets base price (paid/1.05)
-      // Tables (ticket_types===null): customer paid face value → club gets 90% (paid*0.9)
-      revenueByMonth[key] += t.ticket_types !== null ? paid / 1.05 : paid * 0.9;
+      // Tickets: price_paid includes 5% commission → strip it to get base price
+      // Tables: price_paid is the face value of the deposit (no commission added to customer)
+      revenueByMonth[key] += t.ticket_types !== null ? paid / 1.05 : paid;
       if (t.ticket_types !== null) ticketsByMonth[key] = (ticketsByMonth[key] ?? 0) + 1;
     }
   });
@@ -122,7 +122,7 @@ async function getAnalyticsData(clubId: string, locale = 'it-IT') {
   const fillRate = totalCapacity > 0 ? Math.round((totalSold / totalCapacity) * 100) : 0;
 
   const tablesOnly = tickets.filter((t: any) => t.ticket_types === null);
-  const totalTableRevenue = tablesOnly.reduce((sum: number, t: any) => sum + (t.price_paid ?? 0) * 0.9, 0);
+  const totalTableRevenue = tablesOnly.reduce((sum: number, t: any) => sum + (t.price_paid ?? 0), 0);
   const eventsWithTables = new Set(tablesOnly.map((t: any) => t.event_id).filter(Boolean)).size;
   const avgTablesPerEvent = eventsWithTables > 0 ? tablesOnly.length / eventsWithTables : 0;
   const avgTableRevenuePerEvent = eventsWithTables > 0 ? totalTableRevenue / eventsWithTables : 0;
