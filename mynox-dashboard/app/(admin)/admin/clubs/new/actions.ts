@@ -6,6 +6,7 @@ export async function createClubWithManager(data: {
   club: {
     name: string;
     city: string | null;
+    province: string | null;
     address: string | null;
     instagram: string | null;
     tiktok: string | null;

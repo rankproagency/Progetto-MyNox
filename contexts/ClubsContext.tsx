@@ -13,7 +13,8 @@ function rowToClub(row: any): Club {
   return {
     id: row.id,
     name: row.name,
-    city: row.city ?? 'Padova',
+    city: row.city ?? '',
+    province: row.province ?? undefined,
     imageUrl: row.image_url ?? '',
     address: row.address ?? '',
     instagram: row.instagram ?? undefined,
@@ -32,7 +33,7 @@ export function ClubsProvider({ children }: { children: ReactNode }) {
   const loadClubs = useCallback(async () => {
     const { data } = await supabase
       .from('clubs')
-      .select('id, name, city, address, image_url, instagram, tiktok, email, phone, latitude, longitude')
+      .select('id, name, city, province, address, image_url, instagram, tiktok, email, phone, latitude, longitude')
       .eq('is_active', true)
       .order('name', { ascending: true });
 

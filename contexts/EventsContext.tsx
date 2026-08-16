@@ -20,7 +20,8 @@ function rowToEvent(row: any): Event {
   const club: Club = {
     id: row.clubs?.id ?? '',
     name: row.clubs?.name ?? '',
-    city: row.clubs?.city ?? 'Padova',
+    city: row.clubs?.city ?? '',
+    province: row.clubs?.province ?? undefined,
     imageUrl: row.clubs?.image_url ?? '',
     address: row.clubs?.address ?? '',
     instagram: row.clubs?.instagram,

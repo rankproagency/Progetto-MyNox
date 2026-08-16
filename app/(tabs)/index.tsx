@@ -203,7 +203,12 @@ export default function HomeScreen() {
 
   const cityEvents = selectedCity.id === 'all'
     ? events
-    : events.filter((e) => e.club?.city?.toLowerCase() === selectedCity.name.toLowerCase());
+    : events.filter((e) => {
+        const province = e.club?.province?.toLowerCase();
+        const city = e.club?.city?.toLowerCase();
+        const target = selectedCity.name.toLowerCase();
+        return province === target || (!province && city === target);
+      });
   const filteredEvents = applyFilters(cityEvents, maxPrice, onlyAvailable, selectedGenres, ageFilter);
   const filteredEventsByDay = getEventsByDayFromList(filteredEvents);
 

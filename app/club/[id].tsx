@@ -44,7 +44,8 @@ export default function ClubScreen() {
         setClub({
           id: r.id,
           name: r.name,
-          city: r.city,
+          city: r.city ?? '',
+          province: r.province ?? undefined,
           address: r.address ?? '',
           imageUrl: r.image_url ?? '',
           instagram: r.instagram,
@@ -61,7 +62,8 @@ export default function ClubScreen() {
           club: {
             id: row.clubs?.id ?? '',
             name: row.clubs?.name ?? '',
-            city: row.clubs?.city ?? 'Padova',
+            city: row.clubs?.city ?? '',
+            province: row.clubs?.province ?? undefined,
             imageUrl: row.clubs?.image_url ?? '',
             address: row.clubs?.address ?? '',
           },

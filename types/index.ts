@@ -2,6 +2,7 @@ export interface Club {
   id: string;
   name: string;
   city: string;
+  province?: string;
   imageUrl: string;
   updatedAt?: string;
   address: string;

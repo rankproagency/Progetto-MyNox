@@ -9,7 +9,7 @@ import { createClubWithManager, updateClubImageUrl } from './actions';
 export default function NewClubPage() {
   const router = useRouter();
   const [form, setForm] = useState({
-    name: '', city: '', address: '',
+    name: '', city: '', province: '', address: '',
     instagram: '', tiktok: '', email: '', phone: '',
     managerEmail: '',
   });
@@ -35,6 +35,7 @@ export default function NewClubPage() {
       club: {
         name: form.name,
         city: form.city || null,
+        province: form.province || null,
         address: form.address || null,
         instagram: form.instagram || null,
         tiktok: form.tiktok || null,
@@ -115,9 +116,14 @@ export default function NewClubPage() {
               <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass} placeholder="Es. Alter Ego" />
             </Field>
             <Field label="Città">
-              <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className={inputClass} placeholder="Es. Padova" />
+              <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className={inputClass} placeholder="Es. Vigonza" />
             </Field>
           </div>
+
+          <Field label="Provincia">
+            <input value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })} className={inputClass} placeholder="Es. Padova" />
+            <p className="text-xs text-slate-500 mt-1">Usata per raggruppare i club nell&apos;app. Es. un club a Vigonza ha città &quot;Vigonza&quot; e provincia &quot;Padova&quot;.</p>
+          </Field>
 
           <Field label="Indirizzo">
             <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className={inputClass} placeholder="Es. Via Roma 1, Padova" />

@@ -9,6 +9,7 @@ interface Club {
   id: string;
   name: string;
   city: string;
+  province: string | null;
   address: string | null;
   image_url: string | null;
   instagram: string | null;
@@ -39,6 +40,7 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
   const [form, setForm] = useState({
     name: club.name,
     city: club.city,
+    province: club.province ?? '',
     address: club.address ?? '',
     image_url: club.image_url ?? '',
     instagram: club.instagram ?? '',
@@ -108,6 +110,7 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
     const updatePayload: Record<string, unknown> = {
       name: form.name,
       city: form.city,
+      province: form.province || null,
       address: form.address || null,
       image_url: form.image_url || null,
       instagram: form.instagram || null,
@@ -205,11 +208,21 @@ export default function ClubSettingsForm({ club }: { club: Club }) {
             <input
               value={form.city}
               onChange={(e) => setForm({ ...form, city: e.target.value })}
-              placeholder="es. Padova"
+              placeholder="es. Vigonza"
               className={inputClass}
             />
           </Field>
         </div>
+
+        <Field label={t.settingsForm.fieldProvince ?? 'Provincia'} icon={<MapPin size={14} />}>
+          <input
+            value={form.province}
+            onChange={(e) => setForm({ ...form, province: e.target.value })}
+            placeholder="es. Padova"
+            className={inputClass}
+          />
+          <p className="text-xs text-slate-500 mt-1">Usata per raggruppare i club nell&apos;app. Es. un club a Vigonza ha città &quot;Vigonza&quot; e provincia &quot;Padova&quot;.</p>
+        </Field>
 
         <Field label={t.settingsForm.fieldAddress} icon={<MapPin size={14} />}>
           <input
