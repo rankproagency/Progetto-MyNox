@@ -122,7 +122,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
   );
 
   const [ticketTypes, setTicketTypes] = useState<TicketTypeRow[]>(
-    initialTicketTypes ?? [{ label: '', price: '', total_quantity: '', includes_drink: true, price_tiers: [] }]
+    initialTicketTypes ?? [{ label: '', price: '', total_quantity: '', max_per_account: '', includes_drink: true, price_tiers: [] }]
   );
 
   const defaultEventTables = (clubTables ?? []).map((ct) => ({
