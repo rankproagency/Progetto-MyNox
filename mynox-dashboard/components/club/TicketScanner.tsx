@@ -38,7 +38,6 @@ export default function TicketScanner({ events, defaultEventId }: Props) {
   const [cameraError, setCameraError] = useState(false);
   const html5QrRef = useRef<any>(null);
   const processingRef = useRef(false);
-  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   async function handleCode(rawCode: string) {
     if (processingRef.current) return;
@@ -61,12 +60,8 @@ export default function TicketScanner({ events, defaultEventId }: Props) {
       navigator.vibrate?.([120, 60, 120]);
     }
 
-    clearTimeout(resetTimerRef.current);
-    resetTimerRef.current = setTimeout(() => {
-      setScanState('idle');
-      setResult(null);
-      processingRef.current = false;
-    }, 2000);
+    setScanState('idle');
+    processingRef.current = false;
   }
 
   useEffect(() => {
@@ -102,7 +97,6 @@ export default function TicketScanner({ events, defaultEventId }: Props) {
 
     return () => {
       if (instance) instance.stop().catch(() => {});
-      clearTimeout(resetTimerRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, selectedEventId]);
