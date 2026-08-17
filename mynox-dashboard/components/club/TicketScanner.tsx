@@ -256,16 +256,20 @@ function ResultCard({ result }: { result: ScanResult }) {
       </div>
       <div className="flex-1 min-w-0">
         {result.ok ? (
-          <>
-            <p className="text-green-400 font-bold text-base">Ingresso valido ✓</p>
-            <p className="text-white text-sm mt-0.5 truncate">{result.name}</p>
-            <p className="text-slate-400 text-xs mt-0.5">
-              {result.ticketType}
-              {result.tableCapacity != null && (
-                <span className="ml-2 text-slate-300 font-semibold">· {result.tableCapacity} persone</span>
-              )}
-            </p>
-          </>
+          result.tableCapacity != null ? (
+            <>
+              <p className="text-green-400 font-bold text-base">Ingresso valido ✓ — TAVOLO</p>
+              <p className="text-white font-semibold text-sm mt-1">{result.name}</p>
+              <p className="text-slate-300 text-sm mt-0.5">{result.ticketType}</p>
+              <p className="text-green-300 font-bold text-sm mt-0.5">{result.tableCapacity} persone</p>
+            </>
+          ) : (
+            <>
+              <p className="text-green-400 font-bold text-base">Ingresso valido ✓</p>
+              <p className="text-white text-sm mt-0.5 truncate">{result.name}</p>
+              <p className="text-slate-400 text-xs mt-0.5">{result.ticketType}</p>
+            </>
+          )
         ) : result.reason === 'already_used' ? (
           <>
             <p className="text-orange-400 font-bold text-base">Biglietto già usato</p>
