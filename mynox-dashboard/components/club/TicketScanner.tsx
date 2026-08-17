@@ -11,6 +11,7 @@ interface ScanResult {
   ok: boolean;
   name?: string;
   ticketType?: string;
+  tableCapacity?: number;
   reason?: 'already_used' | 'invalid' | 'unauthorized' | 'not_yet' | 'event_ended' | 'wrong_event';
   usedAt?: string;
   eventDate?: string;
@@ -258,7 +259,12 @@ function ResultCard({ result }: { result: ScanResult }) {
           <>
             <p className="text-green-400 font-bold text-base">Ingresso valido ✓</p>
             <p className="text-white text-sm mt-0.5 truncate">{result.name}</p>
-            <p className="text-slate-400 text-xs mt-0.5">{result.ticketType}</p>
+            <p className="text-slate-400 text-xs mt-0.5">
+              {result.ticketType}
+              {result.tableCapacity != null && (
+                <span className="ml-2 text-slate-300 font-semibold">· {result.tableCapacity} persone</span>
+              )}
+            </p>
           </>
         ) : result.reason === 'already_used' ? (
           <>

@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
 
   const { data: ticket } = await admin
     .from('tickets')
-    .select('id, status, scanned_at, user_id, ticket_type_id, event_id')
+    .select('id, status, scanned_at, user_id, ticket_type_id, table_id, table_name, event_id')
     .eq(field, trimmedCode)
     .maybeSingle();
 
@@ -122,16 +122,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, reason: 'already_used', usedAt: null });
   }
 
-  const [{ data: profile }, { data: ticketType }] = await Promise.all([
+  const [{ data: profile }, { data: ticketType }, { data: tableRow }] = await Promise.all([
     admin.from('profiles').select('name').eq('id', ticket.user_id).single(),
     ticket.ticket_type_id
       ? admin.from('ticket_types').select('label').eq('id', ticket.ticket_type_id).single()
       : Promise.resolve({ data: null }),
+    ticket.table_id
+      ? admin.from('tables').select('label, capacity').eq('id', ticket.table_id).single()
+      : Promise.resolve({ data: null }),
   ]);
+
+  const isTable = !ticket.ticket_type_id && !!ticket.table_id;
+  const tableLabel = tableRow?.label ?? ticket.table_name ?? 'Tavolo';
 
   return NextResponse.json({
     ok: true,
     name: profile?.name ?? 'Cliente',
-    ticketType: ticketType?.label ?? 'Biglietto',
+    ticketType: ticketType?.label ?? (isTable ? tableLabel : 'Biglietto'),
+    tableCapacity: tableRow?.capacity ?? null,
   });
 }
