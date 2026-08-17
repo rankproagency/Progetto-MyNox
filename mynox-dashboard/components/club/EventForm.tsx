@@ -23,6 +23,8 @@ interface TicketTypeRow {
   label: string;
   price: string;
   total_quantity: string;
+  max_per_account: string;
+  sold_quantity?: number;
   includes_drink: boolean;
   price_tiers: PriceTier[];
 }
