@@ -726,11 +726,14 @@ export default function EventScreen() {
                       )}
                     </View>
                   )}
-                  {event.ticketTypes.map((ticket) => (
+                  {event.ticketTypes.map((ticket) => {
+                    const isSoldOutTicket = !ticket.isUnlimited && ticket.available === 0;
+                    return (
                     <TouchableOpacity
                       key={ticket.id}
-                      style={[styles.ticketOption, selectedTicket?.id === ticket.id && styles.ticketSelected]}
+                      style={[styles.ticketOption, selectedTicket?.id === ticket.id && styles.ticketSelected, isSoldOutTicket && styles.ticketSoldOut]}
                       onPress={() => {
+                        if (isSoldOutTicket) return;
                         Haptics.selectionAsync();
                         if (selectedTicket?.id === ticket.id) {
                           setSelectedTicket(null);
@@ -740,16 +743,18 @@ export default function EventScreen() {
                           setTicketQty(1);
                         }
                       }}
-                      activeOpacity={0.8}
+                      activeOpacity={isSoldOutTicket ? 1 : 0.8}
                     >
                       <View style={styles.ticketLeft}>
                         <View style={[styles.radio, selectedTicket?.id === ticket.id && styles.radioActive]}>
                           {selectedTicket?.id === ticket.id && <View style={styles.radioDot} />}
                         </View>
-                        <Text style={styles.ticketLabel}>{ticket.label}</Text>
+                        <Text style={[styles.ticketLabel, isSoldOutTicket && { color: Colors.textMuted }]}>{ticket.label}</Text>
                       </View>
                       <View style={styles.ticketRight}>
-                        {(() => {
+                        {isSoldOutTicket ? (
+                          <Text style={styles.soldOut}>{t('common.sold_out')}</Text>
+                        ) : (() => {
                           const effectivePrice = getEffectivePrice(ticket.price, ticket.priceTiers, event.date);
                           const activeTier = getActiveTier(ticket.priceTiers, event.date);
                           return (
@@ -768,7 +773,8 @@ export default function EventScreen() {
                         })()}
                       </View>
                     </TouchableOpacity>
-                  ))}
+                    );
+                  })}
                   {hasTickets && event.ticketTypes.every((tk) => tk.includesDrink) && (
                     <View style={styles.drinkBadge}>
                       <Ionicons name="wine-outline" size={13} color={Colors.accent} />
@@ -1292,6 +1298,7 @@ const styles = StyleSheet.create({
     padding: 14, marginBottom: 8,
   },
   ticketSelected: { borderColor: Colors.accent, backgroundColor: 'rgba(168,85,247,0.07)' },
+  ticketSoldOut: { opacity: 0.45 },
   radio: {
     width: 18, height: 18, borderRadius: 9,
     borderWidth: 1.5, borderColor: Colors.textMuted,
