@@ -210,7 +210,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
   }
 
   function addTicketType() {
-    setTicketTypes((prev) => [...prev, { label: '', price: '', total_quantity: '', includes_drink: true, price_tiers: [] }]);
+    setTicketTypes((prev) => [...prev, { label: '', price: '', total_quantity: '', max_per_account: '', includes_drink: true, price_tiers: [] }]);
   }
 
   function removeTicketType(index: number) {
