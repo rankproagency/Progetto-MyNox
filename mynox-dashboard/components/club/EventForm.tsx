@@ -280,22 +280,38 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
       eventId = data.id;
     }
 
-    // Salva tipi biglietto: elimina i vecchi e reinserisci
+    // Salva tipi biglietto: update quelli esistenti, insert i nuovi, delete solo quelli rimossi senza vendite
     const validTickets = ticketTypes.filter((tk) => tk.label.trim() && tk.price);
-    if (validTickets.length > 0 && eventId) {
-      await supabase.from('ticket_types').delete().eq('event_id', eventId);
-      const { error: ticketError } = await supabase.from('ticket_types').insert(
-        validTickets.map((tk) => ({
-          event_id: eventId,
-          label: tk.label.trim(),
-          price: parseFloat(tk.price),
-          total_quantity: tk.total_quantity ? parseInt(tk.total_quantity) : null,
-          sold_quantity: 0,
-          includes_drink: tk.includes_drink,
-          price_tiers: tk.price_tiers.filter((t) => t.until && t.price).map((t) => ({ until: t.until, price: parseFloat(t.price) })),
-        }))
-      );
-      if (ticketError) { setError(ef.saveTicketsError + ' ' + ticketError.message); setLoading(false); return; }
+    if (eventId) {
+      const existing = validTickets.filter((tk) => tk.id);
+      const newOnes = validTickets.filter((tk) => !tk.id);
+      const ticketPayload = (tk: typeof validTickets[number]) => ({
+        label: tk.label.trim(),
+        price: parseFloat(tk.price),
+        total_quantity: tk.total_quantity ? parseInt(tk.total_quantity) : null,
+        max_per_account: tk.max_per_account ? parseInt(tk.max_per_account) : null,
+        includes_drink: tk.includes_drink,
+        price_tiers: tk.price_tiers.filter((t) => t.until && t.price).map((t) => ({ until: t.until, price: parseFloat(t.price) })),
+      });
+      // Update tipi esistenti preservando sold_quantity
+      for (const tk of existing) {
+        const { error } = await supabase.from('ticket_types').update(ticketPayload(tk)).eq('id', tk.id!);
+        if (error) { setError(ef.saveTicketsError + ' ' + error.message); setLoading(false); return; }
+      }
+      // Insert nuovi
+      if (newOnes.length > 0) {
+        const { error } = await supabase.from('ticket_types').insert(
+          newOnes.map((tk) => ({ event_id: eventId, sold_quantity: 0, ...ticketPayload(tk) }))
+        );
+        if (error) { setError(ef.saveTicketsError + ' ' + error.message); setLoading(false); return; }
+      }
+      // Delete solo i tipi rimossi che non hanno biglietti venduti
+      const keptIds = existing.map((tk) => tk.id!);
+      const { data: allTypes } = await supabase.from('ticket_types').select('id, sold_quantity').eq('event_id', eventId);
+      const toDelete = (allTypes ?? []).filter((t) => !keptIds.includes(t.id) && (t.sold_quantity ?? 0) === 0);
+      for (const t of toDelete) {
+        await supabase.from('ticket_types').delete().eq('id', t.id);
+      }
     }
 
     // Salva tavoli evento (con prezzi specifici per questo evento)
