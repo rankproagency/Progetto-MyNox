@@ -19,15 +19,28 @@ export default async function ScanPage() {
   }
   if (!canScan) redirect('/club/dashboard');
 
-  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const yesterdayDate = new Date(now);
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterdayStr = yesterdayDate.toISOString().slice(0, 10);
+  const currentTime = now.toTimeString().slice(0, 5);
+
   const admin = createAdminClient();
-  const { data: events } = await admin
+  const { data: allEvents } = await admin
     .from('events')
-    .select('id, name')
+    .select('id, name, date, end_time')
     .eq('club_id', profile.club_id)
-    .eq('date', today)
+    .gte('date', yesterdayStr)
+    .lte('date', todayStr)
     .eq('is_published', true)
+    .order('date', { ascending: false })
     .order('name');
+
+  // Evento di ieri: incluso solo se end_time > ora (ancora in corso dopo mezzanotte)
+  const events = (allEvents ?? [])
+    .filter((ev) => ev.date === todayStr || (ev.end_time != null && ev.end_time > currentTime))
+    .map(({ id, name }) => ({ id, name }));
 
   if (!events || events.length === 0) {
     return (
