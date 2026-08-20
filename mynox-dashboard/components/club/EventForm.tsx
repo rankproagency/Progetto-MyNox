@@ -325,9 +325,18 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
         .select('id, club_table_id')
         .eq('event_id', eventId);
 
-      const existingMap = new Map<string, string>(
-        (existingDbTables ?? []).map((t) => [t.club_table_id as string, t.id as string])
-      );
+      const existingMap = new Map<string, string>();
+      const duplicateIds: string[] = [];
+      for (const t of existingDbTables ?? []) {
+        if (existingMap.has(t.club_table_id as string)) {
+          duplicateIds.push(t.id as string);
+        } else {
+          existingMap.set(t.club_table_id as string, t.id as string);
+        }
+      }
+      if (duplicateIds.length > 0) {
+        await supabase.from('tables').delete().in('id', duplicateIds);
+      }
       const formClubTableIds = new Set(eventTables.map((et) => et.clubTableId));
 
       for (const et of eventTables) {
