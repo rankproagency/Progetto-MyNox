@@ -203,12 +203,12 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
     setTickets((prev) =>
       prev.map((t) => (t.id === id ? { ...t, drinkUsed: true } : t))
     );
-    const { error } = await supabase.from('tickets').update({ drink_used: true }).eq('id', id);
-    if (error) {
+    const { data: success, error } = await supabase.rpc('mark_drink_used', { p_ticket_id: id });
+    if (error || success === false) {
       setTickets((prev) =>
         prev.map((t) => (t.id === id ? { ...t, drinkUsed: false } : t))
       );
-      throw error;
+      throw error ?? new Error('Drink già usato o non valido');
     }
     // Aggiorna la cache offline dopo un mark riuscito
     const userId = currentUserIdRef.current;

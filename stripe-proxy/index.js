@@ -35,12 +35,9 @@ const CORS_HEADERS = {
   'Content-Type': 'application/json',
 };
 
-const PROMO_CODES = {
-  LAUNCH10: { type: 'percent', value: 10, label: '10% di sconto' },
-  VIP20:    { type: 'percent', value: 20, label: '20% di sconto' },
-  PADOVA:   { type: 'flat',    value: 5,  label: '€5 di sconto' },
-  FRIENDS:  { type: 'percent', value: 15, label: '15% di sconto' },
-};
+// Tutti i codici promo sono gestiti tramite il dashboard e salvati su Supabase.
+// Non ci sono fallback hardcoded — un codice non trovato nel DB è semplicemente non valido.
+const PROMO_CODES: Record<string, never> = {};
 
 async function applyPromo(baseCents, code, clubId) {
   if (!code) return baseCents;
@@ -471,6 +468,26 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(400, CORS_HEADERS);
         res.end(JSON.stringify({ error: 'ticket_id e gifter_id obbligatori' }));
         return;
+      }
+
+      // Verifica JWT: il gifter_id deve corrispondere al token
+      const jwtUserId = await verifyJwtUserId(req.headers['authorization']);
+      if (!jwtUserId || jwtUserId !== gifter_id) {
+        res.writeHead(401, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Token non valido.' }));
+        return;
+      }
+
+      // Verifica ownership: il biglietto deve appartenere al gifter
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        const ticketRows = await callSupabaseGet(
+          `/rest/v1/tickets?id=eq.${encodeURIComponent(ticket_id)}&user_id=eq.${encodeURIComponent(gifter_id)}&select=id`
+        );
+        if (!Array.isArray(ticketRows) || ticketRows.length === 0) {
+          res.writeHead(403, CORS_HEADERS);
+          res.end(JSON.stringify({ error: 'Biglietto non trovato o non di tua proprietà.' }));
+          return;
+        }
       }
 
       // Genera codice 8 caratteri con crypto.randomBytes (crittograficamente sicuro)
