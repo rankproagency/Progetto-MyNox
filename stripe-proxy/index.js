@@ -178,18 +178,21 @@ function readBody(req) {
   });
 }
 
-// Rate limiter in-memory con limiti per endpoint.
-// Nota: su Render single-instance è sufficiente. Con più istanze usare Redis.
 const RATE_LIMITS = {
-  '/validate-promo':    { max: 10, windowMs: 60_000 },  // promo brute-force
-  '/gift-ticket':       { max: 5,  windowMs: 60_000 },  // gift code generation
-  '/claim-gift':        { max: 10, windowMs: 60_000 },  // claim attempts
-  '/delete-account':    { max: 3,  windowMs: 60_000 },  // account deletion
+  '/validate-promo':    { max: 10, windowMs: 60_000 },
+  '/gift-ticket':       { max: 5,  windowMs: 60_000 },
+  '/claim-gift':        { max: 10, windowMs: 60_000 },
+  '/delete-account':    { max: 3,  windowMs: 60_000 },
   default:              { max: 20, windowMs: 60_000 },
 };
-const rateLimitMaps = new Map(); // endpoint → Map<ip, {count, start}>
 
-function isRateLimited(ip, endpoint) {
+// Endpoint sensibili: rate limit persistente su Supabase (sopravvive ai restart).
+// Gli altri usano in-memory (Stripe ha già protezioni proprie sui payment intent).
+const PERSISTENT_RATE_LIMIT_ENDPOINTS = new Set(['/validate-promo', '/claim-gift', '/delete-account']);
+
+const rateLimitMaps = new Map();
+
+function isRateLimitedInMemory(ip, endpoint) {
   const cfg = RATE_LIMITS[endpoint] ?? RATE_LIMITS.default;
   if (!rateLimitMaps.has(endpoint)) rateLimitMaps.set(endpoint, new Map());
   const map = rateLimitMaps.get(endpoint);
@@ -203,7 +206,27 @@ function isRateLimited(ip, endpoint) {
   map.set(ip, entry);
   return entry.count > cfg.max;
 }
-// Pulizia periodica per evitare memory leak
+
+async function isRateLimited(ip, endpoint) {
+  if (PERSISTENT_RATE_LIMIT_ENDPOINTS.has(endpoint) && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+    const cfg = RATE_LIMITS[endpoint] ?? RATE_LIMITS.default;
+    const windowStart = new Date(Math.floor(Date.now() / cfg.windowMs) * cfg.windowMs).toISOString();
+    try {
+      const blocked = await callSupabase('/rest/v1/rpc/check_rate_limit', {
+        p_ip: ip,
+        p_endpoint: endpoint,
+        p_window_start: windowStart,
+        p_max: cfg.max,
+      });
+      return blocked === true;
+    } catch {
+      // Supabase non raggiungibile: fallback in-memory
+      return isRateLimitedInMemory(ip, endpoint);
+    }
+  }
+  return isRateLimitedInMemory(ip, endpoint);
+}
+
 setInterval(() => {
   const cutoff = Date.now() - 2 * 60 * 1000;
   for (const [, map] of rateLimitMaps) {
@@ -228,7 +251,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ?? req.socket.remoteAddress ?? 'unknown';
-  if (isRateLimited(ip, req.url)) {
+  if (await isRateLimited(ip, req.url)) {
     res.writeHead(429, CORS_HEADERS);
     res.end(JSON.stringify({ error: 'Troppe richieste. Riprova tra un minuto.' }));
     return;
