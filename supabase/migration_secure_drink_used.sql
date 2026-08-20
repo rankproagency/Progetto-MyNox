@@ -2,16 +2,52 @@
 -- drink_used a false e riusare il free drink.
 DROP POLICY IF EXISTS "Utente aggiorna i propri biglietti" ON public.tickets;
 
--- RPC sicura: imposta drink_used = true solo se l'utente è il proprietario
--- e il drink non è già stato consumato. Non può essere invertita dal client.
+-- RPC sicura: imposta drink_used = true solo se:
+-- 1. L'utente è il proprietario del biglietto
+-- 2. Il drink non è già stato consumato
+-- 3. L'evento è ancora in corso (non scaduto)
+-- Non può essere invertita dal client.
 CREATE OR REPLACE FUNCTION public.mark_drink_used(p_ticket_id uuid)
 RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 DECLARE
-  v_rows integer;
+  v_rows      integer;
+  v_event_date date;
+  v_end_time   time;
+  v_cutoff     timestamptz;
 BEGIN
+  -- Verifica ownership e recupera data/orario fine evento
+  SELECT e.date, e.end_time
+  INTO v_event_date, v_end_time
+  FROM public.tickets t
+  JOIN public.events e ON e.id = t.event_id
+  WHERE t.id = p_ticket_id
+    AND t.user_id = auth.uid()
+    AND t.drink_used = false
+    AND t.drink_qr_code IS NOT NULL;
+
+  IF NOT FOUND THEN
+    RETURN false;
+  END IF;
+
+  -- Calcola il cutoff: se end_time < 12:00 l'evento attraversa mezzanotte
+  IF v_end_time IS NOT NULL THEN
+    IF v_end_time < '12:00:00'::time THEN
+      v_cutoff := (v_event_date::timestamp + interval '1 day') + v_end_time;
+    ELSE
+      v_cutoff := v_event_date::timestamp + v_end_time;
+    END IF;
+  ELSE
+    -- Nessun end_time: accettato fino alle 12:00 del giorno dopo
+    v_cutoff := (v_event_date::timestamp + interval '1 day' + interval '12 hours');
+  END IF;
+
+  IF now() > v_cutoff THEN
+    RETURN false;
+  END IF;
+
   UPDATE public.tickets
   SET drink_used = true
   WHERE id = p_ticket_id

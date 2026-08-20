@@ -237,7 +237,6 @@ export default function EventScreen() {
   const limitedAvailable = event.ticketTypes.filter((t) => !t.isUnlimited).reduce((sum, t) => sum + t.available, 0);
   const totalTicketSlots = hasLimitedTickets ? limitedAvailable + event.ticketsSold : 0;
   const soldPercent = totalTicketSlots > 0 ? Math.round((event.ticketsSold / totalTicketSlots) * 100) : 0;
-  const remaining = totalTicketSlots - event.ticketsSold;
   const isLowStock = hasLimitedTickets && soldPercent >= 80;
   const isMediumStock = hasLimitedTickets && soldPercent >= 50 && soldPercent < 80;
   const showScarcity = hasTickets && !isSoldOut && hasLimitedTickets;

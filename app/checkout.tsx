@@ -279,8 +279,9 @@ export default function CheckoutScreen() {
         metadata.table_name = tableName?.trim() ?? '';
       }
       if (parsedExtras.length > 0) metadata.extras = JSON.stringify(parsedExtras);
-      // promo_id nei metadata: il proxy lo consuma atomicamente prima di creare il PaymentIntent
       if (appliedPromo?.promoId) metadata.promo_id = appliedPromo.promoId;
+      // Subtotale biglietti (senza tavolo/extras) usato dal webhook per calcolare price_paid corretto
+      metadata.ticket_subtotal_cents = String(Math.round(ticketSubtotal * 100));
 
       let createdTickets: any[];
 

@@ -27,6 +27,10 @@ if (!STRIPE_SECRET_KEY) {
   console.error('STRIPE_SECRET_KEY mancante');
   process.exit(1);
 }
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY mancanti — JWT verification disabilitata, avvio bloccato');
+  process.exit(1);
+}
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',

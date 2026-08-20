@@ -73,7 +73,11 @@ Deno.serve(async (req) => {
   // Crea biglietti — stessa logica di confirm-payment
   const quantity = parseInt(meta.quantity ?? '1', 10);
   const includesDrink = meta.includes_drink === 'true';
-  const priceEach = parseFloat((paymentIntent.amount / 100 / quantity).toFixed(2));
+  // Usa il subtotale biglietti per price_paid, escludendo caparra tavolo ed extras
+  const ticketSubtotalCents = meta.ticket_subtotal_cents ? parseInt(meta.ticket_subtotal_cents, 10) : 0;
+  const priceEach = ticketSubtotalCents > 0
+    ? parseFloat((ticketSubtotalCents / 100 / quantity).toFixed(2))
+    : parseFloat((paymentIntent.amount / 100 / quantity).toFixed(2));
   const parsedExtras = (() => { try { return meta.extras ? JSON.parse(meta.extras) : []; } catch { return []; } })();
 
   const toInsert = Array.from({ length: quantity }, () => {
