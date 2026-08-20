@@ -249,6 +249,11 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
     if (form.min_age === -1) { setError(ef.minAgeRequired); return; }
     const incompleteTicket = ticketTypes.find((tk) => (tk.label.trim() || tk.price) && !tk.total_quantity);
     if (incompleteTicket) { setError(ef.availableRequired); return; }
+    const oversoldTicket = ticketTypes.find((tk) => tk.total_quantity && (tk.sold_quantity ?? 0) > parseInt(tk.total_quantity));
+    if (oversoldTicket) {
+      setError(ef.quantityBelowSold.replace('{name}', oversoldTicket.label).replace('{n}', String(oversoldTicket.sold_quantity)));
+      return;
+    }
 
     setLoading(true);
     setError('');
