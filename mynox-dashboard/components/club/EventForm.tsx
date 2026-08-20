@@ -301,14 +301,16 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
         if (error) { setError(ef.saveTicketsError + ' ' + error.message); setLoading(false); return; }
       }
       // Insert nuovi
+      let insertedIds: string[] = [];
       if (newOnes.length > 0) {
-        const { error } = await supabase.from('ticket_types').insert(
+        const { data: inserted, error } = await supabase.from('ticket_types').insert(
           newOnes.map((tk) => ({ event_id: eventId, sold_quantity: 0, ...ticketPayload(tk) }))
-        );
+        ).select('id');
         if (error) { setError(ef.saveTicketsError + ' ' + error.message); setLoading(false); return; }
+        insertedIds = (inserted ?? []).map((t) => t.id);
       }
       // Delete solo i tipi rimossi che non hanno biglietti venduti
-      const keptIds = existing.map((tk) => tk.id!);
+      const keptIds = [...existing.map((tk) => tk.id!), ...insertedIds];
       const { data: allTypes } = await supabase.from('ticket_types').select('id, sold_quantity').eq('event_id', eventId);
       const toDelete = (allTypes ?? []).filter((t) => !keptIds.includes(t.id) && (t.sold_quantity ?? 0) === 0);
       for (const t of toDelete) {
