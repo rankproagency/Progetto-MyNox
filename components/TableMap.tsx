@@ -283,12 +283,14 @@ function TableCards({
 
             {/* Destra: caparra + radio */}
             <View style={styles.cardRight}>
-              <Text style={[styles.cardDeposit, isOccupied && styles.cardLabelMuted]}>€{table.deposit}</Text>
-              <Text style={styles.cardDepositLabel}>{t('table_map.deposit')}</Text>
-              {!isOccupied && (
-                <View style={[styles.radioBtn, isSelected && styles.radioBtnActive]}>
-                  {isSelected && <View style={styles.radioDot} />}
-                </View>
+              {isOccupied ? null : (
+                <>
+                  <Text style={styles.cardDeposit}>€{table.deposit}</Text>
+                  <Text style={styles.cardDepositLabel}>{t('table_map.deposit')}</Text>
+                  <View style={[styles.radioBtn, isSelected && styles.radioBtnActive]}>
+                    {isSelected && <View style={styles.radioDot} />}
+                  </View>
+                </>
               )}
             </View>
           </TouchableOpacity>
