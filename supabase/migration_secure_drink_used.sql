@@ -32,16 +32,16 @@ BEGIN
     RETURN false;
   END IF;
 
-  -- Calcola il cutoff: se end_time < 12:00 l'evento attraversa mezzanotte
+  -- Calcola il cutoff in ora italiana (Europe/Rome) per evitare lo sfasamento UTC
   IF v_end_time IS NOT NULL THEN
     IF v_end_time < '12:00:00'::time THEN
-      v_cutoff := (v_event_date::timestamp + interval '1 day') + v_end_time;
+      v_cutoff := ((v_event_date + 1)::timestamp + v_end_time) AT TIME ZONE 'Europe/Rome';
     ELSE
-      v_cutoff := v_event_date::timestamp + v_end_time;
+      v_cutoff := (v_event_date::timestamp + v_end_time) AT TIME ZONE 'Europe/Rome';
     END IF;
   ELSE
-    -- Nessun end_time: accettato fino alle 12:00 del giorno dopo
-    v_cutoff := (v_event_date::timestamp + interval '1 day' + interval '12 hours');
+    -- Nessun end_time: accettato fino alle 12:00 del giorno dopo (ora italiana)
+    v_cutoff := ((v_event_date + 1)::timestamp + interval '12 hours') AT TIME ZONE 'Europe/Rome';
   END IF;
 
   IF now() > v_cutoff THEN
