@@ -43,25 +43,31 @@ export default function TicketScanner({ events, defaultEventId }: Props) {
     if (processingRef.current) return;
     processingRef.current = true;
 
-    const code = rawCode.trim();
-    const res = await fetch('/api/club/validate-ticket', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, eventId: selectedEventId }),
-    });
-    const data: ScanResult = await res.json();
+    try {
+      const code = rawCode.trim();
+      const res = await fetch('/api/club/validate-ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, eventId: selectedEventId }),
+      });
+      const data: ScanResult = await res.json();
 
-    setResult(data);
-    setScanState(data.ok ? 'success' : 'error');
+      setResult(data);
+      setScanState(data.ok ? 'success' : 'error');
 
-    if (data.ok) {
-      navigator.vibrate?.([80]);
-    } else {
-      navigator.vibrate?.([120, 60, 120]);
+      if (data.ok) {
+        navigator.vibrate?.([80]);
+      } else {
+        navigator.vibrate?.([120, 60, 120]);
+      }
+
+      setScanState('idle');
+    } catch {
+      setScanState('error');
+      setResult({ ok: false, reason: 'invalid' });
+    } finally {
+      processingRef.current = false;
     }
-
-    setScanState('idle');
-    processingRef.current = false;
   }
 
   useEffect(() => {
