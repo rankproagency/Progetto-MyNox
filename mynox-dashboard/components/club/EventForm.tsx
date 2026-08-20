@@ -318,36 +318,59 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
       }
     }
 
-    // Salva tavoli evento (con prezzi specifici per questo evento)
-    if (eventId && eventTables.length > 0) {
-      await supabase.from('tables').delete().eq('event_id', eventId);
-      const { error: tablesError } = await supabase.from('tables').insert(
-        eventTables.map((et) => {
-          const clubTable = clubTables?.find((ct) => ct.id === et.clubTableId);
-          return {
-            event_id: eventId,
-            club_table_id: et.clubTableId,
-            label: et.label,
-            capacity: et.capacity,
-            deposit: et.deposit ? parseFloat(et.deposit) : 0,
-            is_available: et.isAvailable,
-            pos_x: clubTable?.posX ?? null,
-            pos_y: clubTable?.posY ?? null,
-            zone_label: et.zoneLabel || null,
-            zone_color: et.zoneLabel ? et.zoneColor : null,
-            minimum_spend: et.showMinimumSpend && et.minimumSpend ? parseFloat(et.minimumSpend) : null,
-          };
-        })
+    // Salva tavoli evento: update quelli esistenti, inserisci i nuovi, rimuovi i cancellati
+    if (eventId) {
+      const { data: existingDbTables } = await supabase
+        .from('tables')
+        .select('id, club_table_id')
+        .eq('event_id', eventId);
+
+      const existingMap = new Map<string, string>(
+        (existingDbTables ?? []).map((t) => [t.club_table_id as string, t.id as string])
       );
-      if (tablesError) { setError(ef.saveTablesError + ' ' + tablesError.message); setLoading(false); return; }
+      const formClubTableIds = new Set(eventTables.map((et) => et.clubTableId));
+
+      for (const et of eventTables) {
+        const clubTable = clubTables?.find((ct) => ct.id === et.clubTableId);
+        const tablePayload = {
+          label: et.label,
+          capacity: et.capacity,
+          deposit: et.deposit ? parseFloat(et.deposit) : 0,
+          is_available: et.isAvailable,
+          pos_x: clubTable?.posX ?? null,
+          pos_y: clubTable?.posY ?? null,
+          zone_label: et.zoneLabel || null,
+          zone_color: et.zoneLabel ? et.zoneColor : null,
+          minimum_spend: et.showMinimumSpend && et.minimumSpend ? parseFloat(et.minimumSpend) : null,
+        };
+        const existingId = existingMap.get(et.clubTableId);
+        if (existingId) {
+          const { error } = await supabase.from('tables').update(tablePayload).eq('id', existingId);
+          if (error) { setError(ef.updateTableError + ' ' + error.message); setLoading(false); return; }
+        } else {
+          const { error } = await supabase.from('tables').insert({ event_id: eventId, club_table_id: et.clubTableId, ...tablePayload });
+          if (error) { setError(ef.insertTableError + ' ' + error.message); setLoading(false); return; }
+        }
+      }
+
+      // Tavoli rimossi dal form: elimina se possibile, altrimenti rende non prenotabile
+      // (tickets.table_id ha FK RESTRICT — se ci sono prenotazioni il delete fallisce)
+      for (const [clubTableId, dbId] of existingMap.entries()) {
+        if (!formClubTableIds.has(clubTableId)) {
+          const { error: delErr } = await supabase.from('tables').delete().eq('id', dbId);
+          if (delErr) {
+            await supabase.from('tables').update({ is_available: false }).eq('id', dbId);
+          }
+        }
+      }
     }
 
-    // Salva extras evento
-    if (eventId && eventExtras.length > 0) {
+    // Salva extras evento (tickets.extras è JSONB — nessuna FK, delete è sempre sicuro)
+    if (eventId) {
       await supabase.from('event_extras').delete().eq('event_id', eventId);
       const activeExtras = eventExtras.filter((ee) => ee.isAvailable);
       if (activeExtras.length > 0) {
-        await supabase.from('event_extras').insert(
+        const { error: extrasError } = await supabase.from('event_extras').insert(
           activeExtras.map((ee) => ({
             event_id: eventId,
             club_extra_id: ee.clubExtraId,
@@ -356,6 +379,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
             is_available: true,
           }))
         );
+        if (extrasError) { setError(ef.saveExtrasError + ' ' + extrasError.message); setLoading(false); return; }
       }
     }
 
