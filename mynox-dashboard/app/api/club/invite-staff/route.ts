@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
         role: 'club_staff',
         club_id: profile.club_id,
       },
-      redirectTo: `${APP_URL}/auth/callback`,
+      redirectTo: `${APP_URL}/auth/reset-password`,
     });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
