@@ -37,9 +37,14 @@ export default async function ScanPage() {
     .order('date', { ascending: false })
     .order('name');
 
-  // Evento di ieri: incluso solo se end_time > ora (ancora in corso dopo mezzanotte)
+  // Evento di ieri: incluso se end_time > ora, oppure se end_time non è stato impostato
+  // e siamo ancora prima di mezzogiorno (qualsiasi serata è certamente finita entro le 12:00)
   const events = (allEvents ?? [])
-    .filter((ev) => ev.date === todayStr || (ev.end_time != null && ev.end_time > currentTime))
+    .filter((ev) => {
+      if (ev.date === todayStr) return true;
+      if (ev.end_time != null) return ev.end_time > currentTime;
+      return currentTime < '12:00';
+    })
     .map(({ id, name }) => ({ id, name }));
 
   if (!events || events.length === 0) {
