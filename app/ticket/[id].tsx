@@ -267,7 +267,7 @@ export default function TicketScreen() {
                         <Text style={styles.validText}>{t('ticket_detail.status_drink_available')}</Text>
                       </View>
                     )}
-                    {!ticket.drinkUsed && isEventToday && (
+                    {!ticket.drinkUsed && !isPast && (
                       <>
                         <TouchableOpacity
                           style={styles.baristaBtm}
