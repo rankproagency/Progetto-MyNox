@@ -14,14 +14,14 @@ export async function GET(request: Request) {
     if (!error && data.session) {
       const meta = data.session.user.user_metadata as Record<string, string> | undefined;
 
-      // Se l'utente è stato invitato come staff, aggiorna il profilo al ruolo corretto.
-      // Questo gestisce il caso in cui l'update nel route invite-staff non aveva ancora
-      // il profilo (utente nuovo che non aveva ancora accettato l'invito).
       if (meta?.role === 'club_staff' && meta?.club_id) {
         const admin = createAdminClient();
         await admin.from('profiles')
           .update({ role: 'club_staff', club_id: meta.club_id })
           .eq('id', data.session.user.id);
+
+        // Utente invitato — deve impostare la password prima di accedere
+        return NextResponse.redirect(`${origin}/auth/reset-password`);
       }
 
       return NextResponse.redirect(`${origin}${next}`);
