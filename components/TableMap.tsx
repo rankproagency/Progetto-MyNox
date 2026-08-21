@@ -52,15 +52,17 @@ export default function TableMap({ tables, selected, onSelect, floorPlanUrl }: P
   const zones = useZones(tables);
 
   useEffect(() => {
+    let cancelled = false;
     if (floorPlanUrl) {
       RNImage.getSize(
         floorPlanUrl,
-        (w, h) => setMapHeight(MAP_WIDTH * (h / w)),
-        () => setMapHeight(DEFAULT_MAP_HEIGHT),
+        (w, h) => { if (!cancelled) setMapHeight(MAP_WIDTH * (h / w)); },
+        () => { if (!cancelled) setMapHeight(DEFAULT_MAP_HEIGHT); },
       );
     } else {
       setMapHeight(DEFAULT_MAP_HEIGHT);
     }
+    return () => { cancelled = true; };
   }, [floorPlanUrl]);
 
   const mappedTables = tables.filter((tbl) => tbl.posX != null && tbl.posY != null);

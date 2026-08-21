@@ -209,8 +209,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setMusicGenresState([]);
         await AsyncStorage.removeItem(KEYS.genres);
-        const raw = await AsyncStorage.getItem(KEYS.onboarded);
-        setIsOnboarded(raw === 'true');
+        // Non leggiamo la chiave generica @mynox_onboarded: appartiene all'utente precedente.
+        // Un utente non autenticato non è mai "onboarded" — il redirect è gestito da _layout.tsx.
+        setIsOnboarded(false);
       }
     });
 

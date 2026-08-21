@@ -48,7 +48,7 @@ export default async function CrmPage({ searchParams }: Props) {
   const contacts = (rows ?? []).map((r: any) => ({
     id:         r.ticket_id,
     created_at: r.created_at,
-    profiles:   { id: r.user_id,   name: r.user_name, email: r.user_email, marketing_consent: true },
+    profiles:   { id: r.user_id,   name: r.user_name, email: r.user_email, marketing_consent: r.marketing_consent ?? false },
     events:     { id: r.event_id,  name: r.event_name, date: r.event_date },
   }));
 

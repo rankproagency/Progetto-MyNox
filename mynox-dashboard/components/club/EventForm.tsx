@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Plus, Trash2, Mic2, Music } from 'lucide-react';
@@ -165,6 +165,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
+  const submittingRef = useRef(false);
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -243,6 +244,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
   }
 
   async function handleSubmit(publish: boolean) {
+    if (submittingRef.current) return;
     if (!form.name.trim()) { setError(ef.nameRequired); return; }
     if (!form.date) { setError(ef.dateRequired); return; }
     if (!form.start_time) { setError(ef.startTimeRequired); return; }
@@ -255,6 +257,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
       return;
     }
 
+    submittingRef.current = true;
     setLoading(true);
     setError('');
 
@@ -280,10 +283,10 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
 
     if (isEdit) {
       const { error: updateError } = await supabase.from('events').update(payload).eq('id', event!.id);
-      if (updateError) { setError(updateError.message); setLoading(false); return; }
+      if (updateError) { setError(updateError.message); submittingRef.current = false; setLoading(false); return; }
     } else {
       const { data, error: insertError } = await supabase.from('events').insert(payload).select('id').single();
-      if (insertError || !data) { setError(insertError?.message ?? ef.createError); setLoading(false); return; }
+      if (insertError || !data) { setError(insertError?.message ?? ef.createError); submittingRef.current = false; setLoading(false); return; }
       eventId = data.id;
     }
 
@@ -303,7 +306,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
       // Update tipi esistenti preservando sold_quantity
       for (const tk of existing) {
         const { error } = await supabase.from('ticket_types').update(ticketPayload(tk)).eq('id', tk.id!);
-        if (error) { setError(ef.saveTicketsError + ' ' + error.message); setLoading(false); return; }
+        if (error) { setError(ef.saveTicketsError + ' ' + error.message); submittingRef.current = false; setLoading(false); return; }
       }
       // Insert nuovi
       let insertedIds: string[] = [];
@@ -311,7 +314,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
         const { data: inserted, error } = await supabase.from('ticket_types').insert(
           newOnes.map((tk) => ({ event_id: eventId, sold_quantity: 0, ...ticketPayload(tk) }))
         ).select('id');
-        if (error) { setError(ef.saveTicketsError + ' ' + error.message); setLoading(false); return; }
+        if (error) { setError(ef.saveTicketsError + ' ' + error.message); submittingRef.current = false; setLoading(false); return; }
         insertedIds = (inserted ?? []).map((t) => t.id);
       }
       // Delete solo i tipi rimossi che non hanno biglietti venduti
@@ -360,10 +363,10 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
         const existingId = existingMap.get(et.clubTableId);
         if (existingId) {
           const { error } = await supabase.from('tables').update(tablePayload).eq('id', existingId);
-          if (error) { setError(ef.updateTableError + ' ' + error.message); setLoading(false); return; }
+          if (error) { setError(ef.updateTableError + ' ' + error.message); submittingRef.current = false; setLoading(false); return; }
         } else {
           const { error } = await supabase.from('tables').insert({ event_id: eventId, club_table_id: et.clubTableId, ...tablePayload });
-          if (error) { setError(ef.insertTableError + ' ' + error.message); setLoading(false); return; }
+          if (error) { setError(ef.insertTableError + ' ' + error.message); submittingRef.current = false; setLoading(false); return; }
         }
       }
 
@@ -393,10 +396,11 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
             is_available: true,
           }))
         );
-        if (extrasError) { setError(ef.saveExtrasError + ' ' + extrasError.message); setLoading(false); return; }
+        if (extrasError) { setError(ef.saveExtrasError + ' ' + extrasError.message); submittingRef.current = false; setLoading(false); return; }
       }
     }
 
+    submittingRef.current = false;
     setLoading(false);
     router.push('/club/events');
     router.refresh();

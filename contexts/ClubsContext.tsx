@@ -5,9 +5,10 @@ import { Club } from '../types';
 interface ClubsCtx {
   clubs: Club[];
   isLoading: boolean;
+  error: string | null;
 }
 
-const ClubsContext = createContext<ClubsCtx>({ clubs: [], isLoading: true });
+const ClubsContext = createContext<ClubsCtx>({ clubs: [], isLoading: true, error: null });
 
 function rowToClub(row: any): Club {
   return {
@@ -29,14 +30,17 @@ function rowToClub(row: any): Club {
 export function ClubsProvider({ children }: { children: ReactNode }) {
   const [clubs, setClubs] = useState<Club[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadClubs = useCallback(async () => {
-    const { data } = await supabase
+    setError(null);
+    const { data, error: fetchError } = await supabase
       .from('clubs')
       .select('id, name, city, province, address, image_url, instagram, tiktok, email, phone, latitude, longitude')
       .eq('is_active', true)
       .order('name', { ascending: true });
 
+    if (fetchError) setError(fetchError.message);
     if (data) setClubs(data.map(rowToClub));
     setIsLoading(false);
   }, []);
@@ -44,7 +48,7 @@ export function ClubsProvider({ children }: { children: ReactNode }) {
   useEffect(() => { loadClubs(); }, [loadClubs]);
 
   return (
-    <ClubsContext.Provider value={{ clubs, isLoading }}>
+    <ClubsContext.Provider value={{ clubs, isLoading, error }}>
       {children}
     </ClubsContext.Provider>
   );

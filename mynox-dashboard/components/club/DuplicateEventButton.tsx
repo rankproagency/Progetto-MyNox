@@ -62,6 +62,8 @@ export default function DuplicateEventButton({ eventId }: Props) {
           price: t.price,
           total_quantity: t.total_quantity,
           includes_drink: t.includes_drink,
+          max_per_account: t.max_per_account,
+          price_tiers: t.price_tiers,
           sold_quantity: 0,
         }))
       );

@@ -73,7 +73,7 @@ export default function RegisterScreen() {
       Alert.alert(t('common.error'), t('register.error_invalid_email'));
       return;
     }
-    if (password.length < 6) {
+    if (password.length < 8) {
       Alert.alert(t('common.error'), t('register.error_password_too_short'));
       return;
     }

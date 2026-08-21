@@ -9,10 +9,7 @@ export default function AuthCallbackScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    async function handle() {
-      const url = await Linking.getInitialURL();
-      if (!url) { router.replace('/login'); return; }
-
+    async function processUrl(url: string): Promise<boolean> {
       // Supabase mette i token nell'hash (#access_token=...&refresh_token=...)
       const hashIndex = url.indexOf('#');
       if (hashIndex !== -1) {
@@ -21,7 +18,7 @@ export default function AuthCallbackScreen() {
         const refresh_token = params.get('refresh_token');
         if (access_token && refresh_token) {
           await supabase.auth.setSession({ access_token, refresh_token });
-          return; // _layout.tsx gestisce la navigazione in base all'auth state
+          return true; // _layout.tsx gestisce la navigazione in base all'auth state
         }
       }
 
@@ -30,14 +27,33 @@ export default function AuthCallbackScreen() {
       const code = parsed.queryParams?.code as string | undefined;
       if (code) {
         await supabase.auth.exchangeCodeForSession(code);
-        return;
+        return true;
       }
 
-      router.replace('/login');
+      return false;
+    }
+
+    async function handle() {
+      // Cold start: URL che ha aperto l'app
+      const initialUrl = await Linking.getInitialURL();
+      if (initialUrl) {
+        const handled = await processUrl(initialUrl);
+        if (handled) return;
+      }
+
+      // Warm start: app già aperta, ascolta il deep link in arrivo
+      const sub = Linking.addEventListener('url', async ({ url }) => {
+        const handled = await processUrl(url);
+        if (!handled) router.replace('/login');
+        sub.remove();
+      });
+
+      // Timeout: se dopo 5 secondi non arriva nessun URL, vai al login
+      setTimeout(() => { sub.remove(); router.replace('/login'); }, 5000);
     }
 
     handle();
-  }, []);
+  }, [router]);
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.background, justifyContent: 'center', alignItems: 'center' }}>

@@ -106,14 +106,16 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
   const [tickets, setTickets] = useState<MockTicket[]>([]);
   const [loaded, setLoaded] = useState(false);
   const currentUserIdRef = useRef<string | null>(null);
+  const mountedRef = useRef(true);
 
   async function loadTickets(userId: string) {
     // Show cached tickets immediately so QR codes are available offline
     try {
       const cached = await AsyncStorage.getItem(ticketCacheKey(userId));
-      if (cached) setTickets(JSON.parse(cached));
+      if (cached && mountedRef.current) setTickets(JSON.parse(cached));
     } catch (_) {}
 
+    if (!mountedRef.current) return;
     setLoaded(false);
     const { data } = await supabase
       .from('tickets')
@@ -127,6 +129,7 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
+    if (!mountedRef.current) return;
     if (data) {
       const mapped = data.map(dbRowToMockTicket);
       setTickets(mapped);
@@ -138,12 +141,29 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
     setLoaded(true);
   }
 
-  // Ascolta i cambi di sessione — carica i biglietti dell'utente giusto
+  // Ascolta i cambi di sessione — carica i biglietti e gestisce il canale Realtime
   useEffect(() => {
+    // Il canale Realtime viene ricreato al cambio utente con filtro user_id
+    // per ricevere solo le notifiche dei propri biglietti (non di tutti gli utenti).
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    function subscribeRealtime(userId: string) {
+      if (channel) supabase.removeChannel(channel);
+      channel = supabase
+        .channel(`tickets_${userId}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'tickets', filter: `user_id=eq.${userId}` },
+          () => { loadTickets(userId); }
+        )
+        .subscribe();
+    }
+
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         currentUserIdRef.current = user.id;
         loadTickets(user.id);
+        subscribeRealtime(user.id);
       } else {
         setLoaded(true);
       }
@@ -154,6 +174,7 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
       if (userId && userId !== currentUserIdRef.current) {
         currentUserIdRef.current = userId;
         loadTickets(userId);
+        subscribeRealtime(userId);
       } else if (!userId) {
         const prevUserId = currentUserIdRef.current;
         currentUserIdRef.current = null;
@@ -162,19 +183,14 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
         if (prevUserId) {
           AsyncStorage.removeItem(ticketCacheKey(prevUserId)).catch(() => {});
         }
+        if (channel) { supabase.removeChannel(channel); channel = null; }
       }
     });
 
-    const channel = supabase
-      .channel('tickets_realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, () => {
-        if (currentUserIdRef.current) loadTickets(currentUserIdRef.current);
-      })
-      .subscribe();
-
     return () => {
+      mountedRef.current = false;
       subscription.unsubscribe();
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 

@@ -124,7 +124,7 @@ function AnimatedListItem({ children, index }: { children: React.ReactNode; inde
   const translateY = useRef(new Animated.Value(18)).current;
 
   useEffect(() => {
-    Animated.parallel([
+    const anim = Animated.parallel([
       Animated.timing(opacity, {
         toValue: 1,
         duration: 260,
@@ -139,7 +139,9 @@ function AnimatedListItem({ children, index }: { children: React.ReactNode; inde
         useNativeDriver: true,
         easing: Easing.out(Easing.quad),
       }),
-    ]).start();
+    ]);
+    anim.start();
+    return () => anim.stop();
   }, []);
 
   return (

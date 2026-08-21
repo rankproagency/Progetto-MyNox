@@ -59,9 +59,14 @@ export async function POST(req: NextRequest) {
   const { data: club } = await admin.from('clubs').select('name').eq('id', profile.club_id).single();
   const clubName = club?.name ?? 'il club';
 
-  // Cerca se l'utente esiste già
-  const { data: existingUsers } = await admin.auth.admin.listUsers();
-  const existingUser = existingUsers?.users?.find((u) => u.email === email);
+  // Cerca se l'utente esiste già — usa profiles.email invece di listUsers()
+  // per evitare di caricare l'intera lista utenti in memoria
+  const { data: existingProfile } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('email', email)
+    .maybeSingle();
+  const existingUser = existingProfile ? { id: existingProfile.id, email } : null;
 
   let targetUserId: string;
 

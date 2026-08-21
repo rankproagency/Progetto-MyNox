@@ -351,7 +351,7 @@ export default function CheckoutScreen() {
             if (attempt > 0) await new Promise((r) => setTimeout(r, 2500));
             const confirmRes = await fetchWithTimeout(`${PROXY_URL}/confirm-payment`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) },
               body: JSON.stringify({ payment_intent_id: fnJson.paymentIntentId }),
             }, attempt === 0 ? 12000 : 8000);
             const confirmJson = await confirmRes.json() as { tickets?: any[]; error?: string };

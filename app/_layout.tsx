@@ -106,12 +106,13 @@ function RootNavigator() {
     if (publicScreens.includes(segment0 ?? '')) return;
 
     let target: string | null = null;
-    if (!isOnboarded && !inAuthScreen) {
-      target = '/onboarding';
-    } else if (isOnboarded && !userId && !inAuthScreen) {
+    if (!userId && !inAuthScreen) {
+      // Utente non autenticato fuori dalle schermate di auth → login
       target = '/login';
-    } else if (userId && !isOnboarded && inAuthScreen && segment0 !== 'reset-password') {
-      // nuovo utente appena registrato: va direttamente all'onboarding senza passare per tabs
+    } else if (userId && !isOnboarded && !inAuthScreen) {
+      // Autenticato ma onboarding non completato → onboarding
+      target = '/onboarding';
+    } else if (userId && !isOnboarded && inAuthScreen && segment0 !== 'onboarding' && segment0 !== 'reset-password') {
       target = '/onboarding';
     } else if (userId && isOnboarded && inAuthScreen && segment0 !== 'reset-password') {
       target = '/(tabs)';

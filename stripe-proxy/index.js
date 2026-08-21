@@ -318,20 +318,9 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // POST /use-promo
-  if (req.url === '/use-promo') {
-    const { promo_id } = body;
-    if (promo_id && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-      try {
-        await callSupabase('/rest/v1/rpc/increment_promo_uses', { p_promo_id: promo_id });
-      } catch (e) {
-        console.error('use-promo error:', e.message);
-      }
-    }
-    res.writeHead(200, CORS_HEADERS);
-    res.end(JSON.stringify({ success: true }));
-    return;
-  }
+  // /use-promo rimosso: i promo vengono consumati atomicamente dentro
+  // /create-payment-intent e /create-free-ticket. Questo endpoint era legacy
+  // e permetteva di bruciare codici promo senza acquistare nulla.
 
   // POST /create-payment-intent
   if (req.url === '/create-payment-intent' || req.url === '/functions/v1/create-payment-intent') {
@@ -346,15 +335,39 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      // Calcolo ticket_subtotal_cents server-side per evitare bypass commissione.
+      // Il client invia ticket_subtotal_cents come hint, ma il valore reale viene
+      // ricavato dal DB usando ticket_type_id × quantity.
+      let serverTicketSubtotalCents = ticket_subtotal_cents ?? 0;
+      const { ticket_type_id: piTtId, quantity: piQtyStr, event_date: piEventDate } = metadata;
+      if (piTtId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        try {
+          const ttRows = await callSupabaseGet(
+            `/rest/v1/ticket_types?id=eq.${encodeURIComponent(piTtId)}&select=price,price_tiers`
+          );
+          if (Array.isArray(ttRows) && ttRows.length > 0) {
+            const piQty = Math.max(1, parseInt(piQtyStr, 10) || 1);
+            const dbPrice = getEffectiveTicketPrice(ttRows[0].price, ttRows[0].price_tiers, piEventDate || '');
+            serverTicketSubtotalCents = Math.round(dbPrice * piQty * 100);
+            // Valida che base_amount_cents copra almeno il subtotale biglietti
+            if (base_amount_cents != null && base_amount_cents < serverTicketSubtotalCents) {
+              res.writeHead(400, CORS_HEADERS);
+              res.end(JSON.stringify({ error: 'Importo non valido.' }));
+              return;
+            }
+          }
+        } catch (e) {
+          console.error('server-side price validation error:', e.message);
+        }
+      }
+
       let finalAmountCents;
       if (base_amount_cents != null) {
         const discountedBase = await applyPromo(base_amount_cents, promo_code, club_id);
-        // 5% commission only on ticket portion — table deposits/extras are commission-free for the customer
-        const rawTicketCents = ticket_subtotal_cents ?? 0;
         let commission = 0;
-        if (rawTicketCents > 0) {
+        if (serverTicketSubtotalCents > 0) {
           const discountSaved = base_amount_cents - discountedBase;
-          const discountedTicketCents = Math.max(0, rawTicketCents - discountSaved);
+          const discountedTicketCents = Math.max(0, serverTicketSubtotalCents - discountSaved);
           commission = Math.max(Math.round(discountedTicketCents * 0.05), 100);
         }
         finalAmountCents = discountedBase + commission;
@@ -454,6 +467,12 @@ const server = http.createServer(async (req, res) => {
   // POST /confirm-payment
   if (req.url === '/confirm-payment' || req.url === '/functions/v1/confirm-payment') {
     try {
+      const jwtUserId = await verifyJwtUserId(req.headers['authorization']);
+      if (!jwtUserId) {
+        res.writeHead(401, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Token non valido.' }));
+        return;
+      }
       const result = await callSupabase('/functions/v1/confirm-payment', body);
       res.writeHead(200, CORS_HEADERS);
       res.end(JSON.stringify(result));
@@ -518,6 +537,14 @@ const server = http.createServer(async (req, res) => {
       if (!code || !claimer_id) {
         res.writeHead(400, CORS_HEADERS);
         res.end(JSON.stringify({ error: 'code e claimer_id obbligatori' }));
+        return;
+      }
+
+      // JWT: claimer_id deve corrispondere al token — previene riscatto su account altrui
+      const jwtUserIdClaim = await verifyJwtUserId(req.headers['authorization']);
+      if (!jwtUserIdClaim || jwtUserIdClaim !== claimer_id) {
+        res.writeHead(401, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Token non valido.' }));
         return;
       }
 
@@ -611,6 +638,14 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      // JWT: gifter_id deve corrispondere al token — previene cancellazione di regali altrui
+      const jwtUserIdCancel = await verifyJwtUserId(req.headers['authorization']);
+      if (!jwtUserIdCancel || jwtUserIdCancel !== gifter_id) {
+        res.writeHead(401, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Token non valido.' }));
+        return;
+      }
+
       // Cerca il codice pending per questo biglietto
       const gifts = await callSupabaseGet(
         `/rest/v1/gift_codes?ticket_id=eq.${ticket_id}&gifter_id=eq.${gifter_id}&status=eq.pending&select=*`
@@ -665,16 +700,9 @@ const server = http.createServer(async (req, res) => {
               res.end(JSON.stringify({ error: 'Biglietto non gratuito.' }));
               return;
             }
-            // Biglietti gratuiti: max 1 per account
-            const existing = await callSupabaseGet(
-              `/rest/v1/tickets?user_id=eq.${encodeURIComponent(user_id)}&ticket_type_id=eq.${encodeURIComponent(ticket_type_id)}&select=id`
-            );
-            const existingCount = Array.isArray(existing) ? existing.length : 0;
-            if (existingCount + quantity > 5) {
-              res.writeHead(409, CORS_HEADERS);
-              res.end(JSON.stringify({ error: 'Puoi riscattare al massimo 5 biglietti omaggio di questo tipo per account.' }));
-              return;
-            }
+            // Biglietti gratuiti: il limite max 5 per account viene verificato atomicamente
+            // nell'RPC create_free_tickets_atomic (pg_advisory_xact_lock + SELECT + INSERT
+            // in un'unica transazione) — nessun TOCTOU possibile tra il check e l'insert.
           }
         }
         if (table_id) {
@@ -714,52 +742,66 @@ const server = http.createServer(async (req, res) => {
       }
 
       const charset = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-      const toInsert = Array.from({ length: quantity }, () => {
+      const ticketPayloads = Array.from({ length: quantity }, () => {
         const id = crypto.randomUUID();
         const entryBytes = Array.from(crypto.randomBytes(6));
         const entryCode = entryBytes.map((b) => charset[b % charset.length]).join('');
         return {
           id,
-          event_id,
-          user_id,
-          ticket_type_id: ticket_type_id || null,
-          table_id: table_id || null,
-          table_name: table_name || null,
           qr_code: `MYNOX-TICKET-${id}`,
           drink_qr_code: includesDrink ? `MYNOX-DRINK-${id}` : null,
-          drink_used: false,
-          status: 'valid',
-          price_paid: 0,
-          stripe_payment_intent_id: null,
           entry_code: entryCode,
-          extras: parsedExtras,
         };
       });
 
+      // Atomic: check limit + insert in one DB transaction (create_free_tickets_atomic)
+      const rpcResult = await callSupabase('/rest/v1/rpc/create_free_tickets_atomic', {
+        p_user_id:        user_id,
+        p_event_id:       event_id,
+        p_ticket_type_id: ticket_type_id || null,
+        p_table_id:       table_id || null,
+        p_table_name:     table_name || null,
+        p_quantity:       quantity,
+        p_includes_drink: includesDrink,
+        p_extras:         parsedExtras.length > 0 ? parsedExtras : [],
+        p_tickets:        ticketPayloads,
+      });
+
+      if (rpcResult?.error === 'limit_exceeded') {
+        res.writeHead(409, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Puoi riscattare al massimo 5 biglietti omaggio di questo tipo per account.' }));
+        return;
+      }
+      if (rpcResult?.error === 'table_already_booked') {
+        res.writeHead(409, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Il tavolo è già stato prenotato da qualcun altro.' }));
+        return;
+      }
+      if (rpcResult?.error === 'tickets_sold_out') {
+        res.writeHead(409, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Biglietti esauriti.' }));
+        return;
+      }
+      if (typeof rpcResult?.error === 'string' && rpcResult.error.startsWith('extra_sold_out')) {
+        const label = rpcResult.error.split(':')[1] ?? 'extra';
+        res.writeHead(409, CORS_HEADERS);
+        res.end(JSON.stringify({ error: `Extra esaurito: ${label}` }));
+        return;
+      }
+
+      const insertedIds = rpcResult?.ids;
+      if (!Array.isArray(insertedIds) || insertedIds.length === 0) {
+        res.writeHead(400, CORS_HEADERS);
+        res.end(JSON.stringify({ error: rpcResult?.message ?? 'Errore creazione biglietto gratuito' }));
+        return;
+      }
+
       const selectQuery = 'id,qr_code,drink_qr_code,entry_code,status,drink_used,price_paid,table_name,extras,ticket_types(label,includes_drink),events(id,name,date,start_time,clubs(name,image_url))';
-      const inserted = await supabaseRequest('POST', `/rest/v1/tickets?select=${encodeURIComponent(selectQuery)}`, toInsert);
+      const inserted = await callSupabaseGet(`/rest/v1/tickets?id=in.(${insertedIds.join(',')})&select=${encodeURIComponent(selectQuery)}`);
 
       if (!Array.isArray(inserted) || inserted.length === 0) {
-        const msg = inserted?.message ?? '';
-        // Errori atomici dal trigger DB
-        if (msg.includes('table_already_booked')) {
-          res.writeHead(409, CORS_HEADERS);
-          res.end(JSON.stringify({ error: 'Il tavolo è già stato prenotato da qualcun altro.' }));
-          return;
-        }
-        if (msg.startsWith('extra_sold_out')) {
-          const label = msg.split(':')[1] ?? 'extra';
-          res.writeHead(409, CORS_HEADERS);
-          res.end(JSON.stringify({ error: `Extra esaurito: ${label}` }));
-          return;
-        }
-        if (msg.includes('tickets_sold_out')) {
-          res.writeHead(409, CORS_HEADERS);
-          res.end(JSON.stringify({ error: 'Biglietti esauriti.' }));
-          return;
-        }
         res.writeHead(400, CORS_HEADERS);
-        res.end(JSON.stringify({ error: msg || 'Errore creazione biglietto gratuito' }));
+        res.end(JSON.stringify({ error: 'Errore recupero biglietti creati' }));
         return;
       }
 

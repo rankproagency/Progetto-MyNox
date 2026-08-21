@@ -107,13 +107,22 @@ export default function PromoManager({ initialCodes, events, clubId }: Props) {
   async function handleToggle(code: PromoCode) {
     const next = !code.is_active;
     setCodes((prev) => prev.map((c) => c.id === code.id ? { ...c, is_active: next } : c));
-    await supabase.from('promo_codes').update({ is_active: next }).eq('id', code.id);
+    const { error } = await supabase.from('promo_codes').update({ is_active: next }).eq('id', code.id);
+    if (error) {
+      // Rollback ottimistico se il salvataggio fallisce
+      setCodes((prev) => prev.map((c) => c.id === code.id ? { ...c, is_active: code.is_active } : c));
+    }
   }
 
   async function handleDelete(id: string) {
     if (!confirm(t.promoManager.deleteConfirm)) return;
+    const snapshot = codes.find((c) => c.id === id);
     setCodes((prev) => prev.filter((c) => c.id !== id));
-    await supabase.from('promo_codes').delete().eq('id', id);
+    const { error } = await supabase.from('promo_codes').delete().eq('id', id);
+    if (error && snapshot) {
+      // Rollback ottimistico
+      setCodes((prev) => [...prev, snapshot].sort((a, b) => a.created_at.localeCompare(b.created_at)));
+    }
   }
 
   const active = codes.filter((c) => c.is_active && !isExpired(c)).length;

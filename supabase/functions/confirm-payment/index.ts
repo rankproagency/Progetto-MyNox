@@ -66,8 +66,28 @@ Deno.serve(async (req) => {
     );
 
     const meta = paymentIntent.metadata;
-    const quantity = parseInt(meta.quantity ?? '1', 10);
+    let quantity = Math.max(1, parseInt(meta.quantity ?? '1', 10));
     const includesDrink = meta.includes_drink === 'true';
+
+    // Valida quantity contro il prezzo reale dal DB per prevenire l'attacco
+    // metadata.quantity=100 + base_amount_cents=1 (un biglietto pagato → 100 biglietti emessi).
+    if (meta.ticket_type_id) {
+      const { data: tt } = await supabase
+        .from('ticket_types')
+        .select('price')
+        .eq('id', meta.ticket_type_id)
+        .single();
+      if (tt) {
+        const unitPriceCents = Math.round(Number(tt.price) * 100);
+        if (unitPriceCents > 0) {
+          // Difesa in profondità: il proxy valida già base_amount_cents >= subtotal al momento
+          // della creazione del PI. Qui usiamo 0.5 come divisore per tollerare sconti fino al 50%.
+          const maxQtyByAmount = Math.floor(paymentIntent.amount / (unitPriceCents * 0.5));
+          quantity = Math.min(quantity, Math.max(1, maxQtyByAmount));
+        }
+      }
+    }
+
     const priceEach = parseFloat((paymentIntent.amount / 100 / quantity).toFixed(2));
 
     // Idempotency: se il payment_intent è già stato processato, restituisce i biglietti esistenti

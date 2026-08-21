@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 
 export interface Profile {
@@ -39,10 +39,14 @@ function formatMemberSince(raw: string | null | undefined): string | null {
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile>({ memberSince: null });
   const [isLoading, setIsLoading] = useState(true);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
+
     async function fetchProfile() {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!mountedRef.current) return;
       if (!user) { setIsLoading(false); return; }
 
       const { data } = await supabase
@@ -51,6 +55,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         .eq('id', user.id)
         .single();
 
+      if (!mountedRef.current) return;
       const raw = data?.member_since ?? user.created_at ?? null;
       setProfile({ memberSince: formatMemberSince(raw) });
       setIsLoading(false);
@@ -59,10 +64,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     fetchProfile();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mountedRef.current) return;
       if (session) fetchProfile();
       else { setProfile({ memberSince: null }); setIsLoading(false); }
     });
-    return () => subscription.unsubscribe();
+    return () => { mountedRef.current = false; subscription.unsubscribe(); };
   }, []);
 
   return (

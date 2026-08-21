@@ -11,13 +11,29 @@ import { Colors } from '../../constants/colors';
 import { Font } from '../../constants/typography';
 import { useTickets } from '../../contexts/TicketsContext';
 import { useCountdown } from '../../hooks/useCountdown';
+import { supabase } from '../../lib/supabase';
 export default function TicketScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { tickets, markDrinkUsed, markTicketUsed } = useTickets();
+  const { tickets, markDrinkUsed, markTicketUsed, refreshTickets } = useTickets();
   const ticket = tickets.find((t) => t.id === id);
   const [activeQR, setActiveQR] = useState<'entry' | 'drink'>('entry');
+
+  // Poll drink status ogni 5 secondi quando la tab drink è attiva e il drink non è ancora usato.
+  // Fallback per i casi in cui Supabase Realtime non notifica (es. aggiornamento via RPC SECURITY DEFINER).
+  useEffect(() => {
+    if (activeQR !== 'drink' || !ticket || ticket.drinkUsed) return;
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from('tickets')
+        .select('drink_used')
+        .eq('id', ticket.id)
+        .single();
+      if (data?.drink_used) refreshTickets();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [activeQR, ticket?.id, ticket?.drinkUsed]);
 
   const qrAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {

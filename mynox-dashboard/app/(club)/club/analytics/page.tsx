@@ -43,7 +43,11 @@ async function getAnalyticsData(clubId: string, locale = 'it-IT') {
     tickets = ticketsData ?? [];
     availableTables = tablesData ?? [];
     for (const tt of ticketTypesData ?? []) {
-      capacityByEvent[tt.event_id] = (capacityByEvent[tt.event_id] ?? 0) + (tt.total_quantity ?? 0);
+      // total_quantity = null significa biglietti illimitati: non contribuisce alla capacità
+      // per evitare fill rate gonfiato o >100% su eventi con tipi misti (limitati + illimitati)
+      if (tt.total_quantity !== null) {
+        capacityByEvent[tt.event_id] = (capacityByEvent[tt.event_id] ?? 0) + tt.total_quantity;
+      }
     }
 
     const uniqueUserIds = [...new Set(

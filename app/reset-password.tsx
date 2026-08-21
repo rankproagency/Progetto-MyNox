@@ -63,11 +63,9 @@ export default function ResetPasswordScreen() {
         await tryHandleUrl(url);
       });
 
-      // Fallback: sessione recovery già attiva (es. navigazione interna)
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) { setReady(true); return; }
-
-      // Nessun token valido trovato
+      // Nessun token recovery trovato nell'URL — mostra errore.
+      // Non usiamo getSession() come fallback: qualsiasi sessione attiva (anche normale login)
+      // farebbe apparire il form senza che l'utente abbia ricevuto la recovery email.
       setTokenError(true);
     }
 

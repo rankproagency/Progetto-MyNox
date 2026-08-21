@@ -15,6 +15,7 @@ import AppHeader from '../../components/AppHeader';
 import { useTranslation } from 'react-i18next';
 import { getLocale } from '../../lib/i18n';
 import { useTabBarScroll, useTabBarCollapsed } from '../../contexts/TabBarContext';
+import { supabase } from '../../lib/supabase';
 
 type Tab = 'future' | 'past';
 
@@ -95,6 +96,11 @@ export default function TicketsScreen() {
     past: tickets.filter((t) => categorize(t) === 'past').length,
   };
 
+  async function getAuthHeader(): Promise<Record<string, string>> {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
+  }
+
   function buildGiftMessage(ticket: MockTicket, code: string): string {
     return (
       `✦ MYNOX ✦\n` +
@@ -129,9 +135,10 @@ export default function TicketsScreen() {
           onPress: async () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             try {
+              const authHeader = await getAuthHeader();
               const res = await fetch('https://mynox-stripe-proxy.onrender.com/cancel-gift', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...authHeader },
                 body: JSON.stringify({ ticket_id: ticket.id, gifter_id: user.id }),
               });
               const json = await res.json() as { success?: boolean; error?: string };
@@ -164,9 +171,10 @@ export default function TicketsScreen() {
           onPress: async () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             try {
+              const authHeaderGift = await getAuthHeader();
               const res = await fetch('https://mynox-stripe-proxy.onrender.com/gift-ticket', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...authHeaderGift },
                 body: JSON.stringify({ ticket_id: ticket.id, gifter_id: user.id }),
               });
               const json = await res.json() as { code?: string; expires_at?: string; error?: string };
@@ -192,9 +200,10 @@ export default function TicketsScreen() {
     if (!claimCode.trim()) return;
     setClaimLoading(true);
     try {
+      const authHeaderClaim = await getAuthHeader();
       const res = await fetch('https://mynox-stripe-proxy.onrender.com/claim-gift', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaderClaim },
         body: JSON.stringify({ code: claimCode.trim().toUpperCase(), claimer_id: user.id }),
       });
       const json = await res.json() as { success?: boolean; error?: string };

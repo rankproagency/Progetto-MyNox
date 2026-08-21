@@ -96,7 +96,7 @@ export default function EventScreen() {
 
   useEffect(() => {
     if (id) addRecentlyViewed(id);
-  }, [id]);
+  }, [id, addRecentlyViewed]);
 
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   useEffect(() => {
@@ -141,11 +141,21 @@ export default function EventScreen() {
       : null
   );
 
+  // Reinizializza bookingMode quando arrivano i dati evento:
+  // all'avvio event=null quindi hasTickets=false e bookingMode='table' per default.
+  useEffect(() => {
+    if (event) {
+      setBookingMode(hasTickets ? 'ticket' : 'table');
+    }
+  }, [event?.id]);
+
   useEffect(() => {
     if (mapCoords || !event?.club?.address) return;
+    const controller = new AbortController();
     const query = encodeURIComponent(`${event.club.address}, Italia`);
     fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`, {
       headers: { 'User-Agent': 'MyNox/1.0 (mynox.app)' },
+      signal: controller.signal,
     })
       .then((r) => r.json())
       .then((data) => {
@@ -154,6 +164,7 @@ export default function EventScreen() {
         }
       })
       .catch(() => {});
+    return () => controller.abort();
   }, [event?.club?.address]);
 
   const availableExtras = (event?.extras ?? []).filter((e) => e.isAvailable);
