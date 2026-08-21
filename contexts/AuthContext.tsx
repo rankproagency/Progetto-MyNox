@@ -236,7 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
         options: {
           data: { name, birthdate, marketing_consent: marketingConsent },
-          emailRedirectTo: 'https://mynox-landing.vercel.app/app-redirect',
+          emailRedirectTo: 'https://mynox.it/app-redirect',
         },
       });
       if (error) throw new Error(error.message);
