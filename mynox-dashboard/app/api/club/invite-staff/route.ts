@@ -15,7 +15,7 @@ async function sendStaffNotificationEmail(email: string, clubName: string, login
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'MyNox <onboarding@resend.dev>',
+      from: 'MyNox <noreply@mynox.it>',
       to: email,
       subject: `Sei stato aggiunto allo staff di ${clubName}`,
       html: `
