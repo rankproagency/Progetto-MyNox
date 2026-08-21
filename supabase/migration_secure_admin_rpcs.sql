@@ -1,9 +1,4 @@
--- Limita l'accesso alle RPC admin che leggono auth.users.
--- Senza questi REVOKE, le funzioni SECURITY DEFINER sono chiamabili
--- da qualsiasi utente autenticato via PostgREST.
-
-REVOKE EXECUTE ON FUNCTION public.admin_list_users(integer, integer, text) FROM anon, authenticated;
-GRANT  EXECUTE ON FUNCTION public.admin_list_users(integer, integer, text) TO service_role;
-
-REVOKE EXECUTE ON FUNCTION public.admin_count_users(text) FROM anon, authenticated;
-GRANT  EXECUTE ON FUNCTION public.admin_count_users(text) TO service_role;
+-- Già applicato tramite migration_security_fixes.sql.
+-- Le RPC admin_list_users e admin_count_users sono ristrette a service_role
+-- con le firme corrette (int, int, text, text, text) e (text, text, text).
+-- Questo file è mantenuto solo come documentazione dell'intenzione.
