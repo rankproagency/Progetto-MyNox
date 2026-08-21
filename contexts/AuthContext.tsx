@@ -184,10 +184,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsLoading(false);
           return;
         }
-        setUser(sessionToUser(session as any));
-        await resolveOnboarded(session as any);
-        await loadUserGenres(session.user.id);
-        setIsLoading(false);
+        try {
+          setUser(sessionToUser(session as any));
+          await resolveOnboarded(session as any);
+          await loadUserGenres(session.user.id);
+        } finally {
+          setIsLoading(false);
+        }
       } else if (event === 'SIGNED_IN') {
         setUser(session ? sessionToUser(session) : null);
         if (session) {

@@ -83,8 +83,11 @@ export default function RegisterScreen() {
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      await register(name.trim(), email.trim(), password, dateOfBirth, marketingConsent);
-      // navigation handled by _layout.tsx
+      const result = await register(name.trim(), email.trim(), password, dateOfBirth, marketingConsent);
+      if (result.requiresEmailConfirmation) {
+        router.push({ pathname: '/email-verification', params: { email: email.trim() } });
+      }
+      // Se non richiede conferma email, la navigazione è gestita da _layout.tsx
     } catch (e: any) {
       Alert.alert(t('register.error_registration_failed'), e.message ?? t('common.retry'));
     }

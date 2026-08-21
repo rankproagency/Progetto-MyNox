@@ -91,7 +91,7 @@ function applyFilters(
   ageFilter: AgeFilter
 ): Event[] {
   return events.filter((e) => {
-    if (onlyAvailable && e.ticketTypes.length > 0 && e.ticketTypes.every((t) => t.available === 0)) return false;
+    if (onlyAvailable && e.ticketTypes.length > 0 && e.ticketTypes.every((t) => !t.isUnlimited && t.available === 0)) return false;
     if (maxPrice !== null) {
       const minPrice = e.ticketTypes.length > 0 ? Math.min(...e.ticketTypes.map((t) => t.price)) : 0;
       if (minPrice > maxPrice) return false;
@@ -217,6 +217,7 @@ export default function HomeScreen() {
 
   function isEventLive(e: (typeof filteredEvents)[number]): boolean {
     const now = new Date();
+    if (!e.startTime || !e.startTime.includes(':')) return false;
     const [startH, startM] = e.startTime.split(':').map(Number);
     const base = new Date(e.date + 'T00:00:00');
     const startDt = new Date(base);

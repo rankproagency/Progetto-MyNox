@@ -43,7 +43,7 @@ const GENRE_CARD_H = Math.floor(GENRE_CARD_W * 0.72);
 function SwipeableRecentItem({
   event, onDelete, resetKey,
 }: {
-  event: { id: string }; onDelete: () => void; resetKey: number;
+  event: Event; onDelete: () => void; resetKey: number;
 }) {
   const translateX = useRef(new Animated.Value(0)).current;
   const startValue = useRef(0);
@@ -104,7 +104,7 @@ function SwipeableRecentItem({
         </TouchableOpacity>
       </Animated.View>
       <Animated.View style={{ transform: [{ translateX }] }} {...panResponder.panHandlers}>
-        <EventListItem event={event as any} />
+        <EventListItem event={event} />
       </Animated.View>
     </View>
   );

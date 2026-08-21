@@ -42,7 +42,7 @@ export default function TonightHero({ event, isLive, cardWidth }: Props) {
 
   const hasTickets = event.ticketTypes.length > 0;
   const minPrice = hasTickets ? Math.min(...event.ticketTypes.map((t) => t.price)) : 0;
-  const isSoldOut = hasTickets && event.ticketTypes.every((t) => t.available === 0);
+  const isSoldOut = hasTickets && event.ticketTypes.every((t) => !t.isUnlimited && t.available === 0);
   const firstArtist = event.lineup[0];
 
   const containerStyle = cardWidth

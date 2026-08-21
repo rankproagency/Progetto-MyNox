@@ -118,7 +118,7 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
     const { data } = await supabase
       .from('tickets')
       .select(`
-        id, qr_code, drink_qr_code, entry_code, status, drink_used, price_paid, table_name, table_id, extras,
+        id, qr_code, drink_qr_code, entry_code, status, drink_used, price_paid, table_name, table_id, ticket_type_id, extras,
         ticket_types(label, includes_drink),
         events(id, name, date, start_time, end_time, image_url, clubs(name, image_url)),
         tables(label, capacity, section),
