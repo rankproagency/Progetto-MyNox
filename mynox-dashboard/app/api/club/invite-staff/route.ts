@@ -100,13 +100,13 @@ export async function POST(req: NextRequest) {
   // Per utenti già esistenti come customer: mantieni il ruolo customer
   // così possono continuare ad usare l'app mobile. Il record in club_staff è
   // sufficiente per dargli accesso alla dashboard.
-  const { data: existingProfile } = await admin
+  const { data: targetProfile } = await admin
     .from('profiles')
     .select('role')
     .eq('id', targetUserId)
     .single();
 
-  if (existingProfile?.role !== 'customer') {
+  if (targetProfile?.role !== 'customer') {
     await admin.from('profiles')
       .update({ role: 'club_staff', club_id: profile.club_id })
       .eq('id', targetUserId);
