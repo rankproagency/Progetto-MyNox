@@ -1,6 +1,16 @@
 'use server';
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
+
+async function requireAdmin(): Promise<{ error: string } | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Non autenticato.' };
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (profile?.role !== 'admin') return { error: 'Accesso negato.' };
+  return null;
+}
 
 export async function createClubWithManager(data: {
   club: {
@@ -18,6 +28,9 @@ export async function createClubWithManager(data: {
   };
   dashboardUrl: string;
 }): Promise<{ id: string; existingUser: boolean } | { error: string }> {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   const supabase = createAdminClient();
 
   // 1. Crea il club
@@ -80,6 +93,9 @@ export async function createClubWithManager(data: {
 }
 
 export async function updateClubImageUrl(clubId: string, imageUrl: string): Promise<{ error?: string }> {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   const supabase = createAdminClient();
   const { error } = await supabase
     .from('clubs')

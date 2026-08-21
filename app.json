@@ -57,6 +57,7 @@
         }
       ],
       "@react-native-community/datetimepicker",
+      "expo-location",
       "expo-web-browser",
       [
         "@stripe/stripe-react-native",

@@ -251,7 +251,11 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ?? req.socket.remoteAddress ?? 'unknown';
+  // Usa l'ultimo IP in X-Forwarded-For (aggiunto dall'infrastruttura Render, non falsificabile dal client)
+  const forwardedFor = req.headers['x-forwarded-for'];
+  const ip = forwardedFor
+    ? forwardedFor.split(',').map(s => s.trim()).filter(Boolean).pop()
+    : (req.socket.remoteAddress ?? 'unknown');
   if (await isRateLimited(ip, req.url)) {
     res.writeHead(429, CORS_HEADERS);
     res.end(JSON.stringify({ error: 'Troppe richieste. Riprova tra un minuto.' }));
@@ -327,9 +331,14 @@ const server = http.createServer(async (req, res) => {
     try {
       const { amount, base_amount_cents, ticket_subtotal_cents, promo_code, club_id, metadata = {} } = body;
 
-      // Verifica JWT: user_id nei metadata deve corrispondere al token
+      // JWT obbligatorio — rifiuta richieste senza autenticazione
       const jwtUserId = await verifyJwtUserId(req.headers['authorization']);
-      if (jwtUserId && metadata.user_id && jwtUserId !== metadata.user_id) {
+      if (!jwtUserId) {
+        res.writeHead(401, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Autenticazione richiesta.' }));
+        return;
+      }
+      if (metadata.user_id && jwtUserId !== metadata.user_id) {
         res.writeHead(401, CORS_HEADERS);
         res.end(JSON.stringify({ error: 'Token non valido.' }));
         return;
@@ -678,9 +687,14 @@ const server = http.createServer(async (req, res) => {
       const { metadata = {} } = body;
       const { event_id, user_id, ticket_type_id, table_id, table_name, quantity: qty, includes_drink, extras: extrasStr, promo_id, event_date } = metadata;
 
-      // Verifica JWT: user_id nei metadata deve corrispondere al token
+      // JWT obbligatorio — rifiuta richieste senza autenticazione
       const jwtUserId = await verifyJwtUserId(req.headers['authorization']);
-      if (jwtUserId && user_id && jwtUserId !== user_id) {
+      if (!jwtUserId) {
+        res.writeHead(401, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Autenticazione richiesta.' }));
+        return;
+      }
+      if (user_id && jwtUserId !== user_id) {
         res.writeHead(401, CORS_HEADERS);
         res.end(JSON.stringify({ error: 'Token non valido.' }));
         return;

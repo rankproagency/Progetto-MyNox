@@ -20,10 +20,8 @@ export async function POST(req: NextRequest) {
     .maybeSingle();
 
   if (!profile) {
-    return NextResponse.json(
-      { error: 'Nessun account associato a questa email.' },
-      { status: 404 }
-    );
+    // Risposta identica a quella di successo — evita user enumeration
+    return NextResponse.json({ ok: true });
   }
 
   // Email valida: invia il link di reset tramite Supabase Auth

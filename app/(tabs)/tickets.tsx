@@ -84,7 +84,7 @@ export default function TicketsScreen() {
     if (!tParam) return;
     if (tabParam === 'past') setActiveTab('past');
     else if (tabParam === 'future') setActiveTab('future');
-  }, [tParam]);
+  }, [tParam, tabParam]);
   const [claimModalOpen, setClaimModalOpen] = useState(false);
   const [claimCode, setClaimCode] = useState('');
   const [claimLoading, setClaimLoading] = useState(false);

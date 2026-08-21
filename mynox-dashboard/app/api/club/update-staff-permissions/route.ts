@@ -35,14 +35,14 @@ export async function PATCH(req: NextRequest) {
     for (const key of ALLOWED_KEYS) {
       if (typeof bulk[key] === 'boolean') update[key] = bulk[key];
     }
-    const { error, count } = await admin
+    const { error, data: updatedRows } = await admin
       .from('club_staff')
       .update(update)
       .eq('id', staffId)
       .eq('club_id', clubId)
       .select();
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-    if (count === 0) return NextResponse.json({ error: 'Membro non trovato' }, { status: 404 });
+    if (!updatedRows || updatedRows.length === 0) return NextResponse.json({ error: 'Membro non trovato' }, { status: 404 });
     return NextResponse.json({ success: true });
   }
 
