@@ -1,5 +1,4 @@
 import { createAdminClient } from '@/lib/supabase/admin';
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -24,14 +23,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  // Email valida: invia il link di reset tramite Supabase Auth
-  const supabase = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+  const safeRedirectTo =
+    redirectTo && siteUrl && (redirectTo as string).startsWith(siteUrl)
+      ? (redirectTo as string)
+      : `${siteUrl}/auth/reset-password`;
 
-  const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-    redirectTo: redirectTo ?? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/reset-password`,
+  const { error } = await admin.auth.resetPasswordForEmail(normalizedEmail, {
+    redirectTo: safeRedirectTo,
   });
 
   if (error) {

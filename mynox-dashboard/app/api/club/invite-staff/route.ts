@@ -4,6 +4,10 @@ import { createClient } from '@/lib/supabase/server';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 async function sendStaffNotificationEmail(email: string, clubName: string, loginUrl: string) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return; // skip se non configurato
@@ -21,7 +25,7 @@ async function sendStaffNotificationEmail(email: string, clubName: string, login
       html: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#07080f;color:#f8fafc;border-radius:16px;">
           <h2 style="color:#a855f7;margin-top:0;">MyNox Staff</h2>
-          <p>Sei stato aggiunto come membro dello staff di <strong>${clubName}</strong>.</p>
+          <p>Sei stato aggiunto come membro dello staff di <strong>${escapeHtml(clubName)}</strong>.</p>
           <p>Accedi alla dashboard per gestire eventi, tavoli e altro.</p>
           <a href="${loginUrl}" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#a855f7;color:#fff;border-radius:10px;text-decoration:none;font-weight:600;">
             Accedi alla dashboard

@@ -66,9 +66,21 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
     }
 
-    // Protegge /club/* — club_admin e club_staff
+    // Protegge /club/* — club_admin, club_staff, e customer invitati come staff
     if (pathname.startsWith('/club') && role !== 'club_admin' && role !== 'club_staff') {
-      return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
+      if (role === 'customer') {
+        // Un customer può avere un record in club_staff se invitato mantenendo il ruolo app
+        const { data: staffRecord } = await supabase
+          .from('club_staff')
+          .select('club_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (!staffRecord) {
+          return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
+        }
+      } else {
+        return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
+      }
     }
   }
 

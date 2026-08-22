@@ -132,6 +132,7 @@ export default function CheckoutScreen() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [paymentPending, setPaymentPending] = useState(false);
   const [paying, setPaying] = useState(false);
+  const payingRef = useRef(false);
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [termsConfirmed, setTermsConfirmed] = useState(false);
 
@@ -251,6 +252,8 @@ export default function CheckoutScreen() {
   }
 
   async function handlePay() {
+    if (payingRef.current) return;
+    payingRef.current = true;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setPaying(true);
     pauseSessionValidation();
@@ -415,6 +418,7 @@ export default function CheckoutScreen() {
     } catch (err) {
       Alert.alert(t('common.error'), String(err));
     } finally {
+      payingRef.current = false;
       setPaying(false);
       resumeSessionValidation();
     }

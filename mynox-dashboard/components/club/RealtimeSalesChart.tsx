@@ -142,11 +142,15 @@ export default function RealtimeSalesChart({ eventIds, initialBuckets, showReven
     if (eventIds.length === 0) return;
     const supabase = createClient();
 
+    const serverFilter = eventIds.length === 1
+      ? `event_id=eq.${eventIds[0]}`
+      : `event_id=in.(${eventIds.join(',')})`;
+
     const channel = supabase
       .channel('dashboard-realtime-tickets')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'tickets' },
+        { event: 'INSERT', schema: 'public', table: 'tickets', filter: serverFilter },
         (payload) => {
           const ticket = payload.new as {
             event_id: string;

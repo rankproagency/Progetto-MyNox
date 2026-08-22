@@ -47,7 +47,9 @@ function eventCloseAt(eventDate: string, endTime: string | null): Date {
 
 function isWithinEventWindow(eventDate: string, endTime: string | null): boolean {
   const now = new Date();
-  const openAt = new Date(`${eventDate}T00:00:00`);
+  // Usa UTC+1 (CET) come offset minimo per la mezzanotte italiana.
+  // In estate (CEST, UTC+2) la finestra apre 1 ora dopo la mezzanotte italiana — tollerabile.
+  const openAt = new Date(`${eventDate}T00:00:00+01:00`);
   const closeAt = eventCloseAt(eventDate, endTime);
   return now >= openAt && now <= closeAt;
 }

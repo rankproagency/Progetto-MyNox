@@ -28,7 +28,7 @@ export default function ClubVenueForm({ clubId, initialFloorPlanUrl, initialTabl
     setError('');
     const supabase = createClient();
     const ext = file.name.split('.').pop();
-    const path = `floor-plans/${clubId}-${Date.now()}.${ext}`;
+    const path = `${clubId}/floor-plans/${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from('event-assets')
       .upload(path, file, { upsert: true });

@@ -71,7 +71,7 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
-  const { user, isOnboarded, isLoading } = useAuth();
+  const { user, isOnboarded, termsAccepted, isLoading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
   const [ready, setReady] = useState(false);
@@ -101,7 +101,7 @@ function RootNavigator() {
     // deve essere reindirizzata dal layout — né prima che setSession() completi
     // (sessione null), né dopo (sessione recovery attiva ma flusso ancora in corso).
     const publicScreens = ['privacy', 'terms', 'email-verification', 'auth'];
-    const authOnlyScreens = ['onboarding', 'login', 'register', 'reset-password'];
+    const authOnlyScreens = ['onboarding', 'login', 'register', 'reset-password', 'accept-terms'];
     const inAuthScreen = authOnlyScreens.includes(segment0 ?? '');
     if (publicScreens.includes(segment0 ?? '')) return;
 
@@ -109,10 +109,13 @@ function RootNavigator() {
     if (!userId && !inAuthScreen) {
       // Utente non autenticato fuori dalle schermate di auth → login
       target = '/login';
+    } else if (userId && !termsAccepted && !isOnboarded && segment0 !== 'accept-terms') {
+      // Utente social (Google/Apple) che non ha ancora accettato Privacy e T&C
+      target = '/accept-terms';
     } else if (userId && !isOnboarded && !inAuthScreen) {
       // Autenticato ma onboarding non completato → onboarding
       target = '/onboarding';
-    } else if (userId && !isOnboarded && inAuthScreen && segment0 !== 'onboarding' && segment0 !== 'reset-password') {
+    } else if (userId && !isOnboarded && inAuthScreen && segment0 !== 'onboarding' && segment0 !== 'reset-password' && segment0 !== 'accept-terms') {
       target = '/onboarding';
     } else if (userId && isOnboarded && inAuthScreen && segment0 !== 'reset-password') {
       target = '/(tabs)';
@@ -122,7 +125,7 @@ function RootNavigator() {
     navigating.current = true;
     router.replace(target as Parameters<typeof router.replace>[0]);
     setTimeout(() => { navigating.current = false; }, 500);
-  }, [ready, isLoading, userId, isOnboarded, segment0]);
+  }, [ready, isLoading, userId, isOnboarded, termsAccepted, segment0]);
 
   return (
     <>

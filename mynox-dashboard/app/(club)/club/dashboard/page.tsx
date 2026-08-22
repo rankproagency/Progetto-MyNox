@@ -137,7 +137,8 @@ async function getDashboardData(clubId: string) {
     const bucket = initialBuckets.find((b) => b.isoKey === isoKey);
     if (bucket) {
       bucket.count++;
-      bucket.revenue += (t.price_paid ?? 0) / 1.05;
+      const paid = t.price_paid ?? 0;
+      bucket.revenue += t.ticket_types !== null ? paid / 1.05 : paid * 0.9;
     }
   });
 
@@ -326,7 +327,9 @@ export default async function ClubDashboardPage() {
           ) : (
             <div className="divide-y divide-white/5">
               {recentTickets.map((ticket: any) => {
-                const paidNet = (ticket.price_paid ?? 0) / 1.05;
+                const paidNet = ticket.ticket_types !== null
+                  ? (ticket.price_paid ?? 0) / 1.05
+                  : (ticket.price_paid ?? 0) * 0.9;
                 const listPrice = ticket.ticket_types?.price ?? null;
                 const hasPromo = listPrice !== null && paidNet < listPrice - 0.01;
                 return (

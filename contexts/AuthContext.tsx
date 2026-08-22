@@ -24,6 +24,7 @@ export interface AuthUser {
 interface AuthCtx {
   user: AuthUser | null;
   isOnboarded: boolean;
+  termsAccepted: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, dateOfBirth: Date, marketingConsent?: boolean) => Promise<{ requiresEmailConfirmation: boolean }>;
@@ -31,6 +32,7 @@ interface AuthCtx {
   loginWithApple: () => Promise<void>;
   logout: () => void;
   completeOnboarding: () => void;
+  acceptTerms: (marketingConsent: boolean) => Promise<void>;
   updateUser: (updates: Partial<Pick<AuthUser, 'name' | 'email'>>) => void;
   updateDateOfBirth: (dob: Date) => Promise<void>;
   updateMarketingConsent: (value: boolean) => Promise<void>;
@@ -46,6 +48,7 @@ interface AuthCtx {
 const AuthContext = createContext<AuthCtx>({
   user: null,
   isOnboarded: false,
+  termsAccepted: false,
   isLoading: true,
   login: async () => {},
   register: async () => ({ requiresEmailConfirmation: false }),
@@ -53,6 +56,7 @@ const AuthContext = createContext<AuthCtx>({
   loginWithApple: async () => {},
   logout: () => {},
   completeOnboarding: () => {},
+  acceptTerms: async () => {},
   updateUser: () => {},
   updateDateOfBirth: async () => {},
   updateMarketingConsent: async () => {},
@@ -86,6 +90,7 @@ function sessionToUser(session: Session): AuthUser {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isOnboarded, setIsOnboarded] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [musicGenres, setMusicGenresState] = useState<string[]>([]);
   const validationPausedRef = useRef(false);
@@ -103,6 +108,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setMusicGenresState(data?.music_genres ?? []);
         setUser((prev) => prev ? { ...prev, marketingConsent: data?.marketing_consent ?? false, gender: data?.gender ?? undefined } : prev);
       } catch (_) {}
+    }
+
+    // Utenti registrati via email: terms_accepted è in metadata.
+    // Utenti già onboarded (esistenti): trattati come accettati — hanno visto i checkbox in fase di registrazione.
+    // Nuovi utenti social: né terms_accepted né onboarded → mostra schermata accept-terms.
+    function resolveTermsAccepted(session: Session) {
+      const meta = session.user.user_metadata;
+      setTermsAccepted(meta?.terms_accepted === true || meta?.onboarded === true);
     }
 
     // Risolve isOnboarded dal user_metadata Supabase, con fallback su AsyncStorage per utenti esistenti
@@ -181,12 +194,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setMusicGenresState([]);
           const raw = await AsyncStorage.getItem(KEYS.onboarded);
           setIsOnboarded(raw === 'true');
+          setTermsAccepted(false);
           setIsLoading(false);
           return;
         }
         try {
           setUser(sessionToUser(session as any));
           await resolveOnboarded(session as any);
+          resolveTermsAccepted(session as any);
           await loadUserGenres(session.user.id);
         } finally {
           setIsLoading(false);
@@ -195,6 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session ? sessionToUser(session) : null);
         if (session) {
           await resolveOnboarded(session);
+          resolveTermsAccepted(session);
           // Primo accesso dopo conferma email: scrivi marketing_consent sul profilo PRIMA
           // di loadUserGenres, altrimenti loadUserGenres legge il vecchio valore (false).
           const meta = session.user.user_metadata;
@@ -208,6 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setMusicGenresState([]);
+        setTermsAccepted(false);
         await AsyncStorage.removeItem(KEYS.genres);
         // Non leggiamo la chiave generica @mynox_onboarded: appartiene all'utente precedente.
         // Un utente non autenticato non è mai "onboarded" — il redirect è gestito da _layout.tsx.
@@ -236,7 +253,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password,
         options: {
-          data: { name, birthdate, marketing_consent: marketingConsent },
+          data: { name, birthdate, marketing_consent: marketingConsent, terms_accepted: true },
           emailRedirectTo: 'https://mynox.it/app-redirect',
         },
       });
@@ -261,15 +278,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error || !data.url) throw new Error(error?.message ?? 'Errore Google Sign-In');
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
     if (result.type === 'success') {
-      const url = result.url;
-      const code = new URL(url).searchParams.get('code');
-      if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        if (exchangeError) throw new Error(exchangeError.message);
-        const { data: { session: gs } } = await supabase.auth.getSession();
-        if (gs && gs.user.user_metadata?.onboarded !== true) {
-          setIsOnboarded(false);
-        }
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(result.url);
+      if (exchangeError) throw new Error(exchangeError.message);
+      const { data: { session: gs } } = await supabase.auth.getSession();
+      if (gs && gs.user.user_metadata?.onboarded !== true) {
+        setIsOnboarded(false);
       }
     }
   }, []);
@@ -295,6 +308,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setUser(null);
     }
+  }, []);
+
+  const acceptTerms = useCallback(async (marketing: boolean) => {
+    await supabase.auth.updateUser({ data: { terms_accepted: true, marketing_consent: marketing } });
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await supabase.from('profiles').update({ marketing_consent: marketing }).eq('id', session.user.id);
+    }
+    setTermsAccepted(true);
+    setUser((prev) => prev ? { ...prev, marketingConsent: marketing } : prev);
   }, []);
 
   const completeOnboarding = useCallback(async () => {
@@ -373,8 +396,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={{
-      user, isOnboarded, isLoading,
-      login, register, loginWithGoogle, loginWithApple, logout, completeOnboarding,
+      user, isOnboarded, termsAccepted, isLoading,
+      login, register, loginWithGoogle, loginWithApple, logout, completeOnboarding, acceptTerms,
       updateUser, updateDateOfBirth, updateMarketingConsent, updateGender, deleteAccount, resetPassword, musicGenres, setMusicGenres,
       pauseSessionValidation, resumeSessionValidation,
     }}>

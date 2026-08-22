@@ -159,6 +159,7 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
         .subscribe();
     }
 
+    mountedRef.current = true;
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         currentUserIdRef.current = user.id;
@@ -244,7 +245,7 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
     setTickets((prev) =>
       prev.map((t) => (t.id === id ? { ...t, status: 'used' as const } : t))
     );
-    const { error } = await supabase.from('tickets').update({ status: 'used' }).eq('id', id);
+    const { error } = await supabase.from('tickets').update({ status: 'used' }).eq('id', id).eq('user_id', currentUserIdRef.current ?? '');
     if (error) {
       setTickets((prev) =>
         prev.map((t) => (t.id === id ? { ...t, status: 'valid' as const } : t))
@@ -269,7 +270,7 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
     setTickets((prev) =>
       prev.map((t) => (t.id === id ? { ...t, status: 'gifted' as const, giftCode: code, giftCodeExpiresAt: expiresAt, qrCode: '', drinkQrCode: undefined } : t))
     );
-    const { error } = await supabase.from('tickets').update({ status: 'gifted' }).eq('id', id);
+    const { error } = await supabase.from('tickets').update({ status: 'gifted' }).eq('id', id).eq('user_id', currentUserIdRef.current ?? '');
     if (error) {
       setTickets((prev) =>
         prev.map((t) => (t.id === id ? { ...t, status: 'valid' as const, giftCode: undefined, giftCodeExpiresAt: undefined } : t))
@@ -291,18 +292,34 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const markTicketReclaimed = useCallback(async (id: string) => {
-    // Cattura il giftCode corrente prima dell'update ottimistico per poterlo restaurare in caso di errore
     let previousGiftCode: string | undefined;
     setTickets((prev) => {
       previousGiftCode = prev.find((t) => t.id === id)?.giftCode;
       return prev.map((t) => (t.id === id ? { ...t, status: 'valid' as const, giftCode: undefined } : t));
     });
-    const { error } = await supabase.from('tickets').update({ status: 'valid' }).eq('id', id);
+    const { error } = await supabase.from('tickets').update({ status: 'valid' }).eq('id', id).eq('user_id', currentUserIdRef.current ?? '');
     if (error) {
       setTickets((prev) =>
         prev.map((t) => (t.id === id ? { ...t, status: 'gifted' as const, giftCode: previousGiftCode } : t))
       );
       throw error;
+    }
+    // Recupera il qrCode aggiornato dal server — dopo il gift il QR era stato azzerato in cache
+    const { data: refreshed } = await supabase.from('tickets').select('qr_code').eq('id', id).maybeSingle();
+    const freshQrCode = refreshed?.qr_code ?? '';
+    setTickets((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, status: 'valid' as const, giftCode: undefined, qrCode: freshQrCode } : t))
+    );
+    const userId = currentUserIdRef.current;
+    if (userId) {
+      try {
+        const cached = await AsyncStorage.getItem(ticketCacheKey(userId));
+        if (cached) {
+          const parsed: MockTicket[] = JSON.parse(cached);
+          const updated = parsed.map((t) => t.id === id ? { ...t, status: 'valid' as const, giftCode: undefined, qrCode: freshQrCode } : t);
+          await AsyncStorage.setItem(ticketCacheKey(userId), JSON.stringify(updated));
+        }
+      } catch (_) {}
     }
   }, []);
 

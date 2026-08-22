@@ -89,13 +89,14 @@ function callStripe(path, body) {
       res.on('data', (chunk) => data += chunk);
       res.on('end', () => resolve(JSON.parse(data)));
     });
+    req.setTimeout(15000, () => { req.destroy(new Error('Stripe request timeout')); });
     req.on('error', reject);
     req.write(bodyStr);
     req.end();
   });
 }
 
-function supabaseRequest(method, path, body) {
+function supabaseRequest(method, path, body, extraHeaders = {}) {
   return new Promise((resolve, reject) => {
     const bodyStr = body ? JSON.stringify(body) : '';
     const url = new URL(SUPABASE_URL + path);
@@ -104,6 +105,7 @@ function supabaseRequest(method, path, body) {
       'apikey': SUPABASE_SERVICE_ROLE_KEY,
       'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
       'Prefer': 'return=representation',
+      ...extraHeaders,
     };
     if (bodyStr) headers['Content-Length'] = Buffer.byteLength(bodyStr);
     const options = { hostname: url.hostname, path: url.pathname + url.search, method, headers };
@@ -112,6 +114,7 @@ function supabaseRequest(method, path, body) {
       res.on('data', (chunk) => data += chunk);
       res.on('end', () => { try { resolve(JSON.parse(data)); } catch { resolve({}); } });
     });
+    req.setTimeout(10000, () => { req.destroy(new Error('Supabase request timeout')); });
     req.on('error', reject);
     if (bodyStr) req.write(bodyStr);
     req.end();
@@ -121,6 +124,10 @@ function supabaseRequest(method, path, body) {
 function callSupabase(path, body) { return supabaseRequest('POST', path, body); }
 function callSupabaseGet(path) { return supabaseRequest('GET', path, null); }
 function callSupabasePatch(path, body) { return supabaseRequest('PATCH', path, body); }
+// Usato per chiamate che devono trasmettere il JWT originale del client (es. confirm-payment)
+function callSupabaseWithClientAuth(path, body, clientAuthHeader) {
+  return supabaseRequest('POST', path, body, { 'Authorization': clientAuthHeader });
+}
 
 async function verifyJwtUserId(authHeader) {
   if (!authHeader || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
@@ -170,11 +177,24 @@ function supabaseAuthRequest(path, body) {
 }
 
 function readBody(req) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     let body = '';
-    req.on('data', (chunk) => body += chunk);
+    let destroyed = false;
+    req.on('data', (chunk) => {
+      body += chunk;
+      if (body.length > 1_000_000 && !destroyed) {
+        destroyed = true;
+        req.destroy();
+        resolve({});
+      }
+    });
     req.on('end', () => {
+      if (destroyed) return;
       try { resolve(JSON.parse(body)); } catch { resolve({}); }
+    });
+    req.on('error', (err) => {
+      if (destroyed) return;
+      reject(err);
     });
   });
 }
@@ -251,10 +271,11 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Usa l'ultimo IP in X-Forwarded-For (aggiunto dall'infrastruttura Render, non falsificabile dal client)
+  // Usa il primo IP in X-Forwarded-For (IP originale del client su Render).
+  // Il primo elemento è aggiunto dall'ingress e non è modificabile dall'utente finale.
   const forwardedFor = req.headers['x-forwarded-for'];
   const ip = forwardedFor
-    ? forwardedFor.split(',').map(s => s.trim()).filter(Boolean).pop()
+    ? forwardedFor.split(',').map(s => s.trim()).filter(Boolean)[0]
     : (req.socket.remoteAddress ?? 'unknown');
   if (await isRateLimited(ip, req.url)) {
     res.writeHead(429, CORS_HEADERS);
@@ -328,6 +349,7 @@ const server = http.createServer(async (req, res) => {
 
   // POST /create-payment-intent
   if (req.url === '/create-payment-intent' || req.url === '/functions/v1/create-payment-intent') {
+    let promoId;
     try {
       const { amount, base_amount_cents, ticket_subtotal_cents, promo_code, club_id, metadata = {} } = body;
 
@@ -433,7 +455,7 @@ const server = http.createServer(async (req, res) => {
       // A1: consumo atomico del promo code PRIMA di creare il PaymentIntent.
       // Questo previene la race condition: solo max_uses PaymentIntent vengono creati con lo sconto.
       // I codici hardcoded (LAUNCH10, VIP20, ecc.) non hanno promo_id e vengono saltati.
-      const promoId = metadata.promo_id;
+      promoId = metadata.promo_id;
       if (promoId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
         try {
           const result = await callSupabase('/rest/v1/rpc/increment_promo_uses', { p_promo_id: promoId });
@@ -499,13 +521,16 @@ const server = http.createServer(async (req, res) => {
   // POST /confirm-payment
   if (req.url === '/confirm-payment' || req.url === '/functions/v1/confirm-payment') {
     try {
-      const jwtUserId = await verifyJwtUserId(req.headers['authorization']);
+      const clientAuthHeader = req.headers['authorization'];
+      const jwtUserId = await verifyJwtUserId(clientAuthHeader);
       if (!jwtUserId) {
         res.writeHead(401, CORS_HEADERS);
         res.end(JSON.stringify({ error: 'Token non valido.' }));
         return;
       }
-      const result = await callSupabase('/functions/v1/confirm-payment', body);
+      // Usa il JWT originale del client — la Edge Function verifica l'utente tramite auth.getUser()
+      // e rifiuterebbe la service_role key (non è un JWT utente valido).
+      const result = await callSupabaseWithClientAuth('/functions/v1/confirm-payment', body, clientAuthHeader);
       res.writeHead(200, CORS_HEADERS);
       res.end(JSON.stringify(result));
     } catch (err) {
@@ -648,8 +673,17 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
-      // Trasferisci il biglietto al nuovo proprietario
-      await callSupabasePatch(`/rest/v1/tickets?id=eq.${gift.ticket_id}`, { user_id: claimer_id, status: 'valid' });
+      // Trasferisci il biglietto al nuovo proprietario solo se è ancora in stato gifted.
+      // Previene il trasferimento di biglietti già usati o negati all'ingresso.
+      const transferred = await callSupabasePatch(
+        `/rest/v1/tickets?id=eq.${gift.ticket_id}&status=eq.gifted`,
+        { user_id: claimer_id, status: 'valid' }
+      );
+      if (!Array.isArray(transferred) || transferred.length === 0) {
+        res.writeHead(409, CORS_HEADERS);
+        res.end(JSON.stringify({ error: 'Biglietto non più disponibile.' }));
+        return;
+      }
 
       res.writeHead(200, CORS_HEADERS);
       res.end(JSON.stringify({ success: true, ticket_id: gift.ticket_id }));
@@ -680,7 +714,7 @@ const server = http.createServer(async (req, res) => {
 
       // Cerca il codice pending per questo biglietto
       const gifts = await callSupabaseGet(
-        `/rest/v1/gift_codes?ticket_id=eq.${ticket_id}&gifter_id=eq.${gifter_id}&status=eq.pending&select=*`
+        `/rest/v1/gift_codes?ticket_id=eq.${encodeURIComponent(ticket_id)}&gifter_id=eq.${encodeURIComponent(gifter_id)}&status=eq.pending&select=*`
       );
 
       if (!Array.isArray(gifts) || gifts.length === 0) {
@@ -722,7 +756,7 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify({ error: 'Token non valido.' }));
         return;
       }
-      const quantity = parseInt(qty ?? '1', 10);
+      const quantity = Math.max(1, Math.min(parseInt(qty ?? '1', 10), 20));
       const includesDrink = includes_drink === 'true';
       const parsedExtras = (() => { try { return extrasStr ? JSON.parse(extrasStr) : []; } catch { return []; } })();
 

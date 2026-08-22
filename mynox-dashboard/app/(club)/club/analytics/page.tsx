@@ -96,9 +96,9 @@ async function getAnalyticsData(clubId: string, locale = 'it-IT') {
   });
   const revenueData = Object.entries(revenueByMonth).map(([mese, ricavi]) => ({ mese, ricavi }));
 
-  const currentMonthKey = now.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
+  const currentMonthKey = now.toLocaleDateString(locale, { month: 'short', year: '2-digit' });
   const prevMonthKey = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-    .toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
+    .toLocaleDateString(locale, { month: 'short', year: '2-digit' });
 
   const currentRevenue = revenueByMonth[currentMonthKey] ?? 0;
   const prevRevenue = revenueByMonth[prevMonthKey] ?? 0;

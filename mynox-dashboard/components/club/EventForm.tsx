@@ -291,7 +291,7 @@ export default function EventForm({ clubId, clubFloorPlanUrl, clubTables, clubEx
     }
 
     // Salva tipi biglietto: update quelli esistenti, insert i nuovi, delete solo quelli rimossi senza vendite
-    const validTickets = ticketTypes.filter((tk) => tk.label.trim() && tk.price);
+    const validTickets = ticketTypes.filter((tk) => tk.label.trim() && tk.price !== '' && !isNaN(parseFloat(tk.price)));
     if (eventId) {
       const existing = validTickets.filter((tk) => tk.id);
       const newOnes = validTickets.filter((tk) => !tk.id);

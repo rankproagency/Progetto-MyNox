@@ -131,12 +131,18 @@ export default function StaffManager({ initialStaff }: Props) {
   async function togglePermission(memberId: string, key: PermKey, value: boolean) {
     setStaff((prev) => prev.map((m) => (m.id === memberId ? { ...m, [key]: value } : m)));
     startTransition(async () => {
-      await fetch('/api/club/update-staff-permissions', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ staffId: memberId, key, value }),
-      });
-      showSaved(memberId);
+      try {
+        const res = await fetch('/api/club/update-staff-permissions', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ staffId: memberId, key, value }),
+        });
+        if (!res.ok) throw new Error('failed');
+        showSaved(memberId);
+      } catch {
+        // Rollback ottimistico in caso di errore
+        setStaff((prev) => prev.map((m) => (m.id === memberId ? { ...m, [key]: !value } : m)));
+      }
     });
   }
 
@@ -150,14 +156,25 @@ export default function StaffManager({ initialStaff }: Props) {
 
   async function applyPresetToMember(memberId: string, preset: Preset) {
     const perms = preset.permissions;
-    setStaff((prev) => prev.map((m) => (m.id === memberId ? { ...m, ...perms } : m)));
+    let previous: ClubStaff | undefined;
+    setStaff((prev) => {
+      previous = prev.find((m) => m.id === memberId);
+      return prev.map((m) => (m.id === memberId ? { ...m, ...perms } : m));
+    });
     startTransition(async () => {
-      await fetch('/api/club/update-staff-permissions', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ staffId: memberId, bulk: perms }),
-      });
-      showSaved(memberId);
+      try {
+        const res = await fetch('/api/club/update-staff-permissions', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ staffId: memberId, bulk: perms }),
+        });
+        if (!res.ok) throw new Error('failed');
+        showSaved(memberId);
+      } catch {
+        if (previous) {
+          setStaff((prev) => prev.map((m) => (m.id === memberId ? { ...m, ...previous } : m)));
+        }
+      }
     });
   }
 

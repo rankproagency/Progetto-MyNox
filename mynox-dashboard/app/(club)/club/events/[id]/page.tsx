@@ -76,7 +76,7 @@ export default async function ClubEventDetailPage({
   // Ricavi caparre tavoli
   const totalTableRevenue = (soldTickets ?? [])
     .filter((t: any) => t.ticket_type_id === null)
-    .reduce((s: number, t: any) => s + (t.price_paid ?? 0) / 1.05, 0);
+    .reduce((s: number, t: any) => s + (t.price_paid ?? 0) * 0.9, 0);
 
   // Mappa tavoli
   const eventTableByLabel = new Map((tables ?? []).map((t) => [t.label, t]));

@@ -35,16 +35,9 @@ export default async function ClubLayout({ children }: { children: React.ReactNo
     .eq('id', effectiveClubId)
     .single();
 
-  // Attiva il club al primo accesso del gestore alla dashboard
-  if (club && club.is_active === false && isOwner) {
-    const adminSupabase = createAdminClient();
-    await adminSupabase
-      .from('clubs')
-      .update({ is_active: true })
-      .eq('id', effectiveClubId);
-  }
+  if (!club?.is_active) redirect('/login?error=club_suspended');
 
-  const permissions = isOwner
+const permissions = isOwner
     ? FULL_PERMISSIONS
     : await getStaffPermissions(profile.id, effectiveClubId) ?? {
         can_manage_events: false,

@@ -29,7 +29,7 @@ export default function TicketScreen() {
         .from('tickets')
         .select('drink_used')
         .eq('id', ticket.id)
-        .single();
+        .maybeSingle();
       if (data?.drink_used) refreshTickets();
     }, 5000);
     return () => clearInterval(interval);

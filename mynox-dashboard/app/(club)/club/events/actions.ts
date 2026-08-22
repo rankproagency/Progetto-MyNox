@@ -19,6 +19,12 @@ export async function saveEventExtras(eventId: string, extras: EventExtraPayload
 
   const admin = createAdminClient();
 
+  // Verifica che l'evento appartenga al club dell'utente (admin bypassa)
+  if (profile.role !== 'admin') {
+    const { data: ev } = await admin.from('events').select('club_id').eq('id', eventId).single();
+    if (!ev || ev.club_id !== profile.club_id) redirect('/club/dashboard');
+  }
+
   // Legge i valori esistenti per preservare lo stock già venduto
   const { data: existing } = await admin
     .from('event_extras')

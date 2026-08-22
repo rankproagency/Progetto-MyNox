@@ -89,7 +89,19 @@ Deno.serve(async (req) => {
     );
 
     const meta = paymentIntent.metadata;
+
+    // Verifica che il JWT del chiamante corrisponda all'user_id nei metadata Stripe.
+    // Impedisce di richiamare confirm-payment con il payment_intent_id altrui.
+    if (meta.user_id && callerUser.id !== meta.user_id) {
+      return new Response(
+        JSON.stringify({ error: 'Non autorizzato.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     let quantity = Math.max(1, parseInt(meta.quantity ?? '1', 10));
+    // Hard cap assoluto: max 20 biglietti per PaymentIntent
+    quantity = Math.min(quantity, 20);
     const includesDrink = meta.includes_drink === 'true';
 
     // Valida quantity contro il prezzo reale dal DB per prevenire l'attacco
@@ -130,10 +142,15 @@ Deno.serve(async (req) => {
           .from('tickets')
           .select(TICKET_SELECT)
           .eq('stripe_payment_intent_id', payment_intent_id);
-        return new Response(
-          JSON.stringify({ tickets: existing ?? [] }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        // Idempotency gap: se il record esiste ma i biglietti no (crash dopo INSERT idempotency),
+        // procediamo comunque a creare i biglietti invece di restituire un array vuoto.
+        if (existing && existing.length > 0) {
+          return new Response(
+            JSON.stringify({ tickets: existing }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        console.error('idempotency gap detected — proceeding to create tickets:', payment_intent_id);
       }
       // Errore non-duplicato: verifica difensiva per evitare biglietti doppi
       // Prima di procedere, controlliamo se i biglietti esistono già

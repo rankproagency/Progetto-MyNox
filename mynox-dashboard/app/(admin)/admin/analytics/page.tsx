@@ -1,10 +1,10 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getT } from '@/lib/i18n-server';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import AdminAnalyticsCharts from '@/components/admin/AdminAnalyticsCharts';
 
 async function getAnalyticsData() {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: tickets } = await supabase
     .from('tickets')
@@ -18,24 +18,30 @@ async function getAnalyticsData() {
 
   // Ricavi per mese (ultimi 6 mesi)
   const revenueByMonth: Record<string, number> = {};
+  const commissionByMonth: Record<string, number> = {};
   const ticketsByMonth: Record<string, number> = {};
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const key = d.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
     revenueByMonth[key] = 0;
+    commissionByMonth[key] = 0;
     ticketsByMonth[key] = 0;
   }
   all.forEach((t: any) => {
     const key = new Date(t.created_at).toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
     if (key in revenueByMonth) {
-      revenueByMonth[key] += (t.price_paid ?? 0) / 1.05;
-      if (t.ticket_type_id !== null) ticketsByMonth[key] += 1;
+      const paid = t.price_paid ?? 0;
+      const isTicket = t.ticket_type_id !== null;
+      revenueByMonth[key] += isTicket ? paid / 1.05 : paid * 0.9;
+      // Commissione: 5% sul prezzo base biglietto (= paid * 0.05/1.05), 10% sulla caparra tavolo
+      commissionByMonth[key] += isTicket ? paid * (0.05 / 1.05) : paid * 0.10;
+      if (isTicket) ticketsByMonth[key] += 1;
     }
   });
   const revenueByMonthData = Object.entries(revenueByMonth).map(([mese, ricavi]) => ({
     mese,
     ricavi: +ricavi.toFixed(2),
-    commissioni: +(ricavi * 0.05).toFixed(2),
+    commissioni: +(commissionByMonth[mese] ?? 0).toFixed(2),
   }));
 
   // Confronto mese corrente vs precedente
@@ -59,7 +65,7 @@ async function getAnalyticsData() {
     const name = (t.events as any)?.clubs?.name ?? 'Sconosciuto';
     if (!byClub[name]) byClub[name] = { biglietti: 0, ricavi: 0 };
     if (t.ticket_type_id !== null) byClub[name].biglietti += 1;
-    byClub[name].ricavi += (t.price_paid ?? 0) / 1.05;
+    byClub[name].ricavi += t.ticket_type_id !== null ? (t.price_paid ?? 0) / 1.05 : (t.price_paid ?? 0) * 0.9;
   });
   const ticketsByClub = Object.entries(byClub)
     .map(([club, d]) => ({ club, biglietti: d.biglietti, ricavi: +d.ricavi.toFixed(2) }))
@@ -75,15 +81,20 @@ async function getAnalyticsData() {
     const club = (t.events as any)?.clubs?.name ?? '—';
     if (!byEvent[id]) byEvent[id] = { name, club, biglietti: 0, ricavi: 0 };
     if (t.ticket_type_id !== null) byEvent[id].biglietti += 1;
-    byEvent[id].ricavi += (t.price_paid ?? 0) / 1.05;
+    byEvent[id].ricavi += t.ticket_type_id !== null ? (t.price_paid ?? 0) / 1.05 : (t.price_paid ?? 0) * 0.9;
   });
   const topEvents = Object.values(byEvent)
     .sort((a, b) => b.ricavi - a.ricavi)
     .slice(0, 5)
     .map((e) => ({ ...e, ricavi: +e.ricavi.toFixed(2) }));
 
-  const totalRevenue = all.reduce((sum: number, t: any) => sum + (t.price_paid ?? 0) / 1.05, 0);
-  const totalCommission = totalRevenue * 0.05;
+  const totalRevenue = all.reduce((sum: number, t: any) =>
+    sum + (t.ticket_type_id !== null ? (t.price_paid ?? 0) / 1.05 : (t.price_paid ?? 0) * 0.9), 0);
+  // Commissione effettiva: 5% del prezzo base biglietti + 10% delle caparre tavoli
+  const totalCommission = all.reduce((sum: number, t: any) => {
+    const paid = t.price_paid ?? 0;
+    return sum + (t.ticket_type_id !== null ? paid * (0.05 / 1.05) : paid * 0.10);
+  }, 0);
 
   return {
     revenueByMonthData,

@@ -61,7 +61,7 @@ export default function TicketScanner({ events, defaultEventId }: Props) {
         navigator.vibrate?.([120, 60, 120]);
       }
 
-      setScanState('idle');
+      setTimeout(() => setScanState('idle'), 2000);
     } catch {
       setScanState('error');
       setResult({ ok: false, reason: 'invalid' });

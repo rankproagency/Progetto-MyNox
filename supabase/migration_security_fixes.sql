@@ -21,11 +21,14 @@ DROP POLICY IF EXISTS "Utente inserisce i propri biglietti" ON public.tickets;
 REVOKE EXECUTE ON FUNCTION public.admin_list_users(int, int, text, text, text) FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.admin_count_users(text, text, text) FROM PUBLIC;
 
+-- NOTA: GRANT solo a service_role — la dashboard usa createAdminClient() che usa la service role key.
+-- In precedenza era GRANT TO authenticated, che permetteva a qualsiasi utente autenticato
+-- di chiamare queste funzioni e accedere a auth.users. Ora corretto in service_role.
 GRANT EXECUTE ON FUNCTION public.admin_list_users(int, int, text, text, text)
-  TO authenticated;  -- la dashboard verifica il ruolo admin a livello applicativo
+  TO service_role;
 
 GRANT EXECUTE ON FUNCTION public.admin_count_users(text, text, text)
-  TO authenticated;
+  TO service_role;
 
 -- ─────────────────────────────────────────────
 -- 3. Abilita RLS sulla tabella rate_limits.

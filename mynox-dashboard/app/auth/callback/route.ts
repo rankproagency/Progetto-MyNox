@@ -16,9 +16,13 @@ export async function GET(request: Request) {
 
       if (meta?.role === 'club_staff' && meta?.club_id) {
         const admin = createAdminClient();
-        await admin.from('profiles')
-          .update({ role: 'club_staff', club_id: meta.club_id })
-          .eq('id', data.session.user.id);
+        // Verifica che il club_id nei metadata esista — previene assegnazione a club inesistenti
+        const { data: club } = await admin.from('clubs').select('id').eq('id', meta.club_id).maybeSingle();
+        if (club) {
+          await admin.from('profiles')
+            .update({ role: 'club_staff', club_id: meta.club_id })
+            .eq('id', data.session.user.id);
+        }
 
         // Utente invitato — deve impostare la password prima di accedere
         return NextResponse.redirect(`${origin}/auth/reset-password`);
