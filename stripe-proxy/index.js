@@ -41,7 +41,7 @@ const CORS_HEADERS = {
 
 // Tutti i codici promo sono gestiti tramite il dashboard e salvati su Supabase.
 // Non ci sono fallback hardcoded — un codice non trovato nel DB è semplicemente non valido.
-const PROMO_CODES: Record<string, never> = {};
+const PROMO_CODES = {};
 
 async function applyPromo(baseCents, code, clubId) {
   if (!code) return baseCents;
