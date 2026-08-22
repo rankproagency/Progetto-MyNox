@@ -48,6 +48,29 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Verifica JWT — impedisce bypass diretto della Edge Function (il proxy verifica già,
+    // ma questa difesa in profondità protegge se la funzione viene chiamata direttamente)
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Token mancante.' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const token = authHeader.slice(7);
+    const supabaseAuth = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: `Bearer ${token}` } } }
+    );
+    const { data: { user: callerUser } } = await supabaseAuth.auth.getUser();
+    if (!callerUser) {
+      return new Response(
+        JSON.stringify({ error: 'Token non valido.' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { payment_intent_id } = await req.json() as { payment_intent_id: string };
 
     // Verifica pagamento con Stripe — mai fidarsi del client
@@ -88,7 +111,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    const priceEach = parseFloat((paymentIntent.amount / 100 / quantity).toFixed(2));
+    // Usa ticket_subtotal_cents dai metadata (solo prezzo biglietti, no commissione/tavolo/extras)
+    // per coerenza con il webhook. Fallback a paymentIntent.amount / qty solo se assente.
+    const ticketSubtotalCents = parseInt(meta.ticket_subtotal_cents ?? '0', 10);
+    const priceEach = ticketSubtotalCents > 0
+      ? parseFloat((ticketSubtotalCents / 100 / quantity).toFixed(2))
+      : parseFloat((paymentIntent.amount / 100 / quantity).toFixed(2));
 
     // Idempotency: se il payment_intent è già stato processato, restituisce i biglietti esistenti
     const { error: idempotencyError } = await supabase

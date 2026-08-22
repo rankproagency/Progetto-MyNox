@@ -447,6 +447,12 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
+      // Aggiunge ticket_subtotal_cents ai metadata Stripe — usato da confirm-payment
+      // per calcolare price_paid per biglietto escludendo commissione, caparra tavolo ed extras.
+      if (serverTicketSubtotalCents > 0) {
+        metadata.ticket_subtotal_cents = String(serverTicketSubtotalCents);
+      }
+
       const stripeBody = {
         amount: String(finalAmountCents),
         currency: 'eur',
@@ -459,6 +465,14 @@ const server = http.createServer(async (req, res) => {
       const intent = await callStripe('/v1/payment_intents', stripeBody);
 
       if (intent.error) {
+        // Rollback del promo code consumato prima della chiamata Stripe
+        if (promoId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+          try {
+            await callSupabase('/rest/v1/rpc/decrement_promo_uses', { p_promo_id: promoId });
+          } catch (e) {
+            console.error('promo rollback failed:', e.message);
+          }
+        }
         res.writeHead(400, CORS_HEADERS);
         res.end(JSON.stringify({ error: intent.error.message }));
         return;
@@ -561,7 +575,7 @@ const server = http.createServer(async (req, res) => {
       // non scaduto, e il claimer non è il gifter.
       const now = new Date().toISOString();
       const claimed = await callSupabasePatch(
-        `/rest/v1/gift_codes?code=eq.${encodeURIComponent(code)}&status=eq.pending&gifter_id=neq.${claimer_id}&expires_at=gte.${encodeURIComponent(now)}`,
+        `/rest/v1/gift_codes?code=eq.${encodeURIComponent(code)}&status=eq.pending&gifter_id=neq.${encodeURIComponent(claimer_id)}&expires_at=gte.${encodeURIComponent(now)}`,
         { status: 'claimed', claimed_by: claimer_id, claimed_at: now }
       );
 
@@ -668,9 +682,9 @@ const server = http.createServer(async (req, res) => {
 
       const gift = gifts[0];
 
-      // Elimina il codice regalo — impostare status='cancelled' violerebbe il CHECK constraint
-      // ('pending','claimed'). La delete è l'unico modo per invalidarlo atomicamente.
-      await supabaseRequest('DELETE', `/rest/v1/gift_codes?code=eq.${encodeURIComponent(gift.code)}`, null);
+      // Elimina solo se ancora pending — previene di cancellare silenziosamente
+      // un regalo già riscattato in caso di race condition tra GET e DELETE.
+      await supabaseRequest('DELETE', `/rest/v1/gift_codes?code=eq.${encodeURIComponent(gift.code)}&status=eq.pending`, null);
 
       res.writeHead(200, CORS_HEADERS);
       res.end(JSON.stringify({ success: true }));

@@ -1,8 +1,21 @@
 'use server';
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
+
+async function requireAdmin(): Promise<{ error: string } | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Non autenticato.' };
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (profile?.role !== 'admin') return { error: 'Accesso negato.' };
+  return null;
+}
 
 export async function deleteClub(clubId: string): Promise<{ error?: string }> {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   const supabase = createAdminClient();
 
   // 1. Recupera gli event_id del club
@@ -39,6 +52,9 @@ export async function deleteClub(clubId: string): Promise<{ error?: string }> {
 }
 
 export async function toggleClubActive(clubId: string, isActive: boolean): Promise<{ error?: string }> {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   const supabase = createAdminClient();
   const { error } = await supabase.from('clubs').update({ is_active: !isActive }).eq('id', clubId);
   if (error) return { error: error.message };
