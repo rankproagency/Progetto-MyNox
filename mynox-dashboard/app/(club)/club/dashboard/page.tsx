@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { CalendarDays, Ticket, Plus, Settings, ChevronRight, Clock, BarChart2, CheckCircle2, Circle } from 'lucide-react';
 import RealtimeSalesChart, { type HourlyBucket } from '@/components/club/RealtimeSalesChart';
+import RecentTicketsFeed from '@/components/club/RecentTicketsFeed';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 

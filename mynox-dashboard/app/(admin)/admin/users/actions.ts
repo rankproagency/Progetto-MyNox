@@ -35,8 +35,8 @@ export async function createClubAdminAccount(
   password: string,
   clubId: string
 ): Promise<{ error?: string }> {
-  const authError = await requireAdmin();
-  if (authError) return authError;
+  const adminCheck = await requireAdmin();
+  if (adminCheck) return adminCheck;
 
   const supabase = createAdminClient();
 

@@ -23,6 +23,12 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  // 2FA OTP step
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpEmail, setOtpEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+
   // Reset password
   const [showReset, setShowReset] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
@@ -66,6 +72,38 @@ function LoginForm() {
       return;
     }
 
+    // Credenziali e ruolo verificati — disconnetti e richiedi OTP come secondo fattore
+    await supabase.auth.signOut();
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false },
+    });
+    if (otpError) {
+      setError('Errore nell\'invio del codice. Riprova.');
+      setLoading(false);
+      return;
+    }
+
+    setOtpEmail(email);
+    setOtpStep(true);
+    setLoading(false);
+  }
+
+  async function handleOtpVerify(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    setOtpLoading(true);
+    const supabase = createClient();
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email: otpEmail,
+      token: otp.trim(),
+      type: 'email',
+    });
+    if (verifyError) {
+      setError('Codice non valido o scaduto. Riprova.');
+      setOtpLoading(false);
+      return;
+    }
     router.push('/');
   }
 
@@ -132,7 +170,51 @@ function LoginForm() {
       )}
 
       <CardContent>
-        {showReset ? (
+        {otpStep ? (
+          /* ── Step 2FA: inserisci codice OTP ── */
+          <form onSubmit={handleOtpVerify} className="space-y-4">
+            <div className="flex flex-col items-center gap-2 py-2 text-center">
+              <div className="w-12 h-12 rounded-full bg-purple-500/15 border border-purple-500/30 flex items-center justify-center mb-1">
+                <CheckCircle size={22} className="text-purple-400" />
+              </div>
+              <p className="text-white text-sm font-semibold">Verifica in due passaggi</p>
+              <p className="text-xs text-slate-400">
+                Abbiamo inviato un codice a<br />
+                <span className="text-purple-400 font-medium">{otpEmail}</span>
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="otp" className="text-slate-300 text-sm">Codice di verifica</Label>
+              <Input
+                id="otp"
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                placeholder="000000"
+                required
+                autoFocus
+                className="bg-[#1a1a24] border-white/8 text-white placeholder:text-slate-500 focus:border-purple-500 text-center text-xl tracking-[0.4em] font-mono"
+              />
+            </div>
+            {error && <p className="text-sm text-red-400">{error}</p>}
+            <Button
+              type="submit"
+              disabled={otpLoading || otp.length < 6}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
+            >
+              {otpLoading ? 'Verifica...' : 'Accedi'}
+            </Button>
+            <button
+              type="button"
+              onClick={() => { setOtpStep(false); setOtp(''); setError(''); }}
+              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors mx-auto"
+            >
+              <ArrowLeft size={12} /> Torna al login
+            </button>
+          </form>
+        ) : showReset ? (
           /* ── Form reset password ── */
           <div className="space-y-4">
             {resetSent ? (
@@ -245,7 +327,7 @@ function LoginForm() {
             </Button>
           </>
         )}
-      </CardContent>
+        </CardContent>
     </Card>
   );
 }

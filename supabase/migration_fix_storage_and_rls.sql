@@ -1,12 +1,17 @@
 -- Fix A1: Storage event-assets — limita upload/delete ai soli club_admin e admin.
 -- Prima rimuovi le policy permissive esistenti, poi ricrea con ruolo corretto.
 
--- Rimuovi policy esistenti sul bucket event-assets (potrebbero avere nomi diversi)
+-- Rimuovi policy esistenti su storage.objects legate al bucket event-assets
 DO $$
 DECLARE
   r RECORD;
 BEGIN
-  FOR r IN SELECT policyname FROM storage.policies WHERE bucket_id = 'event-assets' LOOP
+  FOR r IN
+    SELECT policyname
+    FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects'
+      AND (qual ILIKE '%event-assets%' OR with_check ILIKE '%event-assets%')
+  LOOP
     EXECUTE format('DROP POLICY IF EXISTS %I ON storage.objects', r.policyname);
   END LOOP;
 END $$;

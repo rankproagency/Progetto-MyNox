@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getT } from '@/lib/i18n-server';
 import Link from 'next/link';
 import { Building2, Users, CalendarDays, ChevronRight, Ticket, Clock } from 'lucide-react';
+import RecentTicketsFeed from '@/components/club/RecentTicketsFeed';
 
 async function getDashboardData() {
   const supabase = createAdminClient();
