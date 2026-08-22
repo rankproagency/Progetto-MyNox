@@ -481,6 +481,15 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, CORS_HEADERS);
       res.end(JSON.stringify({ clientSecret: intent.client_secret, paymentIntentId: intent.id }));
     } catch (err) {
+      // Rollback promo se Stripe ha lanciato un'eccezione (es. timeout di rete)
+      // prima che il PaymentIntent fosse creato.
+      if (promoId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        try {
+          await callSupabase('/rest/v1/rpc/decrement_promo_uses', { p_promo_id: promoId });
+        } catch (e) {
+          console.error('promo rollback (catch) failed:', e.message);
+        }
+      }
       res.writeHead(500, CORS_HEADERS);
       res.end(JSON.stringify({ error: err.message }));
     }

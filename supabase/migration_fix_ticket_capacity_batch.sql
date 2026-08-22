@@ -41,7 +41,7 @@ BEGIN
       ticket_type_id uuid PRIMARY KEY,
       pending_count  integer NOT NULL DEFAULT 0
     ) ON COMMIT DELETE ROWS;
-  EXCEPTION WHEN OTHERS THEN
+  EXCEPTION WHEN duplicate_table THEN
     NULL; -- già esistente da una sessione precedente, va bene
   END;
 

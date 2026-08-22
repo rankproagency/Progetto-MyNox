@@ -27,11 +27,25 @@ export default function RecentTicketsFeed({ initialTickets, eventIds, showRevenu
   useEffect(() => {
     const supabase = createClient();
 
+    // Filtro server-side sull'event_id: limita i messaggi WebSocket ai soli
+    // eventi del club corrente. Senza filtro il canale riceverebbe INSERT di tutti
+    // i club, esponendo event_id e status di biglietti di altri club nel payload.
+    const serverFilter: string | undefined =
+      eventIds && eventIds.length === 1
+        ? `event_id=eq.${eventIds[0]}`
+        : eventIds && eventIds.length > 1
+          ? `event_id=in.(${eventIds.join(',')})`
+          : undefined;
+
+    const channelOpts = serverFilter
+      ? { event: 'INSERT' as const, schema: 'public', table: 'tickets', filter: serverFilter }
+      : { event: 'INSERT' as const, schema: 'public', table: 'tickets' };
+
     const channel = supabase
       .channel('recent-tickets-feed')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'tickets' },
+        channelOpts,
         async (payload) => {
           const row = payload.new as { id: string; event_id: string; status: string };
           if (!['valid', 'used'].includes(row.status)) return;
