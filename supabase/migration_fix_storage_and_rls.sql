@@ -78,11 +78,10 @@ CREATE POLICY "admins can update tables"
   USING (
     EXISTS (
       SELECT 1 FROM public.profiles p
-      JOIN public.clubs c ON c.id = public.tables.club_id
       WHERE p.id = auth.uid()
         AND (
           p.role = 'admin'
-          OR (p.role = 'club_admin' AND p.club_id = public.tables.club_id)
+          OR (p.role = 'club_admin' AND p.club_id = club_id)
         )
     )
   );
